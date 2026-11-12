@@ -2,7 +2,7 @@
 const fs = require('fs'), path = require('path'), R = path.join(__dirname, '..');
 const rd = f => fs.readFileSync(path.join(R, f), 'utf8');
 const emb = {}; fs.readdirSync(path.join(R, 'audio')).filter(f => f.endsWith('.mp3')).forEach(f => { emb[f.replace('.mp3', '')] = fs.readFileSync(path.join(R, 'audio', f)).toString('base64'); });
-const js = ['data', 'engine', 'sprites', 'audio', 'ui', 'ui-run'].map(n => rd('js/' + n + '.js')).join('\n;\n').replace(/<\/script/g, '<\/script');
+const js = ['data', 'engine', 'sprites', 'backgrounds', 'audio', 'ui', 'ui-run'].map(n => rd('js/' + n + '.js')).join('\n;\n').replace(/<\/script/g, '<\/script');
 const html = `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">

@@ -32,16 +32,23 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   while (Date.now() - t0 < (SCEN === 'long' ? 240000 : 120000)) {
     const ph = await phase();
     if (!shots[ph] && ph !== 'combat') { shots[ph] = 1; await sleep(700); await shot(ph.replace('+', '-')); }
-    if (ph === 'combat') { for (let i = 0; i < 3; i++) await click('#sk' + i + '.ready'); const low = await page.evaluate(() => ENGINE.S.run && ENGINE.S.run.hp / ENGINE.S.run.stats.hp < 0.4); if (low) await click('#pot'); if (!shots.midcombat && Date.now() - t0 > 6000) { shots.midcombat = 1; await shot('midcombat'); } const boss = await page.evaluate(() => ENGINE.S.run && ENGINE.S.run.room.type === 'boss'); if (boss && !shots.boss) { shots.boss = 1; await sleep(1200); await shot('boss'); } await sleep(120); }
+    if (ph === 'combat') { for (let i = 0; i < 3; i++) await click('#sk' + i + '.ready'); await click('#bparry.alert'); if (await click('.unit.weak')) shots.weakHits = (shots.weakHits || 0) + 1; if (await page.evaluate(() => !!document.querySelector('#bult.ready')) && !shots.ultReady) { shots.ultReady = 1; await shot('ult-ready'); } if (await click('#bult.ready')) { if (!shots.ult) { shots.ult = 1; await sleep(250); await shot('ult-used'); } } const low = await page.evaluate(() => ENGINE.S.run && ENGINE.S.run.hp / ENGINE.S.run.stats.hp < 0.4); if (low) await click('#pot'); if (!shots.midcombat && Date.now() - t0 > 6000) { shots.midcombat = 1; await shot('midcombat'); } const boss = await page.evaluate(() => ENGINE.S.run && ENGINE.S.run.room.type === 'boss'); if (boss && !shots.boss) { shots.boss = 1; await sleep(1200); await shot('boss'); } await sleep(120); }
     else if (ph.indexOf('victory') === 0) { await click('[data-act=cont]'); await sleep(150); }
     else if (ph.indexOf('+boon') > 0) { await click('[data-act=boon]'); await sleep(150); }
     else if (ph === 'doors') { const rt = await page.evaluate(() => ENGINE.S.run.doors.join(',')); const want = ['marchand', 'repos', 'autel', 'event', 'tresor', 'elite'].find(t => !shots['room:' + t] && rt.split(',').indexOf(t) >= 0); const idx = want ? rt.split(',').indexOf(want) : 0; if (want) shots['room:' + want] = 1; await click('[data-act=door][data-i="' + idx + '"]'); await sleep(250); const p2 = await phase(); if (p2 === 'room' && want) { await sleep(500); await shot('room-' + want); } }
     else if (ph === 'room') { if (!(await click('[data-act=room][data-a=open]')) && !(await click('[data-act=room][data-a=heal]')) && !(await click('[data-act=room][data-a=take]')) && !(await click('[data-act=room][data-a=opt]'))) { await click('[data-act=room][data-a=buy]:not(.off)'); await click('[data-act=room][data-a=leave]'); } await sleep(200); }
-    else if (ph === 'death') { deaths++; await sleep(900); await shot('death' + deaths); if (deaths >= maxDeaths) break; await click('[data-act=deathBest]'); await sleep(200); await click('[data-act=again]'); await sleep(600); await page.evaluate(() => { ENGINE.S.settings.speed = 3; }); }
+    else if (ph === 'death') { deaths++; await sleep(900); await shot('death' + deaths); if (deaths >= maxDeaths) break; await click('[data-act=deathBest]'); await sleep(200); await click('[data-act=again]'); await sleep(500); if (!shots.omen) { shots.omen = 1; await shot('omen'); } await click('[data-act=omen]'); await sleep(600); await page.evaluate(() => { ENGINE.S.settings.speed = 3; }); }
     else await sleep(200);
   }
   await click('[data-act=toHub]'); await sleep(600); await shot('hub-after');
   for (const t of ['hero', 'sac', 'autel', 'pactes', 'faits']) { await click('[data-act=tab][data-tab=' + t + ']'); await sleep(350); await shot('tab-' + t); }
+  // changement de héros : aller sur un héros verrouillé puis revenir (c'était le blocage signalé)
+  await click('[data-act=tab][data-tab=hero]'); await sleep(200);
+  await click('[data-act=heroNav][data-d="1"]'); await sleep(250); await shot('hero-locked');
+  const nav1 = await page.evaluate(() => { const b = document.querySelector('[data-act=heroNav][data-d="-1"]'); const r = b.getBoundingClientRect(); const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return top === b || b.contains(top); });
+  await click('[data-act=heroPick][data-id=chevalier]'); await sleep(250);
+  const backOk = await page.evaluate(() => UI.st.view === 'chevalier' && ENGINE.S.hero === 'chevalier' && !!document.querySelector('[data-act=descend]'));
+  console.log('heroSwitch', JSON.stringify({ arrowReachableOnLockedHero: nav1, backToKnight: backOk, weakHits: shots.weakHits || 0, ultUsed: !!shots.ult }));
   await click('[data-act=tab][data-tab=sac]'); await sleep(200); await click('.inv-grid .item'); await sleep(300); await shot('item-sheet'); await click('[data-act=close]');
   await click('[data-act=settings]'); await sleep(300); await shot('settings'); await click('[data-act=close]');
   // rechargement : la sauvegarde doit revenir

@@ -40,11 +40,26 @@ var UI = (function () {
       }
     });
   }
+  function setHtml(id, n) {
+    var s = E.byId(D.SETS, id); if (!s) return '';
+    var h = '<div class="setbox"><b>' + s.icon + ' ' + s.name + '</b> <span class="tiny">' + n + '/6 portés</span>';
+    [2, 4, 6].forEach(function (t) { var parts = []; for (var k in s.bonus[t]) { var f = fmtMod(k, s.bonus[t][k]); if (f) parts.push(f[1] + ' ' + f[0]); } h += '<div class="sb' + (n >= t ? ' on' : '') + '"><i>' + t + '</i><span>' + parts.join(' · ') + '</span></div>'; });
+    return h + '<div class="tiny dim">Set de la zone : ' + D.ZONES[s.zone - 1].name + '</div></div>';
+  }
+  // Choix du présage avant de descendre
+  function askOmen(heroId, zone) {
+    var offer = E.omenOffer();
+    var h = '<h2>🔮 Choisis un présage</h2><div class="tiny dim center" style="margin:-6px 0 10px">Il change les règles de cette descente.</div>';
+    offer.forEach(function (id, i) { var o = E.byId(D.OMENS, id); h += '<button class="choice b2" style="animation-delay:' + (i * 0.07) + 's" data-act="omen" data-id="' + id + '" data-h="' + heroId + '" data-z="' + zone + '"><div class="ic">' + o.icon + '</div><div class="grow"><b>' + o.name + '</b><div class="d">' + o.desc + '</div></div></button>'; });
+    h += '<div class="btns"><button class="btn" data-act="omen" data-id="" data-h="' + heroId + '" data-z="' + zone + '">Descendre sans présage</button></div>';
+    modal(h);
+  }
+  ACT.omen = function (d) { closeModal(); SND.play('door'); S().hero = d.h; E.startRun(d.h, +d.z || 1, d.id || null); UI.run.show(); };
   function itemTile(it, extra) {
     var b = E.itemBase(it), eq = E.equippedBy(it.uid);
     return '<button class="item r' + it.rar + '" data-act="item" data-uid="' + it.uid + '">' + b.icon +
       '<span class="lv">' + it.ilvl + '</span>' + (it.up ? '<span class="up">+' + it.up + '</span>' : '') +
-      (eq ? '<span class="eq">' + (eq === S().hero ? '✅' : '👤') + '</span>' : '') + (it.isNew ? '<span class="nw"></span>' : '') + (it.lock ? '<span class="eq" style="right:auto;left:2px;bottom:auto;top:1px">🔒</span>' : '') + (extra || '') + '</button>';
+      (eq ? '<span class="eq">' + (eq === S().hero ? '✅' : '👤') + '</span>' : '') + (it.isNew ? '<span class="nw"></span>' : '') + (it.set ? '<span class="sm">◆</span>' : '') + (it.lock ? '<span class="eq" style="right:auto;left:2px;bottom:auto;top:1px">🔒</span>' : '') + (extra || '') + '</button>';
   }
 
   // ---------- accueil ----------
@@ -85,6 +100,7 @@ var UI = (function () {
 
   function tabHero() {
     var h = E.hero(st.view), un = E.heroUnlocked(h.id), hs = S().heroes[h.id], html = '';
+    html += '<div class="roster">' + D.HEROES.map(function (x) { var u = E.heroUnlocked(x.id); return '<button class="rh' + (x.id === h.id ? ' on' : '') + (u ? '' : ' lk') + '" data-act="heroPick" data-id="' + x.id + '">' + spr(x.id) + (u ? '' : '<span>🔒</span>') + '</button>'; }).join('') + '</div>';
     html += '<div class="hero-stage"><div class="floorglow"></div><div class="name"><b>' + h.name + '</b><div class="small gold">' + h.title + '</div></div>' + spr(h.id, 'spr');
     html += '<button class="nav l" data-act="heroNav" data-d="-1">‹</button><button class="nav r" data-act="heroNav" data-d="1">›</button>';
     if (un) {
@@ -109,12 +125,18 @@ var UI = (function () {
         html += '<button class="btn primary big" data-act="descend">⚔️ DESCENDRE</button>';
       }
       html += '<div class="tiny dim center" style="margin:6px 0 10px">Record : étage ' + S().stats.best + '</div>';
+      var scn = E.setCounts(h.id), sk = Object.keys(scn); if (sk.length) html += '<div class="card"><b>Sets portés</b>' + sk.map(function (id) { return setHtml(id, scn[id]); }).join('') + '</div>';
       if (S().stats.best > 0) html += '<div class="card idle"><div style="font-size:26px">⚱️</div><div class="grow"><b>Ossuaire</b><div class="small dim">Les morts travaillent pour toi : ' + E.fmt(idle.rate) + ' 🔥/h (réserve ' + idle.cap + ' h)</div><div class="bar" style="margin-top:4px"><i style="width:' + (idle.hours / idle.cap * 100) + '%;background:var(--ash)"></i></div></div><button class="btn goldb sm' + (idle.amount > 0 ? '' : ' off') + '" data-act="idle">+' + E.fmt(idle.amount) + ' 🔥</button></div>';
       html += '<div class="card"><div class="small gold">' + h.role + '</div><div class="small dim" style="margin-bottom:6px">' + h.desc + '</div><div class="skills-list"><div class="sk"><div class="ic">🌟</div><div><b>' + h.passive.name + '</b> <span class="tiny dim">passif</span><div class="small dim">' + h.passive.desc + '</div></div></div>' +
+        '<div class="sk"><div class="ic">' + h.ult.icon + '</div><div><b>' + h.ult.name + '</b> <span class="tiny gold">ultime</span><div class="small dim">' + h.ult.desc + '</div></div></div>' +
         h.skills.map(function (k, i) { var ok = E.skillUnlocked(h.id, i); return '<div class="sk' + (ok ? '' : ' locked') + '"><div class="ic">' + (ok ? k.icon : '🔒') + '</div><div><b>' + k.name + '</b> <span class="tiny dim">' + (ok ? k.cd + ' s' : 'Maîtrise ' + (i + 1)) + '</span><div class="small dim">' + k.desc + '</div></div></div>'; }).join('') + '</div></div>';
     } else html += '<div class="card"><div class="small gold">' + h.role + '</div><div class="small dim">' + h.desc + '</div><div class="small" style="margin-top:6px">🌟 <b>' + h.passive.name + '</b> — ' + h.passive.desc + '</div></div>';
     return html;
   }
+  ACT.heroPick = function (d) {
+    st.view = d.id; if (E.heroUnlocked(d.id) && !S().run) { S().hero = d.id; E.save(); }
+    SND.play('click'); hub();
+  };
   ACT.heroNav = function (d) {
     var i = D.HEROES.indexOf(E.hero(st.view)); i = (i + (+d.d) + D.HEROES.length) % D.HEROES.length; st.view = D.HEROES[i].id;
     if (E.heroUnlocked(st.view) && !S().run) { S().hero = st.view; E.save(); }
@@ -125,7 +147,7 @@ var UI = (function () {
   ACT.idle = function () { var a = E.collectIdle(); if (a > 0) { SND.play('gold'); toast('+' + E.fmt(a) + ' 🔥 Cendres récoltées'); E.save(); keepScroll(hub); } };
   ACT.descend = function () {
     if (!E.heroUnlocked(st.view)) return; S().hero = st.view;
-    SND.play('door'); E.startRun(st.view, st.zone || 1); UI.run.show();
+    askOmen(st.view, st.zone || 1);
   };
   ACT.resume = function () { UI.run.show(); };
   ACT.slotEmpty = function (d) { st.filter = d.slot; hub('sac'); };
@@ -141,9 +163,10 @@ var UI = (function () {
   function tabSac() {
     var inv = S().inv.slice(), hs = S().heroes[S().hero];
     var f = st.filter;
-    if (f !== 'all') inv = inv.filter(function (i) { return E.itemBase(i).slot === f; });
+    if (f === 'set') inv = inv.filter(function (i) { return !!i.set; });
+    else if (f !== 'all') inv = inv.filter(function (i) { return E.itemBase(i).slot === f; });
     inv.sort(function (a, b) { return (b.rar - a.rar) || (E.itemScore(b) - E.itemScore(a)); });
-    var h = '<div class="filters"><button class="chip' + (f === 'all' ? ' on' : '') + '" data-act="filter" data-f="all">Tout (' + S().inv.length + '/' + E.INV_MAX + ')</button>' + D.SLOTS.map(function (s) { return '<button class="chip' + (f === s.id ? ' on' : '') + '" data-act="filter" data-f="' + s.id + '">' + s.icon + ' ' + s.name + '</button>'; }).join('') + '</div>';
+    var h = '<div class="filters"><button class="chip' + (f === 'all' ? ' on' : '') + '" data-act="filter" data-f="all">Tout (' + S().inv.length + '/' + E.INV_MAX + ')</button><button class="chip' + (f === 'set' ? ' on' : '') + '" data-act="filter" data-f="set" style="color:#6dffb0">◆ Sets</button>' + D.SLOTS.map(function (s) { return '<button class="chip' + (f === s.id ? ' on' : '') + '" data-act="filter" data-f="' + s.id + '">' + s.icon + ' ' + s.name + '</button>'; }).join('') + '</div>';
     h += '<div class="row" style="margin-bottom:10px"><button class="btn sm goldb grow" data-act="equipBest">⚡ Équiper le meilleur</button><button class="btn sm grow" data-act="salvageMenu">♻️ Recycler...</button></div>';
     if (!inv.length) h += '<div class="center dim" style="padding:30px">Rien ici. Descends en chercher.</div>';
     h += '<div class="inv-grid">' + inv.map(function (it) {
@@ -174,6 +197,7 @@ var UI = (function () {
     var h = '<div class="item-head"><div class="item r' + it.rar + '">' + b.icon + '</div><div class="grow"><h3 class="c' + it.rar + '" style="font-size:17px">' + E.itemName(it) + '</h3><div class="small"><b class="c' + it.rar + '">' + rar.name + '</b> · ' + slot.name + ' · niveau ' + it.ilvl + (it.up ? ' · <span class="gold">+' + it.up + '</span>' : '') + '</div>' + (eqBy ? '<div class="tiny good">Équipé par ' + E.hero(eqBy).name + '</div>' : '') + '</div></div>';
     h += '<div class="' + (uq ? 'uq' : '') + '">' + modLines(p.base) + (Object.keys(p.aff).length ? '<div style="border-top:1px solid #ffffff12;margin:4px 0"></div>' + modLines(p.aff) : '') + modLines(p.pw, 'pw') + '</div>';
     if (uq) h += '<div class="lore">« ' + uq.lore + ' »</div>';
+    if (it.set) h += setHtml(it.set, E.setCounts(S().hero)[it.set] || 0);
     var cur = hs.equip[b.slot], curIt = cur && cur !== it.uid ? E.findItem(cur) : null;
     if (curIt) { var diff = Math.round((E.itemScore(it) / E.itemScore(curIt) - 1) * 100); h += '<div class="small" style="margin-top:6px">Comparé à <b class="c' + curIt.rar + '">' + E.itemName(curIt) + '</b> : <b class="' + (diff >= 0 ? 'good' : 'bad') + '">' + (diff >= 0 ? '▲ +' : '▼ ') + diff + ' %</b></div>'; }
     if (ctx === 'view') return h + '<div class="btns"><button class="btn" data-act="close">Fermer</button></div>';
@@ -277,5 +301,5 @@ var UI = (function () {
   function boot() { E.load(); applySettings(); st.view = S().hero; splash(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else setTimeout(boot, 0);
 
-  return { ACT: ACT, $: $, S: S, spr: spr, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod };
+  return { ACT: ACT, $: $, S: S, spr: spr, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod };
 })();

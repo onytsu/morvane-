@@ -40,7 +40,9 @@ var DATA = (function () {
     atkPerRoom: { n: 'Attaque par salle franchie', fmt: 'pct' }, vulnStart: { n: 'Les ennemis commencent Vulnérables (s)', fmt: 'flat' },
     rerolls: { n: "Relance d'aubaines", fmt: 'flat' }, startGold: { n: 'Or de départ', fmt: 'flat' },
     idleP: { n: "Cendres de l'Ossuaire", fmt: 'pct' }, startBoons: { n: 'Aubaine offerte au départ', fmt: 'flat' },
-    enemyHpP: { n: 'PV des ennemis', fmt: 'pct' }, idleH: { n: "Heures de réserve de l'Ossuaire", fmt: 'flat' }
+    enemyHpP: { n: 'PV des ennemis', fmt: 'pct' }, idleH: { n: "Heures de réserve de l'Ossuaire", fmt: 'flat' },
+    enemyAtkP: { n: 'Attaque des ennemis', fmt: 'pct' }, ultP: { n: "Charge de l'ultime", fmt: 'pct' },
+    parryP: { n: 'Dégâts de riposte (parade)', fmt: 'pct' }, weakP: { n: 'Dégâts sur point faible', fmt: 'pct' }
   };
 
   // ---------- Héros ----------
@@ -147,6 +149,40 @@ var DATA = (function () {
         { id: 'c_s3', name: 'Jour du jugement', rar: 2, desc: 'Colère divine : +60 % dégâts.', mods: { s3P: 60 } }
       ]
     }
+  ];
+
+  // ---------- Ultimes (jauge qui se remplit en combat) ----------
+  var ULTS = {
+    chevalier: { name: 'Dernier Rempart', icon: '🏰', sfx: 'skill_holy', desc: 'Invulnérable 4 s et 400 % dégâts à tous les ennemis.' },
+    pyro: { name: 'Pluie de Cendres', icon: '☄️', sfx: 'skill_fire', desc: '6 météores de 160 % dégâts, embrase tous les ennemis.' },
+    assassin: { name: 'Danse des Lames', icon: '🌪️', sfx: 'skill_blade', desc: '8 coups critiques de 90 % dégâts sur des ennemis au hasard.' },
+    necro: { name: 'Moisson', icon: '💀', sfx: 'skill_dark', desc: '400 % dégâts à tous, te soigne de la moitié, +2 serviteurs.' },
+    berserker: { name: 'Carnage', icon: '🩸', sfx: 'skill_war', desc: '6 s : vitesse doublée et 20 % vol de vie. Impossible de mourir pendant 4 s.' },
+    pretresse: { name: 'Miracle', icon: '🌟', sfx: 'skill_holy', desc: 'Soigne tous tes PV, bouclier 30 % PV, étourdit tous les ennemis 2 s.' }
+  };
+  HEROES.forEach(function (h) { h.ult = ULTS[h.id]; });
+
+  // ---------- Sets d'objets (bonus à 2, 4 et 6 pièces portées). Un set par zone. ----------
+  var SETS = [
+    { id: 'set_fossoyeur', name: 'Ossements du Fossoyeur', short: 'du Fossoyeur', icon: '⚰️', zone: 1, bonus: { 2: { killHeal: 3, hpP: 10 }, 4: { atkP: 20, gf: 30 }, 6: { revive: 1, firstStrike: 200 } } },
+    { id: 'set_corbeau', name: 'Voile du Corbeau', short: 'du Corbeau', icon: '🦅', zone: 2, bonus: { 2: { crit: 6, dodge: 4 }, 4: { critd: 45, spdP: 12 }, 6: { echo: 25, weakP: 100 } } },
+    { id: 'set_peste', name: 'Suaire de la Peste', short: 'de la Peste', icon: '☠️', zone: 3, bonus: { 2: { poisonHit: 30, bleedHit: 20 }, 4: { poisonP: 80, bleedP: 80 }, 6: { exec: 70, ls: 6 } } },
+    { id: 'set_inquisiteur', name: "Vœux de l'Inquisiteur", short: "de l'Inquisiteur", icon: '⛪', zone: 4, bonus: { 2: { defP: 25, block: 5 }, 4: { hpP: 25, parryP: 150 }, 6: { takenP: -20, startShield: 35 } } },
+    { id: 'set_braises', name: 'Cœur des Braises', short: 'des Braises', icon: '🔥', zone: 5, bonus: { 2: { burnHit: 35, pow: 15 }, 4: { burnP: 90, cdr: 12 }, 6: { dmgP: 30, chain: 90 } } },
+    { id: 'set_roi', name: 'Regalia du Roi Creux', short: 'du Roi Creux', icon: '👑', zone: 6, bonus: { 2: { gf: 30, mf: 25 }, 4: { allP: 8, ultP: 50 }, 6: { boonChoices: 1, allP: 12 } } }
+  ];
+
+  // ---------- Présages (un au choix au début de chaque descente) ----------
+  var OMENS = [
+    { id: 'o_sang', name: 'Lune de sang', icon: '🌕', desc: 'Butin rare +60 %. Mais ennemis +20 % attaque.', mods: { enemyAtkP: 20, mf: 60 } },
+    { id: 'o_brume', name: 'Brume dorée', icon: '🌫️', desc: '+80 % or et Cendres. Mais -15 % PV max.', mods: { gf: 80, hpP: -15 } },
+    { id: 'o_elites', name: 'Nuit des élites', icon: '👹', desc: 'Beaucoup plus de salles Élite, et chaque élite lâche un objet de plus.', mods: { eliteW: 1 } },
+    { id: 'o_hate', name: 'Serment de hâte', icon: '⚡', desc: "+25 % vitesse d'attaque. Mais aucun feu de camp.", mods: { spdP: 25, noRest: 1 } },
+    { id: 'o_clement', name: 'Présage clément', icon: '🕯️', desc: '+2 fioles de soin. Rien à payer.', mods: { potions: 2 } },
+    { id: 'o_relique', name: 'Chasse aux reliques', icon: '🏺', desc: 'Commence avec un artefact. Mais ennemis +15 % PV.', mods: { startArtifact: 1, enemyHpP: 15 } },
+    { id: 'o_etoile', name: 'Étoile filante', icon: '🌠', desc: "L'ultime se charge 2 fois plus vite. Mais +15 % dégâts subis.", mods: { ultP: 100, takenP: 15 } },
+    { id: 'o_grimoire', name: 'Vieux grimoire', icon: '📜', desc: '+40 % expérience. Mais -10 % attaque.', mods: { xp: 40, atkP: -10 } },
+    { id: 'o_duel', name: 'Loi du duel', icon: '🤺', desc: 'Parade : riposte +200 %. Points faibles : +100 % dégâts. Mais -10 % PV max.', mods: { parryP: 200, weakP: 100, hpP: -10 } }
   ];
 
   // ---------- Zones et ennemis ----------
@@ -308,6 +344,9 @@ var DATA = (function () {
     { id: 'b_colosse', name: 'Colosse', icon: '🗿', rar: 2, max: 2, desc: '+35 % PV et +25 % armure, -8 % vitesse.', mods: { hpP: 35, defP: 25, spdP: -8 } },
     { id: 'b_fiole', name: 'Alambic', icon: '🧪', rar: 2, max: 2, desc: '+1 fiole et +25 % de soins reçus.', mods: { potions: 1, healP: 25 } },
     { id: 'b_tout', name: 'Bénédiction creuse', icon: '🌒', rar: 2, max: 3, desc: '+7 % à toutes les stats.', mods: { allP: 7 } },
+    { id: 'b_riposte', name: 'Riposte', icon: '🤺', rar: 1, max: 3, desc: 'Parade : la riposte fait +100 % dégâts.', mods: { parryP: 100 } },
+    { id: 'b_lynx', name: 'Œil de lynx', icon: '🎯', rar: 1, max: 3, desc: 'Points faibles : +60 % dégâts.', mods: { weakP: 60 } },
+    { id: 'b_adrenaline', name: 'Adrénaline', icon: '💉', rar: 1, max: 3, desc: "L'ultime se charge 30 % plus vite.", mods: { ultP: 30 } },
     { id: 'b_phenix', name: 'Dernier souffle', icon: '🕊️', rar: 3, max: 1, desc: 'Une fois par descente, reviens à la vie avec 40 % PV.', mods: { revive: 1 } },
     { id: 'b_avatar', name: 'Avatar de guerre', icon: '👹', rar: 3, max: 1, desc: '+30 % dégâts infligés.', mods: { dmgP: 30 } },
     { id: 'b_bastion', name: 'Bastion', icon: '🏯', rar: 3, max: 1, desc: '-22 % dégâts subis.', mods: { takenP: -22 } },
@@ -459,7 +498,7 @@ var DATA = (function () {
 
   return {
     RARITIES: RARITIES, MODS: MODS, HEROES: HEROES, ENEMIES: ENEMIES, ZONES: ZONES, SLOTS: SLOTS, BASES: BASES,
-    AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
+    SETS: SETS, OMENS: OMENS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
     PACTS: PACTS, ACHIEVEMENTS: ACHIEVEMENTS, EVENTS: EVENTS, ROOMS: ROOMS, ALTARS: ALTARS
   };
 })();

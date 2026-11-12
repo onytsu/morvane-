@@ -4,7 +4,7 @@
   var D = root.DATA || require('./data.js');
   var SAVE_KEY = 'morvane_save_v1';
   var INV_MAX = 80;
-  var GROW = { hp: 1.16, atk: 1.13, cend: 1.10, item: 1.07 }; // croissance par étage
+  var GROW = { hp: 1.165, atk: 1.135, cend: 1.10, item: 1.07 }; // croissance par étage
   var E = {};
 
   // ---------- utilitaires ----------
@@ -122,6 +122,7 @@
         it.aff.push([a.k, Math.round(v * 100) / 100]);
       }
       if (rar === 4) it.pw = pick(D.POWERS).id;
+      if (opts.set && rar >= 2) it.set = opts.set;
     }
     return it;
   };
@@ -129,6 +130,7 @@
   E.itemName = function (it) {
     if (it.uq) return byId(D.UNIQUES, it.uq).name;
     var b = byId(D.BASES, it.base), n = b.name;
+    if (it.set) n += ' ' + byId(D.SETS, it.set).short;
     if (it.pw) n += ' « ' + byId(D.POWERS, it.pw).name + ' »';
     return n + (it.up ? ' +' + it.up : '');
   };
@@ -154,7 +156,7 @@
     var W = { atk: 6, hp: 0.6, def: 3 };
     var WP = { atkP: 1.2, hpP: 0.8, defP: 0.5, spdP: 1.3, allP: 2.5, crit: 1.2, critd: 0.5, ls: 2, dodge: 1.2, regen: 8, pow: 0.5, cdr: 0.8, gf: 0.3, mf: 0.3, xp: 0.3, thorns: 0.2, block: 1 };
     for (var k in m) { if (W[k]) s += m[k] * W[k]; else if (WP[k]) s += m[k] * WP[k] * sc * 0.35; }
-    if (it.pw) s += 12 * sc; if (it.uq) s += 25 * sc;
+    if (it.pw) s += 12 * sc; if (it.uq) s += 25 * sc; if (it.set) s += 6 * sc;
     return s;
   };
   E.findItem = function (uid) { for (var i = 0; i < S.inv.length; i++) if (S.inv[i].uid === uid) return S.inv[i]; return null; };
@@ -238,7 +240,8 @@
   function dropItem(run, src, minRar) {
     var st = run.stats, rar = rollRarity(src, st.mf || 0);
     if (minRar != null && rar < minRar) rar = minRar;
-    var it = E.makeItem(run.floor + (src === 'boss' ? 2 : src === 'elite' ? 1 : 0), rar);
+    var zs = D.SETS[(E.zoneNum(run.floor) - 1) % 6], sch = src === 'boss' ? 0.45 : src === 'mob' ? 0.22 : 0.32;
+    var it = E.makeItem(run.floor + (src === 'boss' ? 2 : src === 'elite' ? 1 : 0), rar, { set: rnd() < sch ? zs.id : null });
     var g = giveItem(it); run.loot.push({ uid: it.uid, rar: it.rar }); return g;
   }
 
@@ -254,6 +257,7 @@
     add(perm, { atkP: 4 * (hs.lvl - 1), hpP: 4 * (hs.lvl - 1) });
     for (var sl in hs.equip) { var it = E.findItem(hs.equip[sl]); if (it) add(perm, E.itemMods(it)); }
     hs.pacts.forEach(function (pid) { var p = byId(D.PACTS, pid); if (p) add(perm, p.mods); });
+    var scn = E.setCounts(heroId); for (var sid in scn) { var sd = byId(D.SETS, sid); if (sd) for (var th in sd.bonus) if (scn[sid] >= +th) add(perm, sd.bonus[th]); }
     D.META.forEach(function (m) { var l = S.meta[m.id] || 0; if (l) add(meta, m.mods, l); });
     if (run) { add(rm, run.mods); add(rm, { atkP: 3 * (run.lvl - 1) + (run.mods.atkPerRoom || 0) * run.rooms, hpP: 3 * (run.lvl - 1) }); }
     var st = {};
@@ -269,9 +273,11 @@
     st.dodge = clamp(st.dodge || 0, 0, 60); st.block = clamp(st.block || 0, 0, 60);
     st.cdr = clamp(st.cdr || 0, 0, 60); st.ls = clamp(st.ls || 0, 0, 40);
     st.takenP = Math.max(-70, st.takenP || 0);
-    ['regen', 'pow', 'gf', 'mf', 'xp', 'thorns', 'echo', 'burnHit', 'poisonHit', 'bleedHit', 'firstStrike', 'startShield', 'killHeal', 'exec', 'chain', 'frenzy', 'revive', 'boonChoices', 'potions', 'dmgP', 'healP', 'burnP', 'poisonP', 'bleedP', 'skel', 'skelP', 's1P', 's2P', 's3P', 'vulnStart', 'rerolls', 'startGold', 'idleP', 'idleH', 'startBoons', 'enemyHpP', 'startArtifact'].forEach(function (key) { st[key] = st[key] || 0; });
+    ['regen', 'pow', 'gf', 'mf', 'xp', 'thorns', 'echo', 'burnHit', 'poisonHit', 'bleedHit', 'firstStrike', 'startShield', 'killHeal', 'exec', 'chain', 'frenzy', 'revive', 'boonChoices', 'potions', 'dmgP', 'healP', 'burnP', 'poisonP', 'bleedP', 'skel', 'skelP', 's1P', 's2P', 's3P', 'vulnStart', 'rerolls', 'startGold', 'idleP', 'idleH', 'startBoons', 'enemyHpP', 'startArtifact', 'enemyAtkP', 'ultP', 'parryP', 'weakP', 'eliteW', 'noRest'].forEach(function (key) { st[key] = st[key] || 0; });
     return st;
   };
+  E.setCounts = function (heroId) { var o = {}, eq = S.heroes[heroId].equip; for (var sl in eq) { var it = E.findItem(eq[sl]); if (it && it.set) o[it.set] = (o[it.set] || 0) + 1; } return o; };
+  E.omenOffer = function () { var p = D.OMENS.slice(), out = []; while (out.length < 3) out.push(p.splice(Math.floor(rnd() * p.length), 1)[0].id); return out; };
   E.power = function (heroId) { // un seul chiffre « Puissance » pour le sanctuaire
     var s = E.heroStats(heroId, null);
     var dps = s.atk * s.spd * (1 + s.crit / 100 * (s.critd / 100 - 1)) * (1 + s.dmgP / 100) * (1 + s.pow / 400);
@@ -328,14 +334,15 @@
 
   // ---------- descente ----------
   E.maxStartZone = function () { return Math.min(S.stats.bossMax + 1, 60); };
-  E.startRun = function (heroId, startZone) {
+  E.startRun = function (heroId, startZone, omenId) {
     heroId = heroId || S.hero; startZone = clamp(startZone || 1, 1, E.maxStartZone());
     var run = {
       hero: heroId, floor: (startZone - 1) * 10 + 1, startFloor: (startZone - 1) * 10 + 1, lvl: 1, xp: 0, gold: 0, hp: 1,
       potions: 0, potionsMax: 2, mods: {}, boons: {}, artifacts: [], rerolls: 0, revived: 0, rooms: 0, kills: 0, loot: [],
-      cendres: 0, bosses: 0, phase: 'room', doors: [], room: null, pendingBoons: 0, offer: null, result: null, combat: null, t: 0, log: []
+      cendres: 0, bosses: 0, ult: 0, stance: 'n', phase: 'room', doors: [], room: null, pendingBoons: 0, offer: null, result: null, combat: null, t: 0, log: []
     };
     S.run = run; S.hero = heroId; S.stats.runs++;
+    var om = omenId ? byId(D.OMENS, omenId) : null; if (om) { add(run.mods, om.mods); run.omen = om.id; }
     recalc(run);
     run.hp = run.stats.hp; run.potions = run.potionsMax; run.gold = run.stats.startGold; run.rerolls = run.stats.rerolls;
     var free = run.stats.startBoons + (startZone - 1) * 3;
@@ -393,12 +400,12 @@
   function genDoors(run) {
     var next = run.floor + 1, pos = ((next - 1) % 10) + 1;
     if (pos === 10) return ['boss'];
-    var w = { combat: 50, elite: (next - run.startFloor) < 2 ? 0 : 13, tresor: 9, marchand: run.gold >= 40 ? 10 : 4, repos: run.hp < run.stats.hp * 0.6 ? 14 : 7, autel: 6, event: 10 };
+    var w = { combat: 50, elite: (next - run.startFloor) < 2 ? 0 : 13 * (run.stats.eliteW ? 3 : 1), tresor: 9, marchand: run.gold >= 40 ? 10 : 4, repos: run.stats.noRest ? 0 : run.hp < run.stats.hp * 0.6 ? 14 : 7, autel: 6, event: 10 };
     if (run.lastRoom && w[run.lastRoom] && run.lastRoom !== 'combat') w[run.lastRoom] *= 0.25;
     var types = Object.keys(w).filter(function (k) { return w[k] > 0; }), n = rnd() < 0.35 ? 3 : 2, out = [];
     while (out.length < n) { var t = wpick(types, function (k) { return w[k]; }); if (out.indexOf(t) < 0) out.push(t); }
     if (out.indexOf('combat') < 0 && out.indexOf('elite') < 0) out[0] = 'combat';
-    if (pos === 9 && out.indexOf('repos') < 0 && out.indexOf('marchand') < 0) out[out.length - 1] = rnd() < 0.6 ? 'repos' : 'marchand';
+    if (pos === 9 && out.indexOf('repos') < 0 && out.indexOf('marchand') < 0) out[out.length - 1] = rnd() < 0.6 && !run.stats.noRest ? 'repos' : 'marchand';
     return out;
   }
   function enemyGroup(run, type) {
@@ -421,7 +428,7 @@
       if (rnd() < 0.12) { r.mimic = true; }
     } else if (type === 'marchand') {
       var art = pick(D.ARTIFACTS.filter(function (a) { return run.artifacts.indexOf(a.id) < 0; }));
-      var it = E.makeItem(run.floor + 1, Math.max(2, rollRarity('chest', run.stats.mf)));
+      var it = E.makeItem(run.floor + 1, Math.max(2, rollRarity('chest', run.stats.mf)), { set: rnd() < 0.3 ? D.SETS[(E.zoneNum(run.floor) - 1) % 6].id : null });
       r.stock = [
         { kind: 'potion', name: 'Fiole de soin', icon: '🧪', desc: '+1 fiole', price: Math.round(35 * pm) },
         { kind: 'heal', name: 'Bandages', icon: '🩹', desc: 'Soigne 40 % PV', price: Math.round(30 * pm) },
@@ -514,7 +521,7 @@
     var hs = Math.pow(GROW.hp, F - 1), as = Math.pow(GROW.atk, F - 1);
     var hp = b.hp * hs * (hpMul || 1) * (1 + (run.stats.enemyHpP || 0) / 100);
     return {
-      key: key, name: b.name, hp: hp, maxhp: hp, atk: b.atk * as, def: b.def * as, int: b.int, t: b.int * rf(0.5, 1), ab: b.ab,
+      key: key, name: b.name, hp: hp, maxhp: hp, atk: b.atk * as * (1 + (run.stats.enemyAtkP || 0) / 100), def: b.def * as, int: b.int, t: b.int * rf(0.5, 1), ab: b.ab,
       elite: !!b.elite, boss: !!b.boss, st: {}, charge: null, chargeCd: b.ab.charge ? b.ab.charge * rf(0.6, 0.9) : 0,
       healT: 6, summonT: 10, shieldT: 5, shield: 0, enraged: false, dead: false, id: 0
     };
@@ -523,8 +530,8 @@
     if (restore) run.hp = run.hpEntry || run.hp;
     var r = run.room, st = run.stats, n = r.group.length;
     var c = {
-      t: 0, over: false, win: false, boss: r.type === 'boss', events: [], target: 0, nextId: 1, drops: [], gold: 0, cendres: 0, xp: 0, kills: 0,
-      hero: { maxhp: st.hp, shield: st.startShield ? st.hp * st.startShield / 100 : 0, shieldT: st.startShield ? 999 : 0, atkT: 0.6, cds: [1.5, 3, 5], st: {}, buffs: {}, frenzy: 0, hits: 0, first: true, skel: run.hero === 'necro' ? 1 : 0, skelT: 1, nextCrit: false },
+      t: 0, over: false, win: false, boss: r.type === 'boss', events: [], target: 0, nextId: 1, weak: null, weakT: 4 + rnd() * 3, drops: [], gold: 0, cendres: 0, xp: 0, kills: 0,
+      hero: { maxhp: st.hp, shield: st.startShield ? st.hp * st.startShield / 100 : 0, shieldT: st.startShield ? 999 : 0, atkT: 0.6, cds: [1.5, 3, 5], st: {}, buffs: {}, parryT: 0, parryCd: 0, invuln: 0, frenzy: 0, hits: 0, first: true, skel: run.hero === 'necro' ? 1 : 0, skelT: 1, nextCrit: false },
       enemies: []
     };
     r.group.forEach(function (k) { var e = mkEnemy(run, k, n >= 3 ? 0.8 : 1); e.id = c.nextId++; if (st.vulnStart) e.st.vuln = st.vulnStart; c.enemies.push(e); });
@@ -557,6 +564,8 @@
     if (run.hero === 'berserker') dmg *= 1 + (1 - run.hp / st.hp);
     if (h.st.weak > 0) dmg *= 0.75;
     if (e.st.vuln > 0) dmg *= 1.25;
+    if (run.stance === 'a') dmg *= 1.25; else if (run.stance === 'd') dmg *= 0.8;
+    if (o.ult) dmg *= 1 + st.pow / 100;
     if (!o.dot && e.def > 0) dmg *= (2 * st.atk) / (2 * st.atk + e.def);
     if (e.shield > 0) { var ab = Math.min(e.shield, dmg); e.shield -= ab; dmg -= ab; if (dmg <= 0) { ev(c, { k: 'dmg', id: e.id, v: 0, sh: 1 }); return 0; } }
     e.hp -= dmg;
@@ -581,7 +590,7 @@
     var cm = e.boss ? 30 : e.elite ? 6 : 1;
     if (e.summoned) cm *= 0.4;
     var cend = Math.ceil(cm * Math.pow(GROW.cend, F - 1) * g), gold = Math.round((e.boss ? 60 : e.elite ? 25 : ri(4, 8)) * g * (e.summoned ? 0.4 : 1));
-    c.cendres += cend; c.gold += gold; c.kills++; run.kills++; S.stats.kills++;
+    ug(run, 5); c.cendres += cend; c.gold += gold; c.kills++; run.kills++; S.stats.kills++;
     c.xp += (e.boss ? 30 : e.elite ? 16 : 6.5) * (e.summoned ? 0.4 : 1);
     if (e.elite) S.stats.elites++;
     ev(c, { k: 'die', id: e.id, boss: e.boss });
@@ -595,7 +604,7 @@
         var uChance = Math.min(0.2, (0.035 + S.pityU * 0.012) * (1 + st.mf / 300));
         if (rnd() < uChance) { var u = E.makeItem(F + 2, 5, { unique: pick(z.uniques) }); c.drops.push(giveItem(u)); run.loot.push({ uid: u.uid, rar: 5 }); S.pityU = 0; } else S.pityU++;
         c.drops.push(dropItem(run, 'boss', first ? 3 : 2)); c.drops.push(dropItem(run, 'boss')); if (rnd() < 0.5) c.drops.push(dropItem(run, 'boss'));
-      } else if (e.elite) { c.drops.push(dropItem(run, 'elite')); if (rnd() < 0.3) c.drops.push(dropItem(run, 'elite')); }
+      } else if (e.elite) { c.drops.push(dropItem(run, 'elite')); if (rnd() < 0.3 || st.eliteW) c.drops.push(dropItem(run, 'elite')); }
       else if (rnd() < 0.14) c.drops.push(dropItem(run, 'mob'));
     }
     if (!alive(c).length) { c.over = true; c.win = true; }
@@ -604,6 +613,12 @@
   function hurt(run, c, e, raw, o) {
     o = o || {}; var st = run.stats, h = c.hero;
     if (c.over && !c.win) return 0;
+    var pm = 1;
+    if (h.invuln > 0 && !o.dot) { ev(c, { k: 'hurt', v: 0, sh: 1 }); return 0; }
+    if (h.parryT > 0 && e && !o.dot) {
+      if (o.big) { ev(c, { k: 'parry', perfect: 1 }); stun(c, e, 2); hit(run, c, e, 3 * (1 + st.parryP / 100), {}); ug(run, 25); return 0; }
+      pm = 0.3; ev(c, { k: 'parry' }); hit(run, c, e, 0.8 * (1 + st.parryP / 100), { noCrit: true, dot: 'thorns' });
+    }
     if (!o.dot) {
       var dg = st.dodge + (h.buffs.dodge ? h.buffs.dodge.v : 0);
       if (rnd() * 100 < dg) { ev(c, { k: 'dodge' }); return 0; }
@@ -614,8 +629,9 @@
       if (rnd() * 100 < st.block) { dmg *= 0.5; blocked = true; }
       dmg *= (2 * raw) / (2 * raw + st.def);
     }
-    dmg *= Math.max(0.3, 1 + st.takenP / 100);
+    dmg *= Math.max(0.3, 1 + st.takenP / 100) * pm * (run.stance === 'a' ? 1.2 : run.stance === 'd' ? 0.75 : 1);
     if (h.shield > 0) { var ab = Math.min(h.shield, dmg); h.shield -= ab; dmg -= ab; if (ab > 0 && dmg <= 0) { ev(c, { k: 'hurt', v: 0, sh: 1 }); dmg = 0; } }
+    if (dmg > 0 && !o.dot) ug(run, 3);
     if (dmg > 0) { run.hp -= dmg; ev(c, { k: 'hurt', v: dmg, block: blocked, dot: o.dot, big: o.big }); }
     if (e && !o.dot) {
       var th = st.thorns + (h.buffs.thorns ? 100 : 0);
@@ -626,6 +642,7 @@
       if (e.ab.bleed && rnd() * 100 < e.ab.bleed) h.st.bleed = { t: 4, dps: e.atk * 0.18 };
       if (e.ab.weak && rnd() * 100 < e.ab.weak) h.st.weak = 4;
     }
+    if (run.hp <= 0 && h.buffs.undying) run.hp = 1;
     if (run.hp <= 0) {
       if (run.revived < st.revive) { run.revived++; run.hp = st.hp * 0.4; h.st = {}; ev(c, { k: 'revive' }); }
       else { run.hp = 0; c.over = true; c.win = false; }
@@ -635,7 +652,7 @@
   function stun(c, e, t) { if (!e || e.dead) return; e.st.stun = Math.max(e.st.stun || 0, e.boss ? t * 0.6 : t); if (e.charge) { e.charge = null; e.chargeCd = e.ab.charge; ev(c, { k: 'interrupt', id: e.id }); } }
   function heroAttack(run, c) {
     var st = run.stats, h = c.hero, e = target(c); if (!e) return;
-    h.hits++;
+    h.hits++; ug(run, 2.5);
     var forced = h.nextCrit; h.nextCrit = false;
     var d = hit(run, c, e, forced ? 2 : 1, { auto: true, crit: forced });
     ev(c, { k: 'swing' });
@@ -655,7 +672,7 @@
     var h = c.hero, st = run.stats; if (h.cds[i] > 0 || !E.skillUnlocked(run.hero, i)) return false;
     var sk = E.hero(run.hero).skills[i], e = target(c); if (!e) return false;
     var others = alive(c).filter(function (x) { return x !== e; }), all = alive(c);
-    h.cds[i] = E.skillCd(run, i);
+    h.cds[i] = E.skillCd(run, i); ug(run, 5);
     ev(c, { k: 'skill', i: i, id: sk.id, sfx: sk.sfx, name: sk.name });
     switch (sk.id) {
       case 'k1': hit(run, c, e, 1.8, { skill: 1 }); stun(c, e, 1.5); break;
@@ -680,6 +697,37 @@
     if (c.over) finish(run, c);
     return true;
   };
+  function ug(run, n) { run.ult = Math.min(100, (run.ult || 0) + n * (1 + (run.stats.ultP || 0) / 100)); }
+  E.PARRY_CD = 5;
+  // Parade : pendant 1 s les coups sont réduits de 70 % et renvoyés. Une attaque chargée parée est annulée.
+  E.parry = function () {
+    var run = S.run, c = run && run.combat; if (!c || c.over || c.hero.parryCd > 0) return false;
+    c.hero.parryT = 1.0; c.hero.parryCd = E.PARRY_CD; ev(c, { k: 'parryOn' }); return true;
+  };
+  E.setStance = function (s) { var run = S.run; if (!run) return null; run.stance = s || (run.stance === 'a' ? 'd' : run.stance === 'd' ? 'n' : 'a'); return run.stance; };
+  E.hitWeak = function (i) {
+    var run = S.run, c = run && run.combat; if (!c || c.over || !c.weak) return false;
+    var e = c.enemies[i]; if (!e || e.dead || e.id !== c.weak.id) return false;
+    c.weak = null; c.weakT = rf(5, 9); ev(c, { k: 'weakhit', id: e.id });
+    hit(run, c, e, 2.5 * (1 + run.stats.weakP / 100), { crit: true }); if (!e.dead) e.st.vuln = Math.max(e.st.vuln || 0, 3); ug(run, 12);
+    if (c.over) finish(run, c);
+    return true;
+  };
+  E.useUlt = function () {
+    var run = S.run, c = run && run.combat; if (!c || c.over || (run.ult || 0) < 100) return false;
+    var h = c.hero, st = run.stats, u = E.hero(run.hero).ult, all = alive(c), n, tg;
+    run.ult = 0; ev(c, { k: 'ult', name: u.name, sfx: u.sfx });
+    switch (run.hero) {
+      case 'chevalier': h.invuln = 4; all.forEach(function (x) { hit(run, c, x, 4, { ult: 1 }); }); break;
+      case 'pyro': for (n = 0; n < 6; n++) { var al = alive(c); if (!al.length) break; tg = pick(al); hit(run, c, tg, 1.6, { ult: 1 }); } alive(c).forEach(function (x) { applyDot(run, x, 'burn'); }); break;
+      case 'assassin': for (n = 0; n < 8; n++) { var al2 = alive(c); if (!al2.length) break; hit(run, c, pick(al2), 0.9, { ult: 1, crit: true }); } break;
+      case 'necro': var tot = 0; all.forEach(function (x) { tot += hit(run, c, x, 4, { ult: 1 }); }); heroHeal(run, c, tot * 0.5); h.skel = Math.min(3 + st.skel, h.skel + 2); break;
+      case 'berserker': h.buffs.spd = { t: 6, v: 100 }; h.buffs.ls = { t: 6, v: 20 }; h.buffs.undying = { t: 4, v: 1 }; break;
+      case 'pretresse': heroHeal(run, c, st.hp, true); h.shield = Math.max(h.shield, st.hp * 0.3); h.shieldT = 8; delete h.st.poison; delete h.st.burn; delete h.st.bleed; all.forEach(function (x) { stun(c, x, 2); }); break;
+    }
+    if (c.over) finish(run, c);
+    return true;
+  };
   E.usePotion = function () {
     var run = S.run, c = run && run.combat; if (!run || run.potions <= 0 || run.hp >= run.stats.hp) return false;
     if (c && c.over) return false;
@@ -690,6 +738,8 @@
   function autoPlay(run, c) {
     var h = c.hero, hero = E.hero(run.hero), frac = run.hp / run.stats.hp;
     var charging = c.enemies.some(function (e) { return !e.dead && e.charge; });
+    if (h.parryCd <= 0 && c.enemies.some(function (e) { return !e.dead && e.charge && e.charge.t < 0.6; })) E.parry();
+    if ((run.ult || 0) >= 100 && (frac < 0.6 || alive(c).length > 1 || c.boss || c.t > 4)) { if (E.useUlt()) return; }
     for (var i = 0; i < 3; i++) {
       if (h.cds[i] > 0 || !E.skillUnlocked(run.hero, i)) continue;
       var id = hero.skills[i].id;
@@ -718,6 +768,9 @@
     if (h.st.weak > 0) h.st.weak -= dt;
     if (c.over) return finish(run, c);
     for (i = 0; i < 3; i++) if (h.cds[i] > 0) h.cds[i] -= dt;
+    if (h.parryT > 0) h.parryT -= dt; if (h.parryCd > 0) h.parryCd -= dt; if (h.invuln > 0) h.invuln -= dt;
+    if (c.weak) { c.weak.t -= dt; var we = null; c.enemies.forEach(function (x) { if (x.id === c.weak.id) we = x; }); if (c.weak.t <= 0 || !we || we.dead) { c.weak = null; c.weakT = rf(5, 9); } }
+    else { c.weakT -= dt; if (c.weakT <= 0) { var al0 = alive(c); if (al0.length) { c.weak = { id: pick(al0).id, t: 2.6 }; ev(c, { k: 'weak', id: c.weak.id }); } } }
     if (S.settings.auto) autoPlay(run, c);
     if (c.over) return finish(run, c);
     // héros : attaque

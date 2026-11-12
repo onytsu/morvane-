@@ -217,3 +217,34 @@ h3 { font-size: 15px; }
 @keyframes beam { to { transform: scaleY(1.25); opacity: 1; } }
 @media (max-height: 640px) { .skb { width: 58px; height: 58px; } .hero-stage { height: 160px; } .hero-stage .spr { width: 110px; height: 110px; } }
 @media (prefers-reduced-motion: reduce) { * { animation-duration: .01s !important; } }
+
+/* --- v1.1 : sélection des héros, sets, décors, parade, ultime, points faibles --- */
+.roster { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 8px; }
+.rh { position: relative; aspect-ratio: 1; border-radius: 10px; border: 2px solid var(--line); background: #130f18; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.rh img { width: 82%; height: 82%; } .rh.on { border-color: var(--gold); box-shadow: 0 0 10px #d9a44177; background: #2a1d2c; }
+.rh.lk img { filter: brightness(.55) grayscale(1); opacity: .7; } .rh span { position: absolute; font-size: 15px; }
+.hero-stage .nav { z-index: 4; } .hero-stage .lock { z-index: 2; padding: 20px 50px; }
+.item .sm { position: absolute; left: 50%; bottom: -1px; transform: translateX(-50%); font-size: 9px; color: #6dffb0; text-shadow: 0 0 4px #000, 0 0 6px #2bd67b; }
+.setbox { margin-top: 8px; padding: 8px 10px; border-radius: 10px; border: 1px solid #2f6b4c; background: #12201a; }
+.setbox > b { color: #6dffb0; } .setbox .sb { display: flex; gap: 8px; align-items: baseline; font-size: 12.5px; color: #7c8a82; padding: 1px 0; }
+.setbox .sb i { font-style: normal; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; border: 1px solid currentColor; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex: none; }
+.setbox .sb.on { color: #6dffb0; font-weight: 600; }
+.arena.hasbg { background-size: cover; background-position: center bottom; background-repeat: no-repeat; image-rendering: pixelated; }
+.arena.hasbg::before { display: none; }
+.arena.hasbg::after { background: radial-gradient(ellipse at 50% 45%, transparent 35%, #000a 100%), linear-gradient(#0006, transparent 25%); }
+.unit.hero.parry img { filter: drop-shadow(0 0 10px #bfe3ff) drop-shadow(0 0 4px #fff) brightness(1.25); }
+.unit.hero.invuln img { filter: drop-shadow(0 0 12px #ffd87a) brightness(1.4); } .unit.hero.undying img { filter: drop-shadow(0 0 12px #ff3b3b) saturate(1.6); }
+.wk { position: absolute; top: 46%; left: 50%; font-size: 34px; margin: -22px 0 0 -20px; display: none; pointer-events: none; filter: drop-shadow(0 0 8px #fff); }
+.unit.weak .wk { display: block; animation: wk .45s ease-in-out infinite alternate; } .unit.weak img { filter: drop-shadow(0 0 10px #fff) brightness(1.35); }
+.row2 { display: flex; gap: 8px; align-items: stretch; margin-top: 8px; }
+.act { position: relative; flex: none; width: 74px; min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 17px; line-height: 1.1; overflow: hidden; }
+.act b { font-size: 10.5px; font-weight: 700; color: var(--dim); } .act:active { transform: scale(.94); filter: brightness(1.3); }
+.act .cd { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: #000b; font-weight: 800; font-size: 17px; }
+.act.cool .cd { display: flex; } .act.alert { border-color: #ffd23c; box-shadow: 0 0 14px #ffb21f; animation: pulse .3s infinite alternate; }
+.ultb { position: relative; flex: 1; min-height: 44px; border-radius: 10px; border: 1px solid #5c4a22; background: #17110a; overflow: hidden; font-weight: 700; font-size: 13.5px; color: #a8997c; }
+.ultb i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, #6b4a12, #d9a441); transition: width .2s; }
+.ultb span { position: relative; text-shadow: 0 1px 3px #000; } .ultb.ready { border-color: #ffe9b8; color: #fff; animation: ready 0.8s ease-in-out infinite; }
+.ultb.ready i { background: linear-gradient(90deg, #d9a441, #fff1c4, #d9a441); background-size: 200% 100%; animation: sheen 1.2s linear infinite; }
+@keyframes wk { to { transform: scale(1.3); } }
+@keyframes sheen { to { background-position: -200% 0; } }
+@media (max-height: 700px) { .row2 { margin-top: 6px; } .act, .ultb { min-height: 38px; } }
