@@ -13,4 +13,12 @@ const html = `<!doctype html>
 <script>${js}</script></body></html>`;
 fs.mkdirSync(path.join(R, 'dist'), { recursive: true });
 fs.writeFileSync(path.join(R, 'dist', 'morvane.html'), html);
+// Version pour la page d'essai claude.ai (sans <html>/<body>, ajoutés à la publication)
+const art = `<title>Morvane</title>
+<style>${rd('css/style.css')}
+:root { color-scheme: dark; --sat: 0px; --sab: 0px; } html, body { height: 100%; } #app { height: 100%; }</style>
+<div id="app"><div id="screen"></div><div id="overlay"></div><div id="modal"></div><div id="toasts"></div><div id="flash"></div></div>
+<script>window.AUDIO_EMBED=${JSON.stringify(emb)};</script>
+<script>${js}</script>`;
+fs.writeFileSync(path.join(R, 'dist', 'morvane-artifact.html'), art);
 console.log('dist/morvane.html', (html.length / 1048576).toFixed(2), 'Mo');
