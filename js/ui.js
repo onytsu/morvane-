@@ -68,6 +68,7 @@ var UI = (function () {
     $('#screen').innerHTML = '<div class="splash">' + spr('logo') + '<h1>MORVANE</h1><div class="dim" style="font-family:var(--serif);letter-spacing:.2em">LES CENDRES DU ROI CREUX</div>' +
       '<button class="btn primary big" data-act="enter" style="max-width:300px;margin-top:18px">' + (S().stats.runs ? 'CONTINUER' : 'COMMENCER') + '</button>' +
       '<div class="tiny dim" style="margin-top:10px">Sauvegarde automatique · jouable hors-ligne</div></div>';
+    if (typeof FX !== 'undefined') FX.attach($('.splash'), { ambient: 'embers', warm: 3 });
   }
   ACT.enter = function () {
     SND.unlock(); SND.play('door');
@@ -92,6 +93,7 @@ var UI = (function () {
     var body = { hero: tabHero, sac: tabSac, autel: tabAutel, pactes: tabPactes, faits: tabFaits }[st.tab]();
     $('#screen').innerHTML = '<div class="topbar"><span class="title grow">MORVANE</span><span class="cur ash">🔥 ' + E.fmt(S().cendres) + '</span><span class="cur ess">💠 ' + E.fmt(S().essence) + '</span><button class="icon-btn" data-act="settings">⚙️</button></div>' +
       '<div class="content" id="content">' + body + '</div><div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (st.tab === t[0] ? ' on' : '') + '" data-act="tab" data-tab="' + t[0] + '"><span class="ti">' + t[1] + '</span>' + t[2] + (t[3] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
+    if (st.tab === 'hero' && typeof FX !== 'undefined') FX.attach($('.hero-stage'), { ambient: 'embers', fire: { x: 0.82, y: 0.76 }, warm: 2 });
     flushAch();
   }
   function pactFree() { var hs = S().heroes[S().hero]; return S().pacts.length > hs.pacts.length && hs.pacts.length < E.pactSlots(S().hero); }
@@ -101,7 +103,9 @@ var UI = (function () {
   function tabHero() {
     var h = E.hero(st.view), un = E.heroUnlocked(h.id), hs = S().heroes[h.id], html = '';
     html += '<div class="roster">' + D.HEROES.map(function (x) { var u = E.heroUnlocked(x.id); return '<button class="rh' + (x.id === h.id ? ' on' : '') + (u ? '' : ' lk') + '" data-act="heroPick" data-id="' + x.id + '">' + spr(x.id) + (u ? '' : '<span>🔒</span>') + '</button>'; }).join('') + '</div>';
-    html += '<div class="hero-stage"><div class="floorglow"></div><div class="name"><b>' + h.name + '</b><div class="small gold">' + h.title + '</div></div>' + spr(h.id, 'spr');
+    var aura = -1; if (un) { for (var asl in hs.equip) { var ait = E.findItem(hs.equip[asl]); if (ait && ait.rar > aura) aura = ait.rar; } }
+    var sprH = spr(h.id, 'spr'); if (aura >= 2) sprH = sprH.replace('<img', '<img style="filter:drop-shadow(0 0 9px ' + D.RARITIES[aura].color + ') drop-shadow(0 6px 6px #000a)"');
+    html += '<div class="hero-stage"><div class="fireglow"></div><div class="floorglow"></div><div class="name"><b>' + h.name + '</b><div class="small gold">' + h.title + '</div></div>' + sprH;
     html += '<button class="nav l" data-act="heroNav" data-d="-1">‹</button><button class="nav r" data-act="heroNav" data-d="1">›</button>';
     if (un) {
       html += '<div class="mast">Maîtrise <b class="gold">' + hs.lvl + '</b><div class="bar" style="width:90px"><i style="width:' + Math.min(100, hs.xp / E.masteryNeed(hs.lvl) * 100) + '%"></i></div></div><div class="pwr">⚡ ' + E.fmt(E.power(h.id)) + '</div>';
@@ -269,7 +273,7 @@ var UI = (function () {
       '<div class="card small dim" style="margin-top:12px">💾 La partie se sauvegarde toute seule sur cet appareil, à chaque salle. Pour la mettre à l’abri ou la passer sur un autre appareil, copie le code ci-dessous.</div>' +
       '<div class="btns"><button class="btn" data-act="export">📤 Copier ma sauvegarde</button><button class="btn" data-act="importAsk">📥 Coller une sauvegarde</button></div>' +
       (S().run ? '<div class="btns"><button class="btn" data-act="abandonAsk">🏳️ Abandonner la descente</button></div>' : '') +
-      '<div class="btns"><button class="btn" data-act="resetAsk" style="color:var(--blood)">Tout effacer</button><button class="btn primary" data-act="close">Fermer</button></div><div class="tiny dim center" style="margin-top:8px">Morvane v1.2</div>');
+      '<div class="btns"><button class="btn" data-act="resetAsk" style="color:var(--blood)">Tout effacer</button><button class="btn primary" data-act="close">Fermer</button></div><div class="tiny dim center" style="margin-top:8px">Morvane v1.3</div>');
   };
   ACT.setSfx = function () { var s = S().settings; s.sfx = !s.sfx; SND.set('sfx', s.sfx); E.save(); ACT.settings(); };
   ACT.setMusic = function () { var s = S().settings; s.music = !s.music; SND.set('music', s.music); E.save(); ACT.settings(); };

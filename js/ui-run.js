@@ -2,7 +2,7 @@
 UI.run = (function () {
   'use strict';
   var E = ENGINE, D = DATA, $ = UI.$, S = UI.S, ACT = UI.ACT;
-  var running = false, paused = false, last = 0, shownPhase = null, phaseTimer = null, els = {}, posOf = {}, floats = 0, built = null;
+  var running = false, paused = false, last = 0, shownPhase = null, phaseTimer = null, els = {}, posOf = {}, floats = 0, built = null, fxL = null, lootShown = 0, combo = 0, comboT = null;
   var POS = [{ r: 24, b: 20 }, { r: 2, b: 30 }, { r: 42, b: 36 }, { r: 12, b: 48 }, { r: 40, b: 8 }];
   var BPOS = [{ r: 1, b: 20 }, { r: 47, b: 10 }, { r: 44, b: 44 }, { r: 60, b: 28 }];
   var BRAR = ['Commune', 'Rare', 'Épique', 'Légendaire'];
@@ -36,8 +36,9 @@ UI.run = (function () {
     var run = S().run, c = run.combat, z = E.zoneOf(run.floor), a = $('#arena');
     a.style.setProperty('--z1', z.bg[0]); a.style.setProperty('--z2', z.bg[1]); a.style.setProperty('--zc', z.color);
     if (typeof Backgrounds !== 'undefined') { a.style.backgroundImage = 'url(' + Backgrounds.url(z.id) + ')'; a.classList.add('hasbg'); }
-    a.innerHTML = '<div class="unit hero" id="uhero">' + UI.spr(run.hero) + '</div><div class="minions" id="minions"></div>';
-    els = {}; posOf = {}; floats = 0;
+    a.innerHTML = '<div class="unit hero" id="uhero">' + UI.spr(run.hero) + '</div><div class="minions" id="minions"></div><div class="combo" id="combo"></div>';
+    els = {}; posOf = {}; floats = 0; lootShown = 0; combo = 0;
+    fxL = typeof FX !== 'undefined' ? FX.attach(a, { ambient: ['dust', 'leaves', 'fireflies', 'gold', 'embers', 'void'][z.id - 1], warm: 2 }) : null;
     if (c) { c.enemies.forEach(function (e, i) { if (!e.dead) addEnemy(e, i, false); }); built = c; }
     else built = 'empty';
   }
@@ -62,6 +63,34 @@ UI.run = (function () {
     a.appendChild(f); floats++;
     setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); floats--; }, 800);
   }
+  // --- petits effets ---
+  function center(el) { var a = $('#arena'); if (!el || !a) return null; var ar = a.getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left - ar.left + r.width / 2, y: r.top - ar.top + r.height * 0.55, w: ar.width, h: ar.height, b: r.bottom - ar.top }; }
+  function fxAt(el, kind, n) { if (!fxL) return; var p = center(el); if (p) FX.burst(fxL, p.x, p.y, kind, n); }
+  function slash(el, crit) {
+    var p = center(el), a = $('#arena'); if (!p || floats > 28) return;
+    var s = document.createElement('i'); s.className = 'slash' + (crit ? ' crit' : ''); s.style.left = p.x + 'px'; s.style.top = p.y + 'px'; s.style.setProperty('--rot', (Math.random() * 100 - 50) + 'deg');
+    a.appendChild(s); setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 240);
+  }
+  function comboUp() {
+    combo++; var c = $('#combo'); if (!c) return;
+    if (combo >= 5) { c.textContent = 'COMBO x' + combo; c.className = 'combo on' + (combo >= 50 ? ' c3' : combo >= 20 ? ' c2' : ''); c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); }
+    clearTimeout(comboT); comboT = setTimeout(comboBreak, 3500);
+  }
+  function comboBreak() { combo = 0; var c = $('#combo'); if (c) c.className = 'combo'; }
+  function souls(el, n, coins) {
+    var p = center(el); if (!p || !fxL) return;
+    FX.fly(fxL, p.x, p.y, p.w - 50, -6, 'burn', n); FX.fly(fxL, p.x, p.y, p.w - 135, -6, 'gold', coins);
+    setTimeout(function () { anim($('#rcend'), 'bump', 300); anim($('#rgold'), 'bump', 300); }, 650);
+  }
+  function dropGems(c, el) {
+    var p = center(el), a = $('#arena'); if (!p || !a) return;
+    c.drops.slice(lootShown).forEach(function (g, i) {
+      var d = document.createElement('i'); d.className = 'gem r' + g.item.rar; d.style.left = (p.x - 8 + (i - 0.5) * 22 + Math.random() * 10) + 'px'; d.style.top = (p.b - 26 + Math.random() * 8) + 'px';
+      a.appendChild(d); if (g.item.rar >= 3) fxAt(el, g.item.rar >= 4 ? 'crit' : 'star', 14);
+    });
+    if (c.drops.length > lootShown) SND.play('loot', 0.7);
+    lootShown = c.drops.length;
+  }
   function anim(el, cls, ms) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(function () { el.classList.remove(cls); }, ms || 260); }
   function banner(big, small) { var a = $('#arena'); if (!a) return; var b = document.createElement('div'); b.className = 'banner'; b.innerHTML = (small ? '<small>' + small + '</small>' : '') + big; a.appendChild(b); setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 2000); }
   function tuto(key, msg) { if (S().tuto[key]) return; S().tuto[key] = 1; UI.toast(msg, true); }
@@ -76,6 +105,7 @@ UI.run = (function () {
         case 'dmg':
           if (e.sh) { floatAt(el, 'Bouclier', 'txt'); break; }
           floatAt(el, E.fmt(e.v), e.crit ? 'crit' : e.dot ? 'dot' : '');
+          fxAt(el, e.crit ? 'crit' : e.dot || 'hit', e.crit ? 12 : e.dot ? 3 : 6); if (!e.dot) { slash(el, e.crit); comboUp(); }
           if (!e.dot) { anim(el, 'hit', 220); SND.play(e.crit ? 'crit' : 'hit'); if (e.crit && e.skill) anim($('#arena'), 'shake', 250); }
           break;
         case 'miss': floatAt(el, 'Esquive', 'txt'); break;
@@ -84,30 +114,31 @@ UI.run = (function () {
         case 'hurt':
           if (e.sh) { floatAt(hero, 'Absorbé', 'txt'); SND.play('block', 0.5); break; }
           floatAt(hero, '-' + E.fmt(e.v), e.big ? 'big' : e.dot ? 'dot' : 'hurt');
+          fxAt(hero, e.dot && e.dot !== 'thorns' ? e.dot : 'blood', e.big ? 18 : e.dot ? 3 : 6); if (e.big) comboBreak();
           if (!e.dot) { anim(hero, 'hit', 250); SND.play(e.block ? 'block' : 'hurt'); }
           if (e.big) { anim($('#arena'), 'shake', 250); UI.flash('#c2283a55'); }
           if (run.hp / run.stats.hp < 0.4 && run.potions > 0) tuto('potion', '🧪 PV bas ! Touche la <b>fiole rouge</b> pour te soigner.');
           break;
         case 'dodge': floatAt(hero, 'Esquive !', 'txt'); break;
-        case 'heal': if (e.v > run.stats.hp * 0.02) floatAt(hero, '+' + E.fmt(e.v), 'heal'); break;
-        case 'skill': SND.play(e.sfx); floatAt(hero, e.name, 'txt'); anim(hero, 'atk', 220); break;
+        case 'heal': if (e.v > run.stats.hp * 0.02) { floatAt(hero, '+' + E.fmt(e.v), 'heal'); fxAt(hero, 'heal', 7); } break;
+        case 'skill': SND.play(e.sfx); floatAt(hero, e.name, 'txt'); anim(hero, 'atk', 220); fxAt(hero, 'gold', 10); break;
         case 'potion': SND.play('potion'); break;
-        case 'die': if (el) { el.classList.add('dead'); el.classList.remove('charging'); } SND.play(e.boss ? 'boss_die' : 'die'); if (e.boss) { UI.flash('#ffffffaa'); anim($('#arena'), 'shake', 250); } break;
+        case 'die': if (el) { fxAt(el, 'death', e.boss ? 45 : 18); souls(el, e.boss ? 12 : 3, e.boss ? 10 : 3); dropGems(c, el); el.classList.add('dead'); el.classList.remove('charging'); } SND.play(e.boss ? 'boss_die' : 'die'); if (e.boss) { UI.flash('#ffffffaa'); anim($('#arena'), 'shake', 250); } break;
         case 'charge': tuto('charge', '⚠️ <b>Attaque chargée !</b> Touche <b>🤺 Parer</b> juste avant le coup pour l’annuler et riposter. Un étourdissement l’interrompt aussi.'); break;
         case 'interrupt': floatAt(el, 'Interrompu !', 'txt'); break;
         case 'enrage': floatAt(el, 'ENRAGÉ', 'big'); break;
         case 'summon': var idx = -1; c.enemies.forEach(function (x, j) { if (x.id === e.id) idx = j; }); if (idx >= 0) { addEnemy(c.enemies[idx], idx, true); floatAt(els[e.id], 'Invoqué', 'txt'); } break;
         case 'eheal': floatAt(el, 'Soin', 'heal'); break;
         case 'eshield': floatAt(el, 'Bouclier', 'txt'); break;
-        case 'revive': UI.flash('#ffe9b8cc'); SND.play('skill_holy'); banner('RESSUSCITÉ', ''); break;
+        case 'revive': fxAt(hero, 'gold', 40); UI.flash('#ffe9b8cc'); SND.play('skill_holy'); banner('RESSUSCITÉ', ''); break;
         case 'fury': UI.toast('🌑 Les ténèbres se referment : les ennemis frappent de plus en plus fort !'); break;
         case 'explode': UI.flash('#9aa04a55'); break;
         case 'dead': SND.play('death'); UI.flash('#000000dd'); break;
         case 'parryOn': anim(hero, 'parry', 1000); SND.play('equip'); break;
-        case 'parry': if (e.perfect) { floatAt(hero, 'PARADE PARFAITE !', 'crit'); UI.flash('#ffe9b888'); SND.play('block'); anim($('#arena'), 'shake', 250); } else { floatAt(hero, 'Paré', 'txt'); SND.play('block', 0.6); } break;
-        case 'ult': banner(e.name.toUpperCase(), 'ULTIME'); UI.flash('#d9a441aa'); SND.play(e.sfx); SND.play('levelup', 0.6); anim($('#arena'), 'shake', 250); break;
+        case 'parry': if (e.perfect) { fxAt(hero, 'ice', 24); floatAt(hero, 'PARADE PARFAITE !', 'crit'); UI.flash('#ffe9b888'); SND.play('block'); anim($('#arena'), 'shake', 250); } else { floatAt(hero, 'Paré', 'txt'); SND.play('block', 0.6); } break;
+        case 'ult': fxAt(hero, 'gold', 45); fxAt(hero, 'crit', 25); banner(e.name.toUpperCase(), 'ULTIME'); UI.flash('#d9a441aa'); SND.play(e.sfx); SND.play('levelup', 0.6); anim($('#arena'), 'shake', 250); break;
         case 'weak': tuto('weak', '🎯 <b>Point faible !</b> Touche vite l’ennemi marqué d’une cible pour un coup critique énorme.'); break;
-        case 'weakhit': floatAt(el, 'POINT FAIBLE !', 'crit'); anim($('#arena'), 'shake', 250); break;
+        case 'weakhit': fxAt(el, 'star', 22); floatAt(el, 'POINT FAIBLE !', 'crit'); anim($('#arena'), 'shake', 250); break;
         case 'win': break;
       }
     }
@@ -345,6 +376,7 @@ UI.run = (function () {
       '<button class="btn goldb wide" data-act="deathBest" style="margin-bottom:8px">⚡ Équiper le meilleur</button>' +
       '<div class="btns" style="margin-top:0"><button class="btn" data-act="toHub">🏰 Sanctuaire</button><button class="btn primary" data-act="again" data-z="' + startZone + '">⚔️ RELANCER</button></div><div style="height:20px"></div></div>';
     $('#screen').innerHTML = html;
+    if (typeof FX !== 'undefined') FX.attach($('#screen'), { ambient: 'ash', warm: 4 });
     if (sum.record) setTimeout(function () { SND.play('levelup'); }, 500);
     UI.flushAch();
     var metaOk = D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; });

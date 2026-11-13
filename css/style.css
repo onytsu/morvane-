@@ -248,3 +248,29 @@ h3 { font-size: 15px; }
 @keyframes wk { to { transform: scale(1.3); } }
 @keyframes sheen { to { background-position: -200% 0; } }
 @media (max-height: 700px) { .row2 { margin-top: 6px; } .act, .ultb { min-height: 38px; } }
+
+/* --- v1.3 : petits effets visuels --- */
+.fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; image-rendering: pixelated; image-rendering: crisp-edges; z-index: 8; }
+.hero-stage .fx { z-index: 1; } .hero-stage .spr, .hero-stage .name { z-index: 2; } .splash { position: relative; } .splash > *:not(.fx) { position: relative; z-index: 9; }
+.unit::before { content: ''; position: absolute; left: 12%; right: 12%; bottom: 6px; height: 14px; border-radius: 50%; background: radial-gradient(#000c, transparent 70%); z-index: -1; pointer-events: none; }
+.slash { position: absolute; width: 74px; height: 5px; margin: -2px 0 0 -37px; background: linear-gradient(90deg, transparent, #fff 45%, #fff 55%, transparent); border-radius: 3px; pointer-events: none; z-index: 11; transform: rotate(var(--rot, -30deg)) scaleX(.2); opacity: 0; animation: slash .2s ease-out; filter: drop-shadow(0 0 4px #fff); }
+.slash.crit { width: 110px; margin-left: -55px; height: 7px; background: linear-gradient(90deg, transparent, #ffd23c 40%, #fff 50%, #ffd23c 60%, transparent); filter: drop-shadow(0 0 6px #ffb21f); }
+.combo { position: absolute; left: 10px; top: 10px; z-index: 12; font-family: var(--serif); font-weight: 700; font-size: 15px; letter-spacing: .08em; color: #e8dfd2; text-shadow: 0 2px 3px #000, 0 0 8px #000; opacity: 0; pointer-events: none; transform-origin: left center; }
+.combo.on { opacity: .9; } .combo.c2 { color: #ffd23c; font-size: 18px; } .combo.c3 { color: #ff5a1f; font-size: 21px; text-shadow: 0 2px 3px #000, 0 0 12px #ff5a1f; }
+.combo.pop { animation: combopop .18s ease-out; }
+.gem { position: absolute; width: 13px; height: 13px; z-index: 6; pointer-events: none; background: var(--rc); border: 2px solid #fff8; transform: rotate(45deg); box-shadow: 0 0 10px var(--rc), 0 0 3px #fff; animation: gemdrop .45s cubic-bezier(.3, 1.6, .5, 1) backwards, gemshine 1.2s ease-in-out .45s infinite alternate; }
+.gem.r3::after, .gem.r4::after, .gem.r5::after { content: ''; position: absolute; left: 50%; bottom: 50%; width: 6px; height: 120px; margin-left: -3px; background: linear-gradient(transparent, var(--rc)); transform: rotate(-45deg); transform-origin: bottom center; filter: blur(2px); opacity: .7; }
+.bump { animation: bump .3s ease-out; }
+.fireglow { position: absolute; right: 1%; bottom: 8%; width: 34%; height: 62%; background: radial-gradient(ellipse at 50% 88%, #ff8a3c55, #ff5a1f22 40%, transparent 70%); animation: flicker 1.7s ease-in-out infinite; pointer-events: none; }
+[data-act=descend], [data-act=resume] { animation: callpulse 2.2s ease-in-out infinite; }
+.splash h1 { animation: titleglow 3s ease-in-out infinite; }
+.lootc .item { animation: glow 2s ease-in-out infinite, lootspin .5s ease-out backwards; }
+@keyframes slash { 0% { opacity: 0; transform: rotate(var(--rot, -30deg)) scaleX(.2); } 35% { opacity: 1; transform: rotate(var(--rot, -30deg)) scaleX(1); } 100% { opacity: 0; transform: rotate(var(--rot, -30deg)) scaleX(1.25); } }
+@keyframes combopop { 0% { transform: scale(1.35); } 100% { transform: scale(1); } }
+@keyframes gemdrop { 0% { transform: translateY(-46px) rotate(45deg) scale(.4); opacity: 0; } 100% { transform: rotate(45deg); opacity: 1; } }
+@keyframes gemshine { to { box-shadow: 0 0 18px var(--rc), 0 0 6px #fff; filter: brightness(1.35); } }
+@keyframes bump { 40% { transform: scale(1.3); filter: brightness(1.6); } }
+@keyframes flicker { 0%, 100% { opacity: .85; transform: scale(1); } 30% { opacity: 1; transform: scale(1.06); } 55% { opacity: .7; transform: scale(.97); } 80% { opacity: .95; transform: scale(1.03); } }
+@keyframes callpulse { 0%, 100% { box-shadow: 0 0 18px #c2283a55; } 50% { box-shadow: 0 0 34px #ff4a5fcc, 0 0 8px #ffb3b3; } }
+@keyframes titleglow { 50% { text-shadow: 0 0 40px #ff5a1f, 0 3px 0 #000; } }
+@keyframes lootspin { from { transform: rotateY(90deg) scale(.6); } }
