@@ -185,6 +185,17 @@ var DATA = (function () {
     { id: 'o_duel', name: 'Loi du duel', icon: '🤺', desc: 'Parade : riposte +200 %. Points faibles : +100 % dégâts. Mais -10 % PV max.', mods: { parryP: 200, weakP: 100, hpP: -10 } }
   ];
 
+  // ---------- Talents : 1 point par niveau de Maîtrise, 5 rangs par talent. mods = bonus par rang ----------
+  var TALENTS = {
+    chevalier: [['t_k1', 'Mur', '🧱', { block: 3 }], ['t_k2', 'Colosse', '❤️', { hpP: 5 }], ['t_k3', 'Bouclier clouté', '🛡️', { s1P: 15 }], ['t_k4', 'Juge', '⚔️', { s2P: 15 }], ['t_k5', 'Garde haute', '🤺', { parryP: 30 }], ['t_k6', 'Bastion', '🏰', { ultP: 10 }]],
+    pyro: [['t_p1', 'Brasier', '🔥', { burnP: 15 }], ['t_p2', 'Érudite', '📖', { pow: 6 }], ['t_p3', 'Pyromane', '☄️', { s1P: 15 }], ['t_p4', 'Onde de choc', '💥', { s2P: 15 }], ['t_p5', 'Concentration', '⏳', { cdr: 3 }], ['t_p6', 'Embrasement', '🌋', { ultP: 10 }]],
+    assassin: [['t_a1', 'Œil vif', '🎯', { crit: 2 }], ['t_a2', 'Cruel', '🩸', { critd: 10 }], ['t_a3', 'Venin', '🐍', { poisonP: 15 }], ['t_a4', 'Fantôme', '💨', { dodge: 2 }], ['t_a5', 'Point vital', '🔪', { weakP: 25 }], ['t_a6', 'Exécuteur', '☠️', { s3P: 15 }]],
+    necro: [['t_n1', 'Fosse commune', '🦴', { skelP: 15 }], ['t_n2', 'Sangsue', '🧛', { s2P: 15 }], ['t_n3', 'Chair morte', '❤️', { hpP: 5 }], ['t_n4', 'Nécrologue', '📖', { pow: 6 }], ['t_n5', 'Moissonneur', '🍖', { killHeal: 1 }], ['t_n6', 'Légion', '💀', { ultP: 10 }]],
+    berserker: [['t_b1', 'Rage', '💪', { atkP: 4 }], ['t_b2', 'Hémorragie', '🩸', { bleedP: 15 }], ['t_b3', 'Soif', '🧛', { ls: 1 }], ['t_b4', 'Peau tannée', '❤️', { hpP: 5 }], ['t_b5', 'Frénésie', '🥁', { spdP: 3 }], ['t_b6', 'Carnage', '😡', { ultP: 10 }]],
+    pretresse: [['t_s1', 'Ferveur', '🙏', { healP: 8 }], ['t_s2', 'Sainteté', '❤️', { hpP: 5 }], ['t_s3', 'Fouet sacré', '✨', { s1P: 15 }], ['t_s4', 'Colère', '⚡', { s3P: 15 }], ['t_s5', 'Grâce', '🌿', { regen: 0.2 }], ['t_s6', 'Miracle', '🌟', { ultP: 10 }]]
+  };
+  for (var th in TALENTS) TALENTS[th] = TALENTS[th].map(function (t) { return { id: t[0], name: t[1], icon: t[2], mods: t[3], max: 5 }; });
+
   // ---------- Préfixes de monstres (rendent les combats différents) ----------
   var MOBFIX = [
     { id: 'vamp', name: 'vampirique', ab: { leech: 70 } }, { id: 'feu', name: 'enflammé', ab: { burn: 60 } },
@@ -214,7 +225,7 @@ var DATA = (function () {
   var CONTRACTS = [
     ['kills', 40, 'Tue 40 ennemis'], ['kills', 90, 'Tue 90 ennemis'], ['elites', 3, 'Vaincs 3 élites'], ['bosses', 1, 'Vaincs un boss'],
     ['chests', 2, 'Ouvre 2 coffres'], ['items', 8, 'Trouve 8 objets'], ['runs', 3, 'Lance 3 descentes'], ['upgrades', 3, 'Améliore 3 fois un objet'],
-    ['weak', 10, 'Touche 10 points faibles'], ['parry', 3, 'Réussis 3 parades parfaites'], ['ult', 5, 'Lance 5 ultimes'], ['arenes', 1, 'Gagne une arène']
+    ['weak', 10, 'Touche 10 points faibles'], ['parry', 3, 'Réussis 3 parades parfaites'], ['ult', 5, 'Lance 5 ultimes'], ['fusions', 2, 'Fusionne des objets 2 fois'], ['arenes', 1, 'Gagne une arène']
   ];
 
   // ---------- Zones et ennemis ----------
@@ -474,6 +485,7 @@ var DATA = (function () {
     { id: 'h_et75', name: "Enfant de l'Abîme", desc: "Atteindre l'étage 75", c: ['best', 75], cendres: 20000 },
     { id: 'h_et120', name: 'Au-delà', desc: "Atteindre l'étage 120", c: ['best', 120], cendres: 100000 },
     { id: 'h_elite', name: "Tueur d'élites", desc: 'Vaincre 25 élites', c: ['elites', 25], cendres: 500 },
+    { id: 'h_fusion', name: 'Alchimiste', desc: 'Fusionner des objets 10 fois', c: ['fusions', 10], cendres: 400 },
     { id: 'h_forge', name: 'Forgeron', desc: 'Améliorer des objets 20 fois', c: ['upgrades', 20], cendres: 300 },
     { id: 'h_epic', name: 'Lueur violette', desc: 'Trouver 10 objets épiques', c: ['epic', 10], cendres: 400 },
     { id: 'h_runs', name: 'Habitué', desc: 'Lancer 25 descentes', c: ['runs', 25], cendres: 500 },
@@ -532,7 +544,7 @@ var DATA = (function () {
 
   return {
     RARITIES: RARITIES, MODS: MODS, HEROES: HEROES, ENEMIES: ENEMIES, ZONES: ZONES, SLOTS: SLOTS, BASES: BASES,
-    SETS: SETS, OMENS: OMENS, MOBFIX: MOBFIX, CONDS: CONDS, ALLIES: ALLIES, CONTRACTS: CONTRACTS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
+    SETS: SETS, OMENS: OMENS, TALENTS: TALENTS, MOBFIX: MOBFIX, CONDS: CONDS, ALLIES: ALLIES, CONTRACTS: CONTRACTS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
     PACTS: PACTS, ACHIEVEMENTS: ACHIEVEMENTS, EVENTS: EVENTS, ROOMS: ROOMS, ALTARS: ALTARS
   };
 })();

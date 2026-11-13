@@ -17,7 +17,7 @@ UI.run = (function () {
       '<div class="arena" id="arena"></div>' +
       '<div class="hud"><div class="hpbar" id="hpbar"><i></i><u></u><span></span></div><div class="xprow"><b id="rlvl"></b><div class="bar"><i id="xpbar"></i></div><span class="hsts" id="hsts"></span></div>' +
       '<div class="skills">' + h.skills.map(function (k, i) { return '<button class="skb" id="sk' + i + '" data-act="skill" data-i="' + i + '"><span class="e">' + k.icon + '</span><span class="cd"></span><span class="n"></span></button>'; }).join('') +
-      '<button class="skb potion" id="pot" data-act="potion">🧪<span class="cnt"></span></button><div class="side"><button class="tog" id="tauto" data-act="auto">AUTO</button><button class="tog" id="tspd" data-act="speed"></button></div></div>' +
+      '<button class="skb potion" id="pot" data-act="potion">🧪<span class="cnt"></span></button><div class="side"><button class="tog" id="tauto" data-act="auto">AUTO</button><button class="tog" id="tspd" data-act="speed"></button><button class="tog help" data-act="help">? Aide</button></div></div>' +
       '<div class="row2"><button class="act" id="bparry" data-act="parry"><span class="ai">🤺</span><b>Parer</b><span class="cd"></span></button>' +
       '<button class="ultb" id="bult" data-act="ult"><i></i><span>' + h.ult.icon + ' ' + h.ult.name + '</span></button>' +
       '<button class="act" id="bstance" data-act="stance"><span class="ai"></span><b></b></button></div>' +
@@ -119,7 +119,7 @@ UI.run = (function () {
     for (i = 0; i < evs.length; i++) {
       e = evs[i]; el = e.id ? els[e.id] : null;
       switch (e.k) {
-        case 'start': SND.music(zoneMusic(run)); intro(run); tuto('skill', '👆 Ton héros frappe tout seul. Touche un <b>pouvoir</b> dès qu’il brille !'); break;
+        case 'start': SND.music(zoneMusic(run)); intro(run); if (!S().tuto['help_' + run.hero]) { S().tuto['help_' + run.hero] = 1; helpSheet(true); } tuto('skill', '👆 Ton héros frappe tout seul. Touche un <b>pouvoir</b> dès qu’il brille !'); break;
         case 'boss': SND.music(E.zoneOf(run.floor).id === 6 ? 'final' : 'boss'); SND.play('boss_intro'); banner(c.enemies[0].name.toUpperCase(), 'BOSS'); UI.flash('#c2283a66'); break;
         case 'dmg':
           if (e.sh) { floatAt(el, 'Bouclier', 'txt'); break; }
@@ -140,7 +140,7 @@ UI.run = (function () {
           break;
         case 'dodge': floatAt(hero, 'Esquive !', 'txt'); break;
         case 'heal': if (e.v > run.stats.hp * 0.02) { floatAt(hero, '+' + E.fmt(e.v), 'heal'); fxAt(hero, 'heal', 7); } break;
-        case 'skill': SND.play(e.sfx); floatAt(hero, e.name, 'txt'); anim(hero, 'atk', 220); fxAt(hero, 'gold', 10); break;
+        case 'skill': var skd = E.hero(run.hero).skills[e.i]; if (skd) tuto('sk_' + skd.id, skd.icon + ' <b>' + skd.name + '</b> : ' + skd.desc); SND.play(e.sfx); floatAt(hero, e.name, 'txt'); anim(hero, 'atk', 220); fxAt(hero, 'gold', 10); break;
         case 'potion': SND.play('potion'); break;
         case 'die': if (el) { fxAt(el, 'death', e.boss ? 45 : 18); souls(el, e.boss ? 12 : 3, e.boss ? 10 : 3); dropGems(c, el); el.classList.add('dead'); el.classList.remove('charging'); } SND.play(e.boss ? 'boss_die' : 'die'); if (e.boss) { UI.flash('#ffffffaa'); anim($('#arena'), 'shake', 250); } break;
         case 'charge': tuto('charge', '⚠️ <b>Attaque chargée !</b> Touche <b>🤺 Parer</b> juste avant le coup pour l’annuler et riposter. Un étourdissement l’interrompt aussi.'); break;
@@ -195,7 +195,7 @@ UI.run = (function () {
     }
     var ult = Math.min(100, run.ult || 0), bu = $('#bult'), inC = c && !c.over && run.phase === 'combat';
     bu.firstChild.style.width = ult + '%'; bu.classList.toggle('ready', ult >= 100);
-    if (ult >= 100 && inC) tuto('ult', '🌟 <b>Ultime prêt !</b> Touche la grande barre dorée : c’est ton coup le plus puissant. Il se recharge en combattant.');
+    if (ult >= 100 && inC) { var hu0 = E.hero(run.hero).ult; tuto('ult_' + run.hero, '🌟 <b>Ultime prêt : ' + hu0.name + '</b><br>' + hu0.desc + '<br><span class="dim">Touche la grande barre dorée. Elle se recharge en combattant.</span>'); }
     var bp = $('#bparry'), pcd = c ? Math.max(0, c.hero.parryCd) : 0;
     bp.classList.toggle('cool', pcd > 0); bp.lastChild.textContent = pcd > 0 ? Math.ceil(pcd) : ''; bp.classList.toggle('alert', !!inC && pcd <= 0 && c.enemies.some(function (x) { return !x.dead && x.charge; }));
     var bs = $('#bstance'), stn = run.stance || 'n';
@@ -389,6 +389,27 @@ UI.run = (function () {
     h += '<div class="btns"><button class="btn" data-act="allStats">📊 Mes stats</button><button class="btn primary" data-act="close">Fermer</button></div>';
     UI.st.view = run.hero; UI.modal(h);
   };
+  // Fiche d'aide : ce que fait chaque bouton. Le combat est en pause tant qu'elle est ouverte.
+  function helpSheet(first) {
+    var run = S().run; if (!run) return; var hero = E.hero(run.hero);
+    var h = '<h2>' + (first ? 'Voici tes pouvoirs' : 'Aide') + '</h2><div class="tiny dim center" style="margin:-6px 0 10px">' + hero.name + ', ' + hero.title + ' · le combat est en pause</div>';
+    h += '<div class="li"><div class="ic">🌟</div><div class="grow"><b>' + hero.passive.name + '</b> <span class="tiny dim">passif, toujours actif</span><div class="small dim">' + hero.passive.desc + '</div></div></div>';
+    hero.skills.forEach(function (k, i) {
+      var ok = E.skillUnlocked(run.hero, i);
+      h += '<div class="li' + (ok ? '' : ' locked') + '"><div class="ic">' + (ok ? k.icon : '🔒') + '</div><div class="grow"><b>' + k.name + '</b> <span class="tiny dim">' + (ok ? 'recharge ' + k.cd + ' s' : 'se débloque à Maîtrise ' + (i + 1)) + '</span><div class="small dim">' + k.desc + '</div></div></div>';
+    });
+    h += '<div class="li on"><div class="ic">' + hero.ult.icon + '</div><div class="grow"><b>' + hero.ult.name + '</b> <span class="tiny gold">ultime · grande barre dorée</span><div class="small dim">' + hero.ult.desc + ' Elle se remplit quand tu frappes, tues et encaisses.</div></div></div>';
+    h += '<h3 class="gold" style="margin:10px 0 6px">Les autres boutons</h3>' +
+      '<div class="li"><div class="ic">🤺</div><div class="grow"><b>Parer</b><div class="small dim">Pendant 1 seconde, tu subis 70 % de dégâts en moins et tu ripostes. Si tu pares une <b>attaque chargée ⚠️</b> (ennemi qui brille en jaune), elle est annulée et l’ennemi est étourdi.</div></div></div>' +
+      '<div class="li"><div class="ic">⚖️</div><div class="grow"><b>Posture</b><div class="small dim">🗡️ Assaut : +25 % dégâts, mais +20 % dégâts subis. 🛡️ Garde : -25 % dégâts subis, mais -20 % dégâts. Change quand tu veux.</div></div></div>' +
+      '<div class="li"><div class="ic">🎯</div><div class="grow"><b>Point faible</b><div class="small dim">Quand une cible apparaît sur un ennemi, touche-le vite : énorme coup critique. Toucher un ennemi sans cible le choisit comme cible de tes attaques.</div></div></div>' +
+      '<div class="li"><div class="ic">🧪</div><div class="grow"><b>Fiole</b><div class="small dim">Rend 35 % de tes PV. Tu en regagnes une à chaque boss vaincu.</div></div></div>' +
+      '<div class="li"><div class="ic">🤖</div><div class="grow"><b>AUTO et vitesse</b><div class="small dim">AUTO lance tes pouvoirs tout seul (mais ne touche pas les points faibles). x1 / x2 / x3 accélère le combat.</div></div></div>' +
+      '<h3 class="gold" style="margin:10px 0 6px">Les symboles</h3><div class="small dim" style="line-height:1.7">🔥 brûlure · ☠️ poison · 🩸 saignement : dégâts chaque seconde<br>💫 étourdi : ne peut pas agir · ⬇️ affaibli : frappe moins fort<br>🎯 vulnérable : subit +25 % dégâts · ⚠️ prépare un gros coup</div>' +
+      '<div class="btns"><button class="btn primary big" data-act="close">' + (first ? 'COMPRIS, AU COMBAT' : 'REPRENDRE') + '</button></div>';
+    UI.modal(h);
+  }
+  ACT.help = function () { SND.play('click'); helpSheet(false); };
   ACT.runMenu = function () { ACT.settings(); };
 
   // ---------- fin de descente ----------
@@ -405,7 +426,7 @@ UI.run = (function () {
       (sum.record ? '<div class="center gold" style="margin-top:6px;font-family:var(--serif);letter-spacing:.1em">★ NOUVEAU RECORD ★</div>' : '') +
       '<div class="sumgrid"><div class="stat"><b>' + sum.kills + '</b><span>Ennemis tués</span></div><div class="stat"><b class="ash">+' + E.fmt(sum.cendres) + '</b><span>Cendres 🔥</span></div><div class="stat"><b>' + sum.loot.length + '</b><span>Objets trouvés</span></div></div>' +
       '<div class="card"><div class="row"><b>Maîtrise de ' + h.name + '</b><span class="grow"></span><b class="gold">niv. ' + hs.lvl + '</b></div><div class="bar" style="margin-top:5px"><i style="width:' + Math.min(100, hs.xp / E.masteryNeed(hs.lvl) * 100) + '%"></i></div>' +
-      (sum.heroUps ? '<div class="small good" style="margin-top:5px">▲ Maîtrise +' + sum.heroUps + ' : +' + (4 * sum.heroUps) + ' % attaque et PV' + ((lvlBefore < 2 && hs.lvl >= 2) || (lvlBefore < 3 && hs.lvl >= 3) ? ' · <b>nouveau pouvoir débloqué !</b>' : '') + ((lvlBefore < 4 && hs.lvl >= 4) || (lvlBefore < 8 && hs.lvl >= 8) ? ' · <b>+1 emplacement de pacte</b>' : '') + '</div>' : '<div class="tiny dim" style="margin-top:4px">+' + sum.mxp + ' expérience</div>') + '</div>';
+      (sum.heroUps ? '<div class="small good" style="margin-top:5px">▲ Maîtrise +' + sum.heroUps + ' : +' + (3 * sum.heroUps) + ' % attaque et PV · <b>+' + sum.heroUps + ' point' + (sum.heroUps > 1 ? 's' : '') + ' de talent</b>' + ((lvlBefore < 2 && hs.lvl >= 2) || (lvlBefore < 3 && hs.lvl >= 3) ? ' · <b>nouveau pouvoir débloqué !</b>' : '') + ((lvlBefore < 4 && hs.lvl >= 4) || (lvlBefore < 8 && hs.lvl >= 8) ? ' · <b>+1 emplacement de pacte</b>' : '') + '</div>' : '<div class="tiny dim" style="margin-top:4px">+' + sum.mxp + ' expérience</div>') + '</div>';
     if (items.length) html += '<div class="card"><b>Butin gardé</b> <span class="tiny dim">(il est à toi pour toujours)</span><div class="inv-grid" style="margin-top:8px">' + items.slice(0, 18).map(function (it) { return UI.itemTile(it); }).join('') + '</div></div>';
     html += '<div class="card small dim">💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)] + '</div>' +
       '<button class="btn goldb wide" data-act="deathBest" style="margin-bottom:8px">⚡ Équiper le meilleur</button>' +

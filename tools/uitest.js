@@ -25,12 +25,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms)); let edge = null;
   const phase = () => page.evaluate(() => { const r = ENGINE.S.run; return r ? r.phase + (r.pendingBoons > 0 ? '+boon' : '') : UI.st.screen; });
   await shot('splash');
   await click('[data-act=enter]'); await sleep(400); await shot('intro');
-  await click('[data-act=firstRun]'); await sleep(1500); await shot('combat1');
+  await click('[data-act=firstRun]'); await sleep(1500); await shot('help-first'); await click('#modal.on [data-act=close]'); await sleep(800); await shot('combat1');
   await page.evaluate(() => { ENGINE.S.settings.speed = 3; });
   // boucle de jeu : clique comme un joueur
   let shots = {}, t0 = Date.now(), deaths = 0, maxDeaths = SCEN === 'long' ? 4 : 2;
   while (Date.now() - t0 < (SCEN === 'long' ? 240000 : 120000)) {
-    const ph = await phase();
+    const ph = await phase(); if (await click('#modal.on [data-act=close]')) { await sleep(150); continue; }
     if (!shots[ph] && ph !== 'combat') { shots[ph] = 1; await sleep(700); await shot(ph.replace('+', '-')); }
     if (ph === 'combat') { for (let i = 0; i < 3; i++) await click('#sk' + i + '.ready'); await click('#bparry.alert'); if (await click('.unit.weak')) shots.weakHits = (shots.weakHits || 0) + 1; if (await page.evaluate(() => !!document.querySelector('#bult.ready')) && !shots.ultReady) { shots.ultReady = 1; await shot('ult-ready'); } if (await click('#bult.ready')) { if (!shots.ult) { shots.ult = 1; await sleep(250); await shot('ult-used'); } } const low = await page.evaluate(() => ENGINE.S.run && ENGINE.S.run.hp / ENGINE.S.run.stats.hp < 0.4); if (low) await click('#pot'); if (!shots.midcombat && Date.now() - t0 > 6000) { shots.midcombat = 1; await shot('midcombat'); } const boss = await page.evaluate(() => ENGINE.S.run && ENGINE.S.run.room.type === 'boss'); if (boss && !shots.boss) { shots.boss = 1; await sleep(1200); await shot('boss'); } await sleep(120); }
     else if (ph.indexOf('victory') === 0) { await click('[data-act=cont]'); await sleep(150); }
@@ -43,7 +43,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms)); let edge = null;
   const endInfo = await page.evaluate(() => { const r = ENGINE.S.run; return r ? { phase: r.phase, floor: r.floor, room: r.room && r.room.type, variant: r.room && r.room.variant, cond: r.room && r.room.cond, wave: r.room && r.room.wave, pending: r.pendingBoons, hp: Math.round(r.hp), t: r.combat && Math.round(r.combat.t), alive: r.combat && r.combat.enemies.filter(e => !e.dead).map(e => e.name + ':' + Math.round(e.hp)), nextWave: r.combat && r.combat.nextWave, over: r.combat && r.combat.over, overlay: document.querySelector('#overlay').className } : { screen: UI.st.screen }; });
   console.log('endInfo', JSON.stringify(endInfo));
   if (endInfo.phase) { await shot('stuck'); await page.evaluate(() => UI.run.end(true)); await sleep(500); }
-  await click('[data-act=toHub]'); await sleep(600); await shot('hub-after');
+  await click('[data-act=toHub]'); await sleep(600); await shot('hub-guide'); await click('#modal.on [data-act=close]'); await sleep(300); await shot('hub-after');
   for (const t of ['hero', 'sac', 'autel', 'pactes', 'faits']) { await click('[data-act=tab][data-tab=' + t + ']'); await sleep(350); await shot('tab-' + t); }
   // changement de héros : aller sur un héros verrouillé puis revenir (c'était le blocage signalé)
   await click('[data-act=tab][data-tab=hero]'); await sleep(200);

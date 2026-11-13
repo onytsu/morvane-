@@ -49,6 +49,7 @@ function playRun() {
     D.META.forEach(m => { const c = E.metaCost(m.id); if (c != null && c < bc) { bc = c; best = m.id; } });
     if (!best || !E.buyMeta(best)) break;
   }
+  for (let k = 0; k < 20 && E.talentPoints(S.hero) > 0; k++) { const tl = D.TALENTS[S.hero]; E.addTalent(S.hero, tl[Math.floor(Math.random() * tl.length)].id); }
   const hs = S.heroes[S.hero]; S.pacts.forEach(p => { if (hs.pacts.length < E.pactSlots(S.hero) && hs.pacts.indexOf(p) < 0) E.togglePact(p); });
   return sum;
 }
@@ -70,3 +71,6 @@ for (let i = 0; i < RUNS; i++) { let t = 0; table.forEach(r => t += r[i].floor);
 console.log(line);
 let tt = 0, n = 0; table.forEach(r => r.forEach(s => { tt += s.simT / Math.max(1, s.rooms); n++; }));
 console.log('Durée moyenne par salle (s de jeu) :', (tt / n).toFixed(1));
+
+let l5 = 0, lall = 0; table.forEach(r => r.forEach((x, i) => { lall += x.loot.length; if (i < 5) l5 += x.loot.length; }));
+console.log('Objets par descente : 5 premières', (l5 / (5 * ACCOUNTS)).toFixed(1), '| toutes', (lall / (RUNS * ACCOUNTS)).toFixed(1));

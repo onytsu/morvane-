@@ -17,7 +17,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms)); let edge = null;
   await page.goto('http://127.0.0.1:8378/index.html'); await sleep(700);
   const shot = name => page.screenshot({ path: path.join(OUT, name + '.png') });
   // prépare un compte avec un peu de progression, sans tutoriels
-  await page.evaluate(() => { const S = ENGINE.S; ['skill', 'charge', 'potion', 'weak', 'ult', 'auto', 'fix', 'porteur'].forEach(k => S.tuto[k] = 1); S.stats.runs = 3; S.stats.best = 12; S.stats.bossMax = 1; S.cendres = 500; S.meta.m_force = 40; S.meta.m_vigueur = 40; S.meta.m_peau = 40; ENGINE.startRun('chevalier', 2); });
+  await page.evaluate(() => { const S = ENGINE.S; ['skill', 'charge', 'potion', 'weak', 'ult', 'auto', 'fix', 'porteur', 'help_chevalier', 'hub', 'ult_chevalier', 'sk_k1'].forEach(k => S.tuto[k] = 1); S.stats.runs = 3; S.stats.best = 12; S.stats.bossMax = 1; S.cendres = 500; S.meta.m_force = 40; S.meta.m_vigueur = 40; S.meta.m_peau = 40; ENGINE.startRun('chevalier', 2); });
   const scene = async (name, room, extra, wait) => {
     await page.evaluate((room, extra) => { const S = ENGINE.S, run = S.run; run.hp = run.stats.hp; run.room = room; run.result = null; Object.assign(run, extra || {}); if (room.group) { run.phase = 'combat'; ENGINE._buildCombat(run); } else run.phase = 'room'; UI.run.show(); }, room, extra || {});
     await sleep(wait || 2600); await shot(name);
@@ -43,6 +43,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms)); let edge = null;
   await page.evaluate(() => { ENGINE.endRun(true); const cs = ENGINE.contracts(); ENGINE.S.stats[cs[0].stat] += cs[0].need; UI.hub('hero'); });
   await sleep(700); await shot('8-contrats');
   res.contract = await page.evaluate(() => { const before = ENGINE.S.cendres; const b = document.querySelector('[data-act=contract]:not(.off)'); if (b) b.click(); return { clicked: !!b, gained: ENGINE.S.cendres - before, claimed: ENGINE.contracts()[0].claimed }; });
+  // fusion : 3 objets communs -> 1 rare
+  await page.evaluate(() => { const S = ENGINE.S; for (let i = 0; i < 4; i++) S.inv.push(ENGINE.makeItem(8 + i, 1, { slot: ['arme', 'casque', 'bottes', 'anneau'][i], set: i < 2 ? 'set_corbeau' : null })); S.inv.push(ENGINE.makeItem(9, 2, {})); UI.hub('sac'); });
+  await sleep(300); await page.evaluate(() => document.querySelector('[data-act=fuseMenu]').click()); await sleep(300);
+  res.fusePicks = await page.evaluate(() => { const ts = [...document.querySelectorAll('#modal .inv-grid .item.r1')].slice(0, 3); ts.forEach(t => document.querySelector('#modal .inv-grid .item[data-uid="' + t.dataset.uid + '"]').click()); return UI.st.fuse.length; });
+  await sleep(300); await shot('9-fusion-choix');
+  res.fuse = await page.evaluate(() => { const n = ENGINE.S.inv.length, pv = ENGINE.fusePreview(UI.st.fuse); document.querySelector('[data-act=fuseDo]').click(); const it = ENGINE.S.inv[ENGINE.S.inv.length - 1]; return { before: n, after: ENGINE.S.inv.length, preview: pv, result: { rar: it.rar, ilvl: it.ilvl, set: it.set || null, name: ENGINE.itemName(it) }, fusions: ENGINE.S.stats.fusions }; });
+  await sleep(500); await shot('10-fusion-resultat');
+  // fiche d'aide en combat
+  await page.evaluate(() => { UI.closeModal(); ENGINE.startRun('chevalier', 1); UI.run.show(); });
+  await sleep(900); await page.evaluate(() => document.querySelector('[data-act=help]').click()); await sleep(400); await shot('11-aide-combat');
   console.log(JSON.stringify({ res, errors: errors.slice(0, 10) }, null, 1));
   await browser.close(); edge.kill(); srv.close(); process.exit(0);
 })().catch(e => { console.error("TEST FAIL", e); try { if (edge) edge.kill(); } catch (x) { } process.exit(1); });

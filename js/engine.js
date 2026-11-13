@@ -42,9 +42,9 @@
   function newSave() {
     var s = {
       v: 1, cendres: 0, essence: 0, hero: 'chevalier', heroes: {}, inv: [], nextUid: 1, meta: {}, pacts: [], ach: {},
-      stats: { kills: 0, deaths: 0, chests: 0, maxLvl: 0, leg: 0, uni: 0, best: 0, elites: 0, upgrades: 0, epic: 0, runs: 0, heroes: 1, weak: 0, parry: 0, ult: 0, arenes: 0, bossMax: 0, boss1: 0, boss2: 0, boss3: 0, boss4: 0, boss5: 0, boss6: 0, bosses: 0, items: 0 },
+      stats: { kills: 0, deaths: 0, chests: 0, maxLvl: 0, leg: 0, uni: 0, best: 0, elites: 0, upgrades: 0, epic: 0, runs: 0, heroes: 1, weak: 0, parry: 0, ult: 0, arenes: 0, fusions: 0, bossMax: 0, boss1: 0, boss2: 0, boss3: 0, boss4: 0, boss5: 0, boss6: 0, bosses: 0, items: 0 },
       settings: { sfx: true, music: true, speed: 1, auto: false, autoSalvage: -1 },
-      idleAt: Date.now(), run: null, tuto: {}, pityU: 0, created: Date.now()
+      idleAt: Date.now(), run: null, tuto: {}, codex: {}, uniq: {}, pityU: 0, created: Date.now()
     };
     s.heroes.chevalier = { xp: 0, lvl: 1, equip: {}, pacts: [] };
     return s;
@@ -202,6 +202,22 @@
     S.inv.slice().forEach(function (it) { if (it.rar <= maxRar && !it.lock && !E.equippedBy(it.uid)) { tot += E.salvage(it.uid); n++; } });
     return { n: n, essence: tot };
   };
+  E.canFuse = function (it) { return !!it && it.rar <= 3 && !it.uq && !it.lock && !E.equippedBy(it.uid); };
+  E.fusePreview = function (uids) {
+    var its = uids.map(E.findItem);
+    if (its.length !== 3 || its.some(function (i) { return !E.canFuse(i); })) return null;
+    if (its[0].rar !== its[1].rar || its[0].rar !== its[2].rar || uids[0] === uids[1] || uids[0] === uids[2] || uids[1] === uids[2]) return null;
+    var cnt = {}, set = null; its.forEach(function (i) { if (i.set) { cnt[i.set] = (cnt[i.set] || 0) + 1; if (cnt[i.set] >= 2) set = i.set; } });
+    return { rar: its[0].rar + 1, ilvl: Math.max(its[0].ilvl, its[1].ilvl, its[2].ilvl), slot: E.itemBase(its[0]).slot, set: set };
+  };
+  E.fuse = function (uids) {
+    var p = E.fusePreview(uids); if (!p) return null;
+    uids.forEach(function (u) { var it = E.findItem(u); S.inv.splice(S.inv.indexOf(it), 1); });
+    var it = E.makeItem(p.ilvl, p.rar, { slot: p.slot, set: p.set });
+    S.inv.push(it); S.stats.fusions++; S.stats.items++;
+    if (it.rar === 3) S.stats.epic++; if (it.rar === 4) S.stats.leg++;
+    E.checkAch(); return it;
+  };
   E.temperCost = function (it) {
     var target = Math.max(S.stats.best, 1); if (it.ilvl >= target) return null;
     return { target: target, essence: Math.ceil((target - it.ilvl) * (it.rar + 1) * 1.5 * (1 + target / 30)) };
@@ -227,7 +243,7 @@
   }
   // src : 'mob' | 'elite' | 'chest' | 'boss'
   function rollRarity(src, mf) {
-    var w = [50, 30, 14, 4.5, 0.7];
+    var w = [55, 30, 11, 3.2, 0.45];
     var m = 1 + mf / 100;
     w[2] *= m; w[3] *= m; w[4] *= m;
     if (src === 'elite') { w[0] *= 0.4; w[2] *= 2; w[3] *= 2.5; w[4] *= 2.5; }
@@ -254,9 +270,10 @@
     var h = E.hero(heroId), hs = S.heroes[heroId];
     var perm = {}, meta = {}, rm = {}, k;
     add(perm, h.passive.mods);
-    add(perm, { atkP: 4 * (hs.lvl - 1), hpP: 4 * (hs.lvl - 1) });
+    add(perm, { atkP: 3 * (hs.lvl - 1), hpP: 3 * (hs.lvl - 1) });
     for (var sl in hs.equip) { var it = E.findItem(hs.equip[sl]); if (it) add(perm, E.itemMods(it)); }
     hs.pacts.forEach(function (pid) { var p = byId(D.PACTS, pid); if (p) add(perm, p.mods); });
+    if (hs.tal) D.TALENTS[heroId].forEach(function (t) { if (hs.tal[t.id]) add(perm, t.mods, hs.tal[t.id]); });
     var scn = E.setCounts(heroId); for (var sid in scn) { var sd = byId(D.SETS, sid); if (sd) for (var th in sd.bonus) if (scn[sid] >= +th) add(perm, sd.bonus[th]); }
     D.META.forEach(function (m) { var l = S.meta[m.id] || 0; if (l) add(meta, m.mods, l); });
     if (run) { add(rm, run.mods); add(rm, { atkP: 3 * (run.lvl - 1) + (run.mods.atkPerRoom || 0) * run.rooms, hpP: 3 * (run.lvl - 1) }); }
@@ -297,6 +314,13 @@
   // ---------- méta ----------
   E.metaCost = function (id) { var m = byId(D.META, id), l = S.meta[id] || 0; return l >= m.max ? null : Math.ceil(m.cost * Math.pow(m.grow, l)); };
   E.buyMeta = function (id) { var c = E.metaCost(id); if (c == null || S.cendres < c) return false; S.cendres -= c; S.meta[id] = (S.meta[id] || 0) + 1; return true; };
+  E.talentPoints = function (heroId) { var hs = S.heroes[heroId]; if (!hs) return 0; var sp = 0, k; for (k in (hs.tal || {})) sp += hs.tal[k]; return Math.max(0, hs.lvl - 1 - sp); };
+  E.addTalent = function (heroId, tid) {
+    var hs = S.heroes[heroId], t = byId(D.TALENTS[heroId], tid); if (!hs || !t || E.talentPoints(heroId) <= 0) return false;
+    hs.tal = hs.tal || {}; if ((hs.tal[tid] || 0) >= t.max) return false;
+    hs.tal[tid] = (hs.tal[tid] || 0) + 1; if (S.run) recalc(S.run); return true;
+  };
+  E.resetTalents = function (heroId) { var hs = S.heroes[heroId]; if (!hs) return; hs.tal = {}; if (S.run) recalc(S.run); };
   E.heroUnlocked = function (id) { return !!S.heroes[id]; };
   E.canUnlock = function (id) { var h = E.hero(id); if (!h.unlock || S.heroes[id]) return false; if (h.unlock.cost) return S.cendres >= h.unlock.cost; return false; };
   E.unlockHero = function (id, free) {
@@ -402,7 +426,7 @@
     E.save(); return true;
   };
   E.rerollBoons = function () { var run = S.run; if (!run || run.rerolls <= 0 || !run.offer) return false; run.rerolls--; E.makeOffer(run); return true; };
-  E.xpNeed = function (lvl) { return 12 + 3 * lvl; };
+  E.xpNeed = function (lvl) { return 14 + 3.5 * lvl; };
   function gainXp(run, amount) {
     amount = amount * (1 + run.stats.xp / 100); run.xp += amount; var ups = 0;
     while (run.xp >= E.xpNeed(run.lvl)) { run.xp -= E.xpNeed(run.lvl); run.lvl++; ups++; run.pendingBoons++; }
@@ -420,7 +444,7 @@
   function genDoors(run) {
     var next = run.floor + 1, pos = ((next - 1) % 10) + 1;
     if (pos === 10) return ['boss'];
-    var w = { combat: 50, elite: (next - run.startFloor) < 2 ? 0 : 13 * (run.stats.eliteW ? 3 : 1), tresor: 9, marchand: run.gold >= 40 ? 10 : 4, repos: run.stats.noRest ? 0 : run.hp < run.stats.hp * 0.6 ? 14 : 7, autel: 6, event: 10, mercenaire: (run.ally || next - run.startFloor < 3) ? 0 : 6, arene: next - run.startFloor < 4 ? 0 : 5 };
+    var w = { combat: 50, elite: (next - run.startFloor) < 2 ? 0 : 13 * (run.stats.eliteW ? 3 : 1), tresor: 6, marchand: run.gold >= 40 ? 10 : 4, repos: run.stats.noRest ? 0 : run.hp < run.stats.hp * 0.6 ? 14 : 7, autel: 6, event: 10, mercenaire: (run.ally || next - run.startFloor < 3) ? 0 : 6, arene: next - run.startFloor < 4 ? 0 : 5 };
     if (run.lastRoom && w[run.lastRoom] && run.lastRoom !== 'combat') w[run.lastRoom] *= 0.25;
     var types = Object.keys(w).filter(function (k) { return w[k] > 0; }), n = rnd() < 0.35 ? 3 : 2, out = [];
     while (out.length < n) { var t = wpick(types, function (k) { return w[k]; }); if (out.indexOf(t) < 0) out.push(t); }
@@ -499,7 +523,7 @@
     if (r.type === 'tresor') {
       if (r.mimic) { r.group = enemyGroup(run, 'mimic'); r.wasMimic = true; run.hpEntry = run.hp; run.phase = 'combat'; E._buildCombat(run); return 'mimic'; }
       var res = { items: [], gold: Math.round(ri(30, 60) * (1 + run.stats.gf / 100)), cendres: 0, xp: 0, chest: true };
-      res.items.push(dropItem(run, 'chest')); if (rnd() < 0.4) res.items.push(dropItem(run, 'chest'));
+      res.items.push(dropItem(run, 'chest')); if (rnd() < 0.1) res.items.push(dropItem(run, 'chest'));
       run.gold += res.gold; S.stats.chests++; run.result = res; run.phase = 'victory'; E.checkAch(); E.save(); return 'chest';
     }
     if (r.type === 'marchand') {
@@ -647,6 +671,7 @@
     ug(run, 5); c.cendres += cend; c.gold += gold; c.kills++; run.kills++; S.stats.kills++;
     c.xp += (e.boss ? 30 : e.elite ? 16 : 6.5) * (e.summoned ? 0.4 : 1) * (e.champ ? 2.5 : e.fix ? 1.5 : 1);
     if (e.elite) S.stats.elites++;
+    S.codex[e.key] = (S.codex[e.key] || 0) + 1;
     ev(c, { k: 'die', id: e.id, boss: e.boss });
     if (st.killHeal) heroHeal(run, c, st.hp * st.killHeal / 100);
     if (run.hero === 'necro') c.hero.skel = Math.min(3 + st.skel, c.hero.skel + 1);
@@ -656,12 +681,12 @@
       if (e.boss) {
         var zn = ((E.zoneNum(F) - 1) % 6) + 1, z = D.ZONES[zn - 1], first = E.zoneNum(F) > S.stats.bossMax;
         var uChance = Math.min(0.2, (0.035 + S.pityU * 0.012) * (1 + st.mf / 300));
-        if (rnd() < uChance) { var u = E.makeItem(F + 2, 5, { unique: pick(z.uniques) }); c.drops.push(giveItem(u)); run.loot.push({ uid: u.uid, rar: 5 }); S.pityU = 0; } else S.pityU++;
-        c.drops.push(dropItem(run, 'boss', first ? 3 : 2)); c.drops.push(dropItem(run, 'boss')); if (rnd() < 0.5) c.drops.push(dropItem(run, 'boss'));
-      } else if (e.elite) { c.drops.push(dropItem(run, 'elite')); if (rnd() < 0.3 || st.eliteW) c.drops.push(dropItem(run, 'elite')); }
-      else if (e.champ) { c.drops.push(dropItem(run, 'elite')); if (rnd() < 0.4) c.drops.push(dropItem(run, 'elite')); }
+        if (rnd() < uChance) { var u = E.makeItem(F + 2, 5, { unique: pick(z.uniques) }); S.uniq[u.uq] = 1; c.drops.push(giveItem(u)); run.loot.push({ uid: u.uid, rar: 5 }); S.pityU = 0; } else S.pityU++;
+        c.drops.push(dropItem(run, 'boss', first ? 3 : 2)); if (rnd() < 0.3) c.drops.push(dropItem(run, 'boss'));
+      } else if (e.elite) { if (rnd() < 0.65) c.drops.push(dropItem(run, 'elite')); if (st.eliteW) c.drops.push(dropItem(run, 'elite')); }
+      else if (e.champ) { c.drops.push(dropItem(run, 'elite')); }
       else if (e.gold) c.drops.push(dropItem(run, 'chest', 2));
-      else if (rnd() < (e.fix ? 0.3 : 0.14)) c.drops.push(dropItem(run, 'mob'));
+      else if (rnd() < (e.fix ? 0.11 : 0.04)) c.drops.push(dropItem(run, 'mob'));
     }
     if (!alive(c).length) endOrWave(run, c);
   }

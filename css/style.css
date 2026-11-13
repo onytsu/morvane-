@@ -296,3 +296,17 @@ h3 { font-size: 15px; }
 .ally { position: absolute; left: 1%; bottom: 49%; z-index: 1; opacity: .92; } .ally img { width: 78px; height: 78px; display: block; filter: drop-shadow(0 4px 3px #000b); animation: bob 2.4s ease-in-out infinite; } .ally.atk img { animation: lunge .22s; }
 .ctr { display: flex; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid #ffffff0d; } .ctr.done { opacity: .55; }
 .choice .ic img { display: block; margin: 0 auto; }
+
+/* --- v1.5 : aide en combat, fusion --- */
+.side { gap: 4px; } .side .tog { height: 22px; } .tog.help { color: var(--gold); border-color: #5c4a22; }
+.fslots { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0 8px; }
+.fslots .item, .fslots .slot { width: 56px; flex: none; font-size: 24px; } .fslots .slot { color: var(--dim); opacity: .7; filter: none; }
+.farrow { font-size: 22px; color: var(--gold); }
+.item.sel { outline: 3px solid var(--gold); outline-offset: 1px; transform: scale(.94); }
+
+/* --- v1.5 : talents, bestiaire --- */
+.codex { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.cdx { background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 5px 2px 4px; text-align: center; overflow: hidden; }
+.cdx img { width: 44px; height: 44px; display: block; margin: 0 auto 2px; } .cdx .tiny { line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 9.5px; }
+.cdx.no img { filter: brightness(0) drop-shadow(0 0 1px #5a4a66); opacity: .7; } .cdx.elite { border-color: #6a3b8a; } .cdx.boss { border-color: #8f1826; background: #1d1014; }
+.li .pips i { width: 16px; height: 6px; }
