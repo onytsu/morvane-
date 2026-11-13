@@ -44,7 +44,10 @@ var ROWS = [
   ['mimique', 'logo', 'tombe', '_inconnu_'],
   ['chevalier_os', 'dryade', 'sorciere', 'inquisiteur', 'bourreau', 'heraut'],
   ['fossoyeur', 'mere_ronces', 'leviathan'],
-  ['eveque', 'seigneur_braises', 'roi_creux']
+  ['eveque', 'seigneur_braises', 'roi_creux'],
+  ['chasseuse', 'moine', 'chauve_souris', 'momie', 'sanglier', 'champignon', 'moustique', 'limon'],
+  ['nonne', 'armure', 'salamandre', 'forge_esprit', 'larme', 'colosse_creux'],
+  ['liche', 'chasseur_fou', 'hydre', 'paladin', 'maitre_chaines', 'devoreur_etoiles']
 ];
 var BG = [0x14, 0x10, 0x1a], PAD = 14;
 function sheet(rows, S, file) {
@@ -64,6 +67,8 @@ else {
   sheet(ROWS.slice(2, 5), 5, path.join(here, 'sprites-preview-2.png'));
   sheet(ROWS.slice(5, 6), 5, path.join(here, 'sprites-preview-3.png'));
   sheet(ROWS.slice(6, 8), 5, path.join(here, 'sprites-preview-4.png'));
+  sheet(ROWS.slice(8, 10), 5, path.join(here, 'sprites-preview-5.png'));
+  sheet(ROWS.slice(10, 11), 5, path.join(here, 'sprites-preview-6.png'));
 
   /* ---------- icones ---------- */
   var iconDir = path.join(here, '..', 'icons');

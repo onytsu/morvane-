@@ -87,7 +87,7 @@ UI.run = (function () {
     var z = E.zoneOf(run.floor); if (S().tuto['zone' + z.id]) return; S().tuto['zone' + z.id] = 1;
     var set = D.SETS[z.id - 1];
     UI.modal('<div class="center tiny gold" style="letter-spacing:.3em">ZONE ' + z.id + ' / 6</div><h2 style="color:' + z.color + ';font-size:24px;margin:4px 0 10px">' + z.name + '</h2><p class="center" style="font-style:italic;line-height:1.5">' + z.lore + '</p>' +
-      '<div class="li"><div class="ic">☠️</div><div class="grow"><b>Gardien : ' + D.ENEMIES[z.boss].name + '</b><div class="small dim">Il t’attend à l’étage ' + (Math.floor((run.floor - 1) / 10) * 10 + 10) + '.</div></div></div>' +
+      '<div class="li"><div class="ic">☠️</div><div class="grow"><b>Gardien : ' + D.ENEMIES[z.boss].name + '</b><div class="small dim">Il t’attend à l’étage ' + (Math.floor((run.floor - 1) / 10) * 10 + 10) + '. ' + z.mech + '</div></div></div>' +
       '<div class="li"><div class="ic">' + set.icon + '</div><div class="grow"><b style="color:#6dffb0">◆ ' + set.name + '</b><div class="small dim">Le set d’objets qu’on ne trouve qu’ici.</div></div></div>' +
       '<div class="btns"><button class="btn primary big" data-act="close">ENTRER</button></div>', true);
   }
@@ -146,7 +146,7 @@ UI.run = (function () {
           fxAt(el, e.crit ? 'crit' : e.dot || 'hit', e.crit ? 12 : e.dot ? 3 : 6); if (!e.dot) { slash(el, e.crit); comboUp(); }
           if (!e.dot) { anim(el, 'hit', 220); SND.play(e.crit ? 'crit' : 'hit'); if (e.crit && e.skill) anim($('#arena'), 'shake', 250); }
           break;
-        case 'miss': floatAt(el, 'Esquive', 'txt'); break;
+        case 'miss': floatAt(el, e.hid ? 'Hors d’atteinte' : 'Esquive', 'txt'); break;
         case 'swing': anim(hero, 'atk', 220); break;
         case 'eatk': anim(el, 'atk', 250); break;
         case 'hurt':
@@ -180,12 +180,14 @@ UI.run = (function () {
         case 'flee': if (el) { floatAt(el, 'Il s’enfuit !', 'txt'); el.classList.add('dead'); } SND.play('error'); break;
         case 'wave': banner('VAGUE ' + e.n + '/' + e.of, 'ARÈNE'); SND.play('door'); var wn = $('#waven'); if (wn) wn.textContent = e.n; break;
         case 'ally': anim($('#ally'), 'atk', 220); break;
+        case 'bossfx': floatAt(el, e.txt, e.big ? 'big' : 'crit'); if (e.hero) floatAt(hero, e.hero, 'txt'); if (e.big) { anim($('#arena'), 'shake', 250); UI.flash('#c2283a44'); SND.play('boss_intro', 0.5); } tuto('mech' + E.zoneOf(run.floor).id, '☠️ <b>Spécialité du boss</b> : ' + E.zoneOf(run.floor).mech); break;
+        case 'elanbreak': floatAt(hero, 'Élan brisé', 'hurt'); break;
         case 'win': break;
       }
     }
     evs.length = 0;
   }
-  function stIcons(st) { return (st.burn ? '🔥' : '') + (st.poison ? '☠️' + (st.poison.n > 1 ? st.poison.n : '') : '') + (st.bleed ? '🩸' : '') + (st.stun > 0 ? '💫' : '') + (st.weak > 0 ? '⬇️' : '') + (st.vuln > 0 ? '🎯' : ''); }
+  function stIcons(st) { return (st.burn ? '🔥' : '') + (st.poison ? '☠️' + (st.poison.n > 1 ? st.poison.n : '') : '') + (st.bleed ? '🩸' : '') + (st.stun > 0 ? '💫' : '') + (st.weak > 0 ? '⬇️' : '') + (st.slow > 0 ? '🕸️' : '') + (st.vuln > 0 ? '🎯' : ''); }
   function updateHud() {
     var run = S().run; if (!run) return; var c = run.combat, stt = run.stats, z = E.zoneOf(run.floor), pos = ((run.floor - 1) % 10) + 1, i;
     var key = run.floor + '|' + run.gold + '|' + run.cendres + '|' + run.lvl + '|' + Object.keys(run.boons).length + run.artifacts.length;
@@ -204,7 +206,7 @@ UI.run = (function () {
     hb.lastChild.textContent = E.fmt(Math.ceil(run.hp)) + ' / ' + E.fmt(stt.hp) + (sh >= 1 ? '  (+' + E.fmt(sh) + ')' : '');
     hb.classList.toggle('low', frac < 0.3);
     $('#xpbar').style.width = Math.min(100, run.xp / E.xpNeed(run.lvl) * 100) + '%';
-    $('#hsts').textContent = c ? stIcons(c.hero.st) : '';
+    $('#hsts').textContent = c ? stIcons(c.hero.st) + (c.hero.elan ? ' ⚡x' + c.hero.elan : '') : '';
     for (i = 0; i < 3; i++) {
       var b2 = $('#sk' + i), ok = E.skillUnlocked(run.hero, i);
       if (!ok) { if (!b2.classList.contains('locked')) { b2.className = 'skb locked'; b2.firstChild.textContent = '🔒'; } continue; }
@@ -230,7 +232,7 @@ UI.run = (function () {
       el.classList.toggle('charging', !!e.charge);
       if (e.charge) el.children[2].firstChild.style.width = ((1 - e.charge.t / e.charge.total) * 100) + '%';
       el.classList.toggle('tg', c.target === i && c.enemies.filter(function (x) { return !x.dead; }).length > 1);
-      el.classList.toggle('enraged', e.enraged);
+      el.classList.toggle('enraged', e.enraged); el.classList.toggle('hidden', e.hidden > 0);
       var s = stIcons(e.st), se = el.children[5]; if (se.textContent !== s) se.textContent = s;
       el.classList.toggle('weak', !!c.weak && c.weak.id === e.id);
     });
@@ -426,7 +428,7 @@ UI.run = (function () {
       '<div class="li"><div class="ic">🎯</div><div class="grow"><b>Point faible</b><div class="small dim">Quand une cible apparaît sur un ennemi, touche-le vite : énorme coup critique. Toucher un ennemi sans cible le choisit comme cible de tes attaques.</div></div></div>' +
       '<div class="li"><div class="ic">🧪</div><div class="grow"><b>Fiole</b><div class="small dim">Rend 35 % de tes PV. Tu en regagnes une à chaque boss vaincu.</div></div></div>' +
       '<div class="li"><div class="ic">🤖</div><div class="grow"><b>AUTO et vitesse</b><div class="small dim">AUTO lance tes pouvoirs tout seul (mais ne touche pas les points faibles). x1 / x2 / x3 accélère le combat.</div></div></div>' +
-      '<h3 class="gold" style="margin:10px 0 6px">Les symboles</h3><div class="small dim" style="line-height:1.7">🔥 brûlure · ☠️ poison · 🩸 saignement : dégâts chaque seconde<br>💫 étourdi : ne peut pas agir · ⬇️ affaibli : frappe moins fort<br>🎯 vulnérable : subit +25 % dégâts · ⚠️ prépare un gros coup</div>' +
+      '<h3 class="gold" style="margin:10px 0 6px">Les symboles</h3><div class="small dim" style="line-height:1.7">🔥 brûlure · ☠️ poison · 🩸 saignement : dégâts chaque seconde<br>💫 étourdi : ne peut pas agir · ⬇️ affaibli : frappe moins fort<br>🎯 vulnérable : subit +25 % dégâts · ⚠️ prépare un gros coup<br>🕸️ entravé : tu frappes 2 fois moins vite</div>' +
       '<div class="btns"><button class="btn primary big" data-act="close">' + (first ? 'COMPRIS, AU COMBAT' : 'REPRENDRE') + '</button></div>';
     UI.modal(h);
   }

@@ -148,6 +148,40 @@ var DATA = (function () {
         { id: 'c_s2', name: 'Fouet sacré', rar: 1, desc: 'Châtiment : +50 % dégâts.', mods: { s1P: 50 } },
         { id: 'c_s3', name: 'Jour du jugement', rar: 2, desc: 'Colère divine : +60 % dégâts.', mods: { s3P: 60 } }
       ]
+    },
+    {
+      id: 'chasseuse', name: 'Maëlle', title: 'Traqueuse des Pendus', role: 'Tireuse — points faibles',
+      desc: 'Elle voit où frapper. Fragile de près, mortelle si tu vises juste.',
+      base: { hp: 100, atk: 11, def: 3, spd: 1.25, crit: 10 },
+      passive: { name: 'Œil de traqueuse', desc: 'Les points faibles apparaissent 2 fois plus souvent et font +50 % dégâts.', mods: { weakP: 50 } },
+      unlock: { boss: 3 }, start: {},
+      skills: [
+        { id: 'h1', name: 'Carreau perforant', icon: '🏹', cd: 5, sfx: 'skill_blade', desc: '230 % dégâts qui ignorent l’armure, et rend la cible vulnérable 3 s.' },
+        { id: 'h2', name: 'Piège à loup', icon: '⛓️', cd: 11, sfx: 'block', desc: '150 % dégâts, étourdit 2 s et fait saigner. Interrompt les attaques chargées.' },
+        { id: 'h3', name: 'Pluie de carreaux', icon: '🌧️', cd: 14, sfx: 'skill_blade', desc: '5 carreaux de 75 % dégâts sur des ennemis au hasard.' }
+      ],
+      boons: [
+        { id: 'c_h1', name: 'Pointes barbelées', rar: 1, desc: 'Carreau perforant : +50 % dégâts.', mods: { s1P: 50 } },
+        { id: 'c_h2', name: 'Instinct de chasse', rar: 2, desc: 'Points faibles : +80 % dégâts.', mods: { weakP: 80 } },
+        { id: 'c_h3', name: 'Carquois sans fond', rar: 1, desc: 'Pluie de carreaux : +60 % dégâts.', mods: { s3P: 60 } }
+      ]
+    },
+    {
+      id: 'moine', name: 'Frère Odon', title: 'Poing de Cendre', role: 'Combattant — élan',
+      desc: 'Chaque coup le rend plus fort. Ne laisse pas un gros coup briser son élan.',
+      base: { hp: 120, atk: 10, def: 5, spd: 1.3, crit: 8 },
+      passive: { name: 'Élan', desc: 'Chaque coup donne +4 % dégâts (jusqu’à x10). L’élan retombe à zéro si tu encaisses une attaque chargée.', mods: {} },
+      unlock: { cost: 8000 }, start: {},
+      skills: [
+        { id: 'm1', name: 'Paume de fer', icon: '👊', cd: 4, sfx: 'hit', desc: '170 % dégâts et étourdit 0,8 s. Interrompt les attaques chargées.' },
+        { id: 'm2', name: 'Souffle intérieur', icon: '🌬️', cd: 12, sfx: 'heal', desc: 'Soigne 15 % PV, retire poison, brûlure et saignement, et met l’élan au maximum.' },
+        { id: 'm3', name: 'Mille poings', icon: '💢', cd: 13, sfx: 'skill_blade', desc: '6 coups rapides de 60 % dégâts.' }
+      ],
+      boons: [
+        { id: 'c_m1', name: 'Main de pierre', rar: 1, desc: 'Paume de fer : +50 % dégâts.', mods: { s1P: 50 } },
+        { id: 'c_m2', name: 'Pas du vent', rar: 2, desc: '+12 % vitesse et +5 % esquive.', mods: { spdP: 12, dodge: 5 } },
+        { id: 'c_m3', name: 'Dix mille poings', rar: 1, desc: 'Mille poings : +60 % dégâts.', mods: { s3P: 60 } }
+      ]
     }
   ];
 
@@ -158,7 +192,9 @@ var DATA = (function () {
     assassin: { name: 'Danse des Lames', icon: '🌪️', sfx: 'skill_blade', desc: '8 coups critiques de 90 % dégâts sur des ennemis au hasard.' },
     necro: { name: 'Moisson', icon: '💀', sfx: 'skill_dark', desc: '400 % dégâts à tous, te soigne de la moitié, +2 serviteurs.' },
     berserker: { name: 'Carnage', icon: '🩸', sfx: 'skill_war', desc: '6 s : vitesse doublée et 20 % vol de vie. Impossible de mourir pendant 4 s.' },
-    pretresse: { name: 'Miracle', icon: '🌟', sfx: 'skill_holy', desc: 'Soigne tous tes PV, bouclier 30 % PV, étourdit tous les ennemis 2 s.' }
+    pretresse: { name: 'Miracle', icon: '🌟', sfx: 'skill_holy', desc: 'Soigne tous tes PV, bouclier 30 % PV, étourdit tous les ennemis 2 s.' },
+    chasseuse: { name: 'Tir du destin', icon: '🎯', sfx: 'crit', desc: '900 % dégâts critiques sur la cible. Si elle meurt, l’ultime revient à moitié chargé.' },
+    moine: { name: 'Éveil', icon: '☯️', sfx: 'skill_holy', desc: '8 s : vitesse +80 %, esquive +40 %, et chaque coup te soigne de 2 % PV.' }
   };
   HEROES.forEach(function (h) { h.ult = ULTS[h.id]; });
 
@@ -192,6 +228,8 @@ var DATA = (function () {
     assassin: [['t_a1', 'Œil vif', '🎯', { crit: 2 }], ['t_a2', 'Cruel', '🩸', { critd: 10 }], ['t_a3', 'Venin', '🐍', { poisonP: 15 }], ['t_a4', 'Fantôme', '💨', { dodge: 2 }], ['t_a5', 'Point vital', '🔪', { weakP: 25 }], ['t_a6', 'Exécuteur', '☠️', { s3P: 15 }]],
     necro: [['t_n1', 'Fosse commune', '🦴', { skelP: 15 }], ['t_n2', 'Sangsue', '🧛', { s2P: 15 }], ['t_n3', 'Chair morte', '❤️', { hpP: 5 }], ['t_n4', 'Nécrologue', '📖', { pow: 6 }], ['t_n5', 'Moissonneur', '🍖', { killHeal: 1 }], ['t_n6', 'Légion', '💀', { ultP: 10 }]],
     berserker: [['t_b1', 'Rage', '💪', { atkP: 4 }], ['t_b2', 'Hémorragie', '🩸', { bleedP: 15 }], ['t_b3', 'Soif', '🧛', { ls: 1 }], ['t_b4', 'Peau tannée', '❤️', { hpP: 5 }], ['t_b5', 'Frénésie', '🥁', { spdP: 3 }], ['t_b6', 'Carnage', '😡', { ultP: 10 }]],
+    chasseuse: [['t_h1', 'Œil perçant', '🎯', { crit: 2 }], ['t_h2', 'Point vital', '🔪', { weakP: 25 }], ['t_h3', 'Carreaux lourds', '🏹', { s1P: 15 }], ['t_h4', 'Déluge', '🌧️', { s3P: 15 }], ['t_h5', 'Main sûre', '🖐️', { spdP: 3 }], ['t_h6', 'Patience', '⏳', { ultP: 10 }]],
+    moine: [['t_m1', 'Poings durcis', '👊', { atkP: 4 }], ['t_m2', 'Pas léger', '💨', { dodge: 2 }], ['t_m3', 'Paume lourde', '🗿', { s1P: 15 }], ['t_m4', 'Rafale', '💢', { s3P: 15 }], ['t_m5', 'Sérénité', '🌿', { healP: 8 }], ['t_m6', 'Illumination', '☯️', { ultP: 10 }]],
     pretresse: [['t_s1', 'Ferveur', '🙏', { healP: 8 }], ['t_s2', 'Sainteté', '❤️', { hpP: 5 }], ['t_s3', 'Fouet sacré', '✨', { s1P: 15 }], ['t_s4', 'Colère', '⚡', { s3P: 15 }], ['t_s5', 'Grâce', '🌿', { regen: 0.2 }], ['t_s6', 'Miracle', '🌟', { ultP: 10 }]]
   };
   for (var th in TALENTS) TALENTS[th] = TALENTS[th].map(function (t) { return { id: t[0], name: t[1], icon: t[2], mods: t[3], max: 5 }; });
@@ -219,7 +257,8 @@ var DATA = (function () {
   var ALLIES = {
     chevalier: 'Frappe et te donne un petit bouclier à chaque coup.', pyro: 'Brûle tous les ennemis.',
     assassin: 'Coups rapides, souvent doublés.', necro: 'Draine les ennemis et te rend des PV.',
-    berserker: 'Frappe très fort.', pretresse: 'Te soigne en continu.'
+    berserker: 'Frappe très fort.', pretresse: 'Te soigne en continu.',
+    chasseuse: 'Tire de loin et rend la cible vulnérable.', moine: 'Frappe vite et étourdit parfois.'
   };
   // ---------- Contrats du jour : [statistique, quantité, texte] ----------
   var CONTRACTS = [
@@ -262,6 +301,19 @@ var DATA = (function () {
     oeil: { name: 'Œil béant', hp: 50, atk: 11, int: 2.8, def: 0, ab: { charge: 7, weak: 40 } },
     devoreur: { name: 'Dévoreur', hp: 85, atk: 8, int: 1.6, def: 3, ab: { leech: 60, enrage: 1 } },
     chevalier_creux: { name: 'Chevalier creux', hp: 95, atk: 10, int: 2.2, def: 10, ab: { charge: 9 } },
+    // Nouveaux monstres (2 par zone)
+    chauve_souris: { name: 'Chauve-souris', hp: 20, atk: 3, int: 0.8, def: 0, ab: { leech: 40, dodge: 20 } },
+    momie: { name: 'Momie', hp: 75, atk: 7, int: 2.4, def: 3, ab: { weak: 40 } },
+    sanglier: { name: 'Sanglier maudit', hp: 65, atk: 8, int: 2.2, def: 2, ab: { charge: 7 } },
+    champignon: { name: 'Mycélion', hp: 45, atk: 4, int: 1.8, def: 0, ab: { poison: 50, heal: 5 } },
+    moustique: { name: 'Moustique géant', hp: 22, atk: 3, int: 0.7, def: 0, ab: { leech: 60, dodge: 25 } },
+    limon: { name: 'Limon putride', hp: 70, atk: 6, int: 2.0, def: 1, ab: { poison: 40, explode: 120 } },
+    nonne: { name: 'Sœur aveugle', hp: 48, atk: 5, int: 1.7, def: 0, ab: { heal: 8, weak: 30 } },
+    armure: { name: 'Armure sainte', hp: 90, atk: 9, int: 2.4, def: 11, ab: { shield: 8 } },
+    salamandre: { name: 'Salamandre', hp: 44, atk: 6, int: 1.2, def: 0, ab: { burn: 60 } },
+    forge_esprit: { name: 'Esprit de forge', hp: 36, atk: 8, int: 1.8, def: 0, ab: { dodge: 25, burn: 40, explode: 130 } },
+    larme: { name: 'Larme du vide', hp: 30, atk: 5, int: 1.0, def: 0, ab: { dodge: 30, weak: 30 } },
+    colosse_creux: { name: 'Colosse creux', hp: 130, atk: 12, int: 3.0, def: 12, ab: { charge: 8, enrage: 1 } },
     // Spécial
     mimique: { name: 'Mimique', hp: 150, atk: 9, int: 1.4, def: 4, ab: { bleed: 40 }, elite: true },
     // Élites
@@ -271,22 +323,28 @@ var DATA = (function () {
     inquisiteur: { name: 'Inquisiteur', hp: 210, atk: 11, int: 1.9, def: 6, ab: { burn: 60, charge: 8 }, elite: true },
     bourreau: { name: 'Bourreau', hp: 240, atk: 14, int: 2.6, def: 5, ab: { charge: 7, bleed: 50, enrage: 1 }, elite: true },
     heraut: { name: 'Héraut du vide', hp: 220, atk: 12, int: 2.0, def: 4, ab: { dodge: 20, weak: 40, summon: 'ombre', charge: 9 }, elite: true },
+    liche: { name: 'Liche mineure', hp: 170, atk: 11, int: 2.0, def: 2, ab: { summon: 'squelette', weak: 40, charge: 9 }, elite: true },
+    chasseur_fou: { name: 'Chasseur fou', hp: 190, atk: 10, int: 1.4, def: 3, ab: { bleed: 50, dodge: 15 }, elite: true },
+    hydre: { name: 'Hydre des tourbes', hp: 230, atk: 9, int: 1.5, def: 3, ab: { heal: 6, poison: 60, enrage: 1 }, elite: true },
+    paladin: { name: 'Paladin déchu', hp: 230, atk: 12, int: 2.2, def: 10, ab: { shield: 10, charge: 8 }, elite: true },
+    maitre_chaines: { name: 'Maître des chaînes', hp: 220, atk: 12, int: 1.8, def: 5, ab: { burn: 50, summon: 'diablotin', charge: 9 }, elite: true },
+    devoreur_etoiles: { name: "Dévoreur d'étoiles", hp: 240, atk: 13, int: 2.0, def: 4, ab: { leech: 50, dodge: 15, charge: 7, enrage: 1 }, elite: true },
     // Boss
-    fossoyeur: { name: 'Le Fossoyeur', hp: 520, atk: 11, int: 2.0, def: 4, ab: { charge: 8, summon: 'squelette', enrage: 1 }, boss: true },
-    mere_ronces: { name: 'La Mère des Ronces', hp: 600, atk: 10, int: 1.6, def: 5, ab: { bleed: 60, heal: 5, charge: 9, thorns: 15 }, boss: true },
-    leviathan: { name: 'Le Léviathan fangeux', hp: 700, atk: 12, int: 2.0, def: 6, ab: { poison: 70, charge: 7, summon: 'sangsue', enrage: 1 }, boss: true },
-    eveque: { name: "L'Évêque sans visage", hp: 650, atk: 12, int: 1.8, def: 5, ab: { charge: 6, weak: 50, summon: 'cultiste', shield: 10 }, boss: true },
-    seigneur_braises: { name: 'Le Seigneur des Braises', hp: 760, atk: 14, int: 1.9, def: 8, ab: { burn: 80, charge: 6, enrage: 1 }, boss: true },
-    roi_creux: { name: 'Le Roi Creux', hp: 900, atk: 15, int: 1.8, def: 8, ab: { charge: 5, weak: 40, summon: 'chevalier_creux', enrage: 1, dodge: 10, leech: 30 }, boss: true }
+    fossoyeur: { name: 'Le Fossoyeur', hp: 520, atk: 11, int: 2.0, def: 4, ab: { charge: 8, summon: 'squelette', enrage: 1, burst: 1 }, boss: true },
+    mere_ronces: { name: 'La Mère des Ronces', hp: 600, atk: 10, int: 1.6, def: 5, ab: { bleed: 60, heal: 5, charge: 9, thorns: 15, roots: 13 }, boss: true },
+    leviathan: { name: 'Le Léviathan fangeux', hp: 700, atk: 12, int: 2.0, def: 6, ab: { poison: 70, charge: 7, summon: 'sangsue', enrage: 1, dive: 15 }, boss: true },
+    eveque: { name: "L'Évêque sans visage", hp: 650, atk: 12, int: 1.8, def: 5, ab: { charge: 6, weak: 50, summon: 'cultiste', shield: 10, ward: 1 }, boss: true },
+    seigneur_braises: { name: 'Le Seigneur des Braises', hp: 760, atk: 14, int: 1.9, def: 8, ab: { burn: 80, charge: 6, enrage: 1, heat: 1 }, boss: true },
+    roi_creux: { name: 'Le Roi Creux', hp: 900, atk: 15, int: 1.8, def: 8, ab: { charge: 5, weak: 40, summon: 'chevalier_creux', enrage: 1, dodge: 10, leech: 30, rebirth: 1 }, boss: true }
   };
 
   var ZONES = [
-    { id: 1, name: 'Crypte des Oubliés', short: 'Crypte', color: '#7d8aa6', bg: ['#141722', '#0b0c12'], mobs: ['squelette', 'goule', 'rat', 'spectre'], elite: 'chevalier_os', boss: 'fossoyeur', uniques: ['u_pelle', 'u_linceul'] },
-    { id: 2, name: 'Bois des Pendus', short: 'Bois', color: '#6f9b5a', bg: ['#131c14', '#090d0a'], mobs: ['loup', 'araignee', 'corbeau', 'pendu'], elite: 'dryade', boss: 'mere_ronces', uniques: ['u_ronces', 'u_corbeau'] },
-    { id: 3, name: 'Marais de la Peste', short: 'Marais', color: '#9aa04a', bg: ['#191b10', '#0c0d08'], mobs: ['sangsue', 'crapaud', 'noye', 'essaim'], elite: 'sorciere', boss: 'leviathan', uniques: ['u_coeur', 'u_carapace'] },
-    { id: 4, name: 'Cathédrale Profanée', short: 'Cathédrale', color: '#c9a55a', bg: ['#1c1710', '#0d0b08'], mobs: ['cultiste', 'gargouille', 'flagellant', 'ange'], elite: 'inquisiteur', boss: 'eveque', uniques: ['u_anneau', 'u_larme'] },
-    { id: 5, name: 'Forges Infernales', short: 'Forges', color: '#e0622e', bg: ['#21110c', '#100806'], mobs: ['diablotin', 'golem', 'cerbere', 'forgeron'], elite: 'bourreau', boss: 'seigneur_braises', uniques: ['u_braisefer', 'u_sceau'] },
-    { id: 6, name: 'Trône du Roi Creux', short: 'Trône', color: '#9b6bff', bg: ['#170f24', '#0a0710'], mobs: ['ombre', 'oeil', 'devoreur', 'chevalier_creux'], elite: 'heraut', boss: 'roi_creux', uniques: ['u_couronne', 'u_faux'] }
+    { id: 1, name: 'Crypte des Oubliés', short: 'Crypte', color: '#7d8aa6', bg: ['#141722', '#0b0c12'], mobs: ['squelette', 'goule', 'rat', 'spectre', 'chauve_souris', 'momie'], elite: 'chevalier_os', elites: ['chevalier_os', 'liche'], boss: 'fossoyeur', uniques: ['u_pelle', 'u_linceul', 'u_lanterne'] },
+    { id: 2, name: 'Bois des Pendus', short: 'Bois', color: '#6f9b5a', bg: ['#131c14', '#090d0a'], mobs: ['loup', 'araignee', 'corbeau', 'pendu', 'sanglier', 'champignon'], elite: 'dryade', elites: ['dryade', 'chasseur_fou'], boss: 'mere_ronces', uniques: ['u_ronces', 'u_corbeau', 'u_croc'] },
+    { id: 3, name: 'Marais de la Peste', short: 'Marais', color: '#9aa04a', bg: ['#191b10', '#0c0d08'], mobs: ['sangsue', 'crapaud', 'noye', 'essaim', 'moustique', 'limon'], elite: 'sorciere', elites: ['sorciere', 'hydre'], boss: 'leviathan', uniques: ['u_coeur', 'u_carapace', 'u_bottes'] },
+    { id: 4, name: 'Cathédrale Profanée', short: 'Cathédrale', color: '#c9a55a', bg: ['#1c1710', '#0d0b08'], mobs: ['cultiste', 'gargouille', 'flagellant', 'ange', 'nonne', 'armure'], elite: 'inquisiteur', elites: ['inquisiteur', 'paladin'], boss: 'eveque', uniques: ['u_anneau', 'u_larme', 'u_calice'] },
+    { id: 5, name: 'Forges Infernales', short: 'Forges', color: '#e0622e', bg: ['#21110c', '#100806'], mobs: ['diablotin', 'golem', 'cerbere', 'forgeron', 'salamandre', 'forge_esprit'], elite: 'bourreau', elites: ['bourreau', 'maitre_chaines'], boss: 'seigneur_braises', uniques: ['u_braisefer', 'u_sceau', 'u_marteau'] },
+    { id: 6, name: 'Trône du Roi Creux', short: 'Trône', color: '#9b6bff', bg: ['#170f24', '#0a0710'], mobs: ['ombre', 'oeil', 'devoreur', 'chevalier_creux', 'larme', 'colosse_creux'], elite: 'heraut', elites: ['heraut', 'devoreur_etoiles'], boss: 'roi_creux', uniques: ['u_couronne', 'u_faux', 'u_manteau'] }
   ];
 
   // ---------- Histoire : présentation de chaque zone et réplique du boss ----------
@@ -299,6 +357,16 @@ var DATA = (function () {
     6: ['Le dernier étage. Un trône, une armure, et rien dedans. Le Roi Creux n’a jamais été un homme : seulement la faim de tout ce qu’il a éteint.', 'Tu es venu remplir le vide ? Il n’y a pas assez de toi.']
   };
   ZONES.forEach(function (z) { z.lore = LORE[z.id][0]; z.taunt = LORE[z.id][1]; });
+  // Spécialité de chaque boss, affichée dans la présentation de la zone
+  var MECH = {
+    1: 'À la moitié de ses PV, il relève deux squelettes d’un coup.',
+    2: 'Ses racines t’entravent régulièrement : tu frappes 2 fois moins vite pendant 4 s.',
+    3: 'Il plonge et devient intouchable, puis resurgit avec un coup énorme : pare-le.',
+    4: 'À 66 % et 33 % de ses PV, il se protège d’un bouclier et te réduit au silence (pouvoirs retardés).',
+    5: 'La chaleur de la forge te brûle de plus en plus fort : tue-le vite.',
+    6: 'Quand il tombe, il se relève une fois, enragé, avec 40 % de ses PV.'
+  };
+  ZONES.forEach(function (z) { z.mech = MECH[z.id]; });
 
   // ---------- Familiers : débloqués en tuant assez de monstres d'une espèce. Un seul actif. ----------
   var FAMILIARS = [
@@ -363,7 +431,8 @@ var DATA = (function () {
     { id: 'pw_bourreau', name: 'Bourreau', mods: { exec: 50 } }, { id: 'pw_foudre', name: 'Foudre', mods: { chain: 90 } },
     { id: 'pw_frenesie', name: 'Frénésie', mods: { frenzy: 3 } }, { id: 'pw_sangsue', name: 'Sangsue', mods: { ls: 6 } },
     { id: 'pw_sablier', name: 'Sablier', mods: { cdr: 15 } }, { id: 'pw_fiole', name: 'Alchimiste', mods: { potions: 1, healP: 20 } },
-    { id: 'pw_hemorragie', name: 'Hémorragie', mods: { bleedHit: 35, bleedP: 30 } }, { id: 'pw_titan', name: 'Titan', mods: { allP: 8 } }
+    { id: 'pw_hemorragie', name: 'Hémorragie', mods: { bleedHit: 35, bleedP: 30 } }, { id: 'pw_titan', name: 'Titan', mods: { allP: 8 } },
+    { id: 'pw_duel', name: 'Duelliste', mods: { parryP: 120, block: 6 } }, { id: 'pw_zenith', name: 'Zénith', mods: { ultP: 40 } }, { id: 'pw_traque', name: 'Traque', mods: { weakP: 100 } }
   ];
   // Objets uniques (rouges) — seulement sur les boss
   var UNIQUES = [
@@ -378,6 +447,12 @@ var DATA = (function () {
     { id: 'u_braisefer', name: 'Braisefer', base: 'epee', lore: 'La lame ne refroidit jamais.', aff: { atkP: 16, crit: 6, spdP: 8, critd: 20 }, mods: { burnHit: 100, burnP: 120 } },
     { id: 'u_sceau', name: 'Sceau du Bourreau', base: 'jonc', lore: 'Un seul geste. Un seul verdict.', aff: { crit: 6, critd: 22, atkP: 10, ls: 3 }, mods: { exec: 80, crit: 8 } },
     { id: 'u_couronne', name: 'Couronne du Roi Creux', base: 'heaume', lore: 'Elle est trop grande. Elle le sera toujours.', aff: { hpP: 14, atkP: 12, defP: 12, mf: 15 }, mods: { allP: 15, boonChoices: 1 } },
+    { id: 'u_lanterne', name: 'Lanterne du Fossoyeur', base: 'pendentif', lore: 'Elle n’éclaire que ce qui est déjà mort.', aff: { hpP: 12, gf: 25, pow: 12, mf: 15 }, mods: { gf: 40, killHeal: 5 } },
+    { id: 'u_croc', name: 'Croc de la Meute', base: 'dague', lore: 'Arraché vivant. Il mord encore.', aff: { atkP: 14, crit: 6, spdP: 8, critd: 18 }, mods: { bleedHit: 60, spdP: 15 } },
+    { id: 'u_bottes', name: 'Bottes du Noyé', base: 'greves', lore: 'Elles sont toujours mouillées.', aff: { hpP: 14, defP: 12, regen: 0.5, dodge: 4 }, mods: { regen: 1, takenP: -10 } },
+    { id: 'u_calice', name: 'Calice Profané', base: 'jonc', lore: 'Ce qu’on y boit ne se dit pas.', aff: { hpP: 10, ls: 3, pow: 12, crit: 4 }, mods: { healP: 50, ls: 6 } },
+    { id: 'u_marteau', name: 'Marteau des Chaînes', base: 'masse', lore: 'Chaque maillon fut un forgeron.', aff: { atkP: 15, block: 4, critd: 20, defP: 10 }, mods: { parryP: 200, block: 10 } },
+    { id: 'u_manteau', name: "Manteau d'Étoiles Mortes", base: 'cuir', lore: 'Regarde bien : aucune ne brille.', aff: { hpP: 12, dodge: 5, spdP: 8, defP: 10 }, mods: { dodge: 15, ultP: 60 } },
     { id: 'u_faux', name: 'Faux des Âmes', base: 'hache', lore: 'Elle moissonne. Tu récoltes.', aff: { atkP: 18, critd: 25, spdP: 8, crit: 6 }, mods: { ls: 12, chain: 120 } }
   ];
 
@@ -412,6 +487,14 @@ var DATA = (function () {
     { id: 'b_colosse', name: 'Colosse', icon: '🗿', rar: 2, max: 2, desc: '+35 % PV et +25 % armure, -8 % vitesse.', mods: { hpP: 35, defP: 25, spdP: -8 } },
     { id: 'b_fiole', name: 'Alambic', icon: '🧪', rar: 2, max: 2, desc: '+1 fiole et +25 % de soins reçus.', mods: { potions: 1, healP: 25 } },
     { id: 'b_tout', name: 'Bénédiction creuse', icon: '🌒', rar: 2, max: 3, desc: '+7 % à toutes les stats.', mods: { allP: 7 } },
+    { id: 'b_sangfroid', name: 'Sang-froid', icon: '🧊', rar: 0, max: 5, desc: '-4 % dégâts subis.', mods: { takenP: -4 } },
+    { id: 'b_duelliste', name: 'Duelliste', icon: '⚔️', rar: 1, max: 3, desc: 'Parade : riposte +60 %. +4 % blocage.', mods: { parryP: 60, block: 4 } },
+    { id: 'b_pillard', name: 'Pillard', icon: '🗝️', rar: 1, max: 3, desc: '+20 % or et Cendres, +20 % butin rare.', mods: { gf: 20, mf: 20 } },
+    { id: 'b_brasier', name: 'Brasier', icon: '♨️', rar: 1, max: 3, desc: 'Brûlures : +50 % dégâts.', mods: { burnP: 50 } },
+    { id: 'b_pestilence', name: 'Pestilence', icon: '🧫', rar: 1, max: 3, desc: 'Poison : +50 % dégâts.', mods: { poisonP: 50 } },
+    { id: 'b_ecorcheur', name: 'Écorcheur', icon: '🔪', rar: 1, max: 3, desc: 'Saignement : +50 % dégâts.', mods: { bleedP: 50 } },
+    { id: 'b_zenith', name: 'Zénith', icon: '🌞', rar: 2, max: 2, desc: "L'ultime se charge 40 % plus vite, +15 % puissance.", mods: { ultP: 40, pow: 15 } },
+    { id: 'b_titan', name: 'Titan épineux', icon: '🦔', rar: 3, max: 1, desc: '+40 % PV et renvoie 60 % de ton attaque à chaque coup reçu.', mods: { hpP: 40, thorns: 60 } },
     { id: 'b_riposte', name: 'Riposte', icon: '🤺', rar: 1, max: 3, desc: 'Parade : la riposte fait +100 % dégâts.', mods: { parryP: 100 } },
     { id: 'b_lynx', name: 'Œil de lynx', icon: '🎯', rar: 1, max: 3, desc: 'Points faibles : +60 % dégâts.', mods: { weakP: 60 } },
     { id: 'b_adrenaline', name: 'Adrénaline', icon: '💉', rar: 1, max: 3, desc: "L'ultime se charge 30 % plus vite.", mods: { ultP: 30 } },
@@ -449,6 +532,14 @@ var DATA = (function () {
     { id: 'r_larme', name: 'Larme de sainte', icon: '💧', desc: '+45 % soins reçus.', mods: { healP: 45 } },
     { id: 'r_fer', name: 'Fer à marquer', icon: '🔱', desc: 'Les ennemis commencent Vulnérables pendant 6 s (+25 % dégâts subis).', mods: { vulnStart: 6 } },
     { id: 'r_enclume', name: 'Enclume miniature', icon: '⚒️', desc: '+30 % armure, renvoie 20 %.', mods: { defP: 30, thorns: 20 } },
+    { id: 'r_boussole', name: 'Boussole du fossoyeur', icon: '🧭', desc: '+30 % butin rare et +30 % or et Cendres.', mods: { mf: 30, gf: 30 } },
+    { id: 'r_gantelet', name: 'Gantelet de duelliste', icon: '🧤', desc: 'Parade : riposte +150 %. +8 % blocage.', mods: { parryP: 150, block: 8 } },
+    { id: 'r_coeurvide', name: 'Cœur du vide', icon: '🕳️', desc: "L'ultime se charge 60 % plus vite.", mods: { ultP: 60 } },
+    { id: 'r_cible', name: 'Cible gravée', icon: '🎯', desc: 'Points faibles : +120 % dégâts.', mods: { weakP: 120 } },
+    { id: 'r_bandage', name: 'Bandages bénis', icon: '🩹', desc: '+30 % soins reçus, +0,6 % régénération.', mods: { healP: 30, regen: 0.6 } },
+    { id: 'r_fouet', name: 'Fouet à neuf queues', icon: '➰', desc: 'Tes attaques font saigner (+50 %), saignement +50 %.', mods: { bleedHit: 50, bleedP: 50 } },
+    { id: 'r_etoile', name: 'Étoile de fer', icon: '✴️', desc: 'Chaque 4e attaque frappe tous les ennemis (+100 %).', mods: { chain: 100 } },
+    { id: 'r_sceptre', name: 'Sceptre brisé', icon: '⚜️', desc: '+25 % puissance des pouvoirs, recharge 12 % plus rapide.', mods: { pow: 25, cdr: 12 } },
     { id: 'r_tambour', name: 'Tambour de peau', icon: '🥁', desc: 'Chaque coup : +3 % vitesse (x10).', mods: { frenzy: 3 } }
   ];
 
@@ -483,6 +574,9 @@ var DATA = (function () {
     { id: 'pa_cendre', name: 'Cœur de cendre', icon: '🕊️', desc: 'Une résurrection par descente.', mods: { revive: 1 }, how: 'Vaincre Le Seigneur des Braises' },
     { id: 'pa_fossoyeur', name: 'Pacte du fossoyeur', icon: '⚱️', desc: '+60 % or et Cendres, mais ennemis +15 % PV.', mods: { gf: 60, enemyHpP: 15 }, how: 'Trouver un objet légendaire' },
     { id: 'pa_creux', name: 'Bénédiction creuse', icon: '👑', desc: '+12 % à toutes les stats.', mods: { allP: 12 }, how: 'Vaincre Le Roi Creux' },
+    { id: 'pa_duel', name: 'Voie du duelliste', icon: '🤺', desc: 'Parade : riposte +100 %. Points faibles : +60 % dégâts.', mods: { parryP: 100, weakP: 60 }, how: 'Réussir 30 parades parfaites' },
+    { id: 'pa_arene', name: "Champion de l'arène", icon: '🏟️', desc: '+12 % dégâts infligés.', mods: { dmgP: 12 }, how: 'Gagner 5 arènes' },
+    { id: 'pa_alchimie', name: "Sang d'alchimiste", icon: '⚗️', desc: '+1 fiole et +30 % soins reçus.', mods: { potions: 1, healP: 30 }, how: 'Fusionner des objets 25 fois' },
     { id: 'pa_relique', name: 'Faveur du pendu', icon: '🎁', desc: 'Commence chaque descente avec un artefact au hasard.', mods: { startArtifact: 1 }, how: 'Trouver un objet unique' }
   ];
 
@@ -501,6 +595,10 @@ var DATA = (function () {
     { id: 'h_lvl15', name: 'Élu', desc: 'Atteindre le niveau 15 dans une descente', c: ['maxLvl', 15], cendres: 300, pact: 'pa_presage' },
     { id: 'h_leg', name: 'Lueur orange', desc: 'Trouver un objet légendaire', c: ['leg', 1], cendres: 500, pact: 'pa_fossoyeur' },
     { id: 'h_uni', name: 'Lueur rouge', desc: 'Trouver un objet unique', c: ['uni', 1], cendres: 1500, pact: 'pa_relique' },
+    { id: 'h_parry', name: 'Mur vivant', desc: 'Réussir 30 parades parfaites', c: ['parry', 30], cendres: 600, pact: 'pa_duel' },
+    { id: 'h_arene', name: 'Gladiateur', desc: 'Gagner 5 arènes', c: ['arenes', 5], cendres: 800, pact: 'pa_arene' },
+    { id: 'h_fusion2', name: 'Grand œuvre', desc: 'Fusionner des objets 25 fois', c: ['fusions', 25], cendres: 1200, pact: 'pa_alchimie' },
+    { id: 'h_weak', name: 'Œil de lynx', desc: 'Toucher 100 points faibles', c: ['weak', 100], cendres: 500 },
     { id: 'h_kill100', name: 'Chasseur', desc: 'Tuer 100 ennemis', c: ['kills', 100], cendres: 60 },
     { id: 'h_kill2k', name: 'Fléau', desc: 'Tuer 2 000 ennemis', c: ['kills', 2000], cendres: 1500 },
     { id: 'h_kill10k', name: 'Extinction', desc: 'Tuer 10 000 ennemis', c: ['kills', 10000], cendres: 10000 },
@@ -514,7 +612,7 @@ var DATA = (function () {
     { id: 'h_forge', name: 'Forgeron', desc: 'Améliorer des objets 20 fois', c: ['upgrades', 20], cendres: 300 },
     { id: 'h_epic', name: 'Lueur violette', desc: 'Trouver 10 objets épiques', c: ['epic', 10], cendres: 400 },
     { id: 'h_runs', name: 'Habitué', desc: 'Lancer 25 descentes', c: ['runs', 25], cendres: 500 },
-    { id: 'h_heros', name: 'Compagnie maudite', desc: 'Débloquer tous les héros', c: ['heroes', 6], cendres: 5000 }
+    { id: 'h_heros', name: 'Compagnie maudite', desc: 'Débloquer tous les héros', c: ['heroes', 8], cendres: 5000 }
   ];
 
   // ---------- Événements ----------

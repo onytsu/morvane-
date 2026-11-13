@@ -319,3 +319,7 @@ h3 { font-size: 15px; }
 .daily { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; margin-bottom: 10px; border-radius: 12px; border: 1px solid var(--gold); background: linear-gradient(90deg, #4d3810, #241a0c); color: #ffe9b8; animation: callgold 2s ease-in-out infinite; }
 .daily:active { transform: scale(.97); }
 @keyframes callgold { 50% { box-shadow: 0 0 22px #d9a441aa; } }
+
+/* --- v1.7 : 8 héros, boss --- */
+.roster { grid-template-columns: repeat(8, 1fr); gap: 4px; } .rh { border-radius: 8px; } .rh span { font-size: 12px; }
+.unit.en.hidden img { opacity: .18; filter: blur(1px) brightness(.6); } .unit.en.hidden .ebar { opacity: .4; }
