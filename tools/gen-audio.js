@@ -40,6 +40,13 @@ const music = [
  ['music_hub','slow melancholic dark fantasy sanctuary theme, solo cello and soft choir pad, distant bell, campfire calm, minor key, instrumental, seamless loop'],
  ['music_combat','tense driving dark fantasy battle loop, low strings ostinato, war drums, minor key, medium-fast tempo, instrumental, no vocals, seamless loop'],
  ['music_boss','epic boss battle, pounding drums, ominous latin-style choir without clear words, heavy brass, fast, instrumental, seamless loop'],
+ ['music_z1','dark fantasy crypt exploration battle loop, cold echoing stone hall, low cello ostinato, slow heavy war drum, distant pipe organ, eerie boys choir pad, minor key, medium tempo, instrumental, no vocals, seamless loop'],
+ ['music_z2','dark fantasy haunted dead forest battle loop, nervous pizzicato strings, wooden percussion and bone rattles, mournful fiddle melody, howling wind, minor key, medium-fast tempo, instrumental, no vocals, seamless loop'],
+ ['music_z3','dark fantasy plague swamp battle loop, sluggish detuned double bass, wet hand drums, eerie bass clarinet and bowed saw, croaking low brass drones, sickly atmosphere, minor key, medium tempo, instrumental, no vocals, seamless loop'],
+ ['music_z4','dark fantasy desecrated gothic cathedral battle loop, huge pipe organ riff, tolling church bells, dramatic string stabs, wordless solemn choir, timpani, minor key, medium-fast tempo, instrumental, seamless loop'],
+ ['music_z5','dark fantasy infernal forge battle loop, pounding anvil hits and metal percussion, aggressive low brass riff, driving taiko drums, distorted cello chugs, fiery and relentless, minor key, fast tempo, instrumental, no vocals, seamless loop'],
+ ['music_z6','dark fantasy void throne room battle loop, cold ethereal synth pads, reversed whispers, slow majestic tragic strings theme, deep sub bass pulse, glassy bells, cosmic dread, minor key, medium tempo, instrumental, no vocals, seamless loop'],
+ ['music_final','final boss battle against a hollow undead king, tragic and colossal, full orchestra, thundering drums, soaring wordless choir, heroic sorrowful string melody over fast ostinato, pipe organ, minor key, fast tempo, instrumental, seamless loop'],
 ];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function post(url, body) {

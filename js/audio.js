@@ -62,7 +62,9 @@ var SND = (function () {
     if (!on.music || !name) { stopCur(0.6); return; }
     if (curName === name) return;
     load('music_' + name).then(function (buf) {
-      if (!buf || wanted !== name || !on.music || curName === name) return;
+      if (!buf) { if (name !== 'combat' && wanted === name) music('combat'); return; }
+      if (wanted !== name || !on.music || curName === name) return;
+      for (var k in buffers) if (k.indexOf('music_') === 0 && k !== 'music_' + name) delete buffers[k]; // une seule musique en mémoire
       stopCur(0.8);
       var s = ctx.createBufferSource(), g = ctx.createGain();
       s.buffer = buf; s.loop = true; s.loopStart = 0.03; s.loopEnd = Math.max(1, buf.duration - 0.06);

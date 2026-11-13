@@ -23,9 +23,11 @@ UI.run = (function () {
       '<button class="act" id="bstance" data-act="stance"><span class="ai"></span><b></b></button></div>' +
       '<button class="relics" id="relics" data-act="relics" style="width:100%"></button></div>';
     built = null; shownPhase = null;
+    if (run.phase !== 'combat') SND.music(zoneMusic(run));
     if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); }
     syncPhase(true);
   }
+  function zoneMusic(run) { return 'z' + E.zoneOf(run.floor).id; }
   function stop() { running = false; clearTimeout(phaseTimer); }
   function pause(p) { paused = p; last = performance.now(); }
 
@@ -69,8 +71,8 @@ UI.run = (function () {
     for (i = 0; i < evs.length; i++) {
       e = evs[i]; el = e.id ? els[e.id] : null;
       switch (e.k) {
-        case 'start': SND.music('combat'); tuto('skill', '👆 Ton héros frappe tout seul. Touche un <b>pouvoir</b> dès qu’il brille !'); break;
-        case 'boss': SND.music('boss'); SND.play('boss_intro'); banner(c.enemies[0].name.toUpperCase(), 'BOSS'); UI.flash('#c2283a66'); break;
+        case 'start': SND.music(zoneMusic(run)); tuto('skill', '👆 Ton héros frappe tout seul. Touche un <b>pouvoir</b> dès qu’il brille !'); break;
+        case 'boss': SND.music(E.zoneOf(run.floor).id === 6 ? 'final' : 'boss'); SND.play('boss_intro'); banner(c.enemies[0].name.toUpperCase(), 'BOSS'); UI.flash('#c2283a66'); break;
         case 'dmg':
           if (e.sh) { floatAt(el, 'Bouclier', 'txt'); break; }
           floatAt(el, E.fmt(e.v), e.crit ? 'crit' : e.dot ? 'dot' : '');
@@ -231,7 +233,7 @@ UI.run = (function () {
     if (quiet) return;
     if (r.boss) SND.play('victory'); if (r.gold) SND.play('gold'); if (r.lvlUps) setTimeout(function () { SND.play('levelup'); }, 300);
     if (r.items.length) lootFx(r.items);
-    if (r.boss) SND.music('combat');
+    if (r.boss) SND.music(zoneMusic(run));
     UI.flushAch();
   }
   ACT.cont = function () { SND.play('click'); E.continueRun(); syncPhase(true); };
