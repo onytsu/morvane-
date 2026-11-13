@@ -4,7 +4,7 @@ UI.run = (function () {
   var E = ENGINE, D = DATA, $ = UI.$, S = UI.S, ACT = UI.ACT;
   var running = false, paused = false, last = 0, shownPhase = null, phaseTimer = null, els = {}, posOf = {}, floats = 0, built = null, fxL = null, lootShown = 0, combo = 0, comboT = null;
   // v2.0 : lumière, orbes, projectiles, primes
-  var vfx = null, orbEls = {}, shotEls = {}, stopT = 0, primeKey = '', wiping = false, stepT = 0, lastTurn = '', moving = false, diceKey = '';
+  var vfx = null, orbEls = {}, shotEls = {}, stopT = 0, primeKey = '', wiping = false, stepT = 0, lastTurn = '', moving = false, diceKey = '', selDie = 0, trayKey = '', lastPlaced = -1, figLine = null, handRoll = false, diceMode = null;
   var RANGED = { pyro: 'fire', necro: 'dark', chasseuse: 'blade', pretresse: 'holy' };
   var ORB = { gold: '💰', heal: '❤️', ult: '🌟', fury: '🔥' };
   var FXMAP = { burn: 'fire', bleed: 'blood', thorns: 'hit', chain: 'ice', skel: 'death', ally: 'hit', star: 'crit' };
@@ -23,6 +23,7 @@ UI.run = (function () {
     $('#screen').innerHTML =
       '<div class="runbar"><div class="grow"><div class="zone" id="rzone"></div><div class="pips" id="rpips"></div></div><span class="cur gold" id="rgold"></span><span class="cur ash" id="rcend"></span><button class="icon-btn" data-act="runMenu">☰</button></div>' +
       '<div class="arena" id="arena"></div>' +
+      '<div class="dtray" id="dtray"><div class="dside"><button class="dbag" id="dbag" data-act="bag">🎒<b></b></button><button class="dre" id="dre" data-act="dreroll">↻<b></b></button></div><div class="dhand" id="dhand"></div><div class="dgrid" id="dgrid"></div></div>' +
       '<div class="hud"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><span></span></div><div class="xprow"><b id="rlvl"></b><div class="bar"><i id="xpbar"></i></div><span class="hsts" id="hsts"></span></div>' +
       '<div class="turnrow"><span class="aps" id="aps"></span><b id="tlabel"></b><span class="grow"></span><button class="tog" id="tauto" data-act="auto">AUTO</button><button class="tog" id="tspd" data-act="speed"></button><button class="tog help" data-act="help">?</button><button class="tog pass" id="tpass" data-act="pass">Passer ⏭</button></div>' +
       '<div class="skills"><button class="skb strike" id="bstrike" data-act="strike" data-info="strike"><span class="e">⚔️</span><span class="nm">Frapper</span></button>' + h.skills.map(function (k, i) { return '<button class="skb" id="sk' + i + '" data-act="skill" data-i="' + i + '" data-info="skill:' + i + '"><span class="e">' + k.icon + '</span><span class="cd"></span><span class="ev"></span><span class="nm">' + k.name + '</span><span class="n"></span></button>'; }).join('') +
@@ -31,7 +32,7 @@ UI.run = (function () {
       '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + h.ult.icon + ' ' + h.ult.name + '</span></button>' +
       '<button class="act" id="bstance" data-act="stance" data-info="stance"><span class="ai"></span><b></b></button></div>' +
       '<button class="relics" id="relics" data-act="relics" style="width:100%"></button></div>';
-    built = null; shownPhase = null; updateHud.key = null; lastTurn = ''; diceKey = '';
+    built = null; shownPhase = null; updateHud.key = null; lastTurn = ''; diceKey = ''; trayKey = ''; selDie = 0; lastPlaced = -1;
     if (run.phase !== 'combat') SND.music(zoneMusic(run));
     if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); }
     syncPhase(true);
@@ -50,7 +51,8 @@ UI.run = (function () {
     els = {}; posOf = {}; floats = 0; lootShown = 0; combo = 0; orbEls = {}; shotEls = {}; primeKey = '';
     vfx = typeof VFX !== 'undefined' ? VFX.attach(a) : null;
     fxL = typeof FX !== 'undefined' ? FX.attach(a, { ambient: ['dust', 'leaves', 'fireflies', 'gold', 'embers', 'void'][z.id - 1], warm: 2 }) : null;
-    if (c && c.dice) showDice(c, { d: c.dice, id: c.dfx.id, name: c.dfx.name, icon: c.dfx.icon }, true);
+    if (c && c.dfx && c.dfx.id) showFig(c.dfx, true);
+    trayKey = ''; selDie = 0; lastPlaced = -1; figLine = null;
     if (c) { c.enemies.forEach(function (e, i) { if (!e.dead) { addEnemy(e, i, false); els[e.id].style.animationDelay = (0.15 + i * 0.09) + 's'; } }); built = c; }
     else built = 'empty';
   }
@@ -63,7 +65,7 @@ UI.run = (function () {
     d.className = 'unit en' + (e.boss ? ' boss' : e.elite ? ' elite' : '') + (spawn ? ' spawn' : '') + (e.fix ? ' fixed fx-' + e.fix : '') + (e.big ? ' giant' : '') + (e.gold ? ' golden' : '') + (e.champ ? ' champ' : '');
     d.id = 'en' + e.id; d.dataset.act = 'target'; d.dataset.i = i; d.dataset.info = 'foe:' + i;
     d.style.right = P[pi].r + '%'; d.style.bottom = P[pi].b + '%'; d.style.zIndex = 10 - Math.round(P[pi].b / 5);
-    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">🎯</span>';
+    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span><span class="intent"></span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">🎯</span>';
     $('#arena').appendChild(d); els[e.id] = d;
   }
   function floatAt(el, txt, cls) {
@@ -134,23 +136,88 @@ UI.run = (function () {
     el.style.setProperty('--dx', Math.round((b.x - a.x) * 0.42) + 'px'); el.style.setProperty('--dy', Math.round((b.y - a.y) * 0.42) + 'px');
     anim(el, 'atk', 280);
   }
-  // --- dés de combat ---
-  function showDice(c, e, still) {
+  // --- dés de combat (v3.2) : la main, la table de 9 cases, les figures ---
+  function tdie(t, v, cls) { return '<span class="tdie t-' + t + (cls || '') + '"><i>' + D.DICE[t].icon + '</i><b>' + v + '</b></span>'; }
+  function facesTxt(f) { return f[0] + '-' + f[5]; }
+  function showFig(e, still) {
     var el = $('#cdice'); if (!el) return;
-    el.className = 'cdice k-' + e.id + (still ? '' : ' roll'); el.innerHTML = die(e.d[0]) + die(e.d[1]) + (e.name ? '<b>' + e.icon + ' ' + e.name + '</b>' : '') + '<em id="cdre"></em>';
+    el.className = 'cdice k-' + e.id + (still ? '' : ' roll'); el.innerHTML = '<b>' + e.icon + ' ' + e.name + '</b>';
     if (still) return;
-    void el.offsetWidth; SND.play('click', 0.8); setTimeout(function () { SND.play('click', 0.6); }, 90);
-    if (e.id !== 'rien') {
-      var hero = $('#uhero'), big = e.id === 'jackpot' || e.id === 'double' || e.id === 'sept';
-      setTimeout(function () { floatAt(hero, e.name + ' !', big ? 'crit' : 'txt'); SND.play(e.id === 'jackpot' ? 'loot_legend' : big ? 'upgrade' : 'equip', 0.7); var h = center(hero); if (vfx && h) { VFX.ring(vfx, h.x, h.y, big ? 'gold' : 'ice', big ? 120 : 70, 0.4, 5); if (big) VFX.sparks(vfx, h.x, h.y, 'gold', e.id === 'jackpot' ? 50 : 20, { speed: 300, g: -160, life: 1 }); } if (e.id === 'jackpot') { UI.flash('#f2bd5e88'); UI.vib([30, 30, 80]); } }, 380);
-      tuto('dice', '🎲 <b>Dés de combat.</b> Deux dés au début de chaque tour : double = +1 action, 7 = pouvoirs gratuits, 10 ou plus = +40 % dégâts, 4 ou moins = protection, deux chiffres qui se suivent = coup critique. Touche les dés pour les <b>relancer</b> (1 fois par combat).');
-    }
+    var hero = $('#uhero'), big = e.id === 'jackpot' || e.id === 'sept';
+    floatAt(hero, e.name + ' !', big ? 'crit' : 'txt'); SND.play(e.id === 'jackpot' ? 'loot_legend' : big ? 'upgrade' : 'equip', 0.7);
+    var h = center(hero); if (vfx && h) { VFX.ring(vfx, h.x, h.y, big ? 'gold' : 'ice', big ? 120 : 70, 0.4, 5); if (big) VFX.sparks(vfx, h.x, h.y, 'gold', e.id === 'jackpot' ? 50 : 20, { speed: 300, g: -160, life: 1 }); }
+    if (e.id === 'jackpot') { UI.flash('#f2bd5e88'); UI.vib([30, 30, 80]); }
+    figLine = e.line || null; trayKey = ''; setTimeout(function () { figLine = null; trayKey = ''; }, 1100);
+    tuto('figure', '🎲 <b>Figure : ' + e.name + '.</b> ' + e.desc + '<br><span class="dim">Trois dés alignés forment une figure selon leurs valeurs. Touche 🎒 pour les voir toutes.</span>');
   }
-  ACT.cdice = function () {
-    var run = S().run, c = run && run.combat; if (!c) return;
-    if (E.rerollDice()) { SND.play('click'); return; }
-    UI.toast('🎲 <b>' + c.dice[0] + ' + ' + c.dice[1] + (c.dfx.name ? ' : ' + c.dfx.name : '') + '</b><br>' + c.dfx.desc + (c.rerolls > 0 ? '<br><span class="dim">Relance possible au début de ton tour, avant d’agir.</span>' : '<br><span class="dim">Plus de relance pour ce combat.</span>'), true);
+  ACT.cdice = function () { var run = S().run, c = run && run.combat; if (c && c.dfx && c.dfx.id) UI.toast(c.dfx.icon + ' <b>' + c.dfx.name + '</b><br>' + c.dfx.desc, true); };
+  function updateTray(run) {
+    var tr = $('#dtray'); if (!tr) return;
+    var c = run.phase === 'combat' && run.combat && !run.combat.over ? run.combat : null, mine = !!c && c.turn === 'hero', auto = !!S().settings.auto, i;
+    if (c && selDie >= c.hand.length) selDie = Math.max(0, c.hand.length - 1);
+    var key = !c ? 'x' + run.bag.length : [mine ? 1 : 0, selDie, c.rerolls, auto ? 1 : 0, lastPlaced, figLine ? figLine.join('') : '', c.hand.map(function (d) { return d.t + d.v; }).join(','), c.grid.map(function (g) { return (g.r || '') + (g.d ? g.d.t + g.d.v : ''); }).join(',')].join('|');
+    if (key === trayKey) return; trayKey = key;
+    tr.className = 'dtray' + (!c ? ' idle' : mine ? '' : ' wait');
+    $('#dbag').lastChild.textContent = run.bag.length;
+    var re = $('#dre'), canRe = mine && c.hand.length > 0 && c.rerolls > 0; re.lastChild.textContent = c ? c.rerolls : ''; re.classList.toggle('off', !canRe);
+    var hh = '';
+    if (c && c.hand.length) c.hand.forEach(function (d, k) { hh += '<button class="hd' + (k === selDie && mine && !auto ? ' sel' : '') + (handRoll ? ' roll' : '') + '" style="animation-delay:' + (k * 0.06) + 's" data-act="hdie" data-i="' + k + '">' + tdie(d.t, d.v) + '</button>'; });
+    else hh = '<span class="dnone">' + (c ? (mine ? 'Tous tes dés sont posés' : 'Les ennemis jouent...') : '🎲 Ton sac : ' + run.bag.length + ' dés') + '</span>';
+    $('#dhand').innerHTML = hh; handRoll = false;
+    var gh = '', sel = mine && !auto && c.hand[selDie] ? c.hand[selDie] : null;
+    for (i = 0; i < 9; i++) {
+      var g = c ? c.grid[i] : { r: null, d: null }, cls = 'dc' + (g.r ? ' r-' + g.r : '') + (g.d ? ' full' : '') + (i === lastPlaced && g.d ? ' pop' : '') + (figLine && figLine.indexOf(i) >= 0 ? ' lit' : ''), inner = '';
+      if (g.d) inner = tdie(g.d.t, g.d.v, g.d.mir ? ' mir' : '');
+      else {
+        inner = g.r === 'x2' ? '<em>×2</em>' : g.r === 'p2' ? '<em>+2</em>' : g.r === 'seal' ? '<em>🔒</em>' : '';
+        if (sel && g.r !== 'seal') {
+          var pv = E.dieCalc(selDie, i), fg = E.figAt(selDie, i);
+          if (pv && (pv.v !== sel.v || pv.t !== sel.t)) inner += '<s class="' + (pv.v > sel.v ? 'up' : 'dn') + '">' + (pv.t !== sel.t && pv.v ? D.DICE[pv.t].icon : '') + pv.v + '</s>';
+          if (fg.length) { cls += ' fig'; inner += '<u>' + fg[0].icon + '</u>'; }
+          if (sel.t === 'echo' || sel.t === 'miroir') cls += ' aim';
+        }
+      }
+      gh += '<button class="' + cls + '" data-act="cell" data-i="' + i + '">' + inner + '</button>';
+    }
+    $('#dgrid').innerHTML = gh;
+  }
+  function dieInfo(t, v, extra) { var d = D.DICE[t]; UI.toast(d.icon + ' <b>' + d.name + (v != null ? ' ' + v : '') + '</b><br>' + d.desc + (extra || ''), true); }
+  ACT.hdie = function (d) {
+    var run = S().run, c = run && run.combat, i = +d.i; if (!c || !c.hand[i]) return;
+    if (i === selDie || c.turn !== 'hero') dieInfo(c.hand[i].t, c.hand[i].v, '<br><span class="dim">Touche une case libre de la table pour le poser.</span>');
+    else { selDie = i; SND.play('click', 0.6); }
+    trayKey = '';
   };
+  ACT.cell = function (d) {
+    var run = S().run, c = run && run.combat && !run.combat.over ? run.combat : null, i = +d.i;
+    if (!c) { UI.toast('🔲 <b>Table de dés.</b> En combat, pose ici les dés de ta main.'); return; }
+    var g = c.grid[i];
+    if (g.d) { if (g.d.t === 'miroir') UI.toast('🪞 <b>Miroir vide.</b> Il n’avait aucun voisin à copier.'); else dieInfo(g.d.t, g.d.v, g.d.mir ? '<br><span class="dim">Copié par un Miroir.</span>' : ''); return; }
+    if (g.r === 'seal') { UI.toast('🔒 <b>Case scellée.</b> Le gardien de la zone la tient fermée : aucun dé ne peut y être posé.'); return; }
+    if (c.turn !== 'hero' || !c.hand.length) { UI.toast(g.r === 'x2' ? '<b>Case ×2.</b> Le dé posé ici compte double.' : g.r === 'p2' ? '<b>Case +2.</b> Le dé posé ici gagne 2 points.' : 'Case libre.'); return; }
+    if (E.placeDie(selDie, i)) { lastPlaced = i; trayKey = ''; setTimeout(function () { if (lastPlaced === i) { lastPlaced = -1; trayKey = ''; } }, 350); } else SND.play('error');
+  };
+  ACT.dreroll = function () {
+    var run = S().run, c = run && run.combat;
+    if (c && E.rerollDice()) { SND.play('click'); return; }
+    UI.toast('↻ <b>Relance.</b> Relance les dés encore dans ta main. ' + (c ? (c.rerolls > 0 ? 'Il t’en reste ' + c.rerolls + ' pour ce combat.' : 'Plus de relance pour ce combat.') : 'Une fois par combat.'), true);
+  };
+  function bagSheet() {
+    var run = S().run; if (!run) return; var groups = {}, order = [], h;
+    run.bag.forEach(function (d) { var k = d.t + '|' + d.f.join(''); if (!groups[k]) { groups[k] = { d: d, n: 0 }; order.push(k); } groups[k].n++; });
+    h = '<h2>🎒 Ton sac de dés</h2><div class="tiny dim center" style="margin:-6px 0 10px">' + run.bag.length + ' dés · tu en pioches ' + (3 + (run.stats.diceHand || 0)) + ' par tour · le sac se remélange quand il est vide</div>';
+    order.forEach(function (k) { var g = groups[k], d = g.d; h += '<div class="li"><div class="ic">' + tdie(d.t, facesTxt(d.f)) + '</div><div class="grow"><b>' + E.dieName(d) + (g.n > 1 ? ' ×' + g.n : '') + '</b> <span class="tiny dim">faces ' + d.f[0] + ' à ' + d.f[5] + '</span><div class="small dim">' + D.DICE[d.t].desc + '</div></div></div>'; });
+    h += '<h3 class="gold" style="margin:10px 0 6px">La table</h3><div class="small dim" style="line-height:1.6">Pose tes dés sur les 9 cases : ils agissent tout de suite et ne coûtent <b>aucune action</b>. Ils restent sur la table ; quand elle est pleine, elle est purgée au tour suivant (+10 % d’ultime).<br><b style="color:#ffd87a">×2</b> le dé compte double · <b style="color:#a9cbff">+2</b> le dé gagne 2 points · 🔒 case scellée par un boss.<br>✨ <b>Écho</b> : pose-le d’abord, puis colle-lui tes meilleurs dés.</div>';
+    h += '<h3 class="gold" style="margin:10px 0 6px">Les figures</h3><div class="tiny dim" style="margin-bottom:6px">Trois dés alignés (ligne, colonne ou diagonale), selon la valeur tirée de chaque dé.</div>';
+    D.FIGS.forEach(function (f) { h += '<div class="li"><div class="ic">' + f[0] + '</div><div class="grow"><b>' + f[1] + '</b> <span class="tiny dim">' + f[2] + '</span><div class="small dim">' + f[3] + '</div></div></div>'; });
+    h += '<div class="btns"><button class="btn primary big" data-act="close">FERMER</button></div>';
+    UI.modal(h);
+  }
+  ACT.bag = function () { SND.play('click'); bagSheet(); };
+  function intentHtml(it) {
+    var h = it.k === 'atk' ? '⚔️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '') : it.k === 'big' ? '💥 ' + E.fmt(Math.ceil(it.dmg)) : it.k === 'prep' ? '⚠️ charge' : it.k === 'stun' ? '💫' : it.k === 'flee' ? '🏃 fuit' : it.k === 'hidden' ? '🌊' : '💤';
+    return h + (it.heal ? ' ✚' : '') + (it.shield ? ' 🛡️' : '') + (it.summon ? ' 👥' : '');
+  }
   // --- orbes à ramasser ---
   function addOrb(e) {
     var a = $('#arena'); if (!a) return; var p = center(els[e.id]) || { x: a.clientWidth * 0.62, b: a.clientHeight * 0.7 };
@@ -272,8 +339,15 @@ UI.run = (function () {
           anim($('#sk' + e.i), 'fire', 300); break;
         case 'potion': SND.play('potion'); break;
         case 'die': if (el) { var dp = center(el); if (vfx && dp) VFX.death(vfx, dp.x, dp.y, e.boss); souls(el, e.boss ? 12 : 3, e.boss ? 10 : 3); dropGems(c, el); el.classList.add('dead'); el.classList.remove('charging'); } SND.play(e.boss ? 'boss_die' : 'die'); if (e.boss) { UI.flash('#ffffffaa'); anim($('#arena'), 'shake', 250); hitstop(160); UI.vib([40, 40, 120]); } break;
-        case 'pturn': var tl = $('#tlabel'); if (tl) { tl.textContent = 'Tour ' + e.n; } anim($('#aps'), 'bump', 300); if (e.n > 1) { floatAt(hero, 'À toi', 'txt'); } document.querySelectorAll('.unit.en.acting').forEach(function (x) { x.classList.remove('acting'); }); break;
-        case 'dice': showDice(c, e, false); break;
+        case 'pturn': var fgp = $('#cdice'); if (fgp) fgp.innerHTML = ''; if (e.n === 2) tuto('intent', '👁️ <b>Intentions.</b> Sous le nom de chaque ennemi : ce qu’il fera à son tour. ⚔️ 12 = il frappera pour 12 · ⚠️ = il charge un gros coup · 💤 = il ne fera rien.'); anim($('#aps'), 'bump', 300); if (e.n > 1) { floatAt(hero, 'À toi', 'txt'); } document.querySelectorAll('.unit.en.acting').forEach(function (x) { x.classList.remove('acting'); }); break;
+        case 'draw': handRoll = true; trayKey = ''; selDie = 0; SND.play('click', 0.8); setTimeout(function () { SND.play('click', 0.6); }, 90); tuto('dice2', '🎲 <b>Tes dés.</b> À chaque tour tu pioches 3 dés de ton sac 🎒. Touche une case de la table pour poser le dé choisi : il agit tout de suite et ne coûte <b>aucune action</b>.<br>⚔️ frappe · 🛡️ protège · ❤️ soigne · ✨ renforce ses voisins.'); break;
+        case 'place': SND.play(e.t === 'garde' ? 'block' : e.t === 'echo' || e.t === 'miroir' ? 'equip' : 'click', 0.7); if (e.t === 'echo') floatAt(hero, '✨ Écho', 'txt'); else if (e.t === 'miroir') floatAt(hero, 'Miroir vide', 'txt'); break;
+        case 'dshield': floatAt(hero, '+' + E.fmt(Math.ceil(e.v)) + ' 🛡️', 'txt'); break;
+        case 'dult': floatAt(hero, '+' + e.v + ' % 🌟', 'txt'); break;
+        case 'dpoison': floatAt(el, '☠️ Poison', 'txt'); break;
+        case 'figure': showFig(e, false); break;
+        case 'gclear': floatAt(hero, 'Table purgée', 'txt'); SND.play('salvage', 0.6); break;
+        case 'handleft': tuto('handleft', '🎲 Tu n’as plus d’action, mais il te reste <b>des dés à poser</b>. Pose-les, ou touche <b>Passer ⏭</b>.'); break;
         case 'eturn': document.querySelectorAll('.unit.en.acting').forEach(function (x) { x.classList.remove('acting'); }); if (el) el.classList.add('acting'); break;
         case 'stunned': floatAt(el, 'Étourdi', 'txt'); break;
         case 'slowed': floatAt(hero, 'Entravé...', 'hurt'); break;
@@ -345,6 +419,9 @@ UI.run = (function () {
     var apk = (c && run.phase === 'combat' ? ap : -1) + ''; var apsEl = $('#aps');
     if (apsEl && apsEl.dataset.k !== apk) { apsEl.dataset.k = apk; var ah = ''; for (i = 0; i < Math.max(E.AP, ap); i++) ah += '<i class="' + (i < ap ? 'on' : '') + '"></i>'; apsEl.innerHTML = ah; }
     $('#bstrike').classList.toggle('ready', mine && ap > 0 && !S().settings.auto); $('#tpass').classList.toggle('off', !mine);
+    var left = mine && ap <= 0 && c.hand.length > 0, tlb = $('#tlabel'), tlt = !c || run.phase !== 'combat' ? '' : left ? 'Pose tes dés' : 'Tour ' + c.round;
+    if (tlb && tlb.textContent !== tlt) tlb.textContent = tlt; $('#tpass').classList.toggle('ready', left && !S().settings.auto);
+    updateTray(run);
     for (i = 0; i < 3; i++) {
       var b2 = $('#sk' + i), ok = E.skillUnlocked(run.hero, i);
       if (!ok) { if (!b2.classList.contains('locked')) { b2.className = 'skb locked'; b2.firstChild.textContent = '🔒'; } continue; }
@@ -379,7 +456,11 @@ UI.run = (function () {
     var ctm = $('#condt'); if (ctm && c.cond === 'defi') { var left = Math.max(0, Math.ceil((20 - c.t) / E.ROUND)); ctm.textContent = ' ' + left + ' tour' + (left > 1 ? 's' : ''); ctm.parentNode.classList.toggle('late', left <= 0); }
     var hu = $('#uhero'); if (hu) { hu.classList.toggle('invuln', c.hero.invuln > 0); hu.classList.toggle('undying', !!c.hero.buffs.undying); }
     if (hu) hu.classList.toggle('fury', !!c.hero.buffs.fury);
-    var cre = $('#cdre'), canRe = !c.over && c.turn === 'hero' && !c.acted && c.rerolls > 0, crt = canRe ? '↻ ' + c.rerolls : ''; if (cre && cre.textContent !== crt) { cre.textContent = crt; $('#cdice').classList.toggle('canre', canRe); }
+    var its = !c.over && c.turn === 'hero' ? E.intents() : null;
+    c.enemies.forEach(function (e, i) {
+      var el = els[e.id]; if (!el) return; var ie = el._it || (el._it = el.querySelector('.intent')), ih = its && !e.dead ? intentHtml(its[i]) : '';
+      if (ie && ie.textContent !== ih) { ie.textContent = ih; ie.className = 'intent' + (its && !e.dead ? ' k-' + its[i].k : ''); }
+    });
     for (var oi = 0; oi < c.orbs.length; oi++) { var ob = orbEls[c.orbs[oi].oid]; if (ob) ob.classList.toggle('last', c.orbs[oi].t <= E.ROUND); }
     var m = $('#minions'), n = c.hero.skel || 0;
     if (m && m.children.length !== n) { var h = ''; for (var i = 0; i < n; i++) h += UI.spr('serviteur'); m.innerHTML = h; }
@@ -411,7 +492,7 @@ UI.run = (function () {
   // Affiche la bonne fenêtre selon la phase de la descente
   function syncPhase(now) {
     var run = S().run; if (!run) return;
-    var key = run.phase + '|' + run.floor + '|' + run.pendingBoons + '|' + run.pendingEvos + '|' + (run.room ? run.room.type : '');
+    var key = run.phase + '|' + run.floor + '|' + run.pendingBoons + '|' + run.pendingEvos + '|' + (run.pendingDice || 0) + '|' + (run.room ? run.room.type : '');
     if (key === shownPhase) return; shownPhase = key;
     clearTimeout(phaseTimer);
     var delay = now ? 0 : run.phase === 'victory' && run.result && !run.result.chest ? (run.result.boss ? 1700 : 850) : run.phase === 'dead' ? 1100 : 0;
@@ -425,7 +506,7 @@ UI.run = (function () {
     if (built === null) buildArena();
     if (run.phase === 'victory') return sheetVictory(run);
     if ((run.phase === 'doors' || run.phase === 'room') && run.pendingEvos > 0 && sheetEvo(run)) return;
-    if (run.phase === 'doors') return run.pendingBoons > 0 ? sheetBoon(run) : sheetDoors(run);
+    if (run.phase === 'doors') return run.pendingBoons > 0 ? sheetBoon(run) : run.pendingDice > 0 ? sheetDice(run) : sheetDoors(run);
     if (run.phase === 'room') return run.pendingBoons > 0 ? sheetBoon(run) : sheetRoom(run);
     if (run.phase === 'dead') return end(false);
   }
@@ -453,6 +534,7 @@ UI.run = (function () {
     h += '<div class="gains">' + (r.gold ? '<span class="gold">+' + r.gold + ' 💰</span>' : '') + (r.cendres ? '<span class="ash">+' + E.fmt(r.cendres) + ' 🔥</span>' : '') + (r.lvlUps ? '<span style="color:#b3a6ff">Niveau ' + run.lvl + ' !</span>' : '') + (r.lvlUps && run.pendingEvos > 0 ? '<span class="gold">✨ Éveil !</span>' : '') + '</div>';
     if (r.defi != null) h += '<div class="center small ' + (r.defi ? 'good' : 'dim') + '" style="margin-bottom:6px">⏱️ Défi du bourreau : ' + (r.defi ? '<b>réussi !</b> Coffre bonus.' : 'trop lent cette fois.') + '</div>';
     if (r.arene) h += '<div class="center small gold" style="margin-bottom:6px">Récompense : un artefact, une aubaine et un objet.</div>';
+    if (r.die) h += '<div class="center small gold" style="margin-bottom:6px">🎲 Un nouveau dé t’attend pour ton sac.</div>';
     if (r.allyLeft) h += '<div class="center small dim" style="margin-bottom:6px">' + E.hero(r.allyLeft).name + ' te salue et repart : son contrat est rempli.</div>';
     if (r.artifact) h += '<div class="choice b3" style="pointer-events:none"><div class="ic">' + r.artifact.icon + '</div><div><span class="tag">Artefact</span><b>' + r.artifact.name + '</b><div class="d">' + r.artifact.desc + '</div></div></div>';
     if (r.items.length) h += '<div class="loot">' + lootCards(r.items) + '</div><div class="tiny dim center">Touche un objet pour le voir ou l’équiper</div>';
@@ -477,6 +559,41 @@ UI.run = (function () {
     h += '<div class="btns"><button class="btn sm' + (run.rerolls > 0 ? '' : ' off') + '" data-act="reroll">🎲 Relancer (' + run.rerolls + ')</button></div>';
     UI.overlay(h);
   }
+  // Offre de dés : un nouveau dé pour le sac, ciseler un dé (+1 à toutes ses faces) ou en briser un
+  function sheetDice(run) {
+    if (!run.diceOffer) E.makeDiceOffer(run);
+    var o = diceMode != null ? run.diceOffer[diceMode] : null, h;
+    if (o && o.k !== 'new') {
+      var up = o.k === 'up';
+      h = '<h2>' + (up ? '🔨 Quel dé ciseler ?' : '💥 Quel dé briser ?') + '</h2><div class="tiny dim center" style="margin:-6px 0 10px">' + (up ? 'Toutes ses faces gagnent +1 (jusqu’à 9).' : 'Il quitte ton sac : tu piocheras plus souvent les autres.') + '</div><div class="bagl">';
+      run.bag.forEach(function (d, i) { h += '<button class="bd' + (up && d.f[5] >= 9 ? ' off' : '') + '" data-act="diePick" data-i="' + i + '">' + tdie(d.t, facesTxt(d.f)) + '<span>' + E.dieName(d) + '</span></button>'; });
+      h += '</div><div class="btns"><button class="btn sm" data-act="dieBack">‹ Retour</button></div>';
+      UI.overlay(h); return;
+    }
+    diceMode = null;
+    h = '<h2>🎲 Un dé pour ton sac</h2><div class="tiny dim center" style="margin:-6px 0 8px">Ton sac : ' + run.bag.length + ' dés · tu en pioches ' + (3 + (run.stats.diceHand || 0)) + ' par tour' + (run.pendingDice > 1 ? ' · encore ' + run.pendingDice : '') + '</div>';
+    run.diceOffer.forEach(function (x, i) {
+      if (x.k === 'new') h += '<button class="choice b' + (x.f[0] - 1) + '" style="animation-delay:' + (i * 0.07) + 's" data-act="dieOffer" data-i="' + i + '"><div class="ic">' + tdie(x.t, facesTxt(x.f)) + '</div><div class="grow"><span class="tag">Nouveau dé · faces ' + x.f[0] + ' à ' + x.f[5] + '</span><b>' + E.dieName(x) + '</b><div class="d">' + D.DICE[x.t].desc + '</div></div></button>';
+      else if (x.k === 'up') h += '<button class="choice b1" style="animation-delay:' + (i * 0.07) + 's" data-act="dieOffer" data-i="' + i + '"><div class="ic">🔨</div><div class="grow"><span class="tag">Atelier</span><b>Ciseler un dé</b><div class="d">Choisis un dé de ton sac : toutes ses faces gagnent +1.</div></div></button>';
+      else h += '<button class="choice b0" style="animation-delay:' + (i * 0.07) + 's" data-act="dieOffer" data-i="' + i + '"><div class="ic">💥</div><div class="grow"><span class="tag">Atelier</span><b>Briser un dé</b><div class="d">Retire un dé de ton sac pour piocher plus souvent les meilleurs.</div></div></button>';
+    });
+    h += '<div class="btns"><button class="btn sm" data-act="bag">🎒 Voir mon sac</button><button class="btn sm" data-act="dieSkip">Ne rien prendre</button></div>';
+    UI.overlay(h);
+  }
+  function diceDone() { diceMode = null; shownPhase = null; updateHud.key = null; trayKey = ''; syncPhase(true); }
+  ACT.dieOffer = function (d) {
+    var run = S().run, o = run && run.diceOffer ? run.diceOffer[+d.i] : null; if (!o) return;
+    if (o.k === 'new') { if (E.chooseDie(+d.i)) { SND.play('equip'); UI.toast(D.DICE[o.t].icon + ' <b>' + E.dieName(o) + '</b> rejoint ton sac.'); diceDone(); } }
+    else { diceMode = +d.i; SND.play('click'); sheetDice(run); }
+  };
+  ACT.diePick = function (d) {
+    var run = S().run, o = run && run.diceOffer ? run.diceOffer[diceMode] : null; if (!o) return;
+    var die = run.bag[+d.i], nm = die ? E.dieName(die) : '';
+    if (E.chooseDie(diceMode, +d.i)) { SND.play(o.k === 'up' ? 'upgrade' : 'salvage'); UI.toast(o.k === 'up' ? '🔨 <b>' + nm + '</b> ciselé : +1 sur toutes ses faces.' : '💥 <b>' + nm + '</b> brisé.'); diceDone(); }
+    else SND.play('error');
+  };
+  ACT.dieBack = function () { diceMode = null; SND.play('click'); sheetDice(S().run); };
+  ACT.dieSkip = function () { SND.play('click'); E.chooseDie(-1); diceDone(); };
   // Éveil de pouvoir : renvoie false s'il n'y a plus rien à éveiller (on passe alors aux aubaines)
   function sheetEvo(run) {
     if (!run.evoOffer || !run.evoOffer.length) E.makeEvoOffer(run);
@@ -644,7 +761,8 @@ UI.run = (function () {
     }
     h += '<div class="li on"><div class="ic">✨</div><div class="grow"><b>Éveils de pouvoir</b><div class="small dim">Tous les 4 niveaux d’une descente (4, 8, 12...), tu fais évoluer un de tes pouvoirs. Un ✦ sur le bouton montre qu’il est éveillé.</div></div></div>';
     h += '<div class="li on"><div class="ic">🎲</div><div class="grow"><b>Tour par tour</b><div class="small dim">À ton tour tu as <b>2 actions ⚡</b>. Frapper, lancer un pouvoir, parer, toucher un point faible ou renvoyer un crâne coûtent 1 action. L’ultime, la fiole, la posture et les orbes sont gratuits. Ensuite chaque ennemi joue, l’un après l’autre.</div></div></div>';
-    h += '<div class="li on"><div class="ic">🎲</div><div class="grow"><b>Dés de combat</b><div class="small dim">Deux dés au début de chaque tour.<br>🎲 <b>Double</b> : +1 action · 👑 <b>Double six</b> : +1 action et tout est critique<br>🍀 <b>Total 7</b> : tes pouvoirs sont gratuits ce tour<br>💥 <b>10 ou 11</b> : +40 % dégâts · 🛡️ <b>3 ou 4</b> : -40 % dégâts subis<br>✨ <b>Deux chiffres qui se suivent</b> : prochain coup critique<br>Touche les dés pour les relancer : 1 fois par combat, avant d’agir.</div></div></div>';
+    h += '<div class="li on"><div class="ic">🎒</div><div class="grow"><b>Dés de combat</b><div class="small dim">À chaque tour tu pioches <b>3 dés</b> de ton sac. Choisis-en un, touche une case de la table : il agit tout de suite, <b>sans coûter d’action</b>.<br>⚔️ Lame frappe · 🛡️ Garde protège · ❤️ Sève soigne<br>✨ <b>Écho</b> renforce les dés posés à côté de lui · 🪞 <b>Miroir</b> copie son voisin<br>Cases <b>×2</b> et <b>+2</b> : le dé posé là vaut plus.<br>Trois dés alignés forment une <b>figure</b> (Brelan, Suite, Sept chanceux...).<br>↻ relance ta main : 1 fois par combat.</div><div class="btns" style="margin-top:6px"><button class="btn sm" data-act="bag">🎒 Mon sac et les figures</button></div></div></div>';
+    h += '<div class="li on"><div class="ic">👁️</div><div class="grow"><b>Intentions</b><div class="small dim">Sous le nom de chaque ennemi, ce qu’il fera à son tour : ⚔️ 12 il frappe pour 12 · 💥 gros coup · ⚠️ il charge (étourdis-le ou pare) · 💤 rien · ✚ soin · 👥 renfort.</div></div></div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les autres boutons</h3>' +
       '<div class="li"><div class="ic">⚔️</div><div class="grow"><b>Frapper</b><div class="small dim">Attaque l’ennemi visé (▼). Plus ta vitesse d’attaque est haute, plus tu donnes de coups par action. Toucher un ennemi le vise ; le toucher encore le frappe.</div></div></div>' +
       '<div class="li"><div class="ic">🤺</div><div class="grow"><b>Parer</b><div class="small dim">Jusqu’à ton prochain tour, tu subis 70 % de dégâts en moins et tu ripostes. Si tu pares une <b>attaque chargée ⚠️</b> (ennemi qui brille en jaune), elle est annulée et l’ennemi est étourdi.</div></div></div>' +
