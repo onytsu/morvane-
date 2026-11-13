@@ -335,13 +335,14 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '1.8';
+  var VERSION = '2.0';
   var NEWS = [
-    ['✨', 'Éveils de pouvoir', 'Tous les 4 niveaux d’une descente, fais évoluer un de tes pouvoirs. 48 éveils, 2 par pouvoir.'],
-    ['🔎', 'Fiches de pouvoir', 'Appui long sur un pouvoir : ce qu’il fait, les vrais chiffres avec tes stats, et quand l’utiliser.'],
-    ['👹', 'Fiches d’ennemis', 'Appui long sur un ennemi (ou touche-le dans le Bestiaire) pour voir ses capacités en clair.'],
-    ['📖', 'Lexique', 'Brûlure, vulnérable, étourdi... tous les mots du jeu expliqués, dans l’Aide.'],
-    ['🎁', 'Du contenu en plus', '6 aubaines, 5 artefacts, 3 événements, 2 conditions de salle, 2 présages, 2 pouvoirs légendaires.']
+    ['🎨', 'Tout est plus beau', 'Lumières, brume, éclats, ondes de choc, héros qui bondit sur sa cible, transitions entre les salles, nouvelle interface.'],
+    ['🔮', 'Orbes à ramasser', 'Les ennemis vaincus lâchent des orbes : or, soin, ultime, fureur. Touche-les avant qu’elles ne s’éteignent.'],
+    ['💀', 'Projectiles à renvoyer', 'Dès l’étage 3, les monstres te lancent des crânes maudits. Touche-les en vol : ils repartent dans l’autre sens.'],
+    ['🎯', 'Primes', 'Trois petits objectifs en permanence pendant la descente. Une prime remplie paie tout de suite, une autre la remplace.'],
+    ['⚒️', 'Trois nouvelles salles', 'La Forge (frappe au bon moment), les Runes (retiens la suite) et la Roue du destin.'],
+    ['🗝️', 'Crochetage', 'Les coffres se crochètent : plus tu es précis, meilleur est le butin.']
   ];
 
   // ---------- Sets d'objets (bonus à 2, 4 et 6 pièces portées). Un set par zone. ----------
@@ -411,10 +412,37 @@ var DATA = (function () {
     chasseuse: 'Tire de loin et rend la cible vulnérable.', moine: 'Frappe vite et étourdit parfois.'
   };
   // ---------- Contrats du jour : [statistique, quantité, texte] ----------
+  // ---------- Primes : objectifs courts pendant une descente. stat = compteur de la descente ----------
+  var PRIMES = [
+    { id: 'pr_kills', icon: '☠️', name: 'Moisson', desc: 'Tue 15 ennemis', stat: 'kills', need: 15, rw: { gold: 40 } },
+    { id: 'pr_elite', icon: '👹', name: 'Gros gibier', desc: 'Vaincs une élite', stat: 'elites', need: 1, rw: { boon: 1 } },
+    { id: 'pr_parry', icon: '🤺', name: 'Riposte', desc: 'Réussis 2 parades parfaites', stat: 'parry', need: 2, rw: { potion: 1 } },
+    { id: 'pr_deflect', icon: '💀', name: 'Retour à l’envoyeur', desc: 'Renvoie 4 projectiles', stat: 'deflect', need: 4, rw: { boon: 1 } },
+    { id: 'pr_orbs', icon: '🔮', name: 'Glaneur', desc: 'Ramasse 8 orbes', stat: 'orbs', need: 8, rw: { ult: 60, gold: 20 } },
+    { id: 'pr_weak', icon: '🎯', name: 'Œil de lynx', desc: 'Touche 3 points faibles', stat: 'weak', need: 3, rw: { gold: 50 } },
+    { id: 'pr_ult', icon: '🌟', name: 'Déchaînement', desc: 'Lance 2 ultimes', stat: 'ult', need: 2, rw: { heal: 25 } },
+    { id: 'pr_skills', icon: '✋', name: 'Mains agiles', desc: 'Lance 12 pouvoirs', stat: 'skills', need: 12, rw: { gold: 35 } },
+    { id: 'pr_rooms', icon: '🚪', name: 'Toujours plus bas', desc: 'Gagne 4 combats', stat: 'rooms', need: 4, rw: { heal: 20 } },
+    { id: 'pr_mini', icon: '⚒️', name: 'Doigts d’or', desc: 'Réussis une épreuve (forge, runes ou crochetage)', stat: 'mini', need: 1, rw: { boon: 1 } },
+    { id: 'pr_crits', icon: '💥', name: 'Coups de maître', desc: 'Inflige 20 coups critiques', stat: 'crits', need: 20, rw: { gold: 40 } },
+    { id: 'pr_clean', icon: '🛡️', name: 'Sans une égratignure', desc: 'Finis 3 combats avec plus de 70 % de PV', stat: 'clean', need: 3, rw: { potion: 1 } }
+  ];
+  // ---------- Roue du destin : 8 parts égales à l'écran, mais pas la même chance (w) ----------
+  var WHEEL = [
+    { icon: '💰', name: 'Bourse', w: 18, fx: { gold: 60 }, r: '' },
+    { icon: '💀', name: 'Malédiction', w: 13, fx: { curse: 1 }, r: 'La roue mord : -12 % PV et +5 % dégâts subis.' },
+    { icon: '🧪', name: 'Fiole', w: 14, fx: { potion: 1 }, r: '+1 fiole.' },
+    { icon: '🎁', name: 'Objet', w: 9, fx: { item: 2 }, r: '' },
+    { icon: '❤️', name: 'Soin', w: 14, fx: { healPct: 35 }, r: '+35 % PV.' },
+    { icon: '🔥', name: 'Cendres', w: 12, fx: { cendres: 1 }, r: '' },
+    { icon: '🌒', name: 'Aubaine', w: 14, fx: { boon: 1 }, r: 'Une aubaine à choisir.' },
+    { icon: '👑', name: 'Artefact', w: 6, fx: { artifact: 1 }, r: '' }
+  ];
   var CONTRACTS = [
     ['kills', 40, 'Tue 40 ennemis'], ['kills', 90, 'Tue 90 ennemis'], ['elites', 3, 'Vaincs 3 élites'], ['bosses', 1, 'Vaincs un boss'],
     ['chests', 2, 'Ouvre 2 coffres'], ['items', 8, 'Trouve 8 objets'], ['runs', 3, 'Lance 3 descentes'], ['upgrades', 3, 'Améliore 3 fois un objet'],
-    ['weak', 10, 'Touche 10 points faibles'], ['parry', 3, 'Réussis 3 parades parfaites'], ['ult', 5, 'Lance 5 ultimes'], ['fusions', 2, 'Fusionne des objets 2 fois'], ['arenes', 1, 'Gagne une arène'], ['evos', 2, 'Choisis 2 éveils de pouvoir']
+    ['weak', 10, 'Touche 10 points faibles'], ['parry', 3, 'Réussis 3 parades parfaites'], ['ult', 5, 'Lance 5 ultimes'], ['fusions', 2, 'Fusionne des objets 2 fois'], ['arenes', 1, 'Gagne une arène'], ['evos', 2, 'Choisis 2 éveils de pouvoir'],
+    ['orbs', 15, 'Ramasse 15 orbes'], ['deflect', 6, 'Renvoie 6 projectiles'], ['minis', 2, 'Réussis 2 épreuves (forge, runes, crochetage)'], ['primes', 3, 'Remplis 3 primes']
   ];
 
   // ---------- Zones et ennemis ----------
@@ -776,7 +804,11 @@ var DATA = (function () {
     { id: 'h_runs', name: 'Habitué', desc: 'Lancer 25 descentes', c: ['runs', 25], cendres: 500 },
     { id: 'h_heros', name: 'Compagnie maudite', desc: 'Débloquer tous les héros', c: ['heroes', 8], cendres: 5000 },
     { id: 'h_evo', name: 'Éveillé', desc: 'Choisir 10 éveils de pouvoir', c: ['evos', 10], cendres: 300 },
-    { id: 'h_evo2', name: 'Grand maître', desc: 'Choisir 60 éveils de pouvoir', c: ['evos', 60], cendres: 3000 }
+    { id: 'h_evo2', name: 'Grand maître', desc: 'Choisir 60 éveils de pouvoir', c: ['evos', 60], cendres: 3000 },
+    { id: 'h_orbs', name: 'Glaneur', desc: 'Ramasser 100 orbes', c: ['orbs', 100], cendres: 400 },
+    { id: 'h_deflect', name: 'Retour à l’envoyeur', desc: 'Renvoyer 50 projectiles', c: ['deflect', 50], cendres: 600 },
+    { id: 'h_minis', name: 'Doigts d’or', desc: 'Réussir 15 épreuves (forge, runes, crochetage)', c: ['minis', 15], cendres: 800 },
+    { id: 'h_primes', name: 'Chasseur de primes', desc: 'Remplir 30 primes', c: ['primes', 30], cendres: 1000 }
   ];
 
   // ---------- Événements ----------
@@ -853,6 +885,9 @@ var DATA = (function () {
     event: { name: 'Mystère', icon: '❓', hint: 'Qui sait ?' },
     mercenaire: { name: 'Mercenaires', icon: '🤝', hint: "Un allié jusqu'au boss" },
     arene: { name: 'Arène', icon: '🏟️', hint: '3 vagues. Grosse récompense' },
+    forge: { name: 'Forge', icon: '⚒️', hint: 'Frappe juste : plus d’attaque' },
+    runes: { name: 'Runes', icon: '🔮', hint: 'Retiens la suite. Soin, aubaine, éveil' },
+    roue: { name: 'Roue du destin', icon: '🎡', hint: 'Un tour gratuit. Ou pire' },
     boss: { name: 'BOSS', icon: '☠️', hint: 'Le gardien de la zone' }
   };
 
@@ -868,7 +903,7 @@ var DATA = (function () {
   return {
     RARITIES: RARITIES, MODS: MODS, HEROES: HEROES, ENEMIES: ENEMIES, ZONES: ZONES, SLOTS: SLOTS, BASES: BASES,
     SETS: SETS, OMENS: OMENS, TALENTS: TALENTS, FAMILIARS: FAMILIARS, MOBFIX: MOBFIX, CONDS: CONDS, ALLIES: ALLIES, CONTRACTS: CONTRACTS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
-    PACTS: PACTS, ACHIEVEMENTS: ACHIEVEMENTS, EVENTS: EVENTS, ROOMS: ROOMS, ALTARS: ALTARS,
+    PACTS: PACTS, ACHIEVEMENTS: ACHIEVEMENTS, EVENTS: EVENTS, ROOMS: ROOMS, PRIMES: PRIMES, WHEEL: WHEEL, ALTARS: ALTARS,
     AB_INFO: AB_INFO, GLOSS: GLOSS, VERSION: VERSION, NEWS: NEWS
   };
 })();

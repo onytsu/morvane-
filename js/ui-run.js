@@ -3,6 +3,14 @@ UI.run = (function () {
   'use strict';
   var E = ENGINE, D = DATA, $ = UI.$, S = UI.S, ACT = UI.ACT;
   var running = false, paused = false, last = 0, shownPhase = null, phaseTimer = null, els = {}, posOf = {}, floats = 0, built = null, fxL = null, lootShown = 0, combo = 0, comboT = null;
+  // v2.0 : lumière, orbes, projectiles, primes
+  var vfx = null, orbEls = {}, shotEls = {}, stopT = 0, primeKey = '', wiping = false;
+  var RANGED = { pyro: 'fire', necro: 'dark', chasseuse: 'blade', pretresse: 'holy' };
+  var ORB = { gold: '💰', heal: '❤️', ult: '🌟', fury: '🔥' };
+  var FXMAP = { burn: 'fire', bleed: 'blood', thorns: 'hit', chain: 'ice', skel: 'death', ally: 'hit', star: 'crit' };
+  function sfxKind(x) { return x === 'skill_fire' ? 'fire' : x === 'skill_holy' || x === 'heal' ? 'holy' : x === 'skill_dark' ? 'dark' : x === 'skill_blade' ? 'blade' : 'war'; }
+  function hitstop(ms) { stopT = Math.max(stopT, ms / 1000); }
+  function punch() { anim($('#arena'), 'punch', 260); }
   var POS = [{ r: 24, b: 20 }, { r: 2, b: 30 }, { r: 42, b: 36 }, { r: 12, b: 48 }, { r: 40, b: 8 }];
   var BPOS = [{ r: 1, b: 20 }, { r: 47, b: 10 }, { r: 44, b: 44 }, { r: 60, b: 28 }];
   var BRAR = ['Commune', 'Rare', 'Épique', 'Légendaire'];
@@ -15,7 +23,7 @@ UI.run = (function () {
     $('#screen').innerHTML =
       '<div class="runbar"><div class="grow"><div class="zone" id="rzone"></div><div class="pips" id="rpips"></div></div><span class="cur gold" id="rgold"></span><span class="cur ash" id="rcend"></span><button class="icon-btn" data-act="runMenu">☰</button></div>' +
       '<div class="arena" id="arena"></div>' +
-      '<div class="hud"><div class="hpbar" id="hpbar"><i></i><u></u><span></span></div><div class="xprow"><b id="rlvl"></b><div class="bar"><i id="xpbar"></i></div><span class="hsts" id="hsts"></span></div>' +
+      '<div class="hud"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><span></span></div><div class="xprow"><b id="rlvl"></b><div class="bar"><i id="xpbar"></i></div><span class="hsts" id="hsts"></span></div>' +
       '<div class="skills">' + h.skills.map(function (k, i) { return '<button class="skb" id="sk' + i + '" data-act="skill" data-i="' + i + '" data-info="skill:' + i + '"><span class="e">' + k.icon + '</span><span class="cd"></span><span class="ev"></span><span class="nm">' + k.name + '</span><span class="n"></span></button>'; }).join('') +
       '<button class="skb potion" id="pot" data-act="potion" data-info="potion">🧪<span class="cnt"></span></button><div class="side"><button class="tog" id="tauto" data-act="auto">AUTO</button><button class="tog" id="tspd" data-act="speed"></button><button class="tog help" data-act="help">? Aide</button></div></div>' +
       '<div class="row2"><button class="act" id="bparry" data-act="parry" data-info="parry"><span class="ai">🤺</span><b>Parer</b><span class="cd"></span></button>' +
@@ -35,11 +43,13 @@ UI.run = (function () {
   function buildArena() {
     var run = S().run, c = run.combat, z = E.zoneOf(run.floor), a = $('#arena');
     a.style.setProperty('--z1', z.bg[0]); a.style.setProperty('--z2', z.bg[1]); a.style.setProperty('--zc', z.color);
-    if (typeof Backgrounds !== 'undefined') { a.style.backgroundImage = 'url(' + Backgrounds.url(z.id) + ')'; a.classList.add('hasbg'); }
-    a.innerHTML = '<div class="unit hero" id="uhero">' + UI.spr(run.hero) + '</div><div class="minions" id="minions"></div><div class="combo" id="combo"></div>' + extraHtml(run);
-    els = {}; posOf = {}; floats = 0; lootShown = 0; combo = 0;
+    var bg = typeof Backgrounds !== 'undefined' ? ' style="background-image:url(' + Backgrounds.url(z.id) + ')"' : ''; a.classList.add('hasbg'); a.classList.remove('danger');
+    a.innerHTML = '<div class="abg"' + bg + '></div><div class="rays"></div><div class="fog f1"></div><div class="unit hero enter" id="uhero">' + UI.spr(run.hero) + '</div><div class="minions" id="minions"></div><div class="fog f2"></div><div class="vig"></div>' +
+      '<button class="primes" id="primes" data-act="primes"></button><div class="combo" id="combo"></div>' + extraHtml(run);
+    els = {}; posOf = {}; floats = 0; lootShown = 0; combo = 0; orbEls = {}; shotEls = {}; primeKey = '';
+    vfx = typeof VFX !== 'undefined' ? VFX.attach(a) : null;
     fxL = typeof FX !== 'undefined' ? FX.attach(a, { ambient: ['dust', 'leaves', 'fireflies', 'gold', 'embers', 'void'][z.id - 1], warm: 2 }) : null;
-    if (c) { c.enemies.forEach(function (e, i) { if (!e.dead) addEnemy(e, i, false); }); built = c; }
+    if (c) { c.enemies.forEach(function (e, i) { if (!e.dead) { addEnemy(e, i, false); els[e.id].style.animationDelay = (0.15 + i * 0.09) + 's'; } }); built = c; }
     else built = 'empty';
   }
   function addEnemy(e, i, spawn) {
@@ -51,7 +61,7 @@ UI.run = (function () {
     d.className = 'unit en' + (e.boss ? ' boss' : e.elite ? ' elite' : '') + (spawn ? ' spawn' : '') + (e.fix ? ' fixed fx-' + e.fix : '') + (e.big ? ' giant' : '') + (e.gold ? ' golden' : '') + (e.champ ? ' champ' : '');
     d.id = 'en' + e.id; d.dataset.act = 'target'; d.dataset.i = i; d.dataset.info = 'foe:' + i;
     d.style.right = P[pi].r + '%'; d.style.bottom = P[pi].b + '%'; d.style.zIndex = 10 - Math.round(P[pi].b / 5);
-    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">🎯</span>';
+    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">🎯</span>';
     $('#arena').appendChild(d); els[e.id] = d;
   }
   function floatAt(el, txt, cls) {
@@ -103,7 +113,90 @@ UI.run = (function () {
   ACT.cond = function () { var r = S().run && S().run.room, cd = r && r.cond ? E.byId(D.CONDS, r.cond) : null; if (cd) UI.toast(cd.icon + ' <b>' + cd.name + '</b> : ' + cd.desc, true); };
   // --- petits effets ---
   function center(el) { var a = $('#arena'); if (!el || !a) return null; var ar = a.getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left - ar.left + r.width / 2, y: r.top - ar.top + r.height * 0.55, w: ar.width, h: ar.height, b: r.bottom - ar.top }; }
-  function fxAt(el, kind, n) { if (!fxL) return; var p = center(el); if (p) FX.burst(fxL, p.x, p.y, kind, n); }
+  function fxAt(el, kind, n) {
+    if (!vfx) return; var p = center(el); if (!p) return;
+    if (kind === 'heal') VFX.sparks(vfx, p.x, p.y + 20, 'heal', n, { speed: 110, g: -260, life: 1, streak: false });
+    else VFX.sparks(vfx, p.x, p.y, FXMAP[kind] || kind, n, kind === 'death' ? { speed: 200, g: -120, life: 1 } : null);
+  }
+  function impactAt(el, crit) { if (!vfx) return; var p = center(el); if (p) VFX.impact(vfx, p.x + (Math.random() * 30 - 15), p.y + (Math.random() * 30 - 15), crit); }
+  // Le héros bondit sur sa cible (ou tire, s'il se bat à distance)
+  function heroSwing(c) {
+    var hero = $('#uhero'), run = S().run, te = c.enemies[c.target], el = te && !te.dead ? els[te.id] : null; if (!hero) return;
+    var kind = RANGED[run.hero], a = center(hero), b = center(el);
+    if (kind || !a || !b) { anim(hero, 'cast', 220); if (kind && a && b && vfx) VFX.proj(vfx, a.x + 26, a.y - 16, b.x, b.y, kind, 0.12); return; }
+    hero.style.setProperty('--dx', Math.round((b.x - a.x) * 0.5) + 'px'); hero.style.setProperty('--dy', Math.round((b.y - a.y) * 0.5) + 'px');
+    anim(hero, 'atk', 240);
+  }
+  function foeSwing(el) {
+    var a = center(el), b = center($('#uhero')); if (!a || !b) return;
+    el.style.setProperty('--dx', Math.round((b.x - a.x) * 0.42) + 'px'); el.style.setProperty('--dy', Math.round((b.y - a.y) * 0.42) + 'px');
+    anim(el, 'atk', 280);
+  }
+  // --- orbes à ramasser ---
+  function addOrb(e) {
+    var a = $('#arena'); if (!a) return; var p = center(els[e.id]) || { x: a.clientWidth * 0.62, b: a.clientHeight * 0.7 };
+    var b = document.createElement('button'); b.className = 'orb k-' + e.kind; b.dataset.oid = e.oid; b.innerHTML = '<i style="animation-duration:' + (6 / (S().settings.speed || 1)) + 's"></i><span>' + ORB[e.kind] + '</span>';
+    b.style.left = Math.max(34, Math.min(a.clientWidth - 34, p.x + Math.random() * 110 - 55)) + 'px';
+    b.style.top = Math.max(70, Math.min(a.clientHeight - 30, p.b - 16 + Math.random() * 34 - 8)) + 'px';
+    a.appendChild(b); orbEls[e.oid] = b;
+    tuto('orb', '🔮 <b>Des orbes !</b> Touche-les avant qu’elles ne s’éteignent : 💰 or, ❤️ soin, 🌟 ultime, 🔥 fureur (+30 % dégâts).');
+  }
+  function dropOrb(oid, cls) { var b = orbEls[oid]; if (!b) return null; delete orbEls[oid]; b.classList.add(cls); setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 320); return b; }
+  function takeOrb(e) {
+    var b = dropOrb(e.oid, 'take'), a = $('#arena'); if (!b || !a) return;
+    var x = parseFloat(b.style.left), y = parseFloat(b.style.top), h = center($('#uhero'));
+    if (vfx) { VFX.ring(vfx, x, y, e.kind === 'ult' ? 'ice' : e.kind, 46, 0.3, 4); if (e.kind === 'gold') VFX.absorb(vfx, x, y, a.clientWidth - 135, -6, 'gold', 7); else if (h) VFX.absorb(vfx, x, y, h.x, h.y, e.kind === 'ult' ? 'ice' : e.kind, 7); }
+    floatAt(b, e.kind === 'gold' ? '+' + e.v + ' 💰' : e.kind === 'heal' ? '+' + E.fmt(Math.max(1, e.v)) + ' PV' : e.kind === 'ult' ? '+12 % ultime' : 'FUREUR !', e.kind === 'gold' ? 'gold' : e.kind === 'heal' ? 'heal' : e.kind === 'fury' ? 'big' : 'txt');
+    if (!e.end) { SND.play(e.kind === 'gold' ? 'gold' : e.kind === 'heal' ? 'heal' : 'upgrade', 0.7); UI.vib(10); }
+    if (e.kind === 'gold') setTimeout(function () { anim($('#rgold'), 'bump', 300); }, 400);
+  }
+  // --- projectiles à renvoyer ---
+  function addShot(e) {
+    var a = $('#arena'), p = center(els[e.id]), q = center($('#uhero')); if (!a || !p || !q) return;
+    var b = document.createElement('button'); b.className = 'shot'; b.dataset.sid = e.sid; b.innerHTML = '<i></i><span>💀</span>'; a.appendChild(b);
+    shotEls[e.sid] = { el: b, x1: p.x - 18, y1: p.y - 22, x2: q.x + 8, y2: q.y - 12, x: p.x, y: p.y };
+    SND.play('skill_dark', 0.45);
+    tuto('shot', '💀 <b>Crâne maudit !</b> Touche-le en vol pour le renvoyer sur celui qui l’a lancé.');
+  }
+  function placeShots(c) {
+    for (var sid in shotEls) {
+      var o = shotEls[sid], sh = null; c.shots.forEach(function (x) { if (x.sid === +sid) sh = x; }); if (!sh) continue;
+      var k = Math.max(0, Math.min(1, 1 - sh.t / sh.total));
+      o.x = o.x1 + (o.x2 - o.x1) * k; o.y = o.y1 + (o.y2 - o.y1) * k - Math.sin(k * Math.PI) * 78;
+      o.el.style.transform = 'translate(' + o.x.toFixed(1) + 'px,' + o.y.toFixed(1) + 'px)'; o.el.classList.toggle('near', k > 0.72);
+      if (vfx && Math.random() < 0.5) VFX.sparks(vfx, o.x, o.y, 'curse', 1, { speed: 30, g: 0, life: 0.4, size: 9, streak: false });
+    }
+  }
+  function endShot(sid) { var o = shotEls[sid]; if (!o) return null; delete shotEls[sid]; if (o.el.parentNode) o.el.parentNode.removeChild(o.el); return o; }
+  document.addEventListener('pointerdown', function (ev) {
+    if (UI.st.screen !== 'run' || paused) return; var t = ev.target.closest ? ev.target.closest('.orb, .shot') : null; if (!t) return;
+    if (t.dataset.oid) E.takeOrb(+t.dataset.oid); else if (t.dataset.sid) E.deflect(+t.dataset.sid);
+  });
+  // --- primes ---
+  function updatePrimes(run) {
+    var info = E.primeInfo(run), key = info.map(function (p) { return p.def.id + p.have; }).join('|'); if (key === primeKey) return; primeKey = key;
+    var el = $('#primes'); if (!el) return;
+    el.innerHTML = info.map(function (p) { return '<span class="pr"><em>' + p.def.icon + '</em><b>' + p.have + '</b>/' + p.need + '<i style="width:' + (p.have / p.need * 100) + '%"></i></span>'; }).join('');
+  }
+  function drainPrimes(run) {
+    while (run.primeLog && run.primeLog.length) {
+      var x = run.primeLog.shift(), p = E.byId(D.PRIMES, x.id); if (!p) continue;
+      UI.toast('🎯 <b>Prime remplie : ' + p.name + '</b><br>Récompense : ' + x.txt, true); SND.play('levelup', 0.7); anim($('#primes'), 'bump', 300); updateHud.key = null;
+      var h = center($('#uhero')); if (vfx && h) { VFX.pillar(vfx, h.x, h.y, 'gold', 60, 0.7); VFX.sparks(vfx, h.x, h.y, 'gold', 22, { speed: 240, g: -200, life: 1 }); }
+    }
+  }
+  ACT.primes = function () {
+    var run = S().run; if (!run) return; SND.play('click');
+    var h = '<h2>🎯 Primes</h2><div class="tiny dim center" style="margin:-6px 0 10px">Trois objectifs en cours. Une prime remplie paie tout de suite, et une autre la remplace.' + (run.primesDone ? ' · ' + run.primesDone + ' remplie' + (run.primesDone > 1 ? 's' : '') + ' cette descente' : '') + '</div>';
+    E.primeInfo(run).forEach(function (p) { h += '<div class="li"><div class="ic">' + p.def.icon + '</div><div class="grow"><div class="row"><b class="grow">' + p.def.name + '</b><b class="gold">' + p.have + ' / ' + p.need + '</b></div><div class="small dim">' + p.def.desc + '</div><div class="bar" style="margin:5px 0 4px"><i style="width:' + (p.have / p.need * 100) + '%"></i></div><div class="tiny">Récompense : ' + p.reward + '</div></div></div>'; });
+    h += '<div class="btns"><button class="btn primary" data-act="close">Fermer</button></div>'; UI.modal(h);
+  };
+  // --- changement de salle : rideau noir, titre, puis la salle apparaît ---
+  function wipe(title, sub, fn) {
+    var w = document.createElement('div'); w.className = 'wipe'; w.innerHTML = '<div><small>' + sub + '</small><b>' + title + '</b></div>'; $('#app').appendChild(w); wiping = true;
+    setTimeout(function () { wiping = false; fn(); hitstop(450); w.classList.add('out'); }, 430);
+    setTimeout(function () { if (w.parentNode) w.parentNode.removeChild(w); }, 1100);
+  }
   function slash(el, crit) {
     var p = center(el), a = $('#arena'); if (!p || floats > 28) return;
     var s = document.createElement('i'); s.className = 'slash' + (crit ? ' crit' : ''); s.style.left = p.x + 'px'; s.style.top = p.y + 'px'; s.style.setProperty('--rot', (Math.random() * 100 - 50) + 'deg');
@@ -116,8 +209,8 @@ UI.run = (function () {
   }
   function comboBreak() { combo = 0; var c = $('#combo'); if (c) c.className = 'combo'; }
   function souls(el, n, coins) {
-    var p = center(el); if (!p || !fxL) return;
-    FX.fly(fxL, p.x, p.y, p.w - 50, -6, 'burn', n); FX.fly(fxL, p.x, p.y, p.w - 135, -6, 'gold', coins);
+    var p = center(el); if (!p) return;
+    if (vfx) { VFX.absorb(vfx, p.x, p.y, p.w - 50, -6, 'fire', n + 2); VFX.absorb(vfx, p.x, p.y, p.w - 135, -6, 'gold', coins + 1); }
     setTimeout(function () { anim($('#rcend'), 'bump', 300); anim($('#rgold'), 'bump', 300); }, 650);
   }
   function dropGems(c, el) {
@@ -143,40 +236,54 @@ UI.run = (function () {
         case 'dmg':
           if (e.sh) { floatAt(el, 'Bouclier', 'txt'); break; }
           floatAt(el, E.fmt(e.v), e.crit ? 'crit' : e.dot ? 'dot' : '');
-          fxAt(el, e.crit ? 'crit' : e.dot || 'hit', e.crit ? 12 : e.dot ? 3 : 6); if (!e.dot) { slash(el, e.crit); comboUp(); }
-          if (!e.dot) { anim(el, 'hit', 220); SND.play(e.crit ? 'crit' : 'hit'); if (e.crit && e.skill) anim($('#arena'), 'shake', 250); }
+          if (e.dot) fxAt(el, e.dot, 4); else { impactAt(el, e.crit); comboUp(); }
+          if (!e.dot) { anim(el, 'hit', 220); SND.play(e.crit ? 'crit' : 'hit'); if (e.crit && e.skill) { anim($('#arena'), 'shake', 250); hitstop(55); } else if (e.crit) punch(); }
           break;
         case 'miss': floatAt(el, e.hid ? 'Hors d’atteinte' : 'Esquive', 'txt'); break;
-        case 'swing': anim(hero, 'atk', 220); break;
-        case 'eatk': anim(el, 'atk', 250); break;
+        case 'swing': heroSwing(c); break;
+        case 'eatk': if (el) foeSwing(el); break;
         case 'hurt':
           if (e.sh) { floatAt(hero, 'Absorbé', 'txt'); SND.play('block', 0.5); break; }
           floatAt(hero, '-' + E.fmt(e.v), e.big ? 'big' : e.dot ? 'dot' : 'hurt');
-          fxAt(hero, e.dot && e.dot !== 'thorns' ? e.dot : 'blood', e.big ? 18 : e.dot ? 3 : 6); if (e.big) comboBreak();
+          fxAt(hero, e.dot && e.dot !== 'thorns' ? e.dot : 'blood', e.big ? 26 : e.dot ? 3 : 8); if (e.big) { comboBreak(); var hb0 = center(hero); if (vfx && hb0) { VFX.ring(vfx, hb0.x, hb0.y, 'blood', 120, 0.4, 8); VFX.flash(vfx, hb0.x, hb0.y, 'blood', 120, 0.25); } hitstop(70); }
           if (!e.dot) { anim(hero, 'hit', 250); SND.play(e.block ? 'block' : 'hurt'); }
           if (e.big) { anim($('#arena'), 'shake', 250); UI.flash('#c2283a55'); UI.vib(60); }
           if (run.hp / run.stats.hp < 0.4 && run.potions > 0) tuto('potion', '🧪 PV bas ! Touche la <b>fiole rouge</b> pour te soigner.');
           break;
         case 'dodge': floatAt(hero, 'Esquive !', 'txt'); break;
         case 'heal': if (e.v > run.stats.hp * 0.02) { floatAt(hero, '+' + E.fmt(e.v), 'heal'); fxAt(hero, 'heal', 7); } break;
-        case 'skill': var skd = E.hero(run.hero).skills[e.i]; if (skd) tuto('sk_' + skd.id, skd.icon + ' <b>' + skd.name + '</b> : ' + skd.desc); SND.play(e.sfx); floatAt(hero, e.name, 'txt'); anim(hero, 'atk', 220); fxAt(hero, 'gold', 10); break;
+        case 'skill': var skd = E.hero(run.hero).skills[e.i]; if (skd) tuto('sk_' + skd.id, skd.icon + ' <b>' + skd.name + '</b> : ' + skd.desc); SND.play(e.sfx); floatAt(hero, e.name, 'txt'); anim(hero, 'cast', 220);
+          var pts = [], seen = {}, hc = center(hero), kd = sfxKind(e.sfx);
+          for (var j = i + 1; j < evs.length && evs[j].k !== 'skill' && evs[j].k !== 'ult'; j++) if (evs[j].k === 'dmg' && evs[j].skill && els[evs[j].id] && !seen[evs[j].id]) { seen[evs[j].id] = 1; pts.push(center(els[evs[j].id])); }
+          if (vfx && hc) { VFX.cast(vfx, kd, hc.x, hc.y, pts); if (!pts.length) { VFX.pillar(vfx, hc.x, hc.y, kd, 64, 0.6); VFX.sparks(vfx, hc.x, hc.y + 20, kd, 18, { speed: 160, g: -300, life: 1 }); } }
+          anim($('#sk' + e.i), 'fire', 300); break;
         case 'potion': SND.play('potion'); break;
-        case 'die': if (el) { fxAt(el, 'death', e.boss ? 45 : 18); souls(el, e.boss ? 12 : 3, e.boss ? 10 : 3); dropGems(c, el); el.classList.add('dead'); el.classList.remove('charging'); } SND.play(e.boss ? 'boss_die' : 'die'); if (e.boss) { UI.flash('#ffffffaa'); anim($('#arena'), 'shake', 250); } break;
+        case 'die': if (el) { var dp = center(el); if (vfx && dp) VFX.death(vfx, dp.x, dp.y, e.boss); souls(el, e.boss ? 12 : 3, e.boss ? 10 : 3); dropGems(c, el); el.classList.add('dead'); el.classList.remove('charging'); } SND.play(e.boss ? 'boss_die' : 'die'); if (e.boss) { UI.flash('#ffffffaa'); anim($('#arena'), 'shake', 250); hitstop(160); UI.vib([40, 40, 120]); } break;
+        case 'orb': addOrb(e); break;
+        case 'orbGone': dropOrb(e.oid, 'gone'); break;
+        case 'orbTake': takeOrb(e); break;
+        case 'shot': addShot(e); break;
+        case 'shotGone': endShot(e.sid); break;
+        case 'shotHit': var so = endShot(e.sid); if (so && vfx) { VFX.flash(vfx, so.x2, so.y2, 'curse', 90, 0.22); VFX.sparks(vfx, so.x2, so.y2, 'curse', 16, { speed: 300 }); } break;
+        case 'deflect': var sd = endShot(e.sid), dt0 = center(el);
+          if (sd && vfx) { VFX.ring(vfx, sd.x, sd.y, 'curse', 70, 0.3, 6); VFX.flash(vfx, sd.x, sd.y, 'curse', 80, 0.18); if (dt0) VFX.proj(vfx, sd.x, sd.y, dt0.x, dt0.y, 'curse', 0.16, function () { VFX.ring(vfx, dt0.x, dt0.y, 'curse', 90, 0.35, 6); VFX.sparks(vfx, dt0.x, dt0.y, 'curse', 20, { speed: 340 }); }); }
+          floatAt(el || hero, 'RENVOYÉ !', 'crit'); SND.play('block'); UI.vib(20); hitstop(45); punch(); break;
         case 'charge': tuto('charge', '⚠️ <b>Attaque chargée !</b> Touche <b>🤺 Parer</b> juste avant le coup pour l’annuler et riposter. Un étourdissement l’interrompt aussi.'); break;
         case 'interrupt': floatAt(el, 'Interrompu !', 'txt'); break;
-        case 'enrage': floatAt(el, 'ENRAGÉ', 'big'); break;
-        case 'summon': var idx = -1; c.enemies.forEach(function (x, j) { if (x.id === e.id) idx = j; }); if (idx >= 0) { addEnemy(c.enemies[idx], idx, true); if (!e.quiet) floatAt(els[e.id], 'Invoqué', 'txt'); } break;
+        case 'enrage': floatAt(el, 'ENRAGÉ', 'big'); var ep = center(el); if (vfx && ep) { VFX.ring(vfx, ep.x, ep.y, 'fury', 120, 0.45, 8); VFX.sparks(vfx, ep.x, ep.y, 'fury', 20, { speed: 280, g: -160 }); } break;
+        case 'summon': var idx = -1; c.enemies.forEach(function (x, j) { if (x.id === e.id) idx = j; }); if (idx >= 0) { addEnemy(c.enemies[idx], idx, true); if (!e.quiet) floatAt(els[e.id], 'Invoqué', 'txt'); var sp0 = center(els[e.id]); if (vfx && sp0) { VFX.flash(vfx, sp0.x, sp0.y, 'dark', 80, 0.3); VFX.ring(vfx, sp0.x, sp0.y + 20, 'dark', 70, 0.4, 4); } } break;
         case 'eheal': floatAt(el, 'Soin', 'heal'); break;
         case 'eshield': floatAt(el, 'Bouclier', 'txt'); break;
-        case 'revive': fxAt(hero, 'gold', 40); UI.flash('#ffe9b8cc'); SND.play('skill_holy'); banner('RESSUSCITÉ', ''); break;
+        case 'revive': fxAt(hero, 'gold', 40); var rv = center(hero); if (vfx && rv) { VFX.pillar(vfx, rv.x, rv.y, 'holy', 110, 1); VFX.ring(vfx, rv.x, rv.y, 'holy', 160, 0.6, 8); } UI.flash('#ffe9b8cc'); SND.play('skill_holy'); banner('RESSUSCITÉ', ''); break;
         case 'fury': UI.toast('🌑 Les ténèbres se referment : les ennemis frappent de plus en plus fort !'); break;
         case 'explode': UI.flash('#9aa04a55'); break;
         case 'dead': UI.vib([80, 60, 160]); SND.play('death'); UI.flash('#000000dd'); break;
         case 'parryOn': anim(hero, 'parry', 1000); SND.play('equip'); break;
-        case 'parry': if (e.perfect) { UI.vib(30); fxAt(hero, 'ice', 24); floatAt(hero, 'PARADE PARFAITE !', 'crit'); UI.flash('#ffe9b888'); SND.play('block'); anim($('#arena'), 'shake', 250); } else { floatAt(hero, 'Paré', 'txt'); SND.play('block', 0.6); } break;
-        case 'ult': fxAt(hero, 'gold', 45); fxAt(hero, 'crit', 25); banner(e.name.toUpperCase(), 'ULTIME'); UI.flash('#d9a441aa'); SND.play(e.sfx); SND.play('levelup', 0.6); anim($('#arena'), 'shake', 250); break;
+        case 'parry': if (e.perfect) { UI.vib(30); fxAt(hero, 'ice', 24); var pc = center(hero); if (vfx && pc) { VFX.ring(vfx, pc.x + 20, pc.y, 'ice', 130, 0.4, 8); VFX.flash(vfx, pc.x + 20, pc.y, 'ice', 110, 0.2); } hitstop(90); floatAt(hero, 'PARADE PARFAITE !', 'crit'); UI.flash('#ffe9b888'); SND.play('block'); anim($('#arena'), 'shake', 250); } else { floatAt(hero, 'Paré', 'txt'); SND.play('block', 0.6); } break;
+        case 'ult': var uc = center(hero), upts = []; c.enemies.forEach(function (x) { if (els[x.id] && !els[x.id].classList.contains('dead')) upts.push(center(els[x.id])); });
+          if (vfx && uc) { VFX.pillar(vfx, uc.x, uc.y, 'ult', 120, 0.9); VFX.cast(vfx, sfxKind(e.sfx), uc.x, uc.y, upts, true); VFX.sparks(vfx, uc.x, uc.y, 'ult', 50, { speed: 420, g: -80, life: 1.2 }); } hitstop(140); banner(e.name.toUpperCase(), 'ULTIME'); UI.flash('#d9a441aa'); SND.play(e.sfx); SND.play('levelup', 0.6); anim($('#arena'), 'shake', 250); break;
         case 'weak': tuto('weak', '🎯 <b>Point faible !</b> Touche vite l’ennemi marqué d’une cible pour un coup critique énorme.'); break;
-        case 'weakhit': fxAt(el, 'star', 22); floatAt(el, 'POINT FAIBLE !', 'crit'); anim($('#arena'), 'shake', 250); break;
+        case 'weakhit': fxAt(el, 'star', 22); var wp = center(el); if (vfx && wp) { VFX.ring(vfx, wp.x, wp.y, 'crit', 110, 0.35, 7); VFX.flash(vfx, wp.x, wp.y, 'crit', 120, 0.2); } hitstop(80); floatAt(el, 'POINT FAIBLE !', 'crit'); anim($('#arena'), 'shake', 250); break;
         case 'flee': if (el) { floatAt(el, 'Il s’enfuit !', 'txt'); el.classList.add('dead'); } SND.play('error'); break;
         case 'wave': banner('VAGUE ' + e.n + '/' + e.of, 'ARÈNE'); SND.play('door'); var wn = $('#waven'); if (wn) wn.textContent = e.n; break;
         case 'ally': anim($('#ally'), 'atk', 220); break;
@@ -206,7 +313,9 @@ UI.run = (function () {
       $('#relics').innerHTML = rel ? rel + '<span class="more"> ›</span>' : '<span class="more">Aucune aubaine pour l’instant</span>';
     }
     var hb = $('#hpbar'), frac = Math.max(0, run.hp / stt.hp), sh = c ? c.hero.shield : 0;
-    hb.firstChild.style.width = (frac * 100) + '%'; hb.children[1].style.width = Math.min(100, sh / stt.hp * 100) + '%';
+    hb.firstChild.style.width = (frac * 100) + '%'; hb.children[1].style.width = Math.min(100, sh / stt.hp * 100) + '%'; hb.children[2].style.width = (frac * 100) + '%';
+    var ar0 = $('#arena'); if (ar0) ar0.classList.toggle('danger', frac < 0.3 && run.phase === 'combat');
+    updatePrimes(run); drainPrimes(run);
     hb.lastChild.textContent = E.fmt(Math.ceil(run.hp)) + ' / ' + E.fmt(stt.hp) + (sh >= 1 ? '  (+' + E.fmt(sh) + ')' : '');
     hb.classList.toggle('low', frac < 0.3);
     $('#xpbar').style.width = Math.min(100, run.xp / E.xpNeed(run.lvl) * 100) + '%';
@@ -235,7 +344,7 @@ UI.run = (function () {
     var run = S().run, c = run && run.combat; if (!c) return;
     c.enemies.forEach(function (e, i) {
       var el = els[e.id]; if (!el) return; if (e.dead) { el.children[3].firstChild.style.width = '0%'; return; }
-      var bar = el.children[3]; bar.firstChild.style.width = Math.max(0, e.hp / e.maxhp * 100) + '%'; bar.lastChild.style.width = Math.min(100, e.shield / e.maxhp * 100) + '%';
+      var bar = el.children[3]; bar.firstChild.style.width = bar.children[1].style.width = Math.max(0, e.hp / e.maxhp * 100) + '%'; bar.lastChild.style.width = Math.min(100, e.shield / e.maxhp * 100) + '%';
       el.classList.toggle('charging', !!e.charge);
       if (e.charge) el.children[2].firstChild.style.width = ((1 - e.charge.t / e.charge.total) * 100) + '%';
       el.classList.toggle('tg', c.target === i && c.enemies.filter(function (x) { return !x.dead; }).length > 1);
@@ -245,6 +354,8 @@ UI.run = (function () {
     });
     var ctm = $('#condt'); if (ctm && c.cond === 'defi') { var left = Math.max(0, 20 - c.t); ctm.textContent = ' ' + left.toFixed(1) + ' s'; ctm.parentNode.classList.toggle('late', left <= 0); }
     var hu = $('#uhero'); if (hu) { hu.classList.toggle('invuln', c.hero.invuln > 0); hu.classList.toggle('undying', !!c.hero.buffs.undying); }
+    if (hu) hu.classList.toggle('fury', !!c.hero.buffs.fury);
+    placeShots(c);
     var m = $('#minions'), n = c.hero.skel || 0;
     if (m && m.children.length !== n) { var h = ''; for (var i = 0; i < n; i++) h += UI.spr('serviteur'); m.innerHTML = h; }
   }
@@ -256,7 +367,8 @@ UI.run = (function () {
       var c = run.combat;
       if (run.phase === 'combat' && c) {
         if (built !== c) buildArena();
-        if (!paused && !$('#modal').classList.contains('on')) {
+        if (stopT > 0) stopT -= dt;
+        else if (!paused && !wiping && !$('#modal').classList.contains('on')) {
           var t = dt * (S().settings.speed || 1);
           while (t > 0 && !c.over) { var s = Math.min(0.05, t); E.tick(s); t -= s; }
         }
@@ -272,7 +384,7 @@ UI.run = (function () {
     var key = run.phase + '|' + run.floor + '|' + run.pendingBoons + '|' + run.pendingEvos + '|' + (run.room ? run.room.type : '');
     if (key === shownPhase) return; shownPhase = key;
     clearTimeout(phaseTimer);
-    var delay = now ? 0 : run.phase === 'victory' && run.result && !run.result.chest ? 750 : run.phase === 'dead' ? 1100 : 0;
+    var delay = now ? 0 : run.phase === 'victory' && run.result && !run.result.chest ? (run.result.boss ? 1700 : 850) : run.phase === 'dead' ? 1100 : 0;
     if (delay) phaseTimer = setTimeout(render, delay); else render();
   }
   var quiet = false;
@@ -306,7 +418,7 @@ UI.run = (function () {
   }
   function sheetVictory(run) {
     var r = run.result, h = '';
-    h += '<h2>' + (r.chest ? '🧰 Coffre ouvert' : r.arene ? '🏟️ Arène conquise' : r.variant === 'champion' ? '💪 Champion terrassé' : r.variant === 'horde' ? 'Horde massacrée' : r.boss ? '☠️ BOSS VAINCU' : r.type === 'elite' ? '👹 Élite vaincue' : 'Victoire') + '</h2>';
+    h += '<h2>' + (r.chest ? ['🧰 Coffre forcé', '🧰 Coffre ouvert', '🗝️ Beau crochetage', '🗝️ Crochetage parfait !'][r.grade == null ? 1 : r.grade] : r.arene ? '🏟️ Arène conquise' : r.variant === 'champion' ? '💪 Champion terrassé' : r.variant === 'horde' ? 'Horde massacrée' : r.boss ? '☠️ BOSS VAINCU' : r.type === 'elite' ? '👹 Élite vaincue' : 'Victoire') + '</h2>';
     if (r.firstKill) h += '<div class="center gold small" style="margin-bottom:6px">Nouvelle zone débloquée : tu pourras repartir d’ici !</div>';
     h += '<div class="gains">' + (r.gold ? '<span class="gold">+' + r.gold + ' 💰</span>' : '') + (r.cendres ? '<span class="ash">+' + E.fmt(r.cendres) + ' 🔥</span>' : '') + (r.lvlUps ? '<span style="color:#b3a6ff">Niveau ' + run.lvl + ' !</span>' : '') + (r.lvlUps && run.pendingEvos > 0 ? '<span class="gold">✨ Éveil !</span>' : '') + '</div>';
     if (r.defi != null) h += '<div class="center small ' + (r.defi ? 'good' : 'dim') + '" style="margin-bottom:6px">⏱️ Défi du bourreau : ' + (r.defi ? '<b>réussi !</b> Coffre bonus.' : 'trop lent cette fois.') + '</div>';
@@ -354,6 +466,7 @@ UI.run = (function () {
     var next = run.floor + 1, z = E.zoneOf(next), frac = run.hp / run.stats.hp;
     var h = '<h2>Étage ' + next + '</h2><div class="center small dim" style="margin:-6px 0 10px">' + (run.doors[0] === 'boss' ? '<span class="bad">' + D.ENEMIES[z.boss].name + ' t’attend.</span>' : 'Choisis ta voie') + ' · PV <b class="' + (frac < 0.35 ? 'bad' : frac < 0.7 ? 'gold' : 'good') + '">' + Math.round(frac * 100) + ' %</b> · 🧪 ' + run.potions + '</div><div class="doors">';
     run.doors.forEach(function (t, i) { var r = D.ROOMS[t]; h += '<button class="door ' + t + '" style="animation-delay:' + (i * 0.08) + 's" data-act="door" data-i="' + i + '"><div class="ic">' + r.icon + '</div><b>' + r.name + '</b><span>' + r.hint + '</span></button>'; });
+    if (run.doors.some(function (t) { return t === 'forge' || t === 'runes' || t === 'roue'; })) tuto('newrooms', '⚒️ <b>Forge</b>, 🔮 <b>Runes</b>, 🎡 <b>Roue</b> : des salles sans combat, où c’est ton adresse (ou ta chance) qui paie.');
     h += '</div>';
     var hs = S().heroes[run.hero], better = S().inv.some(function (it) { if (E.equippedBy(it.uid)) return false; var cur = hs.equip[E.itemBase(it).slot], ci = cur ? E.findItem(cur) : null; return !ci || E.itemScore(it) > E.itemScore(ci) * 1.02; });
     if (better) h += '<div class="btns"><button class="btn goldb sm" data-act="runEquipBest">▲ Tu as trouvé mieux : équiper le meilleur</button></div>';
@@ -361,8 +474,11 @@ UI.run = (function () {
   }
   ACT.runEquipBest = function () { var n = E.equipBest(S().run.hero); if (n) { SND.play('equip'); UI.toast('⚡ ' + n + ' objet' + (n > 1 ? 's' : '') + ' équipé' + (n > 1 ? 's' : '')); } E.save(); refresh(); };
   ACT.door = function (d) {
-    var run = S().run, t = run.doors[+d.i]; SND.play('door');
-    if (E.chooseDoor(+d.i)) { UI.overlay(null); built = null; if (t === 'boss') UI.flash('#000000ee'); syncPhase(true); }
+    var run = S().run, t = run.doors[+d.i]; if (wiping || !t) return; SND.play('door');
+    var rm = D.ROOMS[t], nz = E.zoneOf(run.floor + 1);
+    wipe(rm.icon + ' ' + rm.name, 'Étage ' + (run.floor + 1) + ' · ' + nz.name, function () {
+      if (E.chooseDoor(+d.i)) { UI.overlay(null); built = null; if (t === 'boss') UI.flash('#000000ee'); syncPhase(true); }
+    });
   };
   function sheetRoom(run) {
     var r = run.room, t = r.type, h = '';
@@ -375,7 +491,8 @@ UI.run = (function () {
       h += '<div class="btns"><button class="btn" data-act="room" data-a="leave">Continuer seul</button></div>';
       UI.overlay(h); return;
     }
-    if (t === 'tresor') h = '<h2>Salle du trésor</h2><div class="room-art">🧰</div><p class="center dim">Un coffre cerclé de fer. Il a l’air... de respirer ?</p><div class="btns"><button class="btn goldb big" data-act="room" data-a="open">OUVRIR</button></div>';
+    if (t === 'forge' || t === 'runes' || t === 'roue') { UI.mini.room(run); return; }
+    if (t === 'tresor') h = '<h2>Salle du trésor</h2><div class="room-art">🧰</div><p class="center dim">Un coffre cerclé de fer. Il a l’air... de respirer ?</p><div class="btns"><button class="btn goldb big" data-act="lockpick">🗝️ CROCHETER</button></div><div class="btns" style="margin-top:8px"><button class="btn sm" data-act="room" data-a="open" data-arg="0">Forcer le coffre (butin moindre)</button></div>';
     else if (t === 'marchand') {
       h = '<h2>⚖️ Le Colporteur</h2><p class="center dim small" style="margin-top:-6px">« Tout a un prix. Surtout toi. » · Tu as <b class="gold">💰 ' + run.gold + '</b></p>';
       r.stock.forEach(function (s, i) {
@@ -510,5 +627,7 @@ UI.run = (function () {
   ACT.toHub = function () { SND.play('click'); UI.hub(D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; }) ? 'autel' : 'hero'); };
   ACT.again = function (d) { UI.askOmen(S().hero, Math.min(+d.z || 1, E.maxStartZone())); };
 
-  return { show: show, stop: stop, pause: pause, end: end, refresh: refresh };
+  // Fin d'une épreuve (forge, runes, roue) : message, puis on passe à la suite
+  function after(txt, sfx) { if (txt) UI.toast(txt, true); if (sfx) SND.play(sfx); shownPhase = null; updateHud.key = null; syncPhase(true); }
+  return { show: show, stop: stop, pause: pause, end: end, refresh: refresh, after: after, hud: function () { updateHud.key = null; } };
 })();
