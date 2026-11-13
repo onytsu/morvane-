@@ -310,3 +310,12 @@ h3 { font-size: 15px; }
 .cdx img { width: 44px; height: 44px; display: block; margin: 0 auto 2px; } .cdx .tiny { line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 9.5px; }
 .cdx.no img { filter: brightness(0) drop-shadow(0 0 1px #5a4a66); opacity: .7; } .cdx.elite { border-color: #6a3b8a; } .cdx.boss { border-color: #8f1826; background: #1d1014; }
 .li .pips i { width: 16px; height: 6px; }
+
+/* --- v1.6 : familiers, offrande du jour --- */
+.fam { position: absolute; left: 27%; bottom: 20%; z-index: 3; pointer-events: none; } .fam img { width: 46px; height: 46px; display: block; filter: drop-shadow(0 3px 2px #000b); animation: bob 1.3s ease-in-out infinite; }
+.famh { position: absolute; left: 20%; bottom: 20px; z-index: 2; } .famh img { width: 52px; height: 52px; display: block; filter: drop-shadow(0 3px 3px #000b); animation: bob 1.5s ease-in-out infinite; }
+.flip { transform: scaleX(-1); }
+.famic img { width: 34px; height: 34px; display: block; margin: 0 auto; } .famic.no img { filter: brightness(0) drop-shadow(0 0 1px #5a4a66); opacity: .7; }
+.daily { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; margin-bottom: 10px; border-radius: 12px; border: 1px solid var(--gold); background: linear-gradient(90deg, #4d3810, #241a0c); color: #ffe9b8; animation: callgold 2s ease-in-out infinite; }
+.daily:active { transform: scale(.97); }
+@keyframes callgold { 50% { box-shadow: 0 0 22px #d9a441aa; } }

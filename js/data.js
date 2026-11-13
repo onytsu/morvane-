@@ -289,6 +289,31 @@ var DATA = (function () {
     { id: 6, name: 'Trône du Roi Creux', short: 'Trône', color: '#9b6bff', bg: ['#170f24', '#0a0710'], mobs: ['ombre', 'oeil', 'devoreur', 'chevalier_creux'], elite: 'heraut', boss: 'roi_creux', uniques: ['u_couronne', 'u_faux'] }
   ];
 
+  // ---------- Histoire : présentation de chaque zone et réplique du boss ----------
+  var LORE = {
+    1: ['Sous la chapelle de Morvane, les morts ne dorment plus. Le Fossoyeur les déterre un par un pour son armée, et il lui en manque toujours un : toi.', 'Encore un qui marche. Je vais arranger ça.'],
+    2: ['On pendait ici les voleurs, puis les innocents, puis plus personne ne compta. Les arbres ont bu tant de larmes qu’ils ont appris à haïr.', 'Mes enfants ont faim. Approche, petite chose.'],
+    3: ['La peste est née dans cette eau. Ceux qui s’y sont noyés ne sont jamais remontés. Quelque chose de très grand les a gardés.', '...'],
+    4: ['Les fidèles priaient pour que le Roi revienne. Il est revenu, vide. L’Évêque a arraché son propre visage pour ne plus le voir.', 'Agenouille-toi. Ou je te ferai agenouiller.'],
+    5: ['Ici fut forgée la couronne du Roi Creux. Les forgerons brûlent encore, enchaînés à leurs enclumes, et leur maître ne laisse rien refroidir.', 'Ta chair fera un bon charbon.'],
+    6: ['Le dernier étage. Un trône, une armure, et rien dedans. Le Roi Creux n’a jamais été un homme : seulement la faim de tout ce qu’il a éteint.', 'Tu es venu remplir le vide ? Il n’y a pas assez de toi.']
+  };
+  ZONES.forEach(function (z) { z.lore = LORE[z.id][0]; z.taunt = LORE[z.id][1]; });
+
+  // ---------- Familiers : débloqués en tuant assez de monstres d'une espèce. Un seul actif. ----------
+  var FAMILIARS = [
+    { id: 'f_rat', spr: 'rat', name: 'Rat fouineur', need: ['rat', 40], desc: "+20 % d'or et de Cendres.", mods: { gf: 20 } },
+    { id: 'f_squelette', spr: 'serviteur', noflip: 1, name: 'Petit squelette', need: ['squelette', 60], desc: '+8 % de chance de frapper deux fois.', mods: { echo: 8 } },
+    { id: 'f_spectre', spr: 'spectre', name: 'Feu follet', need: ['spectre', 40], desc: '+6 % esquive.', mods: { dodge: 6 } },
+    { id: 'f_corbeau', spr: 'corbeau', name: 'Corbeau charognard', need: ['corbeau', 40], desc: '+25 % chance de butin rare.', mods: { mf: 25 } },
+    { id: 'f_araignee', spr: 'araignee', name: 'Veuve apprivoisée', need: ['araignee', 40], desc: "+25 % de chance d'empoisonner.", mods: { poisonHit: 25 } },
+    { id: 'f_sangsue', spr: 'sangsue', name: 'Sangsue fidèle', need: ['sangsue', 40], desc: '+3 % vol de vie.', mods: { ls: 3 } },
+    { id: 'f_gargouille', spr: 'gargouille', name: 'Gargouille de poche', need: ['gargouille', 40], desc: '+20 % armure.', mods: { defP: 20 } },
+    { id: 'f_diablotin', spr: 'diablotin', name: 'Diablotin lié', need: ['diablotin', 40], desc: "+25 % de chance d'embraser.", mods: { burnHit: 25 } },
+    { id: 'f_oeil', spr: 'oeil', name: 'Œil veilleur', need: ['oeil', 40], desc: '+6 % critique, +50 % dégâts sur point faible.', mods: { crit: 6, weakP: 50 } },
+    { id: 'f_mimique', spr: 'mimique', name: 'Mimique domptée', need: ['mimique', 5], desc: '+50 or au départ et +1 fiole.', mods: { startGold: 50, potions: 1 } }
+  ];
+
   // ---------- Objets ----------
   var SLOTS = [
     { id: 'arme', name: 'Arme', icon: '🗡️' }, { id: 'casque', name: 'Casque', icon: '⛑️' },
@@ -515,6 +540,30 @@ var DATA = (function () {
     { id: 'e_marche', title: "Le marché des âmes", text: 'Une ombre te tend un contrat. « Un peu de toi contre beaucoup de moi. »',
       opts: [{ t: 'Signer (-20 % PV max)', fx: { maxHpP: -20, artifact: 1 }, r: 'Un artefact apparaît dans ta main.' },
         { t: 'Déchirer le contrat', fx: { gold: 25 }, r: 'Des pièces tombent du papier.' }] },
+    { id: 'e_miroir', title: 'Le miroir fêlé', text: 'Ton reflet ne bouge pas en même temps que toi. Il te tend la main.',
+      opts: [{ t: 'Lui serrer la main', fx: { boon: 1, curse: 'takenP', curseV: 5 }, r: 'Il te donne une aubaine... et garde un peu de toi (+5 % dégâts subis).' },
+        { t: 'Briser le miroir', fx: { gold: 45 }, r: 'Sept ans de malheur. Et 45 or dans le cadre.' },
+        { t: 'Détourner les yeux', fx: {}, r: 'Il te regarde partir.' }] },
+    { id: 'e_enfant', title: "L'enfant qui chante", text: 'Une petite voix fredonne dans le noir. Il n’y a pas d’enfants ici.',
+      opts: [{ t: 'Lui donner 30 or', need: { gold: 30 }, fx: { gold: -30, healPct: 50 }, r: 'La chanson te répare (+50 % PV).' },
+        { t: 'Suivre la voix', fx: { ambush: 1 }, r: '' },
+        { t: 'Boucher tes oreilles', fx: {}, r: 'La chanson s’arrête net.' }] },
+    { id: 'e_alchimiste', title: "L'alchimiste aveugle", text: '« Rouge ou verte ? Je ne sais plus laquelle tue. »',
+      opts: [{ t: 'Boire la rouge', fx: { atkP: 12, hpPct: -15 }, r: 'Tes veines brûlent : +12 % attaque, -15 % PV.' },
+        { t: 'Boire la verte', fx: { maxHpP: 12 }, r: 'Ta peau durcit : +12 % PV max.' },
+        { t: 'Refuser poliment', fx: {}, r: '« Sage. Ou lâche. »' }] },
+    { id: 'e_biblio', title: 'La bibliothèque noyée', text: 'Des livres gonflés d’eau. Un seul est sec. Un autre est en or.',
+      opts: [{ t: 'Lire le livre sec', fx: { boon: 1, hpPct: -8 }, r: 'Les mots te blessent, mais tu apprends une aubaine.' },
+        { t: 'Voler le livre en or', fx: { gold: 70, curse: 'takenP', curseV: 4 }, r: '+70 or. Quelque chose a remarqué (+4 % dégâts subis).' },
+        { t: 'Ne toucher à rien', fx: {}, r: 'Les pages se tournent toutes seules derrière toi.' }] },
+    { id: 'e_cranes', title: 'Le mur de crânes', text: 'L’un d’eux claque des dents. « Une pièce pour un mort ? »',
+      opts: [{ t: 'Lui donner 50 or', need: { gold: 50 }, fx: { gold: -50, artifact: 1 }, r: 'Il crache un artefact.' },
+        { t: 'Lui arracher une dent', fx: { item: 2, hpPct: -10 }, r: 'Il te mord (-10 % PV), mais sa dent valait le coup.' },
+        { t: 'Passer', fx: {}, r: 'Mille orbites te suivent.' }] },
+    { id: 'e_mourant', title: 'Le chevalier mourant', text: 'Adossé au mur, il tient encore son épée. « Finis-en. Ou aide-moi. »',
+      opts: [{ t: 'Abréger ses souffrances', fx: { cendres: 1 }, r: 'Il te remercie d’un souffle.' },
+        { t: 'Panser ses plaies', fx: { hpPct: -12, boon: 1 }, r: 'Tu y laisses de tes forces. Il t’enseigne une aubaine.' },
+        { t: 'Prendre son équipement', fx: { item: 1 }, r: 'Il ne proteste pas longtemps.' }] },
     { id: 'e_tombe', title: 'La tombe ouverte', text: 'Quelqu’un a creusé ici il y a peu. Ou quelque chose en est sorti.',
       opts: [{ t: 'Descendre fouiller', fx: { ambush: 1 }, r: '' },
         { t: 'Reboucher par respect', fx: { cendres: 1 }, r: 'Les morts te remercient en Cendres.' }] }
@@ -544,7 +593,7 @@ var DATA = (function () {
 
   return {
     RARITIES: RARITIES, MODS: MODS, HEROES: HEROES, ENEMIES: ENEMIES, ZONES: ZONES, SLOTS: SLOTS, BASES: BASES,
-    SETS: SETS, OMENS: OMENS, TALENTS: TALENTS, MOBFIX: MOBFIX, CONDS: CONDS, ALLIES: ALLIES, CONTRACTS: CONTRACTS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
+    SETS: SETS, OMENS: OMENS, TALENTS: TALENTS, FAMILIARS: FAMILIARS, MOBFIX: MOBFIX, CONDS: CONDS, ALLIES: ALLIES, CONTRACTS: CONTRACTS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
     PACTS: PACTS, ACHIEVEMENTS: ACHIEVEMENTS, EVENTS: EVENTS, ROOMS: ROOMS, ALTARS: ALTARS
   };
 })();

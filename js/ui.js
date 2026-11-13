@@ -89,7 +89,7 @@ var UI = (function () {
     SND.music('hub');
     var idle = E.idleInfo(), newItems = S().inv.some(function (i) { return i.isNew; });
     var metaOk = D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; });
-    var tabs = [['hero', '🏰', 'Héros', idle.full || E.contractReady() || E.talentPoints(S().hero) > 0], ['sac', '🎒', 'Sac', newItems], ['autel', '⚱️', 'Autel', metaOk], ['pactes', '📜', 'Pactes', pactFree()], ['faits', '🏆', 'Hauts faits', false]];
+    var tabs = [['hero', '🏰', 'Héros', idle.full || E.contractReady() || E.talentPoints(S().hero) > 0 || E.dailyInfo().claimable], ['sac', '🎒', 'Sac', newItems], ['autel', '⚱️', 'Autel', metaOk], ['pactes', '📜', 'Pactes', pactFree() || E.famNew()], ['faits', '🏆', 'Hauts faits', false]];
     var body = { hero: tabHero, sac: tabSac, autel: tabAutel, pactes: tabPactes, faits: tabFaits }[st.tab]();
     $('#screen').innerHTML = '<div class="topbar"><span class="title grow">MORVANE</span><span class="cur ash">🔥 ' + E.fmt(S().cendres) + '</span><span class="cur ess">💠 ' + E.fmt(S().essence) + '</span><button class="icon-btn" data-act="settings">⚙️</button></div>' +
       '<div class="content" id="content">' + body + '</div><div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (st.tab === t[0] ? ' on' : '') + '" data-act="tab" data-tab="' + t[0] + '"><span class="ti">' + t[1] + '</span>' + t[2] + (t[3] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
@@ -111,7 +111,7 @@ var UI = (function () {
     html += '<div class="roster">' + D.HEROES.map(function (x) { var u = E.heroUnlocked(x.id); return '<button class="rh' + (x.id === h.id ? ' on' : '') + (u ? '' : ' lk') + '" data-act="heroPick" data-id="' + x.id + '">' + spr(x.id) + (u ? '' : '<span>🔒</span>') + '</button>'; }).join('') + '</div>';
     var aura = -1; if (un) { for (var asl in hs.equip) { var ait = E.findItem(hs.equip[asl]); if (ait && ait.rar > aura) aura = ait.rar; } }
     var sprH = spr(h.id, 'spr'); if (aura >= 2) sprH = sprH.replace('<img', '<img style="filter:drop-shadow(0 0 9px ' + D.RARITIES[aura].color + ') drop-shadow(0 6px 6px #000a)"');
-    html += '<div class="hero-stage"><div class="fireglow"></div><div class="floorglow"></div><div class="name"><b>' + h.name + '</b><div class="small gold">' + h.title + '</div></div>' + sprH;
+    html += '<div class="hero-stage"><div class="fireglow"></div><div class="floorglow"></div><div class="name"><b>' + h.name + '</b><div class="small gold">' + h.title + '</div></div>' + sprH + (un ? famHtml('famh') : '');
     html += '<button class="nav l" data-act="heroNav" data-d="-1">‹</button><button class="nav r" data-act="heroNav" data-d="1">›</button>';
     if (un) {
       html += '<div class="mast">Maîtrise <b class="gold">' + hs.lvl + '</b><div class="bar" style="width:90px"><i style="width:' + Math.min(100, hs.xp / E.masteryNeed(hs.lvl) * 100) + '%"></i></div></div><div class="pwr">⚡ ' + E.fmt(E.power(h.id)) + '</div>';
@@ -136,6 +136,8 @@ var UI = (function () {
       }
       html += '<div class="tiny dim center" style="margin:6px 0 10px">Record : étage ' + S().stats.best + '</div>';
       var scn = E.setCounts(h.id), sk = Object.keys(scn); if (sk.length) html += '<div class="card"><b>Sets portés</b>' + sk.map(function (id) { return setHtml(id, scn[id]); }).join('') + '</div>';
+      var dl = E.dailyInfo();
+      if (dl.claimable) html += '<button class="daily" data-act="daily"><span style="font-size:26px">🎁</span><span class="grow" style="text-align:left"><b>Offrande du jour</b> <span class="tiny">jour ' + dl.streak + '/7</span><br><span class="small">🔥 ' + E.fmt(dl.cendres) + ' · 💠 ' + dl.essence + (dl.item ? ' · <b class="c3">1 objet épique</b>' : '') + '</span></span><b>PRENDRE</b></button>';
       var tpts = E.talentPoints(h.id);
       html += '<button class="btn wide' + (tpts ? ' goldb' : '') + '" data-act="talents" style="margin-bottom:10px">🌟 Talents de ' + h.name + (tpts ? ' — <b>&nbsp;' + tpts + ' point' + (tpts > 1 ? 's' : '') + ' à placer</b>' : '') + '</button>';
       html += '<div class="card"><div class="row"><b>📜 Contrats du jour</b><span class="grow"></span><span class="tiny dim">nouveaux chaque jour</span></div>' + E.contracts().map(function (ct, i) {
@@ -179,6 +181,23 @@ var UI = (function () {
   ACT.talentAdd = function (d) { if (E.addTalent(S().hero, d.id)) { SND.play('upgrade'); E.save(); renderTalents(); } else SND.play('error'); };
   ACT.talentReset = function () { if (S().run) { toast('Impossible pendant une descente.'); return; } E.resetTalents(S().hero); SND.play('salvage'); E.save(); renderTalents(); };
   ACT.talentClose = function () { closeModal(); refresh(); };
+  function famHtml(cls) {
+    var f = S().fam ? E.byId(D.FAMILIARS, S().fam) : null; if (!f || !E.famUnlocked(f.id)) return '';
+    return '<div class="' + cls + (f.noflip ? '' : ' flip') + '">' + spr(f.spr) + '</div>';
+  }
+  function vib(p) { try { if (S().settings.vib !== false && navigator.vibrate) navigator.vibrate(p); } catch (e) { } }
+  ACT.daily = function () {
+    var i = E.claimDaily(); if (!i) return;
+    SND.play('gold'); SND.play('levelup', 0.6); flash('#d9a44166'); vib(30);
+    toast('🎁 Offrande du jour ' + i.streak + '/7 : +' + E.fmt(i.cendres) + ' 🔥 · +' + i.essence + ' 💠' + (i.got ? '<br><b class="c3">+ ' + E.itemName(i.got) + ' (Épique)</b>' : i.streak < 7 ? '<br><span class="dim">Reviens demain : la récompense grossit.</span>' : ''), true);
+    E.save(); keepScroll(hub);
+  };
+  ACT.fam = function (d) {
+    if (S().run) { toast('Impossible pendant une descente.'); return; }
+    if (!E.famUnlocked(d.id)) { SND.play('error'); return; }
+    E.setFam(d.id); SND.play('equip'); E.save(); keepScroll(hub);
+  };
+  ACT.setVib = function () { var s = S().settings; s.vib = s.vib === false; if (s.vib) vib(40); E.save(); ACT.settings(); };
   ACT.contract = function (d) { var ct = E.claimContract(+d.i); if (ct) { SND.play('gold'); SND.play('levelup', 0.5); flash('#d9a44155'); toast('📜 Contrat rempli : +' + E.fmt(ct.amount) + (ct.kind === 'essence' ? ' 💠' : ' 🔥')); E.save(); keepScroll(hub); } else SND.play('error'); };
   ACT.idle = function () { var a = E.collectIdle(); if (a > 0) { SND.play('gold'); toast('+' + E.fmt(a) + ' 🔥 Cendres récoltées'); E.save(); keepScroll(hub); } };
   ACT.descend = function () {
@@ -309,6 +328,13 @@ var UI = (function () {
       var own = S().pacts.indexOf(p.id) >= 0, on = hs.pacts.indexOf(p.id) >= 0;
       h += '<button class="li' + (on ? ' on' : '') + (own ? '' : ' locked') + '" style="width:100%;text-align:left" data-act="pact" data-id="' + p.id + '"><div class="ic">' + (own ? p.icon : '🔒') + '</div><div class="grow"><b>' + p.name + '</b><div class="small dim">' + p.desc + '</div>' + (own ? '' : '<div class="tiny gold">' + p.how + '</div>') + '</div>' + (on ? '<span class="gold">✔</span>' : '') + '</button>';
     });
+    h += '<h3 style="margin:14px 0 4px">🐾 Familiers</h3><div class="small dim" style="margin-bottom:8px">Tue assez de monstres d’une espèce pour en apprivoiser un. Un seul t’accompagne à la fois, pour tous tes héros.</div>';
+    D.FAMILIARS.forEach(function (f) {
+      var ok = E.famUnlocked(f.id), on = S().fam === f.id, n = Math.min(S().codex[f.need[0]] || 0, f.need[1]);
+      if (ok) S().tuto['fam_' + f.id] = 1;
+      h += '<button class="li' + (on ? ' on' : '') + (ok ? '' : ' locked') + '" style="width:100%;text-align:left" data-act="fam" data-id="' + f.id + '"><div class="ic famic' + (ok ? '' : ' no') + '">' + spr(f.spr) + '</div><div class="grow"><b>' + (ok ? f.name : '???') + '</b><div class="small dim">' + f.desc + '</div>' +
+        (ok ? '' : '<div class="tiny gold">' + D.ENEMIES[f.need[0]].name + ' : ' + n + '/' + f.need[1] + ' tués</div><div class="bar" style="margin-top:3px"><i style="width:' + (n / f.need[1] * 100) + '%"></i></div>') + '</div>' + (on ? '<span class="gold">✔</span>' : '') + '</button>';
+    });
     return h;
   }
   ACT.pact = function (d) {
@@ -320,7 +346,7 @@ var UI = (function () {
   // ---------- hauts faits ----------
   function tabFaits() {
     var s = S().stats, done = Object.keys(S().ach).length;
-    var h = '<div class="card"><div class="sumgrid" style="margin:0"><div class="stat"><b>' + s.best + '</b><span>Étage record</span></div><div class="stat"><b>' + E.fmt(s.kills) + '</b><span>Ennemis tués</span></div><div class="stat"><b>' + s.runs + '</b><span>Descentes</span></div><div class="stat"><b>' + s.bosses + '</b><span>Boss vaincus</span></div><div class="stat"><b class="c4">' + s.leg + '</b><span>Légendaires</span></div><div class="stat"><b class="c5">' + s.uni + '</b><span>Uniques</span></div></div></div><h3 style="margin:4px 0 8px">Hauts faits ' + done + '/' + D.ACHIEVEMENTS.length + '</h3>';
+    var h = '<div class="card"><div class="sumgrid" style="margin:0"><div class="stat"><b>' + s.best + '</b><span>Étage record</span></div><div class="stat"><b>' + E.fmt(s.kills) + '</b><span>Ennemis tués</span></div><div class="stat"><b>' + s.runs + '</b><span>Descentes</span></div><div class="stat"><b>' + s.bosses + '</b><span>Boss vaincus</span></div><div class="stat"><b class="c4">' + s.leg + '</b><span>Légendaires</span></div><div class="stat"><b class="c5">' + s.uni + '</b><span>Uniques</span></div><div class="stat"><b>' + E.fmt(s.maxHit || 0) + '</b><span>Plus gros coup</span></div><div class="stat"><b>x' + (s.maxCombo || 0) + '</b><span>Meilleur combo</span></div><div class="stat"><b>' + (s.fusions || 0) + '</b><span>Fusions</span></div></div></div><h3 style="margin:4px 0 8px">Hauts faits ' + done + '/' + D.ACHIEVEMENTS.length + '</h3>';
     D.ACHIEVEMENTS.slice().sort(function (a, b) { return (S().ach[a.id] ? 1 : 0) - (S().ach[b.id] ? 1 : 0); }).forEach(function (a) {
       var ok = S().ach[a.id], v = Math.min(s[a.c[0]] || 0, a.c[1]), p = a.pact ? E.byId(D.PACTS, a.pact) : null;
       h += '<div class="li' + (ok ? ' done' : '') + '"><div class="ic">' + (ok ? '🏆' : '▫️') + '</div><div class="grow"><b>' + a.name + '</b><div class="small dim">' + a.desc + (ok ? '' : ' — ' + E.fmt(v) + '/' + E.fmt(a.c[1])) + '</div>' + (ok ? '' : '<div class="bar" style="margin-top:3px"><i style="width:' + (v / a.c[1] * 100) + '%"></i></div>') + '</div><div class="small" style="text-align:right"><span class="ash">🔥 ' + E.fmt(a.cendres) + '</span>' + (p ? '<br><span class="tiny gold">' + p.icon + ' Pacte</span>' : '') + '</div></div>';
@@ -346,10 +372,11 @@ var UI = (function () {
   ACT.settings = function () {
     var s = S().settings;
     modal('<h2>Réglages</h2><div class="btns"><button class="btn" data-act="setSfx">' + (s.sfx ? '🔊 Sons : oui' : '🔇 Sons : non') + '</button><button class="btn" data-act="setMusic">' + (s.music ? '🎵 Musique : oui' : '🎵 Musique : non') + '</button></div>' +
+      '<div class="btns"><button class="btn" data-act="setVib">' + (s.vib !== false ? '📳 Vibrations : oui' : '📳 Vibrations : non') + '</button></div>' +
       '<div class="card small dim" style="margin-top:12px">💾 La partie se sauvegarde toute seule sur cet appareil, à chaque salle. Pour la mettre à l’abri ou la passer sur un autre appareil, copie le code ci-dessous.</div>' +
       '<div class="btns"><button class="btn" data-act="export">📤 Copier ma sauvegarde</button><button class="btn" data-act="importAsk">📥 Coller une sauvegarde</button></div>' +
       (S().run ? '<div class="btns"><button class="btn" data-act="abandonAsk">🏳️ Abandonner la descente</button></div>' : '') +
-      '<div class="btns"><button class="btn" data-act="resetAsk" style="color:var(--blood)">Tout effacer</button><button class="btn primary" data-act="close">Fermer</button></div><div class="tiny dim center" style="margin-top:8px">Morvane v1.5</div>');
+      '<div class="btns"><button class="btn" data-act="resetAsk" style="color:var(--blood)">Tout effacer</button><button class="btn primary" data-act="close">Fermer</button></div><div class="tiny dim center" style="margin-top:8px">Morvane v1.6</div>');
   };
   ACT.setSfx = function () { var s = S().settings; s.sfx = !s.sfx; SND.set('sfx', s.sfx); E.save(); ACT.settings(); };
   ACT.setMusic = function () { var s = S().settings; s.music = !s.music; SND.set('music', s.music); E.save(); ACT.settings(); };
@@ -381,5 +408,5 @@ var UI = (function () {
   function boot() { E.load(); applySettings(); st.view = S().hero; splash(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else setTimeout(boot, 0);
 
-  return { ACT: ACT, $: $, S: S, spr: spr, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod };
+  return { ACT: ACT, $: $, S: S, spr: spr, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, famHtml: famHtml, vib: vib, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod };
 })();

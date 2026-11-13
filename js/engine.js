@@ -42,9 +42,9 @@
   function newSave() {
     var s = {
       v: 1, cendres: 0, essence: 0, hero: 'chevalier', heroes: {}, inv: [], nextUid: 1, meta: {}, pacts: [], ach: {},
-      stats: { kills: 0, deaths: 0, chests: 0, maxLvl: 0, leg: 0, uni: 0, best: 0, elites: 0, upgrades: 0, epic: 0, runs: 0, heroes: 1, weak: 0, parry: 0, ult: 0, arenes: 0, fusions: 0, bossMax: 0, boss1: 0, boss2: 0, boss3: 0, boss4: 0, boss5: 0, boss6: 0, bosses: 0, items: 0 },
+      stats: { kills: 0, deaths: 0, chests: 0, maxLvl: 0, leg: 0, uni: 0, best: 0, elites: 0, upgrades: 0, epic: 0, runs: 0, heroes: 1, weak: 0, parry: 0, ult: 0, arenes: 0, fusions: 0, maxHit: 0, maxCombo: 0, bossMax: 0, boss1: 0, boss2: 0, boss3: 0, boss4: 0, boss5: 0, boss6: 0, bosses: 0, items: 0 },
       settings: { sfx: true, music: true, speed: 1, auto: false, autoSalvage: -1 },
-      idleAt: Date.now(), run: null, tuto: {}, codex: {}, uniq: {}, pityU: 0, created: Date.now()
+      idleAt: Date.now(), run: null, tuto: {}, codex: {}, uniq: {}, fam: null, daily: null, pityU: 0, created: Date.now()
     };
     s.heroes.chevalier = { xp: 0, lvl: 1, equip: {}, pacts: [] };
     return s;
@@ -274,6 +274,7 @@
     for (var sl in hs.equip) { var it = E.findItem(hs.equip[sl]); if (it) add(perm, E.itemMods(it)); }
     hs.pacts.forEach(function (pid) { var p = byId(D.PACTS, pid); if (p) add(perm, p.mods); });
     if (hs.tal) D.TALENTS[heroId].forEach(function (t) { if (hs.tal[t.id]) add(perm, t.mods, hs.tal[t.id]); });
+    var fam = S.fam ? byId(D.FAMILIARS, S.fam) : null; if (fam && E.famUnlocked(fam.id)) add(perm, fam.mods);
     var scn = E.setCounts(heroId); for (var sid in scn) { var sd = byId(D.SETS, sid); if (sd) for (var th in sd.bonus) if (scn[sid] >= +th) add(perm, sd.bonus[th]); }
     D.META.forEach(function (m) { var l = S.meta[m.id] || 0; if (l) add(meta, m.mods, l); });
     if (run) { add(rm, run.mods); add(rm, { atkP: 3 * (run.lvl - 1) + (run.mods.atkPerRoom || 0) * run.rooms, hpP: 3 * (run.lvl - 1) }); }
@@ -314,6 +315,9 @@
   // ---------- méta ----------
   E.metaCost = function (id) { var m = byId(D.META, id), l = S.meta[id] || 0; return l >= m.max ? null : Math.ceil(m.cost * Math.pow(m.grow, l)); };
   E.buyMeta = function (id) { var c = E.metaCost(id); if (c == null || S.cendres < c) return false; S.cendres -= c; S.meta[id] = (S.meta[id] || 0) + 1; return true; };
+  E.famUnlocked = function (id) { var f = byId(D.FAMILIARS, id); return !!f && (S.codex[f.need[0]] || 0) >= f.need[1]; };
+  E.setFam = function (id) { if (id && !E.famUnlocked(id)) return false; S.fam = S.fam === id ? null : id; if (S.run) recalc(S.run); return true; };
+  E.famNew = function () { return D.FAMILIARS.some(function (f) { return E.famUnlocked(f.id) && !(S.tuto['fam_' + f.id]); }); };
   E.talentPoints = function (heroId) { var hs = S.heroes[heroId]; if (!hs) return 0; var sp = 0, k; for (k in (hs.tal || {})) sp += hs.tal[k]; return Math.max(0, hs.lvl - 1 - sp); };
   E.addTalent = function (heroId, tid) {
     var hs = S.heroes[heroId], t = byId(D.TALENTS[heroId], tid); if (!hs || !t || E.talentPoints(heroId) <= 0) return false;
@@ -347,6 +351,19 @@
     D.HEROES.forEach(function (h) { if (h.unlock && h.unlock.boss && !S.heroes[h.id] && S.stats['boss' + h.unlock.boss] > 0) { E.unlockHero(h.id, true); got.push({ hero: h }); } });
     if (got.length) { E.newAch = (E.newAch || []).concat(got); }
     return got;
+  };
+  // Offrande du jour : une récompense par jour, qui grossit si on revient plusieurs jours de suite (jusqu'à 7)
+  function dayNum() { var d = new Date(); return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000); }
+  E.dailyInfo = function () {
+    var dn = dayNum(), d = S.daily || { day: 0, streak: 0 };
+    var streak = d.day === dn ? d.streak : d.day === dn - 1 ? Math.min(7, d.streak + 1) : 1;
+    return { claimable: d.day !== dn, streak: streak, cendres: Math.ceil(25 * Math.pow(GROW.cend, S.stats.best) * (1 + 0.3 * (streak - 1))), essence: 4 * streak, item: streak === 7 };
+  };
+  E.claimDaily = function () {
+    var i = E.dailyInfo(); if (!i.claimable) return null;
+    S.daily = { day: dayNum(), streak: i.streak }; S.cendres += i.cendres; S.essence += i.essence;
+    if (i.item) { var it = E.makeItem(Math.max(1, S.stats.best), 3, {}); S.inv.push(it); S.stats.items++; S.stats.epic++; i.got = it; }
+    return i;
   };
   function dayKey() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
   E.contracts = function () {
@@ -643,7 +660,7 @@
     if (c.cond === 'sang') dmg *= 1.4;
     if (!o.dot && e.def > 0) dmg *= (2 * st.atk) / (2 * st.atk + e.def);
     if (e.shield > 0) { var ab = Math.min(e.shield, dmg); e.shield -= ab; dmg -= ab; if (dmg <= 0) { ev(c, { k: 'dmg', id: e.id, v: 0, sh: 1 }); return 0; } }
-    e.hp -= dmg;
+    e.hp -= dmg; run.dmg = (run.dmg || 0) + dmg; if (!o.dot && dmg > (run.maxHit || 0)) run.maxHit = dmg;
     ev(c, { k: 'dmg', id: e.id, v: dmg, crit: crit, dot: o.dot || null, skill: !!o.skill });
     var ls = st.ls + (h.buffs.ls ? h.buffs.ls.v : 0);
     if (ls > 0 && !o.dot) heroHeal(run, c, dmg * ls / 100);
@@ -928,7 +945,7 @@
       S.stats['boss' + zi]++; S.stats.bosses++; run.bosses++;
       if (zn > S.stats.bossMax) { S.stats.bossMax = zn; res.firstKill = true; }
       res.artifact = giveArtifact(run); run.potions = Math.min(run.potionsMax, run.potions + 1);
-      heal(run, run.stats.hp * 0.3, true); res.boss = true; if (run.ally) { res.allyLeft = run.ally; run.ally = null; }
+      heal(run, run.stats.hp * 0.3, true); res.boss = true; if (zn === 6 && res.firstKill) res.ending = true; if (run.ally) { res.allyLeft = run.ally; run.ally = null; }
     }
     heal(run, run.stats.hp * 0.08, true);
     res.lvlUps = gainXp(run, c.xp);
@@ -943,12 +960,13 @@
     var reached = run.floor, bestBefore = run.bestBefore;
     if (!abandon) S.stats.deaths++;
     if (run.phase !== 'dead' && run.floor > S.stats.best) S.stats.best = run.floor;
+    if ((run.maxHit || 0) > (S.stats.maxHit || 0)) S.stats.maxHit = run.maxHit;
     var mxp = Math.round(run.rooms * 8 + run.bosses * 40 + run.kills), ups = 0;
     hs.xp += mxp;
     while (hs.xp >= E.masteryNeed(hs.lvl)) { hs.xp -= E.masteryNeed(hs.lvl); hs.lvl++; ups++; }
     var bonus = Math.ceil(run.cendres * 0.25 + 5 * (run.rooms));
     S.cendres += bonus;
-    var sum = { hero: run.hero, floor: reached, rooms: run.rooms, kills: run.kills, cendres: run.cendres + bonus, bonus: bonus, loot: run.loot, lvl: run.lvl, mxp: mxp, heroLvl: hs.lvl, heroUps: ups, abandon: !!abandon, time: run.t, bosses: run.bosses, record: reached >= S.stats.best && reached > (S.stats.prevBest || 0) };
+    var sum = { hero: run.hero, floor: reached, rooms: run.rooms, kills: run.kills, cendres: run.cendres + bonus, bonus: bonus, loot: run.loot, lvl: run.lvl, mxp: mxp, heroLvl: hs.lvl, heroUps: ups, abandon: !!abandon, time: run.t, bosses: run.bosses, dmg: run.dmg || 0, maxHit: run.maxHit || 0, record: reached >= S.stats.best && reached > (S.stats.prevBest || 0) };
     S.stats.prevBest = Math.max(S.stats.prevBest || 0, S.stats.best);
     S.run = null; E.checkAch(); E.save();
     return sum;

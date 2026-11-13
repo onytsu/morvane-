@@ -17,7 +17,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms)); let edge = null;
   await page.goto('http://127.0.0.1:8378/index.html'); await sleep(700);
   const shot = name => page.screenshot({ path: path.join(OUT, name + '.png') });
   // prépare un compte avec un peu de progression, sans tutoriels
-  await page.evaluate(() => { const S = ENGINE.S; ['skill', 'charge', 'potion', 'weak', 'ult', 'auto', 'fix', 'porteur', 'help_chevalier', 'hub', 'ult_chevalier', 'sk_k1'].forEach(k => S.tuto[k] = 1); S.stats.runs = 3; S.stats.best = 12; S.stats.bossMax = 1; S.cendres = 500; S.meta.m_force = 40; S.meta.m_vigueur = 40; S.meta.m_peau = 40; ENGINE.startRun('chevalier', 2); });
+  await page.evaluate(() => { const S = ENGINE.S; ['skill', 'charge', 'potion', 'weak', 'ult', 'auto', 'fix', 'porteur', 'help_chevalier', 'hub', 'ult_chevalier', 'sk_k1', 'zone1', 'zone2'].forEach(k => S.tuto[k] = 1); S.stats.runs = 3; S.stats.best = 12; S.stats.bossMax = 1; S.cendres = 500; S.meta.m_force = 40; S.meta.m_vigueur = 40; S.meta.m_peau = 40; ENGINE.startRun('chevalier', 2); });
   const scene = async (name, room, extra, wait) => {
     await page.evaluate((room, extra) => { const S = ENGINE.S, run = S.run; run.hp = run.stats.hp; run.room = room; run.result = null; Object.assign(run, extra || {}); if (room.group) { run.phase = 'combat'; ENGINE._buildCombat(run); } else run.phase = 'room'; UI.run.show(); }, room, extra || {});
     await sleep(wait || 2600); await shot(name);
