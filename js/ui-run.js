@@ -46,10 +46,11 @@ UI.run = (function () {
     a.style.setProperty('--z1', z.bg[0]); a.style.setProperty('--z2', z.bg[1]); a.style.setProperty('--zc', z.color);
     var bg = typeof Backgrounds !== 'undefined' ? ' style="background-image:url(' + Backgrounds.url(z.id) + ')"' : ''; a.classList.add('hasbg'); a.classList.remove('danger');
     a.innerHTML = '<div class="abg"' + bg + '></div><div class="rays"></div><div class="fog f1"></div><div class="unit hero enter" id="uhero">' + UI.spr(run.hero) + '</div><div class="minions" id="minions"></div><div class="fog f2"></div><div class="vig"></div>' +
-      '<button class="primes" id="primes" data-act="primes"></button><div class="combo" id="combo"></div>' + extraHtml(run);
+      '<button class="primes" id="primes" data-act="primes"></button><button class="cdice" id="cdice" data-act="cdice"></button><div class="combo" id="combo"></div>' + extraHtml(run);
     els = {}; posOf = {}; floats = 0; lootShown = 0; combo = 0; orbEls = {}; shotEls = {}; primeKey = '';
     vfx = typeof VFX !== 'undefined' ? VFX.attach(a) : null;
     fxL = typeof FX !== 'undefined' ? FX.attach(a, { ambient: ['dust', 'leaves', 'fireflies', 'gold', 'embers', 'void'][z.id - 1], warm: 2 }) : null;
+    if (c && c.dice) showDice(c, { d: c.dice, id: c.dfx.id, name: c.dfx.name, icon: c.dfx.icon }, true);
     if (c) { c.enemies.forEach(function (e, i) { if (!e.dead) { addEnemy(e, i, false); els[e.id].style.animationDelay = (0.15 + i * 0.09) + 's'; } }); built = c; }
     else built = 'empty';
   }
@@ -133,6 +134,23 @@ UI.run = (function () {
     el.style.setProperty('--dx', Math.round((b.x - a.x) * 0.42) + 'px'); el.style.setProperty('--dy', Math.round((b.y - a.y) * 0.42) + 'px');
     anim(el, 'atk', 280);
   }
+  // --- dés de combat ---
+  function showDice(c, e, still) {
+    var el = $('#cdice'); if (!el) return;
+    el.className = 'cdice k-' + e.id + (still ? '' : ' roll'); el.innerHTML = die(e.d[0]) + die(e.d[1]) + (e.name ? '<b>' + e.icon + ' ' + e.name + '</b>' : '') + '<em id="cdre"></em>';
+    if (still) return;
+    void el.offsetWidth; SND.play('click', 0.8); setTimeout(function () { SND.play('click', 0.6); }, 90);
+    if (e.id !== 'rien') {
+      var hero = $('#uhero'), big = e.id === 'jackpot' || e.id === 'double' || e.id === 'sept';
+      setTimeout(function () { floatAt(hero, e.name + ' !', big ? 'crit' : 'txt'); SND.play(e.id === 'jackpot' ? 'loot_legend' : big ? 'upgrade' : 'equip', 0.7); var h = center(hero); if (vfx && h) { VFX.ring(vfx, h.x, h.y, big ? 'gold' : 'ice', big ? 120 : 70, 0.4, 5); if (big) VFX.sparks(vfx, h.x, h.y, 'gold', e.id === 'jackpot' ? 50 : 20, { speed: 300, g: -160, life: 1 }); } if (e.id === 'jackpot') { UI.flash('#f2bd5e88'); UI.vib([30, 30, 80]); } }, 380);
+      tuto('dice', '🎲 <b>Dés de combat.</b> Deux dés au début de chaque tour : double = +1 action, 7 = pouvoirs gratuits, 10 ou plus = +40 % dégâts, 4 ou moins = protection, deux chiffres qui se suivent = coup critique. Touche les dés pour les <b>relancer</b> (1 fois par combat).');
+    }
+  }
+  ACT.cdice = function () {
+    var run = S().run, c = run && run.combat; if (!c) return;
+    if (E.rerollDice()) { SND.play('click'); return; }
+    UI.toast('🎲 <b>' + c.dice[0] + ' + ' + c.dice[1] + (c.dfx.name ? ' : ' + c.dfx.name : '') + '</b><br>' + c.dfx.desc + (c.rerolls > 0 ? '<br><span class="dim">Relance possible au début de ton tour, avant d’agir.</span>' : '<br><span class="dim">Plus de relance pour ce combat.</span>'), true);
+  };
   // --- orbes à ramasser ---
   function addOrb(e) {
     var a = $('#arena'); if (!a) return; var p = center(els[e.id]) || { x: a.clientWidth * 0.62, b: a.clientHeight * 0.7 };
@@ -255,6 +273,7 @@ UI.run = (function () {
         case 'potion': SND.play('potion'); break;
         case 'die': if (el) { var dp = center(el); if (vfx && dp) VFX.death(vfx, dp.x, dp.y, e.boss); souls(el, e.boss ? 12 : 3, e.boss ? 10 : 3); dropGems(c, el); el.classList.add('dead'); el.classList.remove('charging'); } SND.play(e.boss ? 'boss_die' : 'die'); if (e.boss) { UI.flash('#ffffffaa'); anim($('#arena'), 'shake', 250); hitstop(160); UI.vib([40, 40, 120]); } break;
         case 'pturn': var tl = $('#tlabel'); if (tl) { tl.textContent = 'Tour ' + e.n; } anim($('#aps'), 'bump', 300); if (e.n > 1) { floatAt(hero, 'À toi', 'txt'); } document.querySelectorAll('.unit.en.acting').forEach(function (x) { x.classList.remove('acting'); }); break;
+        case 'dice': showDice(c, e, false); break;
         case 'eturn': document.querySelectorAll('.unit.en.acting').forEach(function (x) { x.classList.remove('acting'); }); if (el) el.classList.add('acting'); break;
         case 'stunned': floatAt(el, 'Étourdi', 'txt'); break;
         case 'slowed': floatAt(hero, 'Entravé...', 'hurt'); break;
@@ -324,7 +343,7 @@ UI.run = (function () {
     var mine = !!c && !c.over && c.turn === 'hero' && run.phase === 'combat', ap = mine ? c.hero.ap : 0;
     var hud = document.querySelector('.hud'); if (hud) hud.classList.toggle('wait', !!c && !c.over && run.phase === 'combat' && !mine);
     var apk = (c && run.phase === 'combat' ? ap : -1) + ''; var apsEl = $('#aps');
-    if (apsEl && apsEl.dataset.k !== apk) { apsEl.dataset.k = apk; var ah = ''; for (i = 0; i < E.AP; i++) ah += '<i class="' + (i < ap ? 'on' : '') + '"></i>'; apsEl.innerHTML = ah; }
+    if (apsEl && apsEl.dataset.k !== apk) { apsEl.dataset.k = apk; var ah = ''; for (i = 0; i < Math.max(E.AP, ap); i++) ah += '<i class="' + (i < ap ? 'on' : '') + '"></i>'; apsEl.innerHTML = ah; }
     $('#bstrike').classList.toggle('ready', mine && ap > 0 && !S().settings.auto); $('#tpass').classList.toggle('off', !mine);
     for (i = 0; i < 3; i++) {
       var b2 = $('#sk' + i), ok = E.skillUnlocked(run.hero, i);
@@ -360,6 +379,7 @@ UI.run = (function () {
     var ctm = $('#condt'); if (ctm && c.cond === 'defi') { var left = Math.max(0, Math.ceil((20 - c.t) / E.ROUND)); ctm.textContent = ' ' + left + ' tour' + (left > 1 ? 's' : ''); ctm.parentNode.classList.toggle('late', left <= 0); }
     var hu = $('#uhero'); if (hu) { hu.classList.toggle('invuln', c.hero.invuln > 0); hu.classList.toggle('undying', !!c.hero.buffs.undying); }
     if (hu) hu.classList.toggle('fury', !!c.hero.buffs.fury);
+    var cre = $('#cdre'), canRe = !c.over && c.turn === 'hero' && !c.acted && c.rerolls > 0, crt = canRe ? '↻ ' + c.rerolls : ''; if (cre && cre.textContent !== crt) { cre.textContent = crt; $('#cdice').classList.toggle('canre', canRe); }
     for (var oi = 0; oi < c.orbs.length; oi++) { var ob = orbEls[c.orbs[oi].oid]; if (ob) ob.classList.toggle('last', c.orbs[oi].t <= E.ROUND); }
     var m = $('#minions'), n = c.hero.skel || 0;
     if (m && m.children.length !== n) { var h = ''; for (var i = 0; i < n; i++) h += UI.spr('serviteur'); m.innerHTML = h; }
@@ -491,6 +511,7 @@ UI.run = (function () {
     h += '<div class="dicerow' + (fresh ? ' roll' : '') + '">' + run.moves.map(function (m, k) { var rm = D.ROOMS[m.type]; return '<button class="dbtn ' + m.type + '" data-act="door" data-i="' + k + '">' + die(m.d) + '<span class="grow"><b>' + rm.icon + ' ' + rm.name + '</b><span>' + rm.hint + '</span></span></button>'; }).join('') + '</div>';
     h += '<div class="tiny dim center" style="margin-top:6px">' + (dbl ? '🎲 <b class="gold">Double !</b> Une seule case possible, mais +25 % d’ultime et +10 or.' : 'Deux dés, deux cases possibles : choisis où poser ton pion.') + '</div>';
     var hs = S().heroes[run.hero], better = S().inv.some(function (it) { if (E.equippedBy(it.uid)) return false; var cur = hs.equip[E.itemBase(it).slot], ci = cur ? E.findItem(cur) : null; return !ci || E.itemScore(it) > E.itemScore(ci) * 1.02; });
+    if (b.rerolls > 0 && run.moves[0].type !== 'boss') h += '<div class="btns"><button class="btn sm" data-act="reboard">🎲 Relancer les deux dés (1 fois par zone)</button></div>';
     if (better) h += '<div class="btns"><button class="btn goldb sm" data-act="runEquipBest">▲ Tu as trouvé mieux : équiper le meilleur</button></div>';
     UI.overlay(h); placePawn(b.pos);
     var sh = document.querySelector('#overlay .sheet'), here = $('#cell' + b.pos); if (sh && here) sh.scrollTop = Math.max(0, here.offsetTop - 120);
@@ -499,6 +520,7 @@ UI.run = (function () {
     tuto('board', '🎲 <b>Le plateau.</b> Chaque zone est un chemin de cases jusqu’au boss. À chaque tour tu lances deux dés et tu choisis lequel jouer : regarde où ils t’emmènent.');
   }
   function placePawn(i) { var c = $('#cell' + i), p = $('#pawn'); if (!c || !p) return; p.style.left = (c.offsetLeft + c.offsetWidth / 2) + 'px'; p.style.top = (c.offsetTop + c.offsetHeight / 2) + 'px'; }
+  ACT.reboard = function () { if (moving || wiping) return; if (E.rerollBoard()) sheetDoors(S().run); else SND.play('error'); };
   ACT.cellInfo = function (d) { var run = S().run, t = run && run.board ? run.board.cells[+d.i] : null, rm = t && D.ROOMS[t]; if (rm) { SND.play('click'); UI.toast(rm.icon + ' <b>' + rm.name + '</b> : ' + rm.hint); } };
   ACT.runEquipBest = function () { var n = E.equipBest(S().run.hero); if (n) { SND.play('equip'); UI.toast('⚡ ' + n + ' objet' + (n > 1 ? 's' : '') + ' équipé' + (n > 1 ? 's' : '')); } E.save(); refresh(); };
   ACT.door = function (d) {
@@ -622,6 +644,7 @@ UI.run = (function () {
     }
     h += '<div class="li on"><div class="ic">✨</div><div class="grow"><b>Éveils de pouvoir</b><div class="small dim">Tous les 4 niveaux d’une descente (4, 8, 12...), tu fais évoluer un de tes pouvoirs. Un ✦ sur le bouton montre qu’il est éveillé.</div></div></div>';
     h += '<div class="li on"><div class="ic">🎲</div><div class="grow"><b>Tour par tour</b><div class="small dim">À ton tour tu as <b>2 actions ⚡</b>. Frapper, lancer un pouvoir, parer, toucher un point faible ou renvoyer un crâne coûtent 1 action. L’ultime, la fiole, la posture et les orbes sont gratuits. Ensuite chaque ennemi joue, l’un après l’autre.</div></div></div>';
+    h += '<div class="li on"><div class="ic">🎲</div><div class="grow"><b>Dés de combat</b><div class="small dim">Deux dés au début de chaque tour.<br>🎲 <b>Double</b> : +1 action · 👑 <b>Double six</b> : +1 action et tout est critique<br>🍀 <b>Total 7</b> : tes pouvoirs sont gratuits ce tour<br>💥 <b>10 ou 11</b> : +40 % dégâts · 🛡️ <b>3 ou 4</b> : -40 % dégâts subis<br>✨ <b>Deux chiffres qui se suivent</b> : prochain coup critique<br>Touche les dés pour les relancer : 1 fois par combat, avant d’agir.</div></div></div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les autres boutons</h3>' +
       '<div class="li"><div class="ic">⚔️</div><div class="grow"><b>Frapper</b><div class="small dim">Attaque l’ennemi visé (▼). Plus ta vitesse d’attaque est haute, plus tu donnes de coups par action. Toucher un ennemi le vise ; le toucher encore le frappe.</div></div></div>' +
       '<div class="li"><div class="ic">🤺</div><div class="grow"><b>Parer</b><div class="small dim">Jusqu’à ton prochain tour, tu subis 70 % de dégâts en moins et tu ripostes. Si tu pares une <b>attaque chargée ⚠️</b> (ennemi qui brille en jaune), elle est annulée et l’ennemi est étourdi.</div></div></div>' +
@@ -664,6 +687,7 @@ UI.run = (function () {
       '<div class="center dim small">' + h.name + (abandon ? ' est rentré de l’étage ' : ' est tombé à l’étage ') + '<b style="color:var(--text)">' + sum.floor + '</b> — ' + E.zoneOf(sum.floor).name + '</div>' +
       (sum.record ? '<div class="center gold" style="margin-top:6px;font-family:var(--serif);letter-spacing:.1em">★ NOUVEAU RECORD ★</div>' : '') +
       '<div class="sumgrid"><div class="stat"><b>' + sum.kills + '</b><span>Ennemis tués</span></div><div class="stat"><b class="ash">+' + E.fmt(sum.cendres) + '</b><span>Cendres 🔥</span></div><div class="stat"><b>' + sum.loot.length + '</b><span>Objets trouvés</span></div><div class="stat"><b>' + E.fmt(sum.dmg) + '</b><span>Dégâts infligés</span></div><div class="stat"><b>' + E.fmt(sum.maxHit) + '</b><span>Plus gros coup</span></div><div class="stat"><b>' + Math.floor(sum.time / 60) + ' min ' + ('0' + Math.floor(sum.time % 60)).slice(-2) + '</b><span>Durée</span></div></div>' +
+      (function () { var g = E.gloryInfo(); return '<div class="card glory"><div class="row"><b>🏅 Gloire</b><span class="grow"></span><b class="gold" style="font-size:19px">+' + sum.score + '</b></div><div class="tiny ' + (sum.scoreRec ? 'gold' : 'dim') + '">' + (sum.scoreRec ? '★ Meilleur score ★' : 'Score de la descente · record ' + S().stats.bestScore) + '</div><div class="bar" style="margin:6px 0 4px"><i style="width:' + Math.min(100, g.pts / g.need * 100) + '%"></i></div><div class="tiny dim">Palier ' + g.lvl + ' · ' + g.pts + ' / ' + g.need + ' · prochaine récompense : <span style="color:var(--text)">' + g.next + '</span></div>' + sum.gloryUps.map(function (u) { return '<div class="gup">▲ Palier ' + u.lvl + ' : <b>' + u.txt + '</b></div>'; }).join('') + '</div>'; })() +
       '<div class="card"><div class="row"><b>Maîtrise de ' + h.name + '</b><span class="grow"></span><b class="gold">niv. ' + hs.lvl + '</b></div><div class="bar" style="margin-top:5px"><i style="width:' + Math.min(100, hs.xp / E.masteryNeed(hs.lvl) * 100) + '%"></i></div>' +
       (sum.heroUps ? '<div class="small good" style="margin-top:5px">▲ Maîtrise +' + sum.heroUps + ' : +' + (3 * sum.heroUps) + ' % attaque et PV · <b>+' + sum.heroUps + ' point' + (sum.heroUps > 1 ? 's' : '') + ' de talent</b>' + ((lvlBefore < 2 && hs.lvl >= 2) || (lvlBefore < 3 && hs.lvl >= 3) ? ' · <b>nouveau pouvoir débloqué !</b>' : '') + ((lvlBefore < 4 && hs.lvl >= 4) || (lvlBefore < 8 && hs.lvl >= 8) ? ' · <b>+1 emplacement de pacte</b>' : '') + '</div>' : '<div class="tiny dim" style="margin-top:4px">+' + sum.mxp + ' expérience</div>') + '</div>';
     if (items.length) html += '<div class="card"><b>Butin gardé</b> <span class="tiny dim">(il est à toi pour toujours)</span><div class="inv-grid" style="margin-top:8px">' + items.slice(0, 18).map(function (it) { return UI.itemTile(it); }).join('') + '</div></div>';
@@ -673,6 +697,7 @@ UI.run = (function () {
     $('#screen').innerHTML = html;
     if (typeof FX !== 'undefined') FX.attach($('#screen'), { ambient: 'ash', warm: 4 });
     if (sum.record) setTimeout(function () { SND.play('levelup'); }, 500);
+    if (sum.gloryUps.length) setTimeout(function () { SND.play(sum.gloryUps.some(function (u) { return u.uid; }) ? 'loot_epic' : 'upgrade'); UI.toast('🏅 <b>Gloire : palier ' + S().glory.lvl + ' !</b>'); }, 900);
     UI.flushAch();
     var metaOk = D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; });
     if (metaOk) setTimeout(function () { UI.toast('⚱️ Tu as assez de Cendres pour un bonus permanent à l’<b>Autel</b> !', true); }, 900);

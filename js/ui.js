@@ -188,6 +188,7 @@ var UI = (function () {
         html += '<button class="btn primary big" data-act="descend">⚔️ DESCENDRE</button>';
       }
       html += '<div class="tiny dim center" style="margin:6px 0 10px">Record : étage ' + S().stats.best + '</div>';
+      var gl = E.gloryInfo(); html += '<div class="card glory"><div class="row"><b>🏅 Gloire · palier ' + gl.lvl + '</b><span class="grow"></span><span class="tiny dim">' + gl.pts + ' / ' + gl.need + '</span></div><div class="bar" style="margin:6px 0 4px"><i style="width:' + Math.min(100, gl.pts / gl.need * 100) + '%"></i></div><div class="tiny dim">Chaque descente la remplit. Prochaine récompense : <span style="color:var(--text)">' + gl.next + '</span>' + (S().stats.bestScore ? ' · meilleur score ' + S().stats.bestScore : '') + '</div></div>';
       var scn = E.setCounts(h.id), sk = Object.keys(scn); if (sk.length) html += '<div class="card"><b>Sets portés</b>' + sk.map(function (id) { return setHtml(id, scn[id]); }).join('') + '</div>';
       var dl = E.dailyInfo();
       if (dl.claimable) html += '<button class="daily" data-act="daily"><span style="font-size:26px">🎁</span><span class="grow" style="text-align:left"><b>Offrande du jour</b> <span class="tiny">jour ' + dl.streak + '/7</span><br><span class="small">🔥 ' + E.fmt(dl.cendres) + ' · 💠 ' + dl.essence + (dl.item ? ' · <b class="c3">1 objet épique</b>' : '') + '</span></span><b>PRENDRE</b></button>';

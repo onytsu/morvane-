@@ -617,3 +617,17 @@ h3.gold, h3 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
 @keyframes dieroll { 0% { transform: translateY(-46px) rotate(-420deg) scale(.6); opacity: 0; } 70% { transform: translateY(4px) rotate(12deg) scale(1.1); opacity: 1; } 100% { transform: none; } }
 @media (max-height: 700px) { .skb { width: 56px; height: 56px; } .cell .ci { font-size: 16px; } .turnrow { margin-bottom: 5px; } }
 .turnrow .tog, .turnrow #tlabel { white-space: nowrap; } .turnrow .tog { min-width: 0; padding: 0 9px; font-size: 11px; }
+
+/* ================= v3.1 : dés de combat, gloire ================= */
+.cdice { position: absolute; left: 50%; top: 40px; transform: translateX(-50%); z-index: 14; display: flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 14px; background: #0d0a14c9; border: 1px solid #ffffff26; white-space: nowrap; }
+.cdice:empty { display: none; }
+.cdice .die { width: 28px; height: 28px; border-radius: 7px; padding: 4px; gap: 1.5px; }
+.cdice b { font-family: var(--serif); font-size: 11.5px; letter-spacing: .08em; margin-left: 3px; color: #ffe7b0; }
+.cdice em { font-style: normal; font-size: 11px; font-weight: 700; color: #9fd0ff; } .cdice.canre { border-color: #7fb0ff99; box-shadow: 0 0 12px #7fb0ff44; }
+.cdice.roll .die { animation: dieroll .45s cubic-bezier(.2, .8, .3, 1.2) backwards; } .cdice.roll .die + .die { animation-delay: .07s; } .cdice.roll b { animation: pop .3s .4s backwards; }
+.cdice.k-double, .cdice.k-jackpot, .cdice.k-sept { border-color: #f2bd5e; box-shadow: 0 0 18px #f2bd5e77; } .cdice.k-jackpot { animation: callgold 1s ease-in-out infinite; }
+.cdice.k-fort { border-color: #ff7a5c; box-shadow: 0 0 14px #ff5a3c66; } .cdice.k-garde { border-color: #7fb0ff; } .cdice.k-suite { border-color: #ffe08a99; }
+.cdice.k-rien { opacity: .75; }
+.combo { top: 84px; }
+.card.glory { border-color: #f2bd5e66; background: linear-gradient(180deg, #f2bd5e1a, #f2bd5e05), var(--panel); }
+.gup { margin-top: 5px; font-size: 12.5px; color: var(--ok); animation: pop .4s backwards; } .gup b { color: #ffe7b0; }
