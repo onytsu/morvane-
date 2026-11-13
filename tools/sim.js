@@ -16,6 +16,7 @@ function playRun() {
   let guard = 0, simT = 0;
   while (S.run && guard++ < 200000) {
     const r = S.run;
+    if (r.pendingEvos > 0) { E.chooseEvo(0); continue; }
     if (r.pendingBoons > 0) { if (!r.offer) E.makeOffer(r); let bi = 0, br = -1; r.offer.forEach((id, i) => { const b = E.boonById(id); const sc = b.rar + Math.random() * 0.8 + (b.mods.atkP || b.mods.hpP ? 0.4 : 0); if (sc > br) { br = sc; bi = i; } }); E.chooseBoon(bi); continue; }
     if (r.phase === 'combat') { let n = 0; while (r.combat && !r.combat.over && n++ < 20000) { E.tick(0.1); simT += 0.1; r.combat.events.length = 0; } if (r.combat && !r.combat.over) { r.hp = 0; r.phase = 'dead'; } continue; }
     if (r.phase === 'victory') { E.continueRun(); continue; }

@@ -16,11 +16,11 @@ UI.run = (function () {
       '<div class="runbar"><div class="grow"><div class="zone" id="rzone"></div><div class="pips" id="rpips"></div></div><span class="cur gold" id="rgold"></span><span class="cur ash" id="rcend"></span><button class="icon-btn" data-act="runMenu">☰</button></div>' +
       '<div class="arena" id="arena"></div>' +
       '<div class="hud"><div class="hpbar" id="hpbar"><i></i><u></u><span></span></div><div class="xprow"><b id="rlvl"></b><div class="bar"><i id="xpbar"></i></div><span class="hsts" id="hsts"></span></div>' +
-      '<div class="skills">' + h.skills.map(function (k, i) { return '<button class="skb" id="sk' + i + '" data-act="skill" data-i="' + i + '"><span class="e">' + k.icon + '</span><span class="cd"></span><span class="n"></span></button>'; }).join('') +
-      '<button class="skb potion" id="pot" data-act="potion">🧪<span class="cnt"></span></button><div class="side"><button class="tog" id="tauto" data-act="auto">AUTO</button><button class="tog" id="tspd" data-act="speed"></button><button class="tog help" data-act="help">? Aide</button></div></div>' +
-      '<div class="row2"><button class="act" id="bparry" data-act="parry"><span class="ai">🤺</span><b>Parer</b><span class="cd"></span></button>' +
-      '<button class="ultb" id="bult" data-act="ult"><i></i><span>' + h.ult.icon + ' ' + h.ult.name + '</span></button>' +
-      '<button class="act" id="bstance" data-act="stance"><span class="ai"></span><b></b></button></div>' +
+      '<div class="skills">' + h.skills.map(function (k, i) { return '<button class="skb" id="sk' + i + '" data-act="skill" data-i="' + i + '" data-info="skill:' + i + '"><span class="e">' + k.icon + '</span><span class="cd"></span><span class="ev"></span><span class="nm">' + k.name + '</span><span class="n"></span></button>'; }).join('') +
+      '<button class="skb potion" id="pot" data-act="potion" data-info="potion">🧪<span class="cnt"></span></button><div class="side"><button class="tog" id="tauto" data-act="auto">AUTO</button><button class="tog" id="tspd" data-act="speed"></button><button class="tog help" data-act="help">? Aide</button></div></div>' +
+      '<div class="row2"><button class="act" id="bparry" data-act="parry" data-info="parry"><span class="ai">🤺</span><b>Parer</b><span class="cd"></span></button>' +
+      '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + h.ult.icon + ' ' + h.ult.name + '</span></button>' +
+      '<button class="act" id="bstance" data-act="stance" data-info="stance"><span class="ai"></span><b></b></button></div>' +
       '<button class="relics" id="relics" data-act="relics" style="width:100%"></button></div>';
     built = null; shownPhase = null; updateHud.key = null;
     if (run.phase !== 'combat') SND.music(zoneMusic(run));
@@ -49,9 +49,9 @@ UI.run = (function () {
     posOf[e.id] = pi;
     var d = document.createElement('div');
     d.className = 'unit en' + (e.boss ? ' boss' : e.elite ? ' elite' : '') + (spawn ? ' spawn' : '') + (e.fix ? ' fixed fx-' + e.fix : '') + (e.big ? ' giant' : '') + (e.gold ? ' golden' : '') + (e.champ ? ' champ' : '');
-    d.id = 'en' + e.id; d.dataset.act = 'target'; d.dataset.i = i;
+    d.id = 'en' + e.id; d.dataset.act = 'target'; d.dataset.i = i; d.dataset.info = 'foe:' + i;
     d.style.right = P[pi].r + '%'; d.style.bottom = P[pi].b + '%'; d.style.zIndex = 10 - Math.round(P[pi].b / 5);
-    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + '</div><div class="cbar"><i></i></div><div class="ebar"><i></i><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">🎯</span>';
+    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">🎯</span>';
     $('#arena').appendChild(d); els[e.id] = d;
   }
   function floatAt(el, txt, cls) {
@@ -138,7 +138,7 @@ UI.run = (function () {
     for (i = 0; i < evs.length; i++) {
       e = evs[i]; el = e.id ? els[e.id] : null;
       switch (e.k) {
-        case 'start': SND.music(zoneMusic(run)); intro(run); if (!S().tuto['help_' + run.hero]) { S().tuto['help_' + run.hero] = 1; helpSheet(true); } else zoneIntro(run); tuto('skill', '👆 Ton héros frappe tout seul. Touche un <b>pouvoir</b> dès qu’il brille !'); break;
+        case 'start': SND.music(zoneMusic(run)); intro(run); if (!S().tuto['help_' + run.hero]) { S().tuto['help_' + run.hero] = 1; helpSheet(true); } else zoneIntro(run); tuto('skill', '👆 Ton héros frappe tout seul. Touche un <b>pouvoir</b> dès qu’il brille !'); tuto('press', '🔎 <b>Appui long</b> sur un pouvoir ou sur un ennemi : sa fiche s’ouvre et le combat se met en pause.'); break;
         case 'boss': SND.music(E.zoneOf(run.floor).id === 6 ? 'final' : 'boss'); SND.play('boss_intro'); banner(c.enemies[0].name.toUpperCase(), 'BOSS'); UI.flash('#c2283a66'); UI.vib(80); if (E.zoneOf(run.floor).taunt.length > 4) UI.toast('<i>« ' + E.zoneOf(run.floor).taunt + ' »</i>', true); break;
         case 'dmg':
           if (e.sh) { floatAt(el, 'Bouclier', 'txt'); break; }
@@ -182,6 +182,8 @@ UI.run = (function () {
         case 'ally': anim($('#ally'), 'atk', 220); break;
         case 'bossfx': floatAt(el, e.txt, e.big ? 'big' : 'crit'); if (e.hero) floatAt(hero, e.hero, 'txt'); if (e.big) { anim($('#arena'), 'shake', 250); UI.flash('#c2283a44'); SND.play('boss_intro', 0.5); } tuto('mech' + E.zoneOf(run.floor).id, '☠️ <b>Spécialité du boss</b> : ' + E.zoneOf(run.floor).mech); break;
         case 'elanbreak': floatAt(hero, 'Élan brisé', 'hurt'); break;
+        case 'evo': fxAt(hero, 'star', 10); break;
+        case 'free': floatAt(hero, 'Rechargé !', 'crit'); anim($('#sk' + e.i), 'bump', 300); SND.play('upgrade', 0.6); break;
         case 'win': break;
       }
     }
@@ -190,7 +192,7 @@ UI.run = (function () {
   function stIcons(st) { return (st.burn ? '🔥' : '') + (st.poison ? '☠️' + (st.poison.n > 1 ? st.poison.n : '') : '') + (st.bleed ? '🩸' : '') + (st.stun > 0 ? '💫' : '') + (st.weak > 0 ? '⬇️' : '') + (st.slow > 0 ? '🕸️' : '') + (st.vuln > 0 ? '🎯' : ''); }
   function updateHud() {
     var run = S().run; if (!run) return; var c = run.combat, stt = run.stats, z = E.zoneOf(run.floor), pos = ((run.floor - 1) % 10) + 1, i;
-    var key = run.floor + '|' + run.gold + '|' + run.cendres + '|' + run.lvl + '|' + Object.keys(run.boons).length + run.artifacts.length;
+    var key = run.floor + '|' + run.gold + '|' + run.cendres + '|' + run.lvl + '|' + Object.keys(run.boons).length + run.artifacts.length + '|' + run.evos.length;
     if (updateHud.key !== key) {
       updateHud.key = key;
       $('#rzone').innerHTML = '<b style="color:' + z.color + '">' + z.name + '</b> · étage ' + run.floor + (E.cycleOf(run.floor) ? ' · <span class="bad">Abîme ' + E.cycleOf(run.floor) + '</span>' : '');
@@ -199,6 +201,8 @@ UI.run = (function () {
       $('#rlvl').textContent = 'Niv. ' + run.lvl;
       var rel = ''; run.artifacts.forEach(function (id) { rel += E.byId(D.ARTIFACTS, id).icon; });
       for (var b in run.boons) { var bo = E.boonById(b); rel += bo.icon; }
+      if (run.evos.length) rel = '✨' + run.evos.length + ' ' + rel;
+      E.hero(run.hero).skills.forEach(function (k, si) { var n = k.evos.filter(function (v) { return run.evos.indexOf(v.id) >= 0; }).length, se = $('#sk' + si); if (se) se.children[2].textContent = n === 2 ? '✦✦' : n ? '✦' : ''; });
       $('#relics').innerHTML = rel ? rel + '<span class="more"> ›</span>' : '<span class="more">Aucune aubaine pour l’instant</span>';
     }
     var hb = $('#hpbar'), frac = Math.max(0, run.hp / stt.hp), sh = c ? c.hero.shield : 0;
@@ -207,12 +211,15 @@ UI.run = (function () {
     hb.classList.toggle('low', frac < 0.3);
     $('#xpbar').style.width = Math.min(100, run.xp / E.xpNeed(run.lvl) * 100) + '%';
     $('#hsts').textContent = c ? stIcons(c.hero.st) + (c.hero.elan ? ' ⚡x' + c.hero.elan : '') : '';
+    var charging = !!c && !c.over && c.enemies.some(function (x) { return !x.dead && x.charge; }), hsk = E.hero(run.hero).skills;
     for (i = 0; i < 3; i++) {
       var b2 = $('#sk' + i), ok = E.skillUnlocked(run.hero, i);
       if (!ok) { if (!b2.classList.contains('locked')) { b2.className = 'skb locked'; b2.firstChild.textContent = '🔒'; } continue; }
       var cd = c ? Math.max(0, c.hero.cds[i]) : 0, tot = E.skillCd(run, i), ready = c && !c.over && cd <= 0;
       b2.style.setProperty('--p', (cd / tot * 100) + '%'); b2.lastChild.textContent = cd > 0 ? Math.ceil(cd) : '';
       b2.classList.toggle('cool', cd > 0); b2.classList.toggle('ready', !!ready && !S().settings.auto);
+      var hint = !!ready && charging && hsk[i].tags.indexOf('Interrompt') >= 0;
+      if (b2.dataset.h !== (hint ? '1' : '0')) { b2.dataset.h = hint ? '1' : '0'; b2.classList.toggle('hint', hint); b2.children[3].textContent = hint ? 'INTERROMPS !' : hsk[i].name; }
     }
     var ult = Math.min(100, run.ult || 0), bu = $('#bult'), inC = c && !c.over && run.phase === 'combat';
     bu.firstChild.style.width = ult + '%'; bu.classList.toggle('ready', ult >= 100);
@@ -262,7 +269,7 @@ UI.run = (function () {
   // Affiche la bonne fenêtre selon la phase de la descente
   function syncPhase(now) {
     var run = S().run; if (!run) return;
-    var key = run.phase + '|' + run.floor + '|' + run.pendingBoons + '|' + (run.room ? run.room.type : '');
+    var key = run.phase + '|' + run.floor + '|' + run.pendingBoons + '|' + run.pendingEvos + '|' + (run.room ? run.room.type : '');
     if (key === shownPhase) return; shownPhase = key;
     clearTimeout(phaseTimer);
     var delay = now ? 0 : run.phase === 'victory' && run.result && !run.result.chest ? 750 : run.phase === 'dead' ? 1100 : 0;
@@ -275,6 +282,7 @@ UI.run = (function () {
     if (run.phase === 'combat') { UI.overlay(null); if (built !== run.combat) buildArena(); return; }
     if (built === null) buildArena();
     if (run.phase === 'victory') return sheetVictory(run);
+    if ((run.phase === 'doors' || run.phase === 'room') && run.pendingEvos > 0 && sheetEvo(run)) return;
     if (run.phase === 'doors') return run.pendingBoons > 0 ? sheetBoon(run) : sheetDoors(run);
     if (run.phase === 'room') return run.pendingBoons > 0 ? sheetBoon(run) : sheetRoom(run);
     if (run.phase === 'dead') return end(false);
@@ -300,7 +308,7 @@ UI.run = (function () {
     var r = run.result, h = '';
     h += '<h2>' + (r.chest ? '🧰 Coffre ouvert' : r.arene ? '🏟️ Arène conquise' : r.variant === 'champion' ? '💪 Champion terrassé' : r.variant === 'horde' ? 'Horde massacrée' : r.boss ? '☠️ BOSS VAINCU' : r.type === 'elite' ? '👹 Élite vaincue' : 'Victoire') + '</h2>';
     if (r.firstKill) h += '<div class="center gold small" style="margin-bottom:6px">Nouvelle zone débloquée : tu pourras repartir d’ici !</div>';
-    h += '<div class="gains">' + (r.gold ? '<span class="gold">+' + r.gold + ' 💰</span>' : '') + (r.cendres ? '<span class="ash">+' + E.fmt(r.cendres) + ' 🔥</span>' : '') + (r.lvlUps ? '<span style="color:#b3a6ff">Niveau ' + run.lvl + ' !</span>' : '') + '</div>';
+    h += '<div class="gains">' + (r.gold ? '<span class="gold">+' + r.gold + ' 💰</span>' : '') + (r.cendres ? '<span class="ash">+' + E.fmt(r.cendres) + ' 🔥</span>' : '') + (r.lvlUps ? '<span style="color:#b3a6ff">Niveau ' + run.lvl + ' !</span>' : '') + (r.lvlUps && run.pendingEvos > 0 ? '<span class="gold">✨ Éveil !</span>' : '') + '</div>';
     if (r.defi != null) h += '<div class="center small ' + (r.defi ? 'good' : 'dim') + '" style="margin-bottom:6px">⏱️ Défi du bourreau : ' + (r.defi ? '<b>réussi !</b> Coffre bonus.' : 'trop lent cette fois.') + '</div>';
     if (r.arene) h += '<div class="center small gold" style="margin-bottom:6px">Récompense : un artefact, une aubaine et un objet.</div>';
     if (r.allyLeft) h += '<div class="center small dim" style="margin-bottom:6px">' + E.hero(r.allyLeft).name + ' te salue et repart : son contrat est rempli.</div>';
@@ -327,6 +335,19 @@ UI.run = (function () {
     h += '<div class="btns"><button class="btn sm' + (run.rerolls > 0 ? '' : ' off') + '" data-act="reroll">🎲 Relancer (' + run.rerolls + ')</button></div>';
     UI.overlay(h);
   }
+  // Éveil de pouvoir : renvoie false s'il n'y a plus rien à éveiller (on passe alors aux aubaines)
+  function sheetEvo(run) {
+    if (!run.evoOffer || !run.evoOffer.length) E.makeEvoOffer(run);
+    if (!run.evoOffer.length) { run.pendingBoons += run.pendingEvos; run.pendingEvos = 0; run.evoOffer = null; return false; }
+    var h = '<h2>✨ Éveil de pouvoir</h2><div class="tiny dim center" style="margin:-6px 0 8px">Niveau ' + run.lvl + ' · un de tes pouvoirs évolue : il garde son effet et gagne celui-ci en plus, jusqu’à la fin de la descente' + (run.pendingEvos > 1 ? ' · encore ' + run.pendingEvos : '') + '</div>';
+    run.evoOffer.forEach(function (id, i) {
+      var v = E.evoById(id), sk = E.evoSkill(id);
+      h += '<button class="choice b3" style="animation-delay:' + (i * 0.07) + 's" data-act="evo" data-i="' + i + '"><div class="ic">' + sk.icon + '</div><div class="grow"><span class="tag">' + sk.name + ' ✨</span><b>' + v.name + '</b><div class="d">' + v.desc + '</div><div class="tiny dim" style="margin-top:3px">Aujourd’hui : ' + sk.desc + '</div></div></button>';
+    });
+    h += '<div class="tiny dim center">Prochain éveil au niveau ' + (Math.floor(run.lvl / 4) * 4 + 4) + '. Les pouvoirs encore verrouillés 🔒 s’éveillent une fois débloqués par la Maîtrise.</div>';
+    UI.overlay(h); return true;
+  }
+  ACT.evo = function (d) { var v = E.chooseEvo(+d.i); if (!v) return; SND.play('levelup'); SND.play('skill_holy', 0.5); UI.flash('#d9a44166'); UI.toast('✨ <b>' + E.evoSkill(v.id).name + '</b> s’éveille : ' + v.name); shownPhase = null; updateHud.key = null; syncPhase(true); };
   ACT.boon = function (d) { SND.play('levelup'); E.chooseBoon(+d.i); shownPhase = null; updateHud.key = null; syncPhase(true); };
   ACT.reroll = function () { if (E.rerollBoons()) { SND.play('click'); sheetBoon(S().run); } };
   function sheetDoors(run) {
@@ -406,9 +427,10 @@ UI.run = (function () {
     var run = S().run, h = '<h2>Ta descente</h2>', om = run.omen ? E.byId(D.OMENS, run.omen) : null;
     if (om) h += '<div class="li on"><div class="ic">' + om.icon + '</div><div class="grow"><b>Présage : ' + om.name + '</b><div class="small dim">' + om.desc + '</div></div></div>';
     if (run.artifacts.length) { h += '<h3 class="gold" style="margin-bottom:6px">Artefacts</h3>'; run.artifacts.forEach(function (id) { var a = E.byId(D.ARTIFACTS, id); h += '<div class="li"><div class="ic">' + a.icon + '</div><div class="grow"><b>' + a.name + '</b><div class="small dim">' + a.desc + '</div></div></div>'; }); }
+    if (run.evos.length) { h += '<h3 class="gold" style="margin:8px 0 6px">✨ Éveils</h3>'; run.evos.forEach(function (id) { var v = E.evoById(id), sk = E.evoSkill(id); h += '<div class="li"><div class="ic">' + sk.icon + '</div><div class="grow"><b>' + v.name + '</b> <span class="tiny dim">' + sk.name + '</span><div class="small dim">' + v.desc + '</div></div></div>'; }); }
     var ks = Object.keys(run.boons);
     if (ks.length) { h += '<h3 class="gold" style="margin:8px 0 6px">Aubaines</h3>'; ks.forEach(function (id) { var b = E.boonById(id); h += '<div class="li"><div class="ic">' + b.icon + '</div><div class="grow"><b>' + b.name + (run.boons[id] > 1 ? ' x' + run.boons[id] : '') + '</b><div class="small dim">' + b.desc + '</div></div></div>'; }); }
-    if (!ks.length && !run.artifacts.length) h += '<p class="center dim">Rien encore. Gagne des niveaux pour choisir des aubaines.</p>';
+    if (!ks.length && !run.artifacts.length && !run.evos.length) h += '<p class="center dim">Rien encore. Gagne des niveaux pour choisir des aubaines, et un éveil ✨ tous les 4 niveaux.</p>';
     h += '<div class="btns"><button class="btn" data-act="allStats">📊 Mes stats</button><button class="btn primary" data-act="close">Fermer</button></div>';
     UI.st.view = run.hero; UI.modal(h);
   };
@@ -419,9 +441,18 @@ UI.run = (function () {
     h += '<div class="li"><div class="ic">🌟</div><div class="grow"><b>' + hero.passive.name + '</b> <span class="tiny dim">passif, toujours actif</span><div class="small dim">' + hero.passive.desc + '</div></div></div>';
     hero.skills.forEach(function (k, i) {
       var ok = E.skillUnlocked(run.hero, i);
-      h += '<div class="li' + (ok ? '' : ' locked') + '"><div class="ic">' + (ok ? k.icon : '🔒') + '</div><div class="grow"><b>' + k.name + '</b> <span class="tiny dim">' + (ok ? 'recharge ' + k.cd + ' s' : 'se débloque à Maîtrise ' + (i + 1)) + '</span><div class="small dim">' + k.desc + '</div></div></div>';
+      var nums = ok ? E.skillNumbers(run.hero, i, run) : [], evn = k.evos.filter(function (v) { return run.evos.indexOf(v.id) >= 0; });
+      h += '<button class="li tap' + (ok ? '' : ' locked') + '" data-act="skillInfo" data-h="' + run.hero + '" data-i="' + i + '"><div class="ic">' + (ok ? k.icon : '🔒') + '</div><div class="grow"><b>' + k.name + '</b> <span class="tiny dim">' + (ok ? 'recharge ' + (Math.round(E.skillCd(run, i) * 10) / 10) + ' s' : 'se débloque à Maîtrise ' + (i + 1)) + '</span>' + UI.tagsHtml(k) + '<div class="small dim">' + k.desc + '</div>' +
+        (nums.length ? '<div class="tiny gold">' + nums[0] + '</div>' : '') + evn.map(function (v) { return '<div class="tiny" style="color:#ffd87a">✨ ' + v.name + ' : ' + v.desc + '</div>'; }).join('') + '</div><span class="dim">›</span></button>';
     });
+    h += '<div class="tiny dim center" style="margin:-2px 0 8px">Touche un pouvoir pour le détail. En combat : <b>appui long</b> sur un pouvoir ou un ennemi.</div>';
     h += '<div class="li on"><div class="ic">' + hero.ult.icon + '</div><div class="grow"><b>' + hero.ult.name + '</b> <span class="tiny gold">ultime · grande barre dorée</span><div class="small dim">' + hero.ult.desc + ' Elle se remplit quand tu frappes, tues et encaisses.</div></div></div>';
+    var foes = run.combat && !first ? run.combat.enemies.filter(function (x) { return !x.dead; }) : [];
+    if (foes.length) {
+      h += '<h3 class="gold" style="margin:10px 0 6px">En face de toi</h3>';
+      foes.forEach(function (x) { var names = []; for (var ak in x.ab) if (D.AB_INFO[ak]) names.push(D.AB_INFO[ak][0] + ' ' + D.AB_INFO[ak][1]); h += '<button class="li tap" data-act="foeLive" data-i="' + run.combat.enemies.indexOf(x) + '"><div class="ic">' + UI.spr(x.key).replace('<img', '<img style="width:34px;height:34px"') + '</div><div class="grow"><b>' + x.name + '</b><div class="small dim">' + (names.join(' · ') || 'Aucune capacité spéciale') + '</div></div><span class="dim">›</span></button>'; });
+    }
+    h += '<div class="li on"><div class="ic">✨</div><div class="grow"><b>Éveils de pouvoir</b><div class="small dim">Tous les 4 niveaux d’une descente (4, 8, 12...), tu fais évoluer un de tes pouvoirs. Un ✦ sur le bouton montre qu’il est éveillé.</div></div></div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les autres boutons</h3>' +
       '<div class="li"><div class="ic">🤺</div><div class="grow"><b>Parer</b><div class="small dim">Pendant 1 seconde, tu subis 70 % de dégâts en moins et tu ripostes. Si tu pares une <b>attaque chargée ⚠️</b> (ennemi qui brille en jaune), elle est annulée et l’ennemi est étourdi.</div></div></div>' +
       '<div class="li"><div class="ic">⚖️</div><div class="grow"><b>Posture</b><div class="small dim">🗡️ Assaut : +25 % dégâts, mais +20 % dégâts subis. 🛡️ Garde : -25 % dégâts subis, mais -20 % dégâts. Change quand tu veux.</div></div></div>' +
@@ -429,9 +460,23 @@ UI.run = (function () {
       '<div class="li"><div class="ic">🧪</div><div class="grow"><b>Fiole</b><div class="small dim">Rend 35 % de tes PV. Tu en regagnes une à chaque boss vaincu.</div></div></div>' +
       '<div class="li"><div class="ic">🤖</div><div class="grow"><b>AUTO et vitesse</b><div class="small dim">AUTO lance tes pouvoirs tout seul (mais ne touche pas les points faibles). x1 / x2 / x3 accélère le combat.</div></div></div>' +
       '<h3 class="gold" style="margin:10px 0 6px">Les symboles</h3><div class="small dim" style="line-height:1.7">🔥 brûlure · ☠️ poison · 🩸 saignement : dégâts chaque seconde<br>💫 étourdi : ne peut pas agir · ⬇️ affaibli : frappe moins fort<br>🎯 vulnérable : subit +25 % dégâts · ⚠️ prépare un gros coup<br>🕸️ entravé : tu frappes 2 fois moins vite</div>' +
+      '<div class="btns"><button class="btn sm" data-act="lexique">📖 Lexique : tous les mots expliqués</button></div>' +
       '<div class="btns"><button class="btn primary big" data-act="close">' + (first ? 'COMPRIS, AU COMBAT' : 'REPRENDRE') + '</button></div>';
     UI.modal(h);
   }
+  ACT.foeLive = function (d) { var run = S().run, x = run && run.combat ? run.combat.enemies[+d.i] : null; if (x) { SND.play('click'); UI.modal(UI.foeSheet(x.key, x)); } };
+  function miniSheet(icon, title, sub, text) { UI.modal('<div class="skhead"><div class="ic">' + icon + '</div><div class="grow"><b>' + title + '</b><div class="tiny dim">' + sub + '</div></div></div><p style="margin:10px 2px">' + text + '</p><div class="btns"><button class="btn" data-act="help">‹ Aide</button><button class="btn primary" data-act="close">Fermer</button></div>'); }
+  // Appui long : fiche de ce qu'on touche
+  ACT.info = function (type, arg) {
+    var run = S().run; if (!run || UI.st.screen !== 'run' || $('#modal').classList.contains('on')) return;
+    var hero = E.hero(run.hero);
+    if (type === 'skill') UI.modal(UI.skillSheet(run.hero, +arg));
+    else if (type === 'foe') ACT.foeLive({ i: arg });
+    else if (type === 'ult') miniSheet(hero.ult.icon, hero.ult.name, 'Ultime de ' + hero.name + ' · chargé à ' + Math.floor(run.ult || 0) + ' %', hero.ult.desc + '<br><br><span class="dim">La barre dorée se remplit quand tu frappes, tues, encaisses, lances un pouvoir ou touches un point faible 🎯. Elle garde sa charge d’une salle à l’autre.</span>');
+    else if (type === 'parry') miniSheet('🤺', 'Parer', 'recharge ' + E.PARRY_CD + ' s', 'Pendant 1 seconde, tu subis 70 % de dégâts en moins et tu ripostes.<br><br>Si tu pares une <b>attaque chargée ⚠️</b> (l’ennemi brille en jaune, sa barre jaune se remplit), le coup est <b>annulé</b>, l’ennemi est étourdi 2 s et ta riposte fait 300 % dégâts. Appuie quand la barre jaune est presque pleine.');
+    else if (type === 'stance') miniSheet('⚖️', 'Posture', 'change quand tu veux, sans recharge', '🗡️ <b>Assaut</b> : +25 % dégâts infligés, mais +20 % dégâts subis.<br>🛡️ <b>Garde</b> : -25 % dégâts subis, mais -20 % dégâts infligés.<br>⚖️ <b>Équilibre</b> : rien ne change.<br><br><span class="dim">Assaut quand tout va bien, Garde quand tes PV fondent ou qu’un boss s’enrage.</span>');
+    else if (type === 'potion') miniSheet('🧪', 'Fiole de soin', run.potions + ' / ' + run.potionsMax + ' en réserve', 'Rend 35 % de tes PV, tout de suite. Tu en regagnes une à chaque boss vaincu, et tu peux en acheter au Colporteur ou en distiller au feu de camp.');
+  };
   ACT.help = function () { SND.play('click'); helpSheet(false); };
   ACT.runMenu = function () { ACT.settings(); };
 

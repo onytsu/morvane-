@@ -46,6 +46,56 @@ var UI = (function () {
     [2, 4, 6].forEach(function (t) { var parts = []; for (var k in s.bonus[t]) { var f = fmtMod(k, s.bonus[t][k]); if (f) parts.push(f[1] + ' ' + f[0]); } h += '<div class="sb' + (n >= t ? ' on' : '') + '"><i>' + t + '</i><span>' + parts.join(' · ') + '</span></div>'; });
     return h + '<div class="tiny dim">Set de la zone : ' + D.ZONES[s.zone - 1].name + '</div></div>';
   }
+  // ---------- fiches d'explication : pouvoir, ennemi, lexique, nouveautés ----------
+  function tagsHtml(k) { return '<span class="tgs">' + (k.tags || []).map(function (t) { return '<i class="tgc">' + t + '</i>'; }).join('') + '</span>'; }
+  function inRun() { return st.screen === 'run' && !!S().run; }
+  function backBtn() { return inRun() ? '<button class="btn" data-act="help">‹ Aide</button>' : ''; }
+  function skillSheet(heroId, i) {
+    var h = E.hero(heroId), k = h.skills[i], own = E.heroUnlocked(heroId), run = S().run && S().run.hero === heroId ? S().run : null;
+    var ok = own && E.skillUnlocked(heroId, i), cd = run ? E.skillCd(run, i) : k.cd * (1 - (own ? E.heroStats(heroId, null).cdr : 0) / 100);
+    var nums = own ? E.skillNumbers(heroId, i, run) : [];
+    var html = '<div class="skhead"><div class="ic">' + k.icon + '</div><div class="grow"><b>' + k.name + '</b><div class="tiny dim">Pouvoir ' + (i + 1) + ' de ' + h.name + ' · recharge ' + (Math.round(cd * 10) / 10) + ' s</div>' + tagsHtml(k) + '</div></div>';
+    if (!ok) html += '<div class="card small gold">🔒 Se débloque à Maîtrise ' + (i + 1) + ' : joue ' + h.name + ' pour la monter.</div>';
+    html += '<p style="margin:10px 2px">' + k.desc + '</p>';
+    if (nums.length) html += '<div class="card nums"><div class="tiny gold" style="letter-spacing:.08em">AVEC TES STATS ACTUELLES</div>' + nums.map(function (n) { return '<div><b>' + n + '</b></div>'; }).join('') + '<div class="tiny dim">Avant l’armure de l’ennemi et les coups critiques.</div></div>';
+    html += '<div class="li"><div class="ic">💡</div><div class="grow"><b>Quand l’utiliser</b><div class="small dim">' + k.tip + '</div></div></div>';
+    html += '<h3 class="gold" style="margin:10px 0 2px">✨ Éveils de ce pouvoir</h3><div class="tiny dim" style="margin-bottom:6px">Tous les 4 niveaux d’une descente, tu fais évoluer un pouvoir. Il garde son effet et gagne celui de l’éveil.</div>';
+    k.evos.forEach(function (v) {
+      var got = run && run.evos.indexOf(v.id) >= 0;
+      html += '<div class="li' + (got ? ' on' : '') + '"><div class="ic">' + (got ? '✨' : '▫️') + '</div><div class="grow"><b>' + v.name + '</b>' + (got ? ' <span class="tiny gold">actif</span>' : '') + '<div class="small dim">' + v.desc + '</div></div></div>';
+    });
+    return html + '<div class="btns">' + backBtn() + '<button class="btn primary" data-act="close">Fermer</button></div>';
+  }
+  ACT.skillInfo = function (d) { SND.play('click'); modal(skillSheet(d.h, +d.i)); };
+  // Fiche d'un ennemi. e = l'ennemi en combat (facultatif) : on montre alors ses PV, son préfixe, etc.
+  function abIcons(ab) { var s = '', n = 0; for (var k in ab) if (D.AB_INFO[k] && n++ < 4) s += D.AB_INFO[k][0]; return s; }
+  function foeSheet(key, e) {
+    var b = D.ENEMIES[key]; if (!b) return '';
+    var ab = e ? e.ab : b.ab, zone = null, n = S().codex[key] || 0, lines = '', k;
+    D.ZONES.forEach(function (z) { if (!zone && (z.boss === key || z.elites.indexOf(key) >= 0 || z.mobs.indexOf(key) >= 0)) zone = z; });
+    var html = '<div class="skhead"><div class="ic foe">' + spr(key) + '</div><div class="grow"><b>' + (e ? e.name : b.name) + '</b><div class="tiny dim">' + (b.boss ? 'Boss' : b.elite ? 'Élite' : 'Monstre') + (zone ? ' · ' + zone.name : '') + (n ? ' · tué ' + E.fmt(n) + ' fois' : '') + '</div>' +
+      (e ? '<div class="tiny">❤️ ' + E.fmt(Math.ceil(e.hp)) + ' / ' + E.fmt(e.maxhp) + ' PV · frappe ' + E.fmt(e.atk) + ' toutes les ' + (Math.round(e.int * 10) / 10) + ' s' + (e.def >= 1 ? ' · armure ' + E.fmt(e.def) : '') + '</div>' : '') + '</div></div>';
+    if (e) [e.fix, e.fix2].forEach(function (fid) { var f = fid ? E.byId(D.MOBFIX, fid) : null; if (f && f.desc) lines += '<div class="li"><div class="ic">✴️</div><div class="grow"><b style="color:#ffd87a">' + f.name.charAt(0).toUpperCase() + f.name.slice(1) + '</b><div class="small dim">' + f.desc + '</div></div></div>'; });
+    for (k in ab) if (D.AB_INFO[k]) lines += '<div class="li"><div class="ic">' + D.AB_INFO[k][0] + '</div><div class="grow"><b>' + D.AB_INFO[k][1] + '</b><div class="small dim">' + D.AB_INFO[k][2](ab[k]) + '</div></div></div>';
+    if (b.boss && zone) lines += '<div class="li on"><div class="ic">☠️</div><div class="grow"><b>Spécialité</b><div class="small dim">' + zone.mech + '</div></div></div>';
+    if (e && e.gold) lines += '<div class="li on"><div class="ic">💰</div><div class="grow"><b>Porteur d’or</b><div class="small dim">Il s’enfuit au bout de 12 s. Tue-le avant : il est plein d’or.</div></div></div>';
+    html += lines || '<p class="center dim small" style="margin:12px 0">Aucune capacité spéciale. Il frappe, c’est tout.</p>';
+    if (e && e.fix && !e.champ) html += '<div class="tiny dim center">Les monstres au nom doré sont plus durs, mais rapportent plus.</div>';
+    return html + '<div class="btns">' + backBtn() + '<button class="btn primary" data-act="close">Fermer</button></div>';
+  }
+  ACT.foeInfo = function (d) { if (!(S().codex[d.k] > 0)) { toast('Tue-le une fois pour découvrir sa fiche.'); return; } SND.play('click'); modal(foeSheet(d.k, null)); };
+  ACT.lexique = function () {
+    SND.play('click');
+    modal('<h2>📖 Lexique</h2><div class="tiny dim center" style="margin:-6px 0 10px">Tous les mots du jeu, en clair.</div>' +
+      D.GLOSS.map(function (g) { return '<div class="li"><div class="ic">' + g[0] + '</div><div class="grow"><b>' + g[1] + '</b><div class="small dim">' + g[2] + '</div></div></div>'; }).join('') +
+      '<div class="btns">' + backBtn() + '<button class="btn primary" data-act="close">Fermer</button></div>');
+  };
+  ACT.news = function () {
+    SND.play('click');
+    modal('<div class="center tiny gold" style="letter-spacing:.3em">VERSION ' + D.VERSION + '</div><h2 style="margin:4px 0 10px">Quoi de neuf ?</h2>' +
+      D.NEWS.map(function (g) { return '<div class="li"><div class="ic">' + g[0] + '</div><div class="grow"><b>' + g[1] + '</b><div class="small dim">' + g[2] + '</div></div></div>'; }).join('') +
+      '<div class="btns"><button class="btn primary big" data-act="close">COMPRIS</button></div>');
+  };
   // Choix du présage avant de descendre
   function askOmen(heroId, zone) {
     var offer = E.omenOffer();
@@ -67,7 +117,8 @@ var UI = (function () {
     st.screen = 'splash';
     $('#screen').innerHTML = '<div class="splash">' + spr('logo') + '<h1>MORVANE</h1><div class="dim" style="font-family:var(--serif);letter-spacing:.2em">LES CENDRES DU ROI CREUX</div>' +
       '<button class="btn primary big" data-act="enter" style="max-width:300px;margin-top:18px">' + (S().stats.runs ? 'CONTINUER' : 'COMMENCER') + '</button>' +
-      '<div class="tiny dim" style="margin-top:10px">Sauvegarde automatique · jouable hors-ligne</div></div>';
+      '<div class="tiny dim" style="margin-top:10px">Sauvegarde automatique · jouable hors-ligne</div>' +
+      '<button class="verb" data-act="news">Version ' + D.VERSION + ' · voir les nouveautés ›</button></div>';
     if (typeof FX !== 'undefined') FX.attach($('.splash'), { ambient: 'embers', warm: 3 });
   }
   ACT.enter = function () {
@@ -95,6 +146,8 @@ var UI = (function () {
       '<div class="content" id="content">' + body + '</div><div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (st.tab === t[0] ? ' on' : '') + '" data-act="tab" data-tab="' + t[0] + '"><span class="ti">' + t[1] + '</span>' + t[2] + (t[3] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
     if (st.tab === 'hero' && typeof FX !== 'undefined') FX.attach($('.hero-stage'), { ambient: 'embers', fire: { x: 0.82, y: 0.76 }, warm: 2 });
     flushAch();
+    var vk = 'v' + D.VERSION, seenV = S().tuto[vk]; S().tuto[vk] = 1;
+    if (S().tuto.hub && !seenV) { E.save(); ACT.news(); }
     if (!S().tuto.hub) { S().tuto.hub = 1; E.save(); modal('<h2>Le sanctuaire</h2><p class="center dim small" style="margin-top:-4px">C’est ici que tu deviens plus fort entre deux descentes.</p>' +
       '<div class="li"><div class="ic">🎒</div><div class="grow"><b>Sac</b><div class="small dim">Équipe tes objets. Une flèche verte ▲ montre ceux qui sont meilleurs. Tu peux aussi les <b>fusionner</b> (3 objets → 1 meilleur) ou les recycler.</div></div></div>' +
       '<div class="li"><div class="ic">⚱️</div><div class="grow"><b>Autel</b><div class="small dim">Dépense tes Cendres 🔥 en bonus permanents pour tous tes héros.</div></div></div>' +
@@ -148,7 +201,7 @@ var UI = (function () {
       if (S().stats.best > 0) html += '<div class="card idle"><div style="font-size:26px">⚱️</div><div class="grow"><b>Ossuaire</b><div class="small dim">Les morts travaillent pour toi : ' + E.fmt(idle.rate) + ' 🔥/h (réserve ' + idle.cap + ' h)</div><div class="bar" style="margin-top:4px"><i style="width:' + (idle.hours / idle.cap * 100) + '%;background:var(--ash)"></i></div></div><button class="btn goldb sm' + (idle.amount > 0 ? '' : ' off') + '" data-act="idle">+' + E.fmt(idle.amount) + ' 🔥</button></div>';
       html += '<div class="card"><div class="small gold">' + h.role + '</div><div class="small dim" style="margin-bottom:6px">' + h.desc + '</div><div class="skills-list"><div class="sk"><div class="ic">🌟</div><div><b>' + h.passive.name + '</b> <span class="tiny dim">passif</span><div class="small dim">' + h.passive.desc + '</div></div></div>' +
         '<div class="sk"><div class="ic">' + h.ult.icon + '</div><div><b>' + h.ult.name + '</b> <span class="tiny gold">ultime</span><div class="small dim">' + h.ult.desc + '</div></div></div>' +
-        h.skills.map(function (k, i) { var ok = E.skillUnlocked(h.id, i); return '<div class="sk' + (ok ? '' : ' locked') + '"><div class="ic">' + (ok ? k.icon : '🔒') + '</div><div><b>' + k.name + '</b> <span class="tiny dim">' + (ok ? k.cd + ' s' : 'Maîtrise ' + (i + 1)) + '</span><div class="small dim">' + k.desc + '</div></div></div>'; }).join('') + '</div></div>';
+        h.skills.map(function (k, i) { var ok = E.skillUnlocked(h.id, i); return '<button class="sk tap' + (ok ? '' : ' locked') + '" data-act="skillInfo" data-h="' + h.id + '" data-i="' + i + '"><div class="ic">' + (ok ? k.icon : '🔒') + '</div><div class="grow"><b>' + k.name + '</b> <span class="tiny dim">' + (ok ? k.cd + ' s' : 'Maîtrise ' + (i + 1)) + '</span>' + tagsHtml(k) + '<div class="small dim">' + k.desc + '</div></div><span class="dim">›</span></button>'; }).join('') + '</div><div class="btns" style="margin-top:8px"><button class="btn sm" data-act="lexique">📖 Lexique : tous les mots expliqués</button></div><div class="tiny dim center" style="margin-top:6px">Touche un pouvoir pour voir ses chiffres, un conseil et ses éveils ✨</div></div>';
     } else html += '<div class="card"><div class="small gold">' + h.role + '</div><div class="small dim">' + h.desc + '</div><div class="small" style="margin-top:6px">🌟 <b>' + h.passive.name + '</b> — ' + h.passive.desc + '</div></div>';
     return html;
   }
@@ -353,9 +406,9 @@ var UI = (function () {
     });
     // bestiaire
     var keys = Object.keys(D.ENEMIES), seen = keys.filter(function (k) { return S().codex[k] > 0; }).length;
-    h += '<h3 style="margin:14px 0 8px">📖 Bestiaire ' + seen + '/' + keys.length + '</h3><div class="codex">' + keys.map(function (k) {
+    h += '<h3 style="margin:14px 0 4px">📖 Bestiaire ' + seen + '/' + keys.length + '</h3><div class="tiny dim" style="margin-bottom:8px">Touche un monstre déjà tué pour voir ce qu’il sait faire.</div><div class="codex">' + keys.map(function (k) {
       var n = S().codex[k] || 0, e = D.ENEMIES[k];
-      return '<div class="cdx' + (n ? '' : ' no') + (e.boss ? ' boss' : e.elite ? ' elite' : '') + '">' + spr(k) + '<div class="tiny">' + (n ? e.name : '???') + '</div><div class="tiny dim">' + (n ? 'x' + E.fmt(n) : '') + '</div></div>';
+      return '<div data-act="foeInfo" data-k="' + k + '" class="cdx' + (n ? '' : ' no') + (e.boss ? ' boss' : e.elite ? ' elite' : '') + '">' + spr(k) + '<div class="tiny">' + (n ? e.name : '???') + '</div><div class="tiny dim">' + (n ? 'x' + E.fmt(n) : '') + '</div></div>';
     }).join('') + '</div>';
     var un = D.UNIQUES.filter(function (u) { return S().uniq[u.id]; }).length;
     h += '<h3 style="margin:14px 0 8px" class="c5">🩸 Objets uniques ' + un + '/' + D.UNIQUES.length + '</h3>';
@@ -376,7 +429,7 @@ var UI = (function () {
       '<div class="card small dim" style="margin-top:12px">💾 La partie se sauvegarde toute seule sur cet appareil, à chaque salle. Pour la mettre à l’abri ou la passer sur un autre appareil, copie le code ci-dessous.</div>' +
       '<div class="btns"><button class="btn" data-act="export">📤 Copier ma sauvegarde</button><button class="btn" data-act="importAsk">📥 Coller une sauvegarde</button></div>' +
       (S().run ? '<div class="btns"><button class="btn" data-act="abandonAsk">🏳️ Abandonner la descente</button></div>' : '') +
-      '<div class="btns"><button class="btn" data-act="resetAsk" style="color:var(--blood)">Tout effacer</button><button class="btn primary" data-act="close">Fermer</button></div><div class="tiny dim center" style="margin-top:8px">Morvane v1.7</div>');
+      '<div class="btns"><button class="btn" data-act="resetAsk" style="color:var(--blood)">Tout effacer</button><button class="btn primary" data-act="close">Fermer</button></div><div class="center" style="margin-top:8px"><button class="verb" data-act="news">Morvane version ' + D.VERSION + ' · voir les nouveautés ›</button></div>');
   };
   ACT.setSfx = function () { var s = S().settings; s.sfx = !s.sfx; SND.set('sfx', s.sfx); E.save(); ACT.settings(); };
   ACT.setMusic = function () { var s = S().settings; s.music = !s.music; SND.set('music', s.music); E.save(); ACT.settings(); };
@@ -394,7 +447,19 @@ var UI = (function () {
   function applySettings() { SND.set('sfx', S().settings.sfx); SND.set('music', S().settings.music); }
 
   // ---------- démarrage ----------
+  // Appui long sur un élément [data-info="type:arg"] : ouvre sa fiche au lieu de l'activer
+  var lpT = null, lpFired = false, lpXY = null;
+  function lpStop() { clearTimeout(lpT); lpT = null; }
+  document.addEventListener('pointerdown', function (e) {
+    lpStop(); lpFired = false;
+    var t = e.target.closest ? e.target.closest('[data-info]') : null; if (!t) return;
+    lpXY = [e.clientX, e.clientY];
+    lpT = setTimeout(function () { lpT = null; if (!ACT.info) return; lpFired = true; vib(15); var p = t.dataset.info.split(':'); ACT.info(p[0], p[1]); }, 450);
+  });
+  document.addEventListener('pointermove', function (e) { if (lpT && lpXY && Math.abs(e.clientX - lpXY[0]) + Math.abs(e.clientY - lpXY[1]) > 14) lpStop(); });
+  ['pointerup', 'pointercancel'].forEach(function (n) { document.addEventListener(n, lpStop); });
   document.addEventListener('click', function (e) {
+    if (lpFired) { lpFired = false; e.preventDefault(); return; }
     var t = e.target.closest ? e.target.closest('[data-act]') : null;
     if (!t) { if (e.target.id === 'modal') closeModal(); return; }
     if (t.disabled || t.classList.contains('off')) { SND.play('error'); return; }
@@ -408,5 +473,5 @@ var UI = (function () {
   function boot() { E.load(); applySettings(); st.view = S().hero; splash(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else setTimeout(boot, 0);
 
-  return { ACT: ACT, $: $, S: S, spr: spr, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, famHtml: famHtml, vib: vib, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod };
+  return { ACT: ACT, $: $, S: S, spr: spr, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, famHtml: famHtml, vib: vib, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod, skillSheet: skillSheet, foeSheet: foeSheet, tagsHtml: tagsHtml, abIcons: abIcons };
 })();
