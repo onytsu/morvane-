@@ -335,14 +335,13 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '2.0';
+  var VERSION = '3.0';
   var NEWS = [
-    ['🎨', 'Tout est plus beau', 'Lumières, brume, éclats, ondes de choc, héros qui bondit sur sa cible, transitions entre les salles, nouvelle interface.'],
-    ['🔮', 'Orbes à ramasser', 'Les ennemis vaincus lâchent des orbes : or, soin, ultime, fureur. Touche-les avant qu’elles ne s’éteignent.'],
-    ['💀', 'Projectiles à renvoyer', 'Dès l’étage 3, les monstres te lancent des crânes maudits. Touche-les en vol : ils repartent dans l’autre sens.'],
-    ['🎯', 'Primes', 'Trois petits objectifs en permanence pendant la descente. Une prime remplie paie tout de suite, une autre la remplace.'],
-    ['⚒️', 'Trois nouvelles salles', 'La Forge (frappe au bon moment), les Runes (retiens la suite) et la Roue du destin.'],
-    ['🗝️', 'Crochetage', 'Les coffres se crochètent : plus tu es précis, meilleur est le butin.']
+    ['🎲', 'Un vrai plateau', 'Chaque zone est un chemin de 36 cases jusqu’au boss. Tu lances deux dés et tu choisis lequel jouer.'],
+    ['♟️', 'Combats au tour par tour', 'À ton tour : 2 actions ⚡ (frapper, pouvoir, parer...). Puis chaque ennemi joue, l’un après l’autre. Plus de course contre la montre.'],
+    ['🤺', 'Des choix à chaque tour', 'Parer une attaque chargée, renvoyer un crâne ou viser un point faible coûte une action : à toi de décider.'],
+    ['🕳️', 'Nouvelles cases', 'Bourse oubliée, piège, fontaine : effet immédiat, et tu relances les dés. Un double rapporte de l’ultime.'],
+    ['✨', 'Tout le reste est là', 'Héros, pouvoirs, éveils, orbes, primes, forge, runes, roue, crochetage : rien n’a disparu. Les durées se comptent maintenant en tours.']
   ];
 
   // ---------- Sets d'objets (bonus à 2, 4 et 6 pièces portées). Un set par zone. ----------
@@ -885,6 +884,10 @@ var DATA = (function () {
     event: { name: 'Mystère', icon: '❓', hint: 'Qui sait ?' },
     mercenaire: { name: 'Mercenaires', icon: '🤝', hint: "Un allié jusqu'au boss" },
     arene: { name: 'Arène', icon: '🏟️', hint: '3 vagues. Grosse récompense' },
+    start: { name: 'Départ', icon: '🚩', hint: 'L’entrée de la zone' },
+    bourse: { name: 'Bourse', icon: '💰', hint: 'Un peu d’or, et tu rejoues' },
+    piege: { name: 'Piège', icon: '🕳️', hint: '-10 % PV, et tu rejoues' },
+    fontaine: { name: 'Fontaine', icon: '⛲', hint: '+15 % PV, et tu rejoues' },
     forge: { name: 'Forge', icon: '⚒️', hint: 'Frappe juste : plus d’attaque' },
     runes: { name: 'Runes', icon: '🔮', hint: 'Retiens la suite. Soin, aubaine, éveil' },
     roue: { name: 'Roue du destin', icon: '🎡', hint: 'Un tour gratuit. Ou pire' },
@@ -900,11 +903,33 @@ var DATA = (function () {
     { name: 'Offrande de rage', desc: '+15 % critique, +40 % dégâts critiques, -20 % armure.', mods: { crit: 15, critd: 40, defP: -20 } }
   ];
 
-  return {
+  // Le jeu se joue au tour par tour : 1 tour = 2 secondes de l'ancien temps réel.
+  // Les textes ci-dessus sont écrits en secondes ; on les traduit en tours une fois pour toutes ici.
+  function nb(x) { return parseFloat(String(x).replace(',', '.')); }
+  function fr(n) { return String(Math.round(n * 10) / 10).replace('.', ','); }
+  function tours(sec) { var n = Math.max(1, Math.ceil(nb(sec) / 2 - 1e-9)); return n + ' tour' + (n > 1 ? 's' : ''); }
+  function toTurns(t) {
+    return t.replace(/(\d+(?:,\d+)?) %( PV| de ton attaque)? par seconde/g, function (m, n, w) { return fr(nb(n) * 2) + ' %' + (w || '') + ' par tour'; })
+      .replace(/chaque seconde/g, 'à chaque tour').replace(/en moins de (\d+) secondes/g, function (m, n) { return 'en moins de ' + tours(n); })
+      .replace(/([Tt])outes les (\d+(?:,\d+)?) s\b/g, function (m, c, n) { return c + 'ous les ' + tours(n); })
+      .replace(/(\d+(?:,\d+)?) s(?![\wà-ÿ’'])/g, function (m, n) { return tours(n); });
+  }
+  function conv(o, depth) {
+    if (!o || typeof o !== 'object' || depth > 8) return;
+    Object.keys(o).forEach(function (k) {
+      var v = o[k];
+      if (typeof v === 'string') { if (k !== 'id' && k !== 'sfx' && k !== 'icon') o[k] = toTurns(v); }
+      else if (typeof v === 'function') o[k] = function () { var r = v.apply(this, arguments); return typeof r === 'string' ? toTurns(r) : r; };
+      else conv(v, depth + 1);
+    });
+  }
+  var OUT = {
     RARITIES: RARITIES, MODS: MODS, HEROES: HEROES, ENEMIES: ENEMIES, ZONES: ZONES, SLOTS: SLOTS, BASES: BASES,
     SETS: SETS, OMENS: OMENS, TALENTS: TALENTS, FAMILIARS: FAMILIARS, MOBFIX: MOBFIX, CONDS: CONDS, ALLIES: ALLIES, CONTRACTS: CONTRACTS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
     PACTS: PACTS, ACHIEVEMENTS: ACHIEVEMENTS, EVENTS: EVENTS, ROOMS: ROOMS, PRIMES: PRIMES, WHEEL: WHEEL, ALTARS: ALTARS,
     AB_INFO: AB_INFO, GLOSS: GLOSS, VERSION: VERSION, NEWS: NEWS
-  };
+  }
+  conv(OUT, 0);
+  return OUT;
 })();
 if (typeof module !== 'undefined') module.exports = DATA;

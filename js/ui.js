@@ -54,7 +54,7 @@ var UI = (function () {
     var h = E.hero(heroId), k = h.skills[i], own = E.heroUnlocked(heroId), run = S().run && S().run.hero === heroId ? S().run : null;
     var ok = own && E.skillUnlocked(heroId, i), cd = run ? E.skillCd(run, i) : k.cd * (1 - (own ? E.heroStats(heroId, null).cdr : 0) / 100);
     var nums = own ? E.skillNumbers(heroId, i, run) : [];
-    var html = '<div class="skhead"><div class="ic">' + k.icon + '</div><div class="grow"><b>' + k.name + '</b><div class="tiny dim">Pouvoir ' + (i + 1) + ' de ' + h.name + ' · recharge ' + (Math.round(cd * 10) / 10) + ' s</div>' + tagsHtml(k) + '</div></div>';
+    var html = '<div class="skhead"><div class="ic">' + k.icon + '</div><div class="grow"><b>' + k.name + '</b><div class="tiny dim">Pouvoir ' + (i + 1) + ' de ' + h.name + ' · 1 action · recharge ' + E.turns(cd) + ' tours</div>' + tagsHtml(k) + '</div></div>';
     if (!ok) html += '<div class="card small gold">🔒 Se débloque à Maîtrise ' + (i + 1) + ' : joue ' + h.name + ' pour la monter.</div>';
     html += '<p style="margin:10px 2px">' + k.desc + '</p>';
     if (nums.length) html += '<div class="card nums"><div class="tiny gold" style="letter-spacing:.08em">AVEC TES STATS ACTUELLES</div>' + nums.map(function (n) { return '<div><b>' + n + '</b></div>'; }).join('') + '<div class="tiny dim">Avant l’armure de l’ennemi et les coups critiques.</div></div>';
@@ -74,11 +74,11 @@ var UI = (function () {
     var ab = e ? e.ab : b.ab, zone = null, n = S().codex[key] || 0, lines = '', k;
     D.ZONES.forEach(function (z) { if (!zone && (z.boss === key || z.elites.indexOf(key) >= 0 || z.mobs.indexOf(key) >= 0)) zone = z; });
     var html = '<div class="skhead"><div class="ic foe">' + spr(key) + '</div><div class="grow"><b>' + (e ? e.name : b.name) + '</b><div class="tiny dim">' + (b.boss ? 'Boss' : b.elite ? 'Élite' : 'Monstre') + (zone ? ' · ' + zone.name : '') + (n ? ' · tué ' + E.fmt(n) + ' fois' : '') + '</div>' +
-      (e ? '<div class="tiny">❤️ ' + E.fmt(Math.ceil(e.hp)) + ' / ' + E.fmt(e.maxhp) + ' PV · frappe ' + E.fmt(e.atk) + ' toutes les ' + (Math.round(e.int * 10) / 10) + ' s' + (e.def >= 1 ? ' · armure ' + E.fmt(e.def) : '') + '</div>' : '') + '</div></div>';
+      (e ? '<div class="tiny">❤️ ' + E.fmt(Math.ceil(e.hp)) + ' / ' + E.fmt(e.maxhp) + ' PV · frappe ' + E.fmt(e.atk) + ' ' + (e.int <= 1.05 ? '2 fois par tour' : e.int < 1.9 ? '1 à 2 fois par tour' : e.int <= 2.1 ? '1 fois par tour' : 'presque à chaque tour') + (e.def >= 1 ? ' · armure ' + E.fmt(e.def) : '') + '</div>' : '') + '</div></div>';
     if (e) [e.fix, e.fix2].forEach(function (fid) { var f = fid ? E.byId(D.MOBFIX, fid) : null; if (f && f.desc) lines += '<div class="li"><div class="ic">✴️</div><div class="grow"><b style="color:#ffd87a">' + f.name.charAt(0).toUpperCase() + f.name.slice(1) + '</b><div class="small dim">' + f.desc + '</div></div></div>'; });
     for (k in ab) if (D.AB_INFO[k]) lines += '<div class="li"><div class="ic">' + D.AB_INFO[k][0] + '</div><div class="grow"><b>' + D.AB_INFO[k][1] + '</b><div class="small dim">' + D.AB_INFO[k][2](ab[k]) + '</div></div></div>';
     if (b.boss && zone) lines += '<div class="li on"><div class="ic">☠️</div><div class="grow"><b>Spécialité</b><div class="small dim">' + zone.mech + '</div></div></div>';
-    if (e && e.gold) lines += '<div class="li on"><div class="ic">💰</div><div class="grow"><b>Porteur d’or</b><div class="small dim">Il s’enfuit au bout de 12 s. Tue-le avant : il est plein d’or.</div></div></div>';
+    if (e && e.gold) lines += '<div class="li on"><div class="ic">💰</div><div class="grow"><b>Porteur d’or</b><div class="small dim">Il s’enfuit au bout de 6 tours. Tue-le avant : il est plein d’or.</div></div></div>';
     html += lines || '<p class="center dim small" style="margin:12px 0">Aucune capacité spéciale. Il frappe, c’est tout.</p>';
     if (e && e.fix && !e.champ) html += '<div class="tiny dim center">Les monstres au nom doré sont plus durs, mais rapportent plus.</div>';
     return html + '<div class="btns">' + backBtn() + '<button class="btn primary" data-act="close">Fermer</button></div>';
