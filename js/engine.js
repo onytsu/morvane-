@@ -42,9 +42,9 @@
   function newSave() {
     var s = {
       v: 1, cendres: 0, essence: 0, hero: 'chevalier', heroes: {}, inv: [], nextUid: 1, meta: {}, pacts: [], ach: {},
-      stats: { kills: 0, deaths: 0, chests: 0, maxLvl: 0, leg: 0, uni: 0, best: 0, elites: 0, upgrades: 0, epic: 0, runs: 0, heroes: 1, evos: 0, weak: 0, parry: 0, ult: 0, arenes: 0, fusions: 0, maxHit: 0, maxCombo: 0, bossMax: 0, boss1: 0, boss2: 0, boss3: 0, boss4: 0, boss5: 0, boss6: 0, bosses: 0, items: 0, orbs: 0, deflect: 0, minis: 0, primes: 0 },
+      stats: { kills: 0, deaths: 0, chests: 0, maxLvl: 0, leg: 0, uni: 0, best: 0, elites: 0, upgrades: 0, epic: 0, runs: 0, heroes: 1, evos: 0, weak: 0, parry: 0, ult: 0, arenes: 0, fusions: 0, maxHit: 0, maxCombo: 0, bossMax: 0, boss1: 0, boss2: 0, boss3: 0, boss4: 0, boss5: 0, boss6: 0, bosses: 0, items: 0, orbs: 0, deflect: 0, minis: 0, primes: 0, bestScore: 0, doubles: 0, glory: 0 },
       settings: { sfx: true, music: true, speed: 1, auto: false, autoSalvage: -1 },
-      idleAt: Date.now(), run: null, tuto: {}, codex: {}, uniq: {}, fam: null, daily: null, pityU: 0, created: Date.now()
+      idleAt: Date.now(), run: null, tuto: {}, codex: {}, uniq: {}, fam: null, daily: null, pityU: 0, glory: { lvl: 0, pts: 0 }, created: Date.now()
     };
     s.heroes.chevalier = { xp: 0, lvl: 1, equip: {}, pacts: [] };
     return s;
@@ -536,7 +536,7 @@
     if (cells.slice(31).indexOf('marchand') < 0) cells[33] = 'marchand';
     if (!run.stats.noRest && cells.slice(31).indexOf('repos') < 0) cells[35] = 'repos';
     cells.push('boss');
-    run.board = { cells: cells, pos: pos || 0, base: base };
+    run.board = { cells: cells, pos: pos || 0, base: base, rerolls: 1 };
   }
   function floorAt(run, pos) { return run.board.base + (pos > CELLS ? 10 : Math.max(1, Math.ceil(pos / 4))); }
   E.floorAt = function (pos) { return floorAt(S.run, pos); };
@@ -606,6 +606,7 @@
       r.mercs = [hl.splice(Math.floor(rnd() * hl.length), 1)[0], hl.splice(Math.floor(rnd() * hl.length), 1)[0]]; r.price = Math.round(45 * pm);
     }
   }
+  E.rerollBoard = function () { var run = S.run; if (!run || run.phase !== 'doors' || !run.board || !(run.board.rerolls > 0)) return false; run.board.rerolls--; rollDice(run); E.save(); return true; };
   E.chooseDoor = function (i) {
     var run = S.run; if (!run || run.phase !== 'doors' || run.pendingBoons > 0 || run.pendingEvos > 0) return false;
     var t = run.doors[i]; if (!t) return false;
@@ -742,7 +743,7 @@
       hm *= f.hp || 1; am *= f.atk || 1; im *= f.int || 1; defK += f.def || 0; name += ' ' + f.name;
     });
     if (sp.gold) name = "Porteur d'or";
-    var hp = b.hp * hs * hm * (1 + (run.stats.enemyHpP || 0) / 100), atk = b.atk * as * am * (1 + (run.stats.enemyAtkP || 0) / 100);
+    var hp = b.hp * hs * hm * 1.1 * (1 + (run.stats.enemyHpP || 0) / 100), atk = b.atk * as * am * (1 + (run.stats.enemyAtkP || 0) / 100);
     return {
       key: key, name: name, hp: hp, maxhp: hp, atk: atk, def: b.def * as + defK * atk, int: b.int * im, t: b.int * im * rf(0.5, 1), ab: ab,
       fix: sp.fix || null, fix2: sp.fix2 || null, champ: !!sp.champ, big: sp.fix === 'geant' || sp.fix2 === 'geant', flee: sp.flee || 0, gold: !!sp.gold,
@@ -760,16 +761,39 @@
     };
     r.group.forEach(function (k) { var e = mkEnemy(run, k, n >= 3 ? 0.8 : 1); e.id = c.nextId++; if (st.vulnStart) e.st.vuln = st.vulnStart; if (c.cond === 'fragile') e.st.vuln = Math.max(e.st.vuln || 0, 8); c.enemies.push(e); });
     run.combat = c;
-    c.turn = 'hero'; c.round = 1; c.qi = 0;
-    c.events.push({ k: r.type === 'boss' ? 'boss' : 'start' }); c.events.push({ k: 'pturn', n: 1 });
+    c.turn = 'hero'; c.round = 1; c.qi = 0; c.rerolls = 1 + (st.diceRerolls || 0);
+    c.events.push({ k: r.type === 'boss' ? 'boss' : 'start' }); c.events.push({ k: 'pturn', n: 1 }); rollTurn(run, c);
   };
   // ----- Tour par tour. Un tour vaut ROUND secondes de l'ancien temps réel : les durées et recharges restent écrites en secondes. -----
   var ROUND = 2, AP = 2; E.ROUND = ROUND; E.AP = AP;
   E.turns = function (sec) { return Math.max(1, Math.ceil(sec / ROUND - 1e-9)); };
+  // ----- Dés de combat : deux dés au début de chaque tour. Leur combinaison donne un bonus pour ce tour. -----
+  function combo(a, b, st) {
+    var s = a + b, p = 1 + (st.diceP || 0) / 100;
+    if (a === b) return a === 6 ? { id: 'jackpot', name: 'JACKPOT', icon: '👑', ap: 1, crit: 1, desc: '+1 action et tous tes coups sont critiques ce tour.' } : { id: 'double', name: 'DOUBLE', icon: '🎲', ap: 1, desc: '+1 action ce tour.' };
+    if (s === 7) return { id: 'sept', name: 'SEPT CHANCEUX', icon: '🍀', freeSkill: 1, desc: 'Tes pouvoirs ne coûtent aucune action ce tour.' };
+    if (s >= 10) return { id: 'fort', name: 'COUP FORT', icon: '💥', dmg: Math.round(40 * p), desc: '+' + Math.round(40 * p) + ' % dégâts ce tour.' };
+    if (s <= 4) return { id: 'garde', name: 'PRUDENCE', icon: '🛡️', guard: Math.min(80, Math.round(40 * p)), desc: '-' + Math.min(80, Math.round(40 * p)) + ' % dégâts subis jusqu’à ton prochain tour.' };
+    if (Math.abs(a - b) === 1) return { id: 'suite', name: 'SUITE', icon: '✨', nextCrit: 1, desc: 'Ton prochain coup est critique.' };
+    return { id: 'rien', name: '', icon: '', desc: 'Pas de combinaison ce tour.' };
+  }
+  function rollTurn(run, c, again) {
+    var h = c.hero, a = ri(1, 6), b = ri(1, 6), k = combo(a, b, run.stats);
+    if (c.dfx && c.dfx.nextCrit && again) h.nextCrit = false;
+    c.dice = [a, b]; c.dfx = k; c.acted = false; h.ap = AP + (k.ap || 0);
+    if (k.nextCrit) h.nextCrit = true;
+    if (k.ap) { S.stats.doubles = (S.stats.doubles || 0) + 1; run.dbl = (run.dbl || 0) + 1; }
+    ev(c, { k: 'dice', d: [a, b], id: k.id, name: k.name, icon: k.icon, desc: k.desc, again: !!again });
+  }
+  // Relance des dés de combat : avant d'avoir agi, un nombre limité de fois par combat
+  E.rerollDice = function () {
+    var run = S.run, c = run && run.combat; if (!canAct(c) || c.acted || c.rerolls <= 0) return false;
+    c.rerolls--; rollTurn(run, c, true); return true;
+  };
   function canAct(c) { return !!c && !c.over && c.turn === 'hero' && c.hero.ap > 0; }
   // Dépense une action. À zéro, la main passe aux ennemis.
   function spend(run, c) {
-    c.hero.ap--; if (c.over) return;
+    c.hero.ap--; c.acted = true; if (c.over) return;
     if (c.hero.ap <= 0) beginFoes(run, c);
   }
   function beginFoes(run, c) {
@@ -812,7 +836,8 @@
     var dmg = o.flat != null ? o.flat : st.atk * mult, crit = false;
     if (o.skill) dmg *= (1 + st.pow / 100) * (1 + (st['s' + o.skill + 'P'] || 0) / 100);
     if (!o.dot) {
-      if (o.crit || (!o.noCrit && rnd() * 100 < st.crit)) { crit = true; dmg *= st.critd / 100; }
+      if (o.crit || (!o.noCrit && (rnd() * 100 < st.crit || (c.dfx && c.dfx.crit && c.turn === 'hero')))) { crit = true; dmg *= st.critd / 100; }
+      if (c.dfx && c.dfx.dmg && c.turn === 'hero') dmg *= 1 + c.dfx.dmg / 100;
       if (h.first) { h.first = false; if (st.firstStrike) dmg *= 1 + st.firstStrike / 100; }
       if (st.exec && e.hp / e.maxhp < 0.3) dmg *= 1 + st.exec / 100;
     }
@@ -958,6 +983,7 @@
       if (rnd() * 100 < st.block) { dmg *= 0.5; blocked = true; }
       dmg *= (2 * raw) / (2 * raw + st.def);
     }
+    if (c.dfx && c.dfx.guard && !o.dot) dmg *= 1 - c.dfx.guard / 100;
     dmg *= Math.max(0.3, 1 + st.takenP / 100) * pm * (run.stance === 'a' ? 1.2 : run.stance === 'd' ? 0.75 : 1);
     if (h.shield > 0) { var ab = Math.min(h.shield, dmg); h.shield -= ab; dmg -= ab; if (ab > 0 && dmg <= 0) { ev(c, { k: 'hurt', v: 0, sh: 1 }); dmg = 0; } }
     if (dmg > 0 && !o.dot) ug(run, 3);
@@ -1082,7 +1108,7 @@
     if (st.skillHeal) heroHeal(run, c, st.hp * st.skillHeal / 100);
     if (st.skillEcho && h.cds[i] > 0.5 && rnd() * 100 < st.skillEcho) { h.cds[i] = 0.5; ev(c, { k: 'free', i: i }); }
     if (c.over) finish(run, c);
-    spend(run, c);
+    if (c.dfx && c.dfx.freeSkill) { c.acted = true; if (h.ap <= 0 && !c.over) beginFoes(run, c); } else spend(run, c);
     return true;
   };
   function ug(run, n) { run.ult = Math.min(100, (run.ult || 0) + n * (1 + (run.stats.ultP || 0) / 100) * (run.combat && run.combat.cond === 'silence' ? 2 : 1)); }
@@ -1212,7 +1238,7 @@
     // point faible : visible pendant un tour
     if (c.weak) { c.weak = null; c.weakT = rf(5, 9); }
     else { c.weakT -= dt * (c.cond === 'tenebres' ? 2 : 1) * (run.hero === 'chasseuse' ? 2 : 1); if (c.weakT <= 0) { var al0 = alive(c); if (al0.length) { c.weak = { id: pick(al0).id, t: ROUND }; ev(c, { k: 'weak', id: c.weak.id }); } } }
-    c.round++; c.turn = 'hero'; h.ap = AP; ev(c, { k: 'pturn', n: c.round });
+    c.round++; c.turn = 'hero'; h.ap = AP; ev(c, { k: 'pturn', n: c.round }); rollTurn(run, c);
   }
   // Spécialité de chaque boss
   function bossTick(run, c, e, dt) {
@@ -1272,6 +1298,27 @@
     ev(c, { k: 'win', boss: r.type === 'boss' });
     E.checkAch(); E.save();
   }
+  // ----- Gloire : le score d'une descente remplit une piste de récompenses sans fin -----
+  E.gloryNeed = function (lvl) { return Math.min(400, 60 + 25 * lvl); };
+  function gloryReward(lvl) { // récompense du palier lvl (à partir de 1)
+    var r = { cendres: Math.ceil(40 * Math.pow(1.16, Math.min(lvl, 40))) };
+    if (lvl % 3 === 0) r.essence = 15 + 5 * Math.min(lvl, 40);
+    if (lvl % 10 === 0) r.item = 4; else if (lvl % 5 === 0) r.item = 3;
+    return r;
+  }
+  function gloryText(r) { return '🔥 ' + E.fmt(r.cendres) + (r.essence ? ' · 💠 ' + r.essence : '') + (r.item === 4 ? ' · 🎁 objet légendaire' : r.item === 3 ? ' · 🎁 objet épique' : ''); }
+  E.gloryInfo = function () { var g = S.glory; return { lvl: g.lvl, pts: g.pts, need: E.gloryNeed(g.lvl), next: gloryText(gloryReward(g.lvl + 1)) }; };
+  E.runScore = function (run) { return Math.round((run.floor - run.startFloor + 1) * 5 + run.kills * 0.6 + run.bosses * 30 + (run.primesDone || 0) * 8 + (run.dbl || 0) * 2 + (run.cnt.mini || 0) * 6 + (run.cnt.deflect || 0) * 1.5 + (run.cnt.parry || 0) * 3); };
+  function addGlory(pts) {
+    var g = S.glory, ups = []; g.pts += pts; S.stats.glory = (S.stats.glory || 0) + pts;
+    while (g.pts >= E.gloryNeed(g.lvl) && ups.length < 30) {
+      g.pts -= E.gloryNeed(g.lvl); g.lvl++; var r = gloryReward(g.lvl), u = { lvl: g.lvl, txt: gloryText(r), uid: null };
+      S.cendres += r.cendres; if (r.essence) S.essence += r.essence;
+      if (r.item) { var it = E.makeItem(Math.max(1, S.stats.best), r.item, {}), gi = giveItem(it); u.uid = gi.salvaged ? null : it.uid; if (gi.salvaged) u.txt += ' (sac plein : recyclé)'; }
+      ups.push(u);
+    }
+    return ups;
+  }
   // Fin de descente (mort ou abandon). Renvoie le résumé.
   E.endRun = function (abandon) {
     var run = S.run; if (!run) return null;
@@ -1283,9 +1330,11 @@
     var mxp = Math.round(run.rooms * 8 + run.bosses * 40 + run.kills), ups = 0;
     hs.xp += mxp;
     while (hs.xp >= E.masteryNeed(hs.lvl)) { hs.xp -= E.masteryNeed(hs.lvl); hs.lvl++; ups++; }
+    var score = E.runScore(run), scoreRec = score > (S.stats.bestScore || 0); if (scoreRec) S.stats.bestScore = score;
+    var gUps = addGlory(score);
     var bonus = Math.ceil(run.cendres * 0.25 + 5 * (run.rooms));
     S.cendres += bonus;
-    var sum = { hero: run.hero, floor: reached, rooms: run.rooms, kills: run.kills, cendres: run.cendres + bonus, bonus: bonus, loot: run.loot, lvl: run.lvl, mxp: mxp, heroLvl: hs.lvl, heroUps: ups, abandon: !!abandon, time: run.t, bosses: run.bosses, dmg: run.dmg || 0, maxHit: run.maxHit || 0, record: reached >= S.stats.best && reached > (S.stats.prevBest || 0) };
+    var sum = { hero: run.hero, floor: reached, rooms: run.rooms, kills: run.kills, cendres: run.cendres + bonus, bonus: bonus, loot: run.loot, lvl: run.lvl, mxp: mxp, heroLvl: hs.lvl, heroUps: ups, abandon: !!abandon, time: run.t, bosses: run.bosses, dmg: run.dmg || 0, maxHit: run.maxHit || 0, score: score, scoreRec: scoreRec, gloryUps: gUps, record: reached >= S.stats.best && reached > (S.stats.prevBest || 0) };
     S.stats.prevBest = Math.max(S.stats.prevBest || 0, S.stats.best);
     S.run = null; E.checkAch(); E.save();
     return sum;

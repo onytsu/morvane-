@@ -42,7 +42,7 @@ var DATA = (function () {
     idleP: { n: "Cendres de l'Ossuaire", fmt: 'pct' }, startBoons: { n: 'Aubaine offerte au départ', fmt: 'flat' },
     enemyHpP: { n: 'PV des ennemis', fmt: 'pct' }, idleH: { n: "Heures de réserve de l'Ossuaire", fmt: 'flat' },
     enemyAtkP: { n: 'Attaque des ennemis', fmt: 'pct' }, ultP: { n: "Charge de l'ultime", fmt: 'pct' },
-    parryP: { n: 'Dégâts de riposte (parade)', fmt: 'pct' }, weakP: { n: 'Dégâts sur point faible', fmt: 'pct' },
+    parryP: { n: 'Dégâts de riposte (parade)', fmt: 'pct' }, weakP: { n: 'Dégâts sur point faible', fmt: 'pct' }, diceRerolls: { n: 'Relance des dés de combat', fmt: 'flat' }, diceP: { n: 'Force des combinaisons de dés', fmt: 'pct' },
     skillHeal: { n: 'Soin à chaque pouvoir lancé (% PV)', fmt: 'pct' }, stunDmg: { n: 'Dégâts aux ennemis étourdis', fmt: 'pct' },
     statusDmg: { n: 'Dégâts aux ennemis brûlés, empoisonnés ou saignants', fmt: 'pct' }, skillEcho: { n: 'Chance de pouvoir rechargé aussitôt', fmt: 'pct' },
     startEvo: { n: 'Éveil de pouvoir offert au départ', fmt: 'flat' }
@@ -335,13 +335,13 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '3.0';
+  var VERSION = '3.1';
   var NEWS = [
-    ['🎲', 'Un vrai plateau', 'Chaque zone est un chemin de 36 cases jusqu’au boss. Tu lances deux dés et tu choisis lequel jouer.'],
-    ['♟️', 'Combats au tour par tour', 'À ton tour : 2 actions ⚡ (frapper, pouvoir, parer...). Puis chaque ennemi joue, l’un après l’autre. Plus de course contre la montre.'],
-    ['🤺', 'Des choix à chaque tour', 'Parer une attaque chargée, renvoyer un crâne ou viser un point faible coûte une action : à toi de décider.'],
-    ['🕳️', 'Nouvelles cases', 'Bourse oubliée, piège, fontaine : effet immédiat, et tu relances les dés. Un double rapporte de l’ultime.'],
-    ['✨', 'Tout le reste est là', 'Héros, pouvoirs, éveils, orbes, primes, forge, runes, roue, crochetage : rien n’a disparu. Les durées se comptent maintenant en tours.']
+    ['🎲', 'Dés de combat', 'Deux dés au début de chaque tour. Double : +1 action. Sept : pouvoirs gratuits. 10 ou plus : +40 % dégâts. Double six : jackpot. Une relance par combat.'],
+    ['🏅', 'Gloire', 'Chaque descente, même ratée, donne un score qui remplit la piste de Gloire : Cendres, essence, objets épiques et légendaires, sans fin.'],
+    ['🏆', 'Score et record', 'Ton score s’affiche à la fin de chaque descente. Bats ton record.'],
+    ['🔁', 'Relance du plateau', 'Une fois par zone, tu peux relancer les deux dés du plateau.'],
+    ['♟️', 'Rappel : plateau et tour par tour', 'Chaque zone est un chemin de 36 cases. En combat : tes actions ⚡, puis chaque ennemi joue.']
   ];
 
   // ---------- Sets d'objets (bonus à 2, 4 et 6 pièces portées). Un set par zone. ----------
@@ -441,7 +441,7 @@ var DATA = (function () {
     ['kills', 40, 'Tue 40 ennemis'], ['kills', 90, 'Tue 90 ennemis'], ['elites', 3, 'Vaincs 3 élites'], ['bosses', 1, 'Vaincs un boss'],
     ['chests', 2, 'Ouvre 2 coffres'], ['items', 8, 'Trouve 8 objets'], ['runs', 3, 'Lance 3 descentes'], ['upgrades', 3, 'Améliore 3 fois un objet'],
     ['weak', 10, 'Touche 10 points faibles'], ['parry', 3, 'Réussis 3 parades parfaites'], ['ult', 5, 'Lance 5 ultimes'], ['fusions', 2, 'Fusionne des objets 2 fois'], ['arenes', 1, 'Gagne une arène'], ['evos', 2, 'Choisis 2 éveils de pouvoir'],
-    ['orbs', 15, 'Ramasse 15 orbes'], ['deflect', 6, 'Renvoie 6 projectiles'], ['minis', 2, 'Réussis 2 épreuves (forge, runes, crochetage)'], ['primes', 3, 'Remplis 3 primes']
+    ['doubles', 4, 'Obtiens 4 doubles aux dés de combat'], ['orbs', 15, 'Ramasse 15 orbes'], ['deflect', 6, 'Renvoie 6 projectiles'], ['minis', 2, 'Réussis 2 épreuves (forge, runes, crochetage)'], ['primes', 3, 'Remplis 3 primes']
   ];
 
   // ---------- Zones et ennemis ----------
@@ -645,6 +645,8 @@ var DATA = (function () {
     { id: 'b_cruel', name: 'Cruauté', icon: '🩸', rar: 0, max: 8, desc: '+25 % dégâts critiques.', mods: { critd: 25 } },
     { id: 'b_or', name: 'Doigts crochus', icon: '💰', rar: 0, max: 5, desc: "+30 % d'or et de Cendres.", mods: { gf: 30 } },
     { id: 'b_arcane', name: 'Savoir interdit', icon: '📖', rar: 0, max: 8, desc: '+18 % puissance des pouvoirs.', mods: { pow: 18 } },
+    { id: 'b_des1', name: 'Dé pipé', icon: '🎲', rar: 1, max: 2, desc: '+1 relance des dés par combat.', mods: { diceRerolls: 1 } },
+    { id: 'b_des2', name: 'Main lourde', icon: '🎰', rar: 2, max: 2, desc: 'Coup fort et Prudence sont 50 % plus puissants.', mods: { diceP: 50 } },
     { id: 'b_regen', name: 'Chair tenace', icon: '🌿', rar: 0, max: 5, desc: 'Régénère +0,5 % PV par seconde.', mods: { regen: 0.5 } },
     { id: 'b_sang', name: 'Soif', icon: '🧛', rar: 1, max: 5, desc: '+4 % vol de vie.', mods: { ls: 4 } },
     { id: 'b_ombre', name: 'Pas de côté', icon: '💨', rar: 1, max: 5, desc: '+6 % esquive.', mods: { dodge: 6 } },
@@ -807,6 +809,8 @@ var DATA = (function () {
     { id: 'h_orbs', name: 'Glaneur', desc: 'Ramasser 100 orbes', c: ['orbs', 100], cendres: 400 },
     { id: 'h_deflect', name: 'Retour à l’envoyeur', desc: 'Renvoyer 50 projectiles', c: ['deflect', 50], cendres: 600 },
     { id: 'h_minis', name: 'Doigts d’or', desc: 'Réussir 15 épreuves (forge, runes, crochetage)', c: ['minis', 15], cendres: 800 },
+    { id: 'h_dbl', name: 'Veinard', desc: 'Obtenir 50 doubles aux dés de combat', c: ['doubles', 50], cendres: 500 },
+    { id: 'h_score', name: 'Légende', desc: 'Atteindre 300 de score en une descente', c: ['bestScore', 300], cendres: 1500 },
     { id: 'h_primes', name: 'Chasseur de primes', desc: 'Remplir 30 primes', c: ['primes', 30], cendres: 1000 }
   ];
 
