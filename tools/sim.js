@@ -19,6 +19,7 @@ function playRun() {
     const r = S.run;
     if (r.pendingEvos > 0) { E.chooseEvo(0); continue; }
     if (r.pendingBoons > 0) { if (!r.offer) E.makeOffer(r); let bi = 0, br = -1; r.offer.forEach((id, i) => { const b = E.boonById(id); const sc = b.rar + Math.random() * 0.8 + (b.mods.atkP || b.mods.hpP ? 0.4 : 0); if (sc > br) { br = sc; bi = i; } }); E.chooseBoon(bi); continue; }
+    if (r.pendingDice > 0) { if (!r.diceOffer) E.makeDiceOffer(r); const ui = r.diceOffer.findIndex(o => o.k === 'up'); const li = r.bag.findIndex(d => d.t === 'lame' && d.f[5] < 9); if (r.bag.length >= 9 && ui >= 0 && li >= 0) E.chooseDie(ui, li); else E.chooseDie(0); continue; }
     if (r.phase === 'combat') { let n = 0; while (r.combat && !r.combat.over && n++ < 20000) { const c = r.combat; if (c.turn === 'hero') { if (!E.autoAct()) E.pass(); } else if (!E.foeStep()) simT += E.ROUND; c.events.length = 0; } if (r.combat && !r.combat.over) { r.hp = 0; r.phase = 'dead'; } continue; }
     if (r.phase === 'victory') { E.continueRun(); continue; }
     if (r.phase === 'doors') {
