@@ -42,7 +42,10 @@ var DATA = (function () {
     idleP: { n: "Cendres de l'Ossuaire", fmt: 'pct' }, startBoons: { n: 'Aubaine offerte au départ', fmt: 'flat' },
     enemyHpP: { n: 'PV des ennemis', fmt: 'pct' }, idleH: { n: "Heures de réserve de l'Ossuaire", fmt: 'flat' },
     enemyAtkP: { n: 'Attaque des ennemis', fmt: 'pct' }, ultP: { n: "Charge de l'ultime", fmt: 'pct' },
-    parryP: { n: 'Dégâts de riposte (parade)', fmt: 'pct' }, weakP: { n: 'Dégâts sur point faible', fmt: 'pct' }
+    parryP: { n: 'Dégâts de riposte (parade)', fmt: 'pct' }, weakP: { n: 'Dégâts sur point faible', fmt: 'pct' },
+    skillHeal: { n: 'Soin à chaque pouvoir lancé (% PV)', fmt: 'pct' }, stunDmg: { n: 'Dégâts aux ennemis étourdis', fmt: 'pct' },
+    statusDmg: { n: 'Dégâts aux ennemis brûlés, empoisonnés ou saignants', fmt: 'pct' }, skillEcho: { n: 'Chance de pouvoir rechargé aussitôt', fmt: 'pct' },
+    startEvo: { n: 'Éveil de pouvoir offert au départ', fmt: 'flat' }
   };
 
   // ---------- Héros ----------
@@ -198,6 +201,149 @@ var DATA = (function () {
   };
   HEROES.forEach(function (h) { h.ult = ULTS[h.id]; });
 
+  // ---------- Fiches de pouvoirs : étiquettes, conseil, et de quoi calculer les vrais chiffres ----------
+  // calc : ['dmg', multiplicateur, nombre de coups, précision] | ['heal', % PV] | ['shield', % PV] | ['hpdmg', % PV]
+  var SKILL_INFO = {
+    k1: [['Dégâts', 'Étourdit', 'Interrompt'], 'Garde-le pour un ennemi qui brille en jaune ⚠️ : il annule son gros coup.', [['dmg', 1.8]]],
+    k2: [['Gros dégâts', 'Soin'], 'Ton plus gros coup. Lance-le dès qu’il est prêt, ou quand il te manque des PV.', [['dmg', 3.5], ['heal', 10]]],
+    k3: [['Bouclier', 'Renvoi'], 'À lancer juste avant de prendre cher : boss enragé, plusieurs ennemis, PV bas.', [['shield', 30]]],
+    p1: [['Dégâts', 'Zone', 'Brûlure'], 'Vise l’ennemi le plus solide : les autres prennent quand même 90 %.', [['dmg', 2.2, 1, 'sur la cible'], ['dmg', 0.9, 1, 'sur les autres']]],
+    p2: [['Zone', 'Brûlure'], 'Parfait contre les groupes. Embrase tout le monde avant Immolation.', [['dmg', 1.7, 1, 'à chaque ennemi']]],
+    p3: [['Très gros dégâts', 'Vitesse'], 'Attends que la cible brûle 🔥 : le coup fait +60 %.', [['dmg', 4.0, 1], ['dmg', 6.4, 1, 'si la cible brûle']]],
+    a1: [['Dégâts', '3 coups'], 'Chaque coup peut être critique, donc empoisonner. À lancer dès que possible.', [['dmg', 0.85, 3]]],
+    a2: [['Esquive', 'Critique garanti'], 'Lance-le quand un ennemi va frapper fort, puis laisse le prochain coup faire mal.', []],
+    a3: [['Très gros dégâts', 'Achève'], 'Attends que la cible passe sous 35 % PV : x2,5, et rechargée si elle tue.', [['dmg', 3.0, 1], ['dmg', 7.5, 1, 'sous 35 % PV']]],
+    n1: [['Dégâts', 'Serviteur'], 'Chaque lancer ajoute un squelette. À utiliser sans attendre.', [['dmg', 2.0]]],
+    n2: [['Dégâts', 'Soin'], 'Ton soin : garde-le pour quand il te manque des PV.', [['dmg', 1.9, 1, 'et autant de PV rendus']]],
+    n3: [['Serviteurs', 'Rafale'], 'Remplit ton armée d’un coup. Idéal en début de combat de boss.', []],
+    b1: [['Dégâts', 'Saignement'], 'À lancer dès que possible : le saignement continue de faire mal.', [['dmg', 2.0]]],
+    b2: [['Vitesse', 'Vol de vie', 'Coûte des PV'], 'Tu perds 10 % PV, mais tu les regagnes vite en frappant. Évite-le si tu es presque mort.', []],
+    b3: [['Zone', 'Soin'], 'Plus il y a d’ennemis, plus il te soigne. Parfait contre les groupes.', [['dmg', 2.2, 1, 'à chaque ennemi'], ['heal', 5, 'par ennemi touché']]],
+    s1: [['Dégâts', 'Affaiblit'], 'Vise celui qui frappe le plus fort : il fera 25 % de dégâts en moins.', [['dmg', 1.9]]],
+    s2: [['Soin', 'Purifie'], 'Garde-le pour un moment difficile, ou pour enlever poison et brûlure.', [['heal', 25]]],
+    s3: [['Zone', 'Étourdit'], 'Ses dégâts dépendent de tes PV max, pas de ton attaque. Plus tu as de PV, plus ça tape.', [['hpdmg', 30, 'à chaque ennemi']]],
+    h1: [['Dégâts', 'Perce l’armure', 'Vulnérable'], 'Idéal contre les ennemis blindés. La cible subit ensuite +25 % dégâts pendant 3 s.', [['dmg', 2.3]]],
+    h2: [['Étourdit', 'Interrompt', 'Saignement'], 'Garde-le pour un ennemi qui brille en jaune ⚠️ : il annule son gros coup.', [['dmg', 1.5]]],
+    h3: [['Dégâts', '5 coups', 'Au hasard'], 'Contre un seul ennemi, les 5 carreaux sont pour lui.', [['dmg', 0.75, 5]]],
+    m1: [['Dégâts', 'Étourdit', 'Interrompt'], 'Recharge courte : sers-t’en pour casser les attaques chargées ⚠️ et protéger ton élan.', [['dmg', 1.7]]],
+    m2: [['Soin', 'Purifie', 'Élan max'], 'Te soigne et met ton élan à x10 d’un coup. Très fort en début de combat.', [['heal', 15]]],
+    m3: [['Dégâts', '6 coups', 'Élan'], 'Chaque coup fait monter l’élan. Encore plus fort quand l’élan est déjà haut.', [['dmg', 0.6, 6]]]
+  };
+
+  // ---------- Éveils de pouvoir : 2 par pouvoir. On en choisit un tous les 4 niveaux d'une descente. ----------
+  // mods = bonus pour la descente | cd = multiplicateur de recharge | fx = effets ajoutés quand le pouvoir est lancé :
+  //   again/splash (coup en plus sur la cible / sur les autres, en multiple de l'attaque), stun, burn, poison, bleed, vuln, weak (sur la cible),
+  //   stunAll, burnAll, bleedAll, vulnAll, weakAll (sur tous), heal, shield (% PV), ult (charge), spd/ls ([valeur, durée]), skel, cdOthers (s)
+  var EVOS = {
+    k1: [{ name: 'Onde de choc', desc: 'Frappe aussi les autres ennemis (90 %) et étourdit tout le monde 0,8 s.', fx: { splash: 0.9, stunAll: 0.8 } },
+      { name: 'Brise-garde', desc: '+40 % dégâts et rend la cible vulnérable 4 s (+25 % dégâts subis).', mods: { s1P: 40 }, fx: { vuln: 4 } }],
+    k2: [{ name: 'Sentence de sang', desc: 'Fait saigner la cible et te soigne de 10 % PV en plus.', fx: { bleed: 1, heal: 10 } },
+      { name: 'Marteau du juge', desc: 'Recharge 25 % plus courte et charge ton ultime.', cd: 0.75, fx: { ult: 10 } }],
+    k3: [{ name: 'Serment éternel', desc: 'Ajoute un bouclier de 15 % PV et te soigne de 8 % PV.', fx: { shield: 15, heal: 8 } },
+      { name: 'Représailles', desc: '+40 % vitesse d’attaque pendant 6 s.', fx: { spd: [40, 6] } }],
+    p1: [{ name: 'Boule jumelle', desc: 'Une seconde boule frappe la cible (110 % dégâts).', fx: { again: 1.1 } },
+      { name: 'Mèche courte', desc: 'Recharge 30 % plus courte.', cd: 0.7 }],
+    p2: [{ name: 'Onde étourdissante', desc: 'Étourdit tous les ennemis 1 s.', fx: { stunAll: 1 } },
+      { name: 'Cendres collantes', desc: 'Rend tous les ennemis vulnérables 4 s (+25 % dégâts subis).', fx: { vulnAll: 4 } }],
+    p3: [{ name: 'Phénix', desc: 'Te soigne de 12 % PV et te donne un bouclier de 10 % PV.', fx: { heal: 12, shield: 10 } },
+      { name: 'Brasier intérieur', desc: '+50 % dégâts et charge ton ultime.', mods: { s3P: 50 }, fx: { ult: 15 } }],
+    a1: [{ name: 'Lames empoisonnées', desc: 'Ajoute 2 doses de poison à la cible.', fx: { poison: 2 } },
+      { name: 'Entaille profonde', desc: 'Fait saigner la cible et la rend vulnérable 2 s.', fx: { bleed: 1, vuln: 2 } }],
+    a2: [{ name: 'Pas de l’ombre', desc: '+50 % vitesse d’attaque pendant 3 s.', fx: { spd: [50, 3] } },
+      { name: 'Sangsue d’ombre', desc: 'Te soigne de 6 % PV et donne 20 % de vol de vie pendant 4 s.', fx: { heal: 6, ls: [20, 4] } }],
+    a3: [{ name: 'Faucheuse', desc: 'Frappe aussi les autres ennemis (150 % dégâts).', fx: { splash: 1.5 } },
+      { name: 'Appétit', desc: '+40 % dégâts et charge ton ultime.', mods: { s3P: 40 }, fx: { ult: 12 } }],
+    n1: [{ name: 'Os éclatés', desc: 'Les éclats frappent aussi les autres ennemis (100 % dégâts).', fx: { splash: 1.0 } },
+      { name: 'Moelle noire', desc: 'Affaiblit la cible 4 s (-25 % attaque) et la rend vulnérable 3 s.', fx: { weak: 4, vuln: 3 } }],
+    n2: [{ name: 'Festin d’âmes', desc: 'Relève un serviteur et recharge 20 % plus courte.', cd: 0.8, fx: { skel: 1 } },
+      { name: 'Sang caillé', desc: '+30 % dégâts et te donne un bouclier de 12 % PV.', mods: { s2P: 30 }, fx: { shield: 12 } }],
+    n3: [{ name: 'Marche funèbre', desc: 'Étourdit tous les ennemis 1,5 s.', fx: { stunAll: 1.5 } },
+      { name: 'Pacte des os', desc: 'Te soigne de 15 % PV et charge ton ultime.', fx: { heal: 15, ult: 15 } }],
+    b1: [{ name: 'Double taillade', desc: 'Un second coup frappe la cible (120 % dégâts).', fx: { again: 1.2 } },
+      { name: 'Boucherie', desc: 'Frappe aussi les autres ennemis (100 %) et les fait tous saigner.', fx: { splash: 1.0, bleedAll: 1 } }],
+    b2: [{ name: 'Rage aveugle', desc: 'Rend tous les ennemis vulnérables 5 s (+25 % dégâts subis).', fx: { vulnAll: 5 } },
+      { name: 'Cuir épais', desc: 'Te donne un bouclier de 15 % PV.', fx: { shield: 15 } }],
+    b3: [{ name: 'Cyclone', desc: 'Recharge 30 % plus courte.', cd: 0.7 },
+      { name: 'Lames barbelées', desc: 'Fait saigner tous les ennemis et les étourdit 0,8 s.', fx: { bleedAll: 1, stunAll: 0.8 } }],
+    s1: [{ name: 'Jugement en chaîne', desc: 'Frappe aussi les autres ennemis (120 %) et les affaiblit tous 4 s.', fx: { splash: 1.2, weakAll: 4 } },
+      { name: 'Stigmates', desc: 'Embrase la cible et la rend vulnérable 3 s.', fx: { burn: 1, vuln: 3 } }],
+    s2: [{ name: 'Cantique', desc: 'Ajoute un bouclier de 15 % PV.', fx: { shield: 15 } },
+      { name: 'Zèle', desc: '+40 % vitesse d’attaque pendant 5 s et charge ton ultime.', fx: { spd: [40, 5], ult: 10 } }],
+    s3: [{ name: 'Châtiment éternel', desc: 'Embrase tous les ennemis et les rend vulnérables 3 s.', fx: { burnAll: 1, vulnAll: 3 } },
+      { name: 'Lumière réparatrice', desc: 'Te soigne de 12 % PV et recharge 20 % plus courte.', cd: 0.8, fx: { heal: 12 } }],
+    h1: [{ name: 'Carreau empoisonné', desc: 'Ajoute 3 doses de poison à la cible.', fx: { poison: 3 } },
+      { name: 'Ricochet', desc: 'Le carreau rebondit sur les autres ennemis (120 % dégâts).', fx: { splash: 1.2 } }],
+    h2: [{ name: 'Champ de pièges', desc: 'Étourdit tous les ennemis 1,2 s et les fait saigner.', fx: { stunAll: 1.2, bleedAll: 1 } },
+      { name: 'Piège incendiaire', desc: 'Embrase la cible et la rend vulnérable 4 s.', fx: { burn: 1, vuln: 4 } }],
+    h3: [{ name: 'Déluge', desc: 'Recharge 30 % plus courte.', cd: 0.7 },
+      { name: 'Pluie de feu', desc: 'Embrase tous les ennemis et charge ton ultime.', fx: { burnAll: 1, ult: 12 } }],
+    m1: [{ name: 'Paume vibrante', desc: '+40 % dégâts et rend la cible vulnérable 3 s.', mods: { s1P: 40 }, fx: { vuln: 3 } },
+      { name: 'Onde de choc', desc: 'Frappe aussi les autres ennemis (100 %) et étourdit tout le monde 0,5 s.', fx: { splash: 1.0, stunAll: 0.5 } }],
+    m2: [{ name: 'Peau de pierre', desc: 'Ajoute un bouclier de 15 % PV.', fx: { shield: 15 } },
+      { name: 'Second souffle', desc: '+40 % vitesse 5 s et tes deux autres pouvoirs gagnent 2 s de recharge.', fx: { spd: [40, 5], cdOthers: 2 } }],
+    m3: [{ name: 'Poings ardents', desc: 'Embrase la cible et la fait saigner.', fx: { burn: 1, bleed: 1 } },
+      { name: 'Frappe finale', desc: 'Termine par un dernier coup à 200 % dégâts.', fx: { again: 2.0 } }]
+  };
+  HEROES.forEach(function (h) {
+    h.skills.forEach(function (k) {
+      var inf = SKILL_INFO[k.id]; k.tags = inf[0]; k.tip = inf[1]; k.calc = inf[2];
+      k.evos = EVOS[k.id]; k.evos.forEach(function (v, j) { v.id = k.id + (j ? 'b' : 'a'); v.skill = k.id; });
+    });
+  });
+
+  // ---------- Ce que font les ennemis, en clair (v = valeur de la capacité) ----------
+  var AB_INFO = {
+    charge: ['⚠️', 'Attaque chargée', function () { return 'Prépare régulièrement un coup énorme (il brille en jaune). Pare-le 🤺 juste avant l’impact ou étourdis-le pour l’annuler.'; }],
+    poison: ['☠️', 'Empoisonne', function (v) { return v + ' % de chance de t’empoisonner à chaque coup : dégâts chaque seconde, et les doses se cumulent.'; }],
+    burn: ['🔥', 'Embrase', function (v) { return v + ' % de chance de t’embraser à chaque coup : dégâts chaque seconde pendant 3 s.'; }],
+    bleed: ['🩸', 'Fait saigner', function (v) { return v + ' % de chance de te faire saigner à chaque coup : dégâts chaque seconde pendant 4 s.'; }],
+    weak: ['⬇️', 'Affaiblit', function (v) { return v + ' % de chance de t’affaiblir : tu frappes 25 % moins fort pendant 4 s.'; }],
+    leech: ['🧛', 'Vampire', function () { return 'Se soigne chaque fois qu’il te blesse. Tue-le vite, ou bloque ses coups.'; }],
+    heal: ['💚', 'Soigneur', function (v) { return 'Toutes les 6 s, rend ' + v + ' % PV à l’ennemi le plus blessé. À tuer en premier.'; }],
+    shield: ['🛡️', 'Bouclier', function (v) { return 'Toutes les 10 s, se protège d’un bouclier (' + v + ' % de ses PV).'; }],
+    summon: ['📣', 'Invocateur', function () { return 'Appelle des renforts toutes les 13 s. Plus le combat dure, plus ils sont nombreux.'; }],
+    dodge: ['💨', 'Insaisissable', function (v) { return 'Esquive ' + v + ' % de tes attaques normales. Tes pouvoirs, eux, touchent toujours.'; }],
+    enrage: ['😡', 'S’enrage', function () { return 'Sous 30 % PV, il frappe 40 % plus vite et 25 % plus fort. Achève-le sans traîner.'; }],
+    explode: ['💥', 'Explosif', function () { return 'Explose en mourant et te blesse. Garde des PV ou un bouclier avant de l’achever.'; }],
+    thorns: ['🌵', 'Épines', function () { return 'Te blesse un peu chaque fois que tu le frappes.'; }]
+  };
+
+  // ---------- Lexique : tous les mots du jeu, expliqués ----------
+  var GLOSS = [
+    ['🔥', 'Brûlure', '25 % de ton attaque par seconde pendant 3 s. Relancer une brûlure la remet à 3 s.'],
+    ['☠️', 'Poison', '8 % de ton attaque par seconde et par dose, pendant 5 s. Jusqu’à 8 doses cumulées : c’est le plus fort sur les combats longs.'],
+    ['🩸', 'Saignement', '22 % de ton attaque par seconde pendant 4 s.'],
+    ['💫', 'Étourdi', 'L’ennemi ne fait plus rien. Étourdir annule aussi une attaque chargée ⚠️. Les boss restent étourdis moins longtemps.'],
+    ['🎯', 'Vulnérable', 'La cible subit +25 % de dégâts de toutes tes attaques.'],
+    ['⬇️', 'Affaibli', 'Inflige 25 % de dégâts en moins. Ça marche sur les ennemis comme sur toi.'],
+    ['🕸️', 'Entravé', 'Tu frappes 2 fois moins vite.'],
+    ['⚠️', 'Attaque chargée', 'Un ennemi qui brille en jaune prépare un coup énorme. Pare 🤺 juste avant l’impact (parade parfaite : coup annulé + riposte) ou étourdis-le.'],
+    ['🛡️', 'Bouclier', 'Des PV en plus, affichés en clair sur ta barre de vie. Ils partent avant tes vrais PV.'],
+    ['💥', 'Critique', 'Un coup critique fait 150 % de dégâts, plus tes « dégâts critiques ».'],
+    ['📖', 'Puissance des pouvoirs', 'Augmente les dégâts de tes 3 pouvoirs et de ton ultime (pas de tes attaques normales).'],
+    ['⏳', 'Recharge', 'Le temps d’attente avant de relancer un pouvoir. « Recharge plus rapide » le raccourcit.'],
+    ['🧛', 'Vol de vie', 'Une part des dégâts de tes coups te revient en PV.'],
+    ['💨', 'Esquive', 'Chance d’éviter complètement un coup.'],
+    ['🧱', 'Blocage', 'Chance de diviser par 2 les dégâts d’un coup.'],
+    ['⛰️', 'Armure', 'Réduit les dégâts des coups. Les brûlures, poisons et saignements l’ignorent.'],
+    ['🌵', 'Épines', 'Renvoie une part de ton attaque à celui qui te frappe.'],
+    ['🌟', 'Ultime', 'Ton pouvoir le plus fort. La grande barre dorée se remplit quand tu frappes, tues, encaisses et touches les points faibles.'],
+    ['✨', 'Éveil', 'Tous les 4 niveaux d’une descente, tu fais évoluer un de tes pouvoirs. Il garde son effet et en gagne un nouveau.'],
+    ['🌒', 'Aubaine', 'Un bonus choisi à chaque niveau. Il dure jusqu’à la fin de la descente.'],
+    ['🏺', 'Artefact', 'Une relique gagnée sur les élites, les boss et les arènes. Elle dure jusqu’à la fin de la descente.'],
+    ['⚖️', 'Posture', '🗡️ Assaut : +25 % dégâts, +20 % dégâts subis. 🛡️ Garde : -25 % dégâts subis, -20 % dégâts.']
+  ];
+
+  // ---------- Version et nouveautés ----------
+  var VERSION = '1.8';
+  var NEWS = [
+    ['✨', 'Éveils de pouvoir', 'Tous les 4 niveaux d’une descente, fais évoluer un de tes pouvoirs. 48 éveils, 2 par pouvoir.'],
+    ['🔎', 'Fiches de pouvoir', 'Appui long sur un pouvoir : ce qu’il fait, les vrais chiffres avec tes stats, et quand l’utiliser.'],
+    ['👹', 'Fiches d’ennemis', 'Appui long sur un ennemi (ou touche-le dans le Bestiaire) pour voir ses capacités en clair.'],
+    ['📖', 'Lexique', 'Brûlure, vulnérable, étourdi... tous les mots du jeu expliqués, dans l’Aide.'],
+    ['🎁', 'Du contenu en plus', '6 aubaines, 5 artefacts, 3 événements, 2 conditions de salle, 2 présages, 2 pouvoirs légendaires.']
+  ];
+
   // ---------- Sets d'objets (bonus à 2, 4 et 6 pièces portées). Un set par zone. ----------
   var SETS = [
     { id: 'set_fossoyeur', name: 'Ossements du Fossoyeur', short: 'du Fossoyeur', icon: '⚰️', zone: 1, bonus: { 2: { killHeal: 3, hpP: 10 }, 4: { atkP: 20, gf: 30 }, 6: { revive: 1, firstStrike: 200 } } },
@@ -218,7 +364,9 @@ var DATA = (function () {
     { id: 'o_relique', name: 'Chasse aux reliques', icon: '🏺', desc: 'Commence avec un artefact. Mais ennemis +15 % PV.', mods: { startArtifact: 1, enemyHpP: 15 } },
     { id: 'o_etoile', name: 'Étoile filante', icon: '🌠', desc: "L'ultime se charge 2 fois plus vite. Mais +15 % dégâts subis.", mods: { ultP: 100, takenP: 15 } },
     { id: 'o_grimoire', name: 'Vieux grimoire', icon: '📜', desc: '+40 % expérience. Mais -10 % attaque.', mods: { xp: 40, atkP: -10 } },
-    { id: 'o_duel', name: 'Loi du duel', icon: '🤺', desc: 'Parade : riposte +200 %. Points faibles : +100 % dégâts. Mais -10 % PV max.', mods: { parryP: 200, weakP: 100, hpP: -10 } }
+    { id: 'o_duel', name: 'Loi du duel', icon: '🤺', desc: 'Parade : riposte +200 %. Points faibles : +100 % dégâts. Mais -10 % PV max.', mods: { parryP: 200, weakP: 100, hpP: -10 } },
+    { id: 'o_eveil', name: 'Lune d’éveil', icon: '✨', desc: 'Commence avec un Éveil de pouvoir. Mais ennemis +10 % attaque.', mods: { startEvo: 1, enemyAtkP: 10 } },
+    { id: 'o_arcane', name: 'Marée arcanique', icon: '🌊', desc: '+35 % puissance des pouvoirs. Mais ils se rechargent 15 % moins vite.', mods: { pow: 35, cdr: -15 } }
   ];
 
   // ---------- Talents : 1 point par niveau de Maîtrise, 5 rangs par talent. mods = bonus par rang ----------
@@ -237,9 +385,9 @@ var DATA = (function () {
   // ---------- Préfixes de monstres (rendent les combats différents) ----------
   var MOBFIX = [
     { id: 'vamp', name: 'vampirique', ab: { leech: 70 } }, { id: 'feu', name: 'enflammé', ab: { burn: 60 } },
-    { id: 'blinde', name: 'blindé', def: 1.3, hp: 1.15 }, { id: 'rapide', name: 'rapide', int: 0.62 },
+    { id: 'blinde', name: 'blindé', def: 1.3, hp: 1.15, desc: 'Armure épaisse et un peu plus de PV. Les brûlures, poisons et saignements ignorent son armure.' }, { id: 'rapide', name: 'rapide', int: 0.62, desc: 'Attaque beaucoup plus souvent.' },
     { id: 'regen', name: 'régénérant', ab: { heal: 5 } }, { id: 'explosif', name: 'explosif', ab: { explode: 220 } },
-    { id: 'spectral', name: 'spectral', ab: { dodge: 30 } }, { id: 'geant', name: 'géant', hp: 1.8, atk: 1.2 },
+    { id: 'spectral', name: 'spectral', ab: { dodge: 30 } }, { id: 'geant', name: 'géant', hp: 1.8, atk: 1.2, desc: 'Énorme : beaucoup plus de PV et frappe plus fort.' },
     { id: 'toxique', name: 'toxique', ab: { poison: 65 } }, { id: 'maudit', name: 'maudit', ab: { weak: 55 } }
   ];
   // ---------- Conditions de salle ----------
@@ -251,7 +399,9 @@ var DATA = (function () {
     { id: 'hate', name: 'Vent de hâte', icon: '💨', desc: 'Tout le monde attaque 30 % plus vite.' },
     { id: 'or', name: "Veine d'or", icon: '💰', desc: 'Or et Cendres doublés dans cette salle.' },
     { id: 'defi', name: 'Défi du bourreau', icon: '⏱️', desc: 'Tue tout en moins de 20 secondes pour gagner un coffre bonus.' },
-    { id: 'silence', name: 'Silence', icon: '🤐', desc: 'Tes pouvoirs se rechargent 2 fois moins vite, mais ton ultime 2 fois plus vite.' }
+    { id: 'silence', name: 'Silence', icon: '🤐', desc: 'Tes pouvoirs se rechargent 2 fois moins vite, mais ton ultime 2 fois plus vite.' },
+    { id: 'echo', name: 'Écho de la crypte', icon: '🔔', desc: 'Tes pouvoirs se rechargent 40 % plus vite.' },
+    { id: 'fragile', name: 'Os fragiles', icon: '🦴', desc: 'Les ennemis commencent Vulnérables pendant 8 s (+25 % dégâts subis).' }
   ];
   // ---------- Mercenaires (un autre héros se bat à tes côtés jusqu'au prochain boss) ----------
   var ALLIES = {
@@ -264,7 +414,7 @@ var DATA = (function () {
   var CONTRACTS = [
     ['kills', 40, 'Tue 40 ennemis'], ['kills', 90, 'Tue 90 ennemis'], ['elites', 3, 'Vaincs 3 élites'], ['bosses', 1, 'Vaincs un boss'],
     ['chests', 2, 'Ouvre 2 coffres'], ['items', 8, 'Trouve 8 objets'], ['runs', 3, 'Lance 3 descentes'], ['upgrades', 3, 'Améliore 3 fois un objet'],
-    ['weak', 10, 'Touche 10 points faibles'], ['parry', 3, 'Réussis 3 parades parfaites'], ['ult', 5, 'Lance 5 ultimes'], ['fusions', 2, 'Fusionne des objets 2 fois'], ['arenes', 1, 'Gagne une arène']
+    ['weak', 10, 'Touche 10 points faibles'], ['parry', 3, 'Réussis 3 parades parfaites'], ['ult', 5, 'Lance 5 ultimes'], ['fusions', 2, 'Fusionne des objets 2 fois'], ['arenes', 1, 'Gagne une arène'], ['evos', 2, 'Choisis 2 éveils de pouvoir']
   ];
 
   // ---------- Zones et ennemis ----------
@@ -432,7 +582,8 @@ var DATA = (function () {
     { id: 'pw_frenesie', name: 'Frénésie', mods: { frenzy: 3 } }, { id: 'pw_sangsue', name: 'Sangsue', mods: { ls: 6 } },
     { id: 'pw_sablier', name: 'Sablier', mods: { cdr: 15 } }, { id: 'pw_fiole', name: 'Alchimiste', mods: { potions: 1, healP: 20 } },
     { id: 'pw_hemorragie', name: 'Hémorragie', mods: { bleedHit: 35, bleedP: 30 } }, { id: 'pw_titan', name: 'Titan', mods: { allP: 8 } },
-    { id: 'pw_duel', name: 'Duelliste', mods: { parryP: 120, block: 6 } }, { id: 'pw_zenith', name: 'Zénith', mods: { ultP: 40 } }, { id: 'pw_traque', name: 'Traque', mods: { weakP: 100 } }
+    { id: 'pw_duel', name: 'Duelliste', mods: { parryP: 120, block: 6 } }, { id: 'pw_zenith', name: 'Zénith', mods: { ultP: 40 } }, { id: 'pw_traque', name: 'Traque', mods: { weakP: 100 } },
+    { id: 'pw_rituel', name: 'Rituel', mods: { skillHeal: 2, pow: 15 } }, { id: 'pw_predateur', name: 'Prédateur', mods: { statusDmg: 25 } }
   ];
   // Objets uniques (rouges) — seulement sur les boss
   var UNIQUES = [
@@ -502,7 +653,13 @@ var DATA = (function () {
     { id: 'b_avatar', name: 'Avatar de guerre', icon: '👹', rar: 3, max: 1, desc: '+30 % dégâts infligés.', mods: { dmgP: 30 } },
     { id: 'b_bastion', name: 'Bastion', icon: '🏯', rar: 3, max: 1, desc: '-22 % dégâts subis.', mods: { takenP: -22 } },
     { id: 'b_destin', name: 'Fil du destin', icon: '🧵', rar: 3, max: 1, desc: "+1 choix à chaque aubaine et +1 relance.", mods: { boonChoices: 1, rerolls: 1 } },
-    { id: 'b_tempete', name: 'Tempête de lames', icon: '🌀', rar: 3, max: 1, desc: '+25 % vitesse et +15 % chance de frapper deux fois.', mods: { spdP: 25, echo: 15 } }
+    { id: 'b_tempete', name: 'Tempête de lames', icon: '🌀', rar: 3, max: 1, desc: '+25 % vitesse et +15 % chance de frapper deux fois.', mods: { spdP: 25, echo: 15 } },
+    { id: 'b_maitrise', name: 'Maîtrise', icon: '🎓', rar: 1, max: 3, desc: '+15 % puissance des pouvoirs, recharge 6 % plus rapide.', mods: { pow: 15, cdr: 6 } },
+    { id: 'b_rituel', name: 'Rituel', icon: '🕯️', rar: 1, max: 3, desc: 'Chaque pouvoir lancé te soigne de 2 % PV.', mods: { skillHeal: 2 } },
+    { id: 'b_opportuniste', name: 'Opportuniste', icon: '💫', rar: 1, max: 3, desc: '+40 % dégâts aux ennemis étourdis.', mods: { stunDmg: 40 } },
+    { id: 'b_predateur', name: 'Prédateur', icon: '🐺', rar: 2, max: 2, desc: '+25 % dégâts aux ennemis qui brûlent, saignent ou sont empoisonnés.', mods: { statusDmg: 25 } },
+    { id: 'b_resonance', name: 'Résonance', icon: '🔔', rar: 3, max: 1, desc: '20 % de chance qu’un pouvoir lancé soit rechargé aussitôt.', mods: { skillEcho: 20 } },
+    { id: 'b_rempart', name: 'Second rempart', icon: '🧱', rar: 2, max: 2, desc: '+8 % blocage et bouclier de 10 % PV au début de chaque combat.', mods: { block: 8, startShield: 10 } }
   ];
 
   // ---------- Artefacts (reliques de descente, uniques) ----------
@@ -540,7 +697,12 @@ var DATA = (function () {
     { id: 'r_fouet', name: 'Fouet à neuf queues', icon: '➰', desc: 'Tes attaques font saigner (+50 %), saignement +50 %.', mods: { bleedHit: 50, bleedP: 50 } },
     { id: 'r_etoile', name: 'Étoile de fer', icon: '✴️', desc: 'Chaque 4e attaque frappe tous les ennemis (+100 %).', mods: { chain: 100 } },
     { id: 'r_sceptre', name: 'Sceptre brisé', icon: '⚜️', desc: '+25 % puissance des pouvoirs, recharge 12 % plus rapide.', mods: { pow: 25, cdr: 12 } },
-    { id: 'r_tambour', name: 'Tambour de peau', icon: '🥁', desc: 'Chaque coup : +3 % vitesse (x10).', mods: { frenzy: 3 } }
+    { id: 'r_tambour', name: 'Tambour de peau', icon: '🥁', desc: 'Chaque coup : +3 % vitesse (x10).', mods: { frenzy: 3 } },
+    { id: 'r_diapason', name: 'Diapason d’os', icon: '🔔', desc: '15 % de chance qu’un pouvoir lancé soit rechargé aussitôt.', mods: { skillEcho: 15 } },
+    { id: 'r_encens', name: 'Encens noir', icon: '🕯️', desc: 'Chaque pouvoir lancé te soigne de 3 % PV. +15 % puissance.', mods: { skillHeal: 3, pow: 15 } },
+    { id: 'r_crochet', name: 'Crochet du boucher', icon: '🪝', desc: '+60 % dégâts aux ennemis étourdis.', mods: { stunDmg: 60 } },
+    { id: 'r_fiel', name: 'Fiole de fiel', icon: '🧪', desc: '+30 % dégâts aux ennemis qui brûlent, saignent ou sont empoisonnés.', mods: { statusDmg: 30 } },
+    { id: 'r_metronome', name: 'Métronome fêlé', icon: '🎼', desc: 'Pouvoirs rechargés 10 % plus vite, ultime chargé 30 % plus vite.', mods: { cdr: 10, ultP: 30 } }
   ];
 
   // ---------- Autel des Cendres (améliorations permanentes) ----------
@@ -612,7 +774,9 @@ var DATA = (function () {
     { id: 'h_forge', name: 'Forgeron', desc: 'Améliorer des objets 20 fois', c: ['upgrades', 20], cendres: 300 },
     { id: 'h_epic', name: 'Lueur violette', desc: 'Trouver 10 objets épiques', c: ['epic', 10], cendres: 400 },
     { id: 'h_runs', name: 'Habitué', desc: 'Lancer 25 descentes', c: ['runs', 25], cendres: 500 },
-    { id: 'h_heros', name: 'Compagnie maudite', desc: 'Débloquer tous les héros', c: ['heroes', 8], cendres: 5000 }
+    { id: 'h_heros', name: 'Compagnie maudite', desc: 'Débloquer tous les héros', c: ['heroes', 8], cendres: 5000 },
+    { id: 'h_evo', name: 'Éveillé', desc: 'Choisir 10 éveils de pouvoir', c: ['evos', 10], cendres: 300 },
+    { id: 'h_evo2', name: 'Grand maître', desc: 'Choisir 60 éveils de pouvoir', c: ['evos', 60], cendres: 3000 }
   ];
 
   // ---------- Événements ----------
@@ -664,7 +828,19 @@ var DATA = (function () {
         { t: 'Prendre son équipement', fx: { item: 1 }, r: 'Il ne proteste pas longtemps.' }] },
     { id: 'e_tombe', title: 'La tombe ouverte', text: 'Quelqu’un a creusé ici il y a peu. Ou quelque chose en est sorti.',
       opts: [{ t: 'Descendre fouiller', fx: { ambush: 1 }, r: '' },
-        { t: 'Reboucher par respect', fx: { cendres: 1 }, r: 'Les morts te remercient en Cendres.' }] }
+        { t: 'Reboucher par respect', fx: { cendres: 1 }, r: 'Les morts te remercient en Cendres.' }] },
+    { id: 'e_maitre', title: 'Le maître d’armes', text: 'Un fantôme en armure répète le même geste depuis cent ans. Il s’arrête et te regarde.',
+      opts: [{ t: 'S’entraîner avec lui (-15 % PV)', fx: { hpPct: -15, evo: 1 }, r: 'Il te corrige à coups de plat de lame. Un de tes pouvoirs s’éveille.' },
+        { t: 'Lui payer une leçon (60 or)', need: { gold: 60 }, fx: { gold: -60, boon: 1 }, r: 'Il t’enseigne une aubaine.' },
+        { t: 'Saluer et passer', fx: {}, r: 'Il reprend son geste.' }] },
+    { id: 'e_fontaine', title: 'La fontaine à l’envers', text: 'L’eau coule vers le plafond. Au fond du bassin, quelque chose brille.',
+      opts: [{ t: 'Boire', fx: { healPct: 40 }, r: 'Elle a un goût de pluie. +40 % PV.' },
+        { t: 'Plonger le bras', fx: { hpPct: -10, artifact: 1 }, r: 'Ça mord (-10 % PV), mais tu ressors quelque chose.' },
+        { t: 'Remplir une fiole', fx: { potion: 1 }, r: '+1 fiole.' }] },
+    { id: 'e_ossements', title: 'Le tas d’ossements', text: 'Des os bien rangés, par taille. Quelqu’un tient à l’ordre, ici.',
+      opts: [{ t: 'Fouiller sans rien ranger', fx: { item: 2, curse: 'takenP', curseV: 4 }, r: 'Tu trouves un objet. Quelqu’un est vexé (+4 % dégâts subis).' },
+        { t: 'Ranger les os tombés', fx: { cendres: 1, healPct: 10 }, r: 'Un merci glacé te traverse (+10 % PV).' },
+        { t: 'Passer', fx: {}, r: 'Rien ne bouge.' }] }
   ];
 
   var ROOMS = {
@@ -692,7 +868,8 @@ var DATA = (function () {
   return {
     RARITIES: RARITIES, MODS: MODS, HEROES: HEROES, ENEMIES: ENEMIES, ZONES: ZONES, SLOTS: SLOTS, BASES: BASES,
     SETS: SETS, OMENS: OMENS, TALENTS: TALENTS, FAMILIARS: FAMILIARS, MOBFIX: MOBFIX, CONDS: CONDS, ALLIES: ALLIES, CONTRACTS: CONTRACTS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
-    PACTS: PACTS, ACHIEVEMENTS: ACHIEVEMENTS, EVENTS: EVENTS, ROOMS: ROOMS, ALTARS: ALTARS
+    PACTS: PACTS, ACHIEVEMENTS: ACHIEVEMENTS, EVENTS: EVENTS, ROOMS: ROOMS, ALTARS: ALTARS,
+    AB_INFO: AB_INFO, GLOSS: GLOSS, VERSION: VERSION, NEWS: NEWS
   };
 })();
 if (typeof module !== 'undefined') module.exports = DATA;

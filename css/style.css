@@ -323,3 +323,27 @@ h3 { font-size: 15px; }
 /* --- v1.7 : 8 héros, boss --- */
 .roster { grid-template-columns: repeat(8, 1fr); gap: 4px; } .rh { border-radius: 8px; } .rh span { font-size: 12px; }
 .unit.en.hidden img { opacity: .18; filter: blur(1px) brightness(.6); } .unit.en.hidden .ebar { opacity: .4; }
+
+/* ---------- v1.8 : fiches de pouvoir, éveils, version ---------- */
+.skills { align-items: flex-start; padding-bottom: 2px; }
+.skb { overflow: visible; margin-bottom: 13px; }
+.skb .nm { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 2px; width: 78px; font-size: 9px; line-height: 1.1; font-weight: 600; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; pointer-events: none; }
+.skb.ready .nm { color: #e9d2a0; } .skb.locked .nm { opacity: .7; }
+.skb .ev { position: absolute; top: -5px; right: -3px; font-size: 13px; color: #ffe08a; text-shadow: 0 0 6px #d9a441, 0 1px 2px #000; pointer-events: none; letter-spacing: -2px; }
+.skb.hint { border-color: #ffd23c; box-shadow: 0 0 18px #ffb21f; animation: pulse .3s infinite alternate; }
+.skb.hint .nm { color: #ffd23c; font-weight: 800; overflow: visible; }
+.skb.potion { margin-top: 6px; } .skills .side { margin-top: 0; }
+.skb.bump { transform: scale(1.15); }
+.abi { font-size: 9px; opacity: .85; letter-spacing: -1px; }
+.tgs { display: flex; flex-wrap: wrap; gap: 4px; margin: 3px 0 2px; }
+.tgc { font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: .03em; padding: 1px 7px; border-radius: 9px; border: 1px solid #5c4a22; background: #2a2012; color: #e9c877; white-space: nowrap; }
+.skhead { display: flex; gap: 12px; align-items: center; }
+.skhead .ic { width: 58px; height: 58px; flex: none; border-radius: 50%; border: 2px solid var(--gold); background: radial-gradient(#3a2740, #1a1220); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 12px #d9a44155; }
+.skhead .ic.foe { border-radius: 12px; border-color: var(--line); box-shadow: none; } .skhead .ic.foe img { width: 52px; height: 52px; }
+.skhead b { font-size: 18px; color: var(--gold); font-family: var(--serif); }
+.nums { border-color: #5c4a22; background: #1d1810; } .nums b { font-size: 15px; color: #ffe9b8; }
+button.li.tap, button.sk.tap { width: 100%; text-align: left; } button.li.tap:active, button.sk.tap:active { filter: brightness(1.3); }
+.skills-list button.sk { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid #ffffff0d; }
+.verb { font-size: 11.5px; color: var(--gold); padding: 6px 12px; border: 1px solid #5c4a22; border-radius: 14px; background: #17110a; }
+.cdx[data-act]:not(.no) { cursor: pointer; }
+@media (max-height: 640px) { .skb .nm { font-size: 8.5px; } }

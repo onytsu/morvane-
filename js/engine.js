@@ -42,7 +42,7 @@
   function newSave() {
     var s = {
       v: 1, cendres: 0, essence: 0, hero: 'chevalier', heroes: {}, inv: [], nextUid: 1, meta: {}, pacts: [], ach: {},
-      stats: { kills: 0, deaths: 0, chests: 0, maxLvl: 0, leg: 0, uni: 0, best: 0, elites: 0, upgrades: 0, epic: 0, runs: 0, heroes: 1, weak: 0, parry: 0, ult: 0, arenes: 0, fusions: 0, maxHit: 0, maxCombo: 0, bossMax: 0, boss1: 0, boss2: 0, boss3: 0, boss4: 0, boss5: 0, boss6: 0, bosses: 0, items: 0 },
+      stats: { kills: 0, deaths: 0, chests: 0, maxLvl: 0, leg: 0, uni: 0, best: 0, elites: 0, upgrades: 0, epic: 0, runs: 0, heroes: 1, evos: 0, weak: 0, parry: 0, ult: 0, arenes: 0, fusions: 0, maxHit: 0, maxCombo: 0, bossMax: 0, boss1: 0, boss2: 0, boss3: 0, boss4: 0, boss5: 0, boss6: 0, bosses: 0, items: 0 },
       settings: { sfx: true, music: true, speed: 1, auto: false, autoSalvage: -1 },
       idleAt: Date.now(), run: null, tuto: {}, codex: {}, uniq: {}, fam: null, daily: null, pityU: 0, created: Date.now()
     };
@@ -64,7 +64,7 @@
     for (k in ref) if (S[k] === undefined) S[k] = ref[k];
     for (k in ref.stats) if (S.stats[k] === undefined) S.stats[k] = ref.stats[k];
     for (k in ref.settings) if (S.settings[k] === undefined) S.settings[k] = ref.settings[k];
-    if (S.run) { S.run.combat = null; if (S.run.phase === 'combat') E._buildCombat(S.run, true); }
+    if (S.run) { S.run.evos = S.run.evos || []; S.run.pendingEvos = S.run.pendingEvos || 0; S.run.combat = null; if (S.run.phase === 'combat') E._buildCombat(S.run, true); }
     E.S = S;
     return fresh;
   };
@@ -289,9 +289,9 @@
     st.crit = clamp(h.base.crit + (st.crit || 0), 0, 100);
     st.critd = 150 + (st.critd || 0);
     st.dodge = clamp(st.dodge || 0, 0, 60); st.block = clamp(st.block || 0, 0, 60);
-    st.cdr = clamp(st.cdr || 0, 0, 60); st.ls = clamp(st.ls || 0, 0, 40);
+    st.cdr = clamp(st.cdr || 0, -50, 60); st.ls = clamp(st.ls || 0, 0, 40);
     st.takenP = Math.max(-70, st.takenP || 0);
-    ['regen', 'pow', 'gf', 'mf', 'xp', 'thorns', 'echo', 'burnHit', 'poisonHit', 'bleedHit', 'firstStrike', 'startShield', 'killHeal', 'exec', 'chain', 'frenzy', 'revive', 'boonChoices', 'potions', 'dmgP', 'healP', 'burnP', 'poisonP', 'bleedP', 'skel', 'skelP', 's1P', 's2P', 's3P', 'vulnStart', 'rerolls', 'startGold', 'idleP', 'idleH', 'startBoons', 'enemyHpP', 'startArtifact', 'enemyAtkP', 'ultP', 'parryP', 'weakP', 'eliteW', 'noRest'].forEach(function (key) { st[key] = st[key] || 0; });
+    ['regen', 'pow', 'gf', 'mf', 'xp', 'thorns', 'echo', 'burnHit', 'poisonHit', 'bleedHit', 'firstStrike', 'startShield', 'killHeal', 'exec', 'chain', 'frenzy', 'revive', 'boonChoices', 'potions', 'dmgP', 'healP', 'burnP', 'poisonP', 'bleedP', 'skel', 'skelP', 's1P', 's2P', 's3P', 'vulnStart', 'rerolls', 'startGold', 'idleP', 'idleH', 'startBoons', 'enemyHpP', 'startArtifact', 'enemyAtkP', 'ultP', 'parryP', 'weakP', 'eliteW', 'noRest', 'skillHeal', 'stunDmg', 'statusDmg', 'skillEcho', 'startEvo'].forEach(function (key) { st[key] = st[key] || 0; });
     return st;
   };
   E.setCounts = function (heroId) { var o = {}, eq = S.heroes[heroId].equip; for (var sl in eq) { var it = E.findItem(eq[sl]); if (it && it.set) o[it.set] = (o[it.set] || 0) + 1; } return o; };
@@ -400,7 +400,7 @@
     var run = {
       hero: heroId, floor: (startZone - 1) * 10 + 1, startFloor: (startZone - 1) * 10 + 1, lvl: 1, xp: 0, gold: 0, hp: 1,
       potions: 0, potionsMax: 2, mods: {}, boons: {}, artifacts: [], rerolls: 0, revived: 0, rooms: 0, kills: 0, loot: [],
-      cendres: 0, bosses: 0, ult: 0, stance: 'n', phase: 'room', doors: [], room: null, pendingBoons: 0, offer: null, result: null, combat: null, t: 0, log: []
+      cendres: 0, bosses: 0, ult: 0, stance: 'n', phase: 'room', doors: [], room: null, pendingBoons: 0, offer: null, evos: [], pendingEvos: 0, evoOffer: null, result: null, combat: null, t: 0, log: []
     };
     S.run = run; S.hero = heroId; S.stats.runs++;
     var om = omenId ? byId(D.OMENS, omenId) : null; if (om) { add(run.mods, om.mods); run.omen = om.id; }
@@ -410,6 +410,7 @@
     if (startZone > 1) run.lvl = 1 + (startZone - 1) * 3;
     for (var i = 0; i < free; i++) { var o = offerBoons(run, 1, 0); if (o.length) applyBoon(run, o[0]); }
     if (run.stats.startArtifact) giveArtifact(run);
+    for (var ei = Math.floor(run.lvl / 4) + run.stats.startEvo; ei > 0; ei--) grantEvo(run);
     recalc(run); run.hp = run.stats.hp; run.potions = run.potionsMax; run.rerolls = run.stats.rerolls;
     enterRoom(run, 'combat');
     E.checkAch(); E.save();
@@ -435,6 +436,29 @@
     if (a.mods.potions) run.potions = Math.min(run.potionsMax, run.potions + a.mods.potions);
     return a;
   }
+  // ----- Éveils de pouvoir : un pouvoir débloqué gagne un effet en plus, pour la descente -----
+  E.evoById = function (id) { for (var i = 0; i < D.HEROES.length; i++) for (var j = 0; j < 3; j++) { var v = byId(D.HEROES[i].skills[j].evos, id); if (v) return v; } return null; };
+  E.evoSkill = function (id) { for (var i = 0; i < D.HEROES.length; i++) for (var j = 0; j < 3; j++) if (byId(D.HEROES[i].skills[j].evos, id)) return D.HEROES[i].skills[j]; return null; };
+  E.evoAvail = function (run) {
+    var out = []; E.hero(run.hero).skills.forEach(function (k, i) { if (E.skillUnlocked(run.hero, i)) k.evos.forEach(function (v) { if (run.evos.indexOf(v.id) < 0) out.push(v.id); }); });
+    return out;
+  };
+  // Donne un éveil à choisir. S'il n'en reste plus, c'est une aubaine à la place. Renvoie true si c'est bien un éveil.
+  function grantEvo(run) { if (E.evoAvail(run).length > run.pendingEvos) { run.pendingEvos++; return true; } run.pendingBoons++; return false; }
+  E.makeEvoOffer = function (run) {
+    var pool = E.evoAvail(run), out = [];
+    while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0]);
+    run.evoOffer = out; return out;
+  };
+  E.chooseEvo = function (i) {
+    var run = S.run; if (!run || run.pendingEvos <= 0) return false;
+    if (!run.evoOffer) E.makeEvoOffer(run);
+    var v = E.evoById(run.evoOffer[i]); if (!v) return false;
+    run.evos.push(v.id); if (v.mods) add(run.mods, v.mods); recalc(run);
+    run.pendingEvos--; run.evoOffer = null; S.stats.evos = (S.stats.evos || 0) + 1;
+    if (run.pendingEvos > 0) { if (E.evoAvail(run).length) E.makeEvoOffer(run); else { run.pendingBoons += run.pendingEvos; run.pendingEvos = 0; } }
+    E.checkAch(); E.save(); return v;
+  };
   E.makeOffer = function (run, bonus) { run.offer = offerBoons(run, 3 + run.stats.boonChoices, bonus || 0); return run.offer; };
   E.chooseBoon = function (i) {
     var run = S.run; if (!run || !run.offer || run.pendingBoons <= 0) return false;
@@ -446,7 +470,7 @@
   E.xpNeed = function (lvl) { return 14 + 3.5 * lvl; };
   function gainXp(run, amount) {
     amount = amount * (1 + run.stats.xp / 100); run.xp += amount; var ups = 0;
-    while (run.xp >= E.xpNeed(run.lvl)) { run.xp -= E.xpNeed(run.lvl); run.lvl++; ups++; run.pendingBoons++; }
+    while (run.xp >= E.xpNeed(run.lvl)) { run.xp -= E.xpNeed(run.lvl); run.lvl++; ups++; run.pendingBoons++; if (run.lvl % 4 === 0) grantEvo(run); }
     if (ups) { recalc(run); heal(run, run.stats.hp * 0.15 * ups, true); if (run.lvl > S.stats.maxLvl) S.stats.maxLvl = run.lvl; }
     return ups;
   }
@@ -521,7 +545,7 @@
     }
   }
   E.chooseDoor = function (i) {
-    var run = S.run; if (!run || run.phase !== 'doors' || run.pendingBoons > 0) return false;
+    var run = S.run; if (!run || run.phase !== 'doors' || run.pendingBoons > 0 || run.pendingEvos > 0) return false;
     var t = run.doors[i]; if (!t) return false;
     run.floor++; enterRoom(run, t); E.save(); return true;
   };
@@ -529,7 +553,7 @@
     run.rooms++;
     if (run.floor > S.stats.best) S.stats.best = run.floor;
     recalc(run);
-    run.doors = genDoors(run); run.phase = 'doors'; if (run.pendingBoons > 0 && !run.offer) E.makeOffer(run);
+    run.doors = genDoors(run); run.phase = 'doors'; if (run.pendingEvos > 0 && !run.evoOffer) E.makeEvoOffer(run); if (run.pendingBoons > 0 && !run.offer) E.makeOffer(run);
     E.checkAch(); E.save();
   }
   E.continueRun = function () { var run = S.run; if (run && run.phase === 'victory') { toDoors(run); return true; } return false; };
@@ -581,6 +605,8 @@
       if (fx.atkP) { add(run.mods, { atkP: fx.atkP }); recalc(run); }
       if (fx.curse) { var cm = {}; cm[fx.curse] = fx.curseV; add(run.mods, cm); recalc(run); }
       if (fx.boon) { run.pendingBoons += fx.boon; }
+      if (fx.evo) { if (!grantEvo(run)) txt = 'Tes pouvoirs n’ont plus rien à apprendre : tu reçois une aubaine à la place.'; }
+      if (fx.potion) run.potions = Math.min(run.potionsMax, run.potions + fx.potion);
       if (fx.artifact) { var ar = giveArtifact(run); if (ar) txt += ' (' + ar.name + ')'; }
       if (fx.item != null) { var g = dropItem(run, 'chest', fx.item); txt += ' (' + E.itemName(g.item) + ')'; r.gotItem = g.item.uid; }
       if (fx.cendres) { var cg = Math.ceil(15 * Math.pow(GROW.cend, run.floor)); S.cendres += cg; run.cendres += cg; txt += ' +' + E.fmt(cg) + ' Cendres.'; }
@@ -624,7 +650,7 @@
       hero: { maxhp: st.hp, shield: st.startShield ? st.hp * st.startShield / 100 : 0, shieldT: st.startShield ? 999 : 0, atkT: 0.6, cds: [1.5, 3, 5], st: {}, buffs: {}, parryT: 0, parryCd: 0, invuln: 0, frenzy: 0, hits: 0, first: true, skel: run.hero === 'necro' ? 1 : 0, skelT: 1, nextCrit: false },
       enemies: []
     };
-    r.group.forEach(function (k) { var e = mkEnemy(run, k, n >= 3 ? 0.8 : 1); e.id = c.nextId++; if (st.vulnStart) e.st.vuln = st.vulnStart; c.enemies.push(e); });
+    r.group.forEach(function (k) { var e = mkEnemy(run, k, n >= 3 ? 0.8 : 1); e.id = c.nextId++; if (st.vulnStart) e.st.vuln = st.vulnStart; if (c.cond === 'fragile') e.st.vuln = Math.max(e.st.vuln || 0, 8); c.enemies.push(e); });
     run.combat = c;
     c.events.push({ k: r.type === 'boss' ? 'boss' : 'start' });
   };
@@ -657,6 +683,8 @@
     if (run.hero === 'moine') dmg *= 1 + 0.04 * (h.elan || 0);
     if (h.st.weak > 0) dmg *= 0.75;
     if (e.st.vuln > 0) dmg *= 1.25;
+    if (!o.dot && st.stunDmg && e.st.stun > 0) dmg *= 1 + st.stunDmg / 100;
+    if (!o.dot && st.statusDmg && (e.st.burn || e.st.poison || e.st.bleed)) dmg *= 1 + st.statusDmg / 100;
     if (run.stance === 'a') dmg *= 1.25; else if (run.stance === 'd') dmg *= 0.8;
     if (o.ult) dmg *= 1 + st.pow / 100;
     if (c.cond === 'sang') dmg *= 1.4;
@@ -770,7 +798,54 @@
     if (st.chain && h.hits % 4 === 0) { alive(c).forEach(function (x) { hit(run, c, x, st.chain / 100, { noCrit: true, dot: 'chain' }); }); ev(c, { k: 'chain' }); }
     if (st.frenzy && h.frenzy < 10) h.frenzy++;
   }
-  E.skillCd = function (run, i) { var sk = E.hero(run.hero).skills[i]; return sk.cd * (1 - run.stats.cdr / 100); };
+  E.skillCd = function (run, i) {
+    var sk = E.hero(run.hero).skills[i], cd = sk.cd * (1 - run.stats.cdr / 100);
+    if (run.evos) sk.evos.forEach(function (v) { if (v.cd && run.evos.indexOf(v.id) >= 0) cd *= v.cd; });
+    return cd;
+  };
+  // Effets ajoutés par les éveils quand le pouvoir i est lancé (e = cible visée au moment du lancer)
+  function evoFx(run, c, i, e) {
+    var sk = E.hero(run.hero).skills[i], h = c.hero, st = run.stats;
+    if (!run.evos || !run.evos.length) return;
+    sk.evos.forEach(function (v) {
+      if (!v.fx || run.evos.indexOf(v.id) < 0) return; var f = v.fx, tg;
+      function each(fn) { alive(c).forEach(fn); }
+      if (!c.over) {
+        if (f.again) { tg = e && !e.dead ? e : target(c); if (tg) hit(run, c, tg, f.again, { skill: i + 1 }); }
+        if (f.splash) alive(c).filter(function (x) { return x !== e; }).forEach(function (x) { hit(run, c, x, f.splash, { skill: i + 1 }); });
+        tg = e && !e.dead ? e : null;
+        if (tg) {
+          if (f.burn) applyDot(run, tg, 'burn'); if (f.bleed) applyDot(run, tg, 'bleed');
+          for (var n = 0; n < (f.poison || 0); n++) applyDot(run, tg, 'poison');
+          if (f.vuln) tg.st.vuln = Math.max(tg.st.vuln || 0, f.vuln); if (f.weak) tg.st.weak = Math.max(tg.st.weak || 0, f.weak);
+          if (f.stun) stun(c, tg, f.stun);
+        }
+        if (f.burnAll) each(function (x) { applyDot(run, x, 'burn'); }); if (f.bleedAll) each(function (x) { applyDot(run, x, 'bleed'); });
+        if (f.vulnAll) each(function (x) { x.st.vuln = Math.max(x.st.vuln || 0, f.vulnAll); }); if (f.weakAll) each(function (x) { x.st.weak = Math.max(x.st.weak || 0, f.weakAll); });
+        if (f.stunAll) each(function (x) { stun(c, x, f.stunAll); });
+      }
+      if (f.heal) heroHeal(run, c, st.hp * f.heal / 100);
+      if (f.shield) { h.shield = Math.min(st.hp * 0.6, h.shield + st.hp * f.shield / 100); h.shieldT = Math.max(h.shieldT, 6); }
+      if (f.ult) ug(run, f.ult);
+      if (f.spd) h.buffs.spd = { t: Math.max(f.spd[1], h.buffs.spd ? h.buffs.spd.t : 0), v: Math.max(f.spd[0], h.buffs.spd ? h.buffs.spd.v : 0) };
+      if (f.ls) h.buffs.ls = { t: Math.max(f.ls[1], h.buffs.ls ? h.buffs.ls.t : 0), v: Math.max(f.ls[0], h.buffs.ls ? h.buffs.ls.v : 0) };
+      if (f.skel) h.skel = Math.min(3 + st.skel, h.skel + f.skel);
+      if (f.cdOthers) for (var j = 0; j < 3; j++) if (j !== i && h.cds[j] > 0) h.cds[j] = Math.max(0, h.cds[j] - f.cdOthers);
+      ev(c, { k: 'evo', name: v.name });
+    });
+  }
+  // Les vrais chiffres d'un pouvoir avec les stats actuelles (run facultatif). Renvoie une liste de textes.
+  E.skillNumbers = function (heroId, i, run) {
+    var sk = E.hero(heroId).skills[i], st = run ? run.stats : E.heroStats(heroId, null), out = [];
+    var dm = (1 + st.pow / 100) * (1 + (st['s' + (i + 1) + 'P'] || 0) / 100) * (1 + st.dmgP / 100);
+    (sk.calc || []).forEach(function (c) {
+      if (c[0] === 'dmg') out.push('≈ ' + E.fmt(st.atk * c[1] * dm) + ' dégâts' + (c[2] > 1 ? ' × ' + c[2] + ' coups' : '') + (c[3] ? ' ' + c[3] : ''));
+      else if (c[0] === 'hpdmg') out.push('≈ ' + E.fmt(st.hp * c[1] / 100 * dm) + ' dégâts' + (c[2] ? ' ' + c[2] : ''));
+      else if (c[0] === 'heal') out.push('soin ≈ ' + E.fmt(st.hp * c[1] / 100 * Math.max(0.1, 1 + st.healP / 100)) + ' PV' + (c[2] ? ' ' + c[2] : ''));
+      else if (c[0] === 'shield') out.push('bouclier ≈ ' + E.fmt(st.hp * c[1] / 100 * (1 + st.pow / 200)) + ' PV');
+    });
+    return out;
+  };
   E.useSkill = function (i) {
     var run = S.run, c = run && run.combat; if (!c || c.over) return false;
     var h = c.hero, st = run.stats; if (h.cds[i] > 0 || !E.skillUnlocked(run.hero, i)) return false;
@@ -804,6 +879,9 @@
       case 's2': heroHeal(run, c, st.hp * 0.25 * (1 + st.pow / 200)); delete h.st.poison; delete h.st.burn; delete h.st.bleed; delete h.st.weak; break;
       case 's3': all.forEach(function (x) { hit(run, c, x, 0, { skill: 3, flat: st.hp * 0.30, noCrit: true }); stun(c, x, 1); }); break;
     }
+    evoFx(run, c, i, e);
+    if (st.skillHeal) heroHeal(run, c, st.hp * st.skillHeal / 100);
+    if (st.skillEcho && h.cds[i] > 0.5 && rnd() * 100 < st.skillEcho) { h.cds[i] = 0.5; ev(c, { k: 'free', i: i }); }
     if (c.over) finish(run, c);
     return true;
   };
@@ -885,7 +963,7 @@
     });
     if (h.st.weak > 0) h.st.weak -= dt; if (h.st.slow > 0) h.st.slow -= dt;
     if (c.over) return finish(run, c);
-    for (i = 0; i < 3; i++) if (h.cds[i] > 0) h.cds[i] -= dt * (c.cond === 'silence' ? 0.5 : 1);
+    for (i = 0; i < 3; i++) if (h.cds[i] > 0) h.cds[i] -= dt * (c.cond === 'silence' ? 0.5 : c.cond === 'echo' ? 1.4 : 1);
     if (h.parryT > 0) h.parryT -= dt; if (h.parryCd > 0) h.parryCd -= dt; if (h.invuln > 0) h.invuln -= dt;
     if (c.weak) { c.weak.t -= dt; var we = null; c.enemies.forEach(function (x) { if (x.id === c.weak.id) we = x; }); if (c.weak.t <= 0 || !we || we.dead) { c.weak = null; c.weakT = rf(5, 9); } }
     else { c.weakT -= dt * (c.cond === 'tenebres' ? 2 : 1) * (run.hero === 'chasseuse' ? 2 : 1); if (c.weakT <= 0) { var al0 = alive(c); if (al0.length) { c.weak = { id: pick(al0).id, t: 2.6 }; ev(c, { k: 'weak', id: c.weak.id }); } } }
