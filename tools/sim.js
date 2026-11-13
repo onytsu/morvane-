@@ -22,7 +22,7 @@ function playRun() {
     if (r.phase === 'victory') { E.continueRun(); continue; }
     if (r.phase === 'doors') {
       const frac = r.hp / r.stats.hp; let ch = 0, best = -1;
-      r.doors.forEach((t, i) => { let sc = { combat: 5, elite: frac > 0.7 ? 7 : 1, tresor: 6, marchand: r.gold >= 70 ? 6 : 2, repos: frac < 0.6 ? 9 : 3, autel: 4, event: 5, boss: 9 }[t]; if (sc > best) { best = sc; ch = i; } });
+      r.doors.forEach((t, i) => { let sc = { combat: 5, elite: frac > 0.7 ? 7 : 1, tresor: 6, forge: 6, runes: 6, roue: 5, marchand: r.gold >= 70 ? 6 : 2, repos: frac < 0.6 ? 9 : 3, autel: 4, event: 5, boss: 9 }[t]; if (sc > best) { best = sc; ch = i; } });
       E.chooseDoor(ch); continue;
     }
     if (r.phase === 'room') {
@@ -32,6 +32,9 @@ function playRun() {
       else if (t === 'repos') E.roomAction(r.hp < r.stats.hp * 0.65 ? 'heal' : 'sharpen');
       else if (t === 'autel') E.roomAction(Math.random() < 0.5 ? 'take' : 'skip', 0);
       else if (t === 'mercenaire') { if (E.roomAction('hire', 0) === false) E.roomAction('leave'); }
+      else if (t === 'forge') E.roomAction('forge', 2 + Math.floor(Math.random() * 3));
+      else if (t === 'runes') E.roomAction('runes', 1 + Math.floor(Math.random() * 2));
+      else if (t === 'roue') { E.roomAction('spin'); E.roomAction('leave'); }
       else if (t === 'event') { const ev = E.byId(D.EVENTS, r.room.event); let i = Math.floor(Math.random() * ev.opts.length); if (E.roomAction('opt', i) === false) E.roomAction('opt', ev.opts.length - 1); }
       continue;
     }
