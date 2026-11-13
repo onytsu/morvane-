@@ -1,4 +1,5 @@
 // Robot de test : joue N descentes à la suite sur un même compte et affiche la progression.
+// (v3.0 : les combats sont joués tour par tour avec ENGINE.autoAct / ENGINE.foeStep)
 // node tools/sim.js [descentes] [comptes] [hero|all]
 const D = require('../js/data.js');
 globalThis.DATA = D;
@@ -18,11 +19,11 @@ function playRun() {
     const r = S.run;
     if (r.pendingEvos > 0) { E.chooseEvo(0); continue; }
     if (r.pendingBoons > 0) { if (!r.offer) E.makeOffer(r); let bi = 0, br = -1; r.offer.forEach((id, i) => { const b = E.boonById(id); const sc = b.rar + Math.random() * 0.8 + (b.mods.atkP || b.mods.hpP ? 0.4 : 0); if (sc > br) { br = sc; bi = i; } }); E.chooseBoon(bi); continue; }
-    if (r.phase === 'combat') { let n = 0; while (r.combat && !r.combat.over && n++ < 20000) { E.tick(0.1); simT += 0.1; r.combat.events.length = 0; } if (r.combat && !r.combat.over) { r.hp = 0; r.phase = 'dead'; } continue; }
+    if (r.phase === 'combat') { let n = 0; while (r.combat && !r.combat.over && n++ < 20000) { const c = r.combat; if (c.turn === 'hero') { if (!E.autoAct()) E.pass(); } else if (!E.foeStep()) simT += E.ROUND; c.events.length = 0; } if (r.combat && !r.combat.over) { r.hp = 0; r.phase = 'dead'; } continue; }
     if (r.phase === 'victory') { E.continueRun(); continue; }
     if (r.phase === 'doors') {
       const frac = r.hp / r.stats.hp; let ch = 0, best = -1;
-      r.doors.forEach((t, i) => { let sc = { combat: 5, elite: frac > 0.7 ? 7 : 1, tresor: 6, forge: 6, runes: 6, roue: 5, marchand: r.gold >= 70 ? 6 : 2, repos: frac < 0.6 ? 9 : 3, autel: 4, event: 5, boss: 9 }[t]; if (sc > best) { best = sc; ch = i; } });
+      r.doors.forEach((t, i) => { let sc = { combat: 5, elite: frac > 0.7 ? 7 : 1, bourse: 6, fontaine: frac < 0.8 ? 7 : 4, piege: 0.5, tresor: 6, forge: 6, runes: 6, roue: 5, marchand: r.gold >= 70 ? 6 : 2, repos: frac < 0.6 ? 9 : 3, autel: 4, event: 5, boss: 9 }[t]; if (sc > best) { best = sc; ch = i; } });
       E.chooseDoor(ch); continue;
     }
     if (r.phase === 'room') {

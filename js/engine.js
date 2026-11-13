@@ -64,7 +64,7 @@
     for (k in ref) if (S[k] === undefined) S[k] = ref[k];
     for (k in ref.stats) if (S.stats[k] === undefined) S.stats[k] = ref.stats[k];
     for (k in ref.settings) if (S.settings[k] === undefined) S.settings[k] = ref.settings[k];
-    if (S.run) { S.run.evos = S.run.evos || []; S.run.pendingEvos = S.run.pendingEvos || 0; S.run.cnt = S.run.cnt || {}; S.run.primeLog = S.run.primeLog || []; if (!S.run.primes) { S.run.primes = []; rollPrimes(S.run); } S.run.combat = null; if (S.run.phase === 'combat') E._buildCombat(S.run, true); }
+    if (S.run) { S.run.evos = S.run.evos || []; S.run.pendingEvos = S.run.pendingEvos || 0; S.run.cnt = S.run.cnt || {}; S.run.primeLog = S.run.primeLog || []; if (!S.run.primes) { S.run.primes = []; rollPrimes(S.run); } if (!S.run.board) { recalc(S.run); genBoard(S.run, Math.floor((S.run.floor - 1) / 10) * 10, S.run.floor % 10 === 0 ? CELLS + 1 : ((S.run.floor - 1) % 10) * 4 + 1); if (S.run.phase === 'doors') rollDice(S.run); } S.run.combat = null; if (S.run.phase === 'combat') E._buildCombat(S.run, true); }
     E.S = S;
     return fresh;
   };
@@ -413,6 +413,7 @@
     for (var ei = Math.floor(run.lvl / 4) + run.stats.startEvo; ei > 0; ei--) grantEvo(run);
     recalc(run); run.hp = run.stats.hp; run.potions = run.potionsMax; run.rerolls = run.stats.rerolls;
     rollPrimes(run);
+    genBoard(run, (startZone - 1) * 10, 1);
     enterRoom(run, 'combat');
     E.checkAch(); E.save();
     return run;
@@ -520,16 +521,30 @@
     return run.hp - before;
   }
 
-  function genDoors(run) {
-    var next = run.floor + 1, pos = ((next - 1) % 10) + 1;
-    if (pos === 10) return ['boss'];
-    var w = { combat: 50, elite: (next - run.startFloor) < 2 ? 0 : 13 * (run.stats.eliteW ? 3 : 1), tresor: 6, marchand: run.gold >= 40 ? 10 : 4, repos: run.stats.noRest ? 0 : run.hp < run.stats.hp * 0.6 ? 14 : 7, autel: 6, event: 10, mercenaire: (run.ally || next - run.startFloor < 3) ? 0 : 6, arene: next - run.startFloor < 4 ? 0 : 5, forge: 7, runes: 7, roue: 6 };
-    if (run.lastRoom && w[run.lastRoom] && run.lastRoom !== 'combat') w[run.lastRoom] *= 0.25;
-    var types = Object.keys(w).filter(function (k) { return w[k] > 0; }), n = rnd() < 0.35 ? 3 : 2, out = [];
-    while (out.length < n) { var t = wpick(types, function (k) { return w[k]; }); if (out.indexOf(t) < 0) out.push(t); }
-    if (out.indexOf('combat') < 0 && out.indexOf('elite') < 0 && out.indexOf('arene') < 0) out[0] = 'combat';
-    if (pos === 9 && out.indexOf('repos') < 0 && out.indexOf('marchand') < 0) out[out.length - 1] = rnd() < 0.6 && !run.stats.noRest ? 'repos' : 'marchand';
-    return out;
+  // ----- Plateau : chaque zone est un chemin de 36 cases, puis la case du boss. 4 cases = 1 étage. -----
+  var CELLS = 36; E.CELLS = CELLS;
+  function genBoard(run, base, pos) {
+    var cells = ['start'], prev = 'combat', i;
+    for (i = 1; i <= CELLS; i++) {
+      var w = { combat: 44, elite: i <= 8 ? 0 : 10 * (run.stats.eliteW ? 3 : 1), tresor: 6, marchand: 6, repos: run.stats.noRest ? 0 : 6, autel: 5, event: 9, mercenaire: i <= 10 ? 0 : 4, arene: i <= 16 ? 0 : 4, forge: 6, runes: 6, roue: 5, bourse: 6, piege: 6, fontaine: 3 };
+      if (prev !== 'combat') { w[prev] *= 0.1; w.combat *= 1.5; }
+      var types = Object.keys(w).filter(function (k) { return w[k] > 0; });
+      var t = i <= 2 ? 'combat' : wpick(types, function (k) { return w[k]; });
+      cells.push(t); prev = t;
+    }
+    // un marchand et un feu de camp à portée avant le boss
+    if (cells.slice(31).indexOf('marchand') < 0) cells[33] = 'marchand';
+    if (!run.stats.noRest && cells.slice(31).indexOf('repos') < 0) cells[35] = 'repos';
+    cells.push('boss');
+    run.board = { cells: cells, pos: pos || 0, base: base };
+  }
+  function floorAt(run, pos) { return run.board.base + (pos > CELLS ? 10 : Math.max(1, Math.ceil(pos / 4))); }
+  E.floorAt = function (pos) { return floorAt(S.run, pos); };
+  // Deux dés : chacun donne une case d'arrivée, à toi de choisir. Un double ne laisse qu'un choix, mais rapporte.
+  function rollDice(run) {
+    var b = run.board, d = [ri(1, 6), ri(1, 6)], moves = [];
+    d.forEach(function (v) { var to = Math.min(CELLS + 1, b.pos + v); if (!moves.some(function (m) { return m.to === to; })) moves.push({ d: v, to: to, type: b.cells[to] }); });
+    run.dice = d; run.moves = moves; run.doors = moves.map(function (m) { return m.type; });
   }
   function enemyGroup(run, type) {
     var z = E.zoneOf(run.floor), pos = ((run.floor - 1) % 10) + 1;
@@ -551,13 +566,20 @@
     return g;
   }
   function enterRoom(run, type) {
-    run.room = { type: type }; run.result = null; run.lastRoom = type;
+    run.room = { type: type }; run.result = null;
     var r = run.room, z = E.zoneOf(run.floor), pm = 1 + 0.12 * (E.zoneNum(run.floor) - 1);
     if (type === 'combat' || type === 'elite' || type === 'boss' || type === 'arene') {
       if (type === 'arene') { r.waves = 3; r.wave = 1; }
       r.group = enemyGroup(run, type === 'arene' ? 'wave' : type);
       if ((type === 'combat' || type === 'elite') && run.floor >= 3 && rnd() < 0.3) r.cond = pick(D.CONDS).id;
       run.hpEntry = run.hp; run.phase = 'combat'; E._buildCombat(run); return;
+    }
+    // cases à effet immédiat : on rejoue aussitôt
+    if (type === 'bourse' || type === 'piege' || type === 'fontaine') {
+      if (type === 'bourse') { var bg = Math.round(ri(18, 30) * (1 + 0.15 * (E.zoneNum(run.floor) - 1)) * (1 + run.stats.gf / 100)); run.gold += bg; run.note = '💰 <b>Bourse oubliée</b> : +' + bg + ' or.'; }
+      else if (type === 'piege') { var pd = Math.min(run.hp - 1, run.stats.hp * 0.1); run.hp -= pd; run.note = '🕳️ <b>Piège !</b> -' + E.fmt(Math.ceil(pd)) + ' PV.'; }
+      else { var fh = heal(run, run.stats.hp * 0.15, true); run.note = '⛲ <b>Fontaine</b> : +' + E.fmt(Math.ceil(fh)) + ' PV.'; }
+      toDoors(run, true); return;
     }
     run.phase = 'room';
     if (type === 'tresor') {
@@ -587,13 +609,19 @@
   E.chooseDoor = function (i) {
     var run = S.run; if (!run || run.phase !== 'doors' || run.pendingBoons > 0 || run.pendingEvos > 0) return false;
     var t = run.doors[i]; if (!t) return false;
-    run.floor++; enterRoom(run, t); E.save(); return true;
+    var m = run.moves[i], dbl = run.dice[0] === run.dice[1];
+    run.board.pos = m.to; run.floor = floorAt(run, m.to); run.note = null;
+    if (dbl) { run.ult = Math.min(100, (run.ult || 0) + 25); run.gold += 10; }
+    enterRoom(run, t);
+    if (dbl) run.note = '🎲 <b>Double !</b> +25 % d’ultime et +10 or.' + (run.note ? '<br>' + run.note : '');
+    E.save(); return true;
   };
-  function toDoors(run) {
-    run.rooms++;
+  function toDoors(run, instant) {
+    if (!instant) run.rooms++;
     if (run.floor > S.stats.best) S.stats.best = run.floor;
     recalc(run);
-    run.doors = genDoors(run); run.phase = 'doors'; if (run.pendingEvos > 0 && !run.evoOffer) E.makeEvoOffer(run); if (run.pendingBoons > 0 && !run.offer) E.makeOffer(run);
+    if (!run.board || run.board.pos > CELLS) genBoard(run, Math.floor(run.floor / 10) * 10, 0);
+    rollDice(run); run.phase = 'doors'; if (run.pendingEvos > 0 && !run.evoOffer) E.makeEvoOffer(run); if (run.pendingBoons > 0 && !run.offer) E.makeOffer(run);
     E.checkAch(); E.save();
   }
   E.continueRun = function () { var run = S.run; if (run && run.phase === 'victory') { toDoors(run); return true; } return false; };
@@ -726,13 +754,43 @@
     if (restore) run.hp = run.hpEntry || run.hp;
     var r = run.room, st = run.stats, n = r.group.length;
     var c = {
-      t: 0, over: false, win: false, boss: r.type === 'boss', cond: r.cond || null, events: [], target: 0, nextId: 1, weak: null, weakT: 4 + rnd() * 3, drops: [], gold: 0, cendres: 0, xp: 0, kills: 0, orbs: [], shots: [], shotT: rf(4, 7), nextSid: 1,
-      hero: { maxhp: st.hp, shield: st.startShield ? st.hp * st.startShield / 100 : 0, shieldT: st.startShield ? 999 : 0, atkT: 0.6, cds: [1.5, 3, 5], st: {}, buffs: {}, parryT: 0, parryCd: 0, invuln: 0, frenzy: 0, hits: 0, first: true, skel: run.hero === 'necro' ? 1 : 0, skelT: 1, nextCrit: false },
+      t: 0, over: false, win: false, boss: r.type === 'boss', cond: r.cond || null, events: [], target: 0, nextId: 1, weak: null, weakT: 4 + rnd() * 3, drops: [], gold: 0, cendres: 0, xp: 0, kills: 0, orbs: [], shots: [], shotT: rf(2, 6), nextSid: 1,
+      hero: { maxhp: st.hp, shield: st.startShield ? st.hp * st.startShield / 100 : 0, shieldT: st.startShield ? 999 : 0, acc: 0, ap: AP, cds: [0, 2, 4], st: {}, buffs: {}, parryT: 0, parryCd: 0, invuln: 0, frenzy: 0, hits: 0, first: true, skel: run.hero === 'necro' ? 1 : 0, skelT: 1, nextCrit: false },
       enemies: []
     };
     r.group.forEach(function (k) { var e = mkEnemy(run, k, n >= 3 ? 0.8 : 1); e.id = c.nextId++; if (st.vulnStart) e.st.vuln = st.vulnStart; if (c.cond === 'fragile') e.st.vuln = Math.max(e.st.vuln || 0, 8); c.enemies.push(e); });
     run.combat = c;
-    c.events.push({ k: r.type === 'boss' ? 'boss' : 'start' });
+    c.turn = 'hero'; c.round = 1; c.qi = 0;
+    c.events.push({ k: r.type === 'boss' ? 'boss' : 'start' }); c.events.push({ k: 'pturn', n: 1 });
+  };
+  // ----- Tour par tour. Un tour vaut ROUND secondes de l'ancien temps réel : les durées et recharges restent écrites en secondes. -----
+  var ROUND = 2, AP = 2; E.ROUND = ROUND; E.AP = AP;
+  E.turns = function (sec) { return Math.max(1, Math.ceil(sec / ROUND - 1e-9)); };
+  function canAct(c) { return !!c && !c.over && c.turn === 'hero' && c.hero.ap > 0; }
+  // Dépense une action. À zéro, la main passe aux ennemis.
+  function spend(run, c) {
+    c.hero.ap--; if (c.over) return;
+    if (c.hero.ap <= 0) beginFoes(run, c);
+  }
+  function beginFoes(run, c) {
+    var h = c.hero, st = run.stats, n;
+    c.turn = 'foes'; c.qi = 0; h.ap = 0;
+    // serviteurs et mercenaire jouent à la fin de ton tour
+    if (h.skel > 0 && !c.over) { n = h.buffs.skelF ? 6 : 2; var te = target(c); if (te) { hit(run, c, te, 0.35 * h.skel * n * (1 + st.skelP / 100), { noCrit: true, dot: 'skel' }); ev(c, { k: 'skel' }); } }
+    if (run.ally && !c.over) { h.allyT = (h.allyT == null ? 0 : h.allyT) + ROUND; n = 0; while (h.allyT >= 1.3 && !c.over && n++ < 3) { h.allyT -= 1.3; allyAct(run, c); } }
+    if (c.over) finish(run, c);
+  }
+  E.pass = function () { var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero') return false; beginFoes(run, c); return true; };
+  // Frappe : une action. Le nombre de coups dépend de la vitesse d'attaque (1 coup à vitesse 1).
+  E.strike = function () {
+    var run = S.run, c = run && run.combat; if (!canAct(c)) return false;
+    var st = run.stats, h = c.hero, slow = h.st.slow > 0;
+    var spd = (slow ? 0.5 : 1) * (c.cond === 'hate' ? 1.3 : 1) * st.spd * (1 + (h.buffs.spd ? h.buffs.spd.v : 0) / 100) * (1 + st.frenzy * h.frenzy / 100);
+    h.acc += spd; var n = Math.floor(h.acc + 1e-9); if (n < 1 && !slow) n = 1; h.acc = Math.max(0, h.acc - n); n = Math.min(n, 4);
+    if (!n) ev(c, { k: 'slowed' });
+    while (n-- > 0 && !c.over) heroAttack(run, c);
+    if (c.over) finish(run, c);
+    spend(run, c); return true;
   };
   function ev(c, o) { if (c.events.length < 200) c.events.push(o); }
   function alive(c) { return c.enemies.filter(function (e) { return !e.dead; }); }
@@ -823,7 +881,7 @@
     if (!alive(c).length) endOrWave(run, c);
   }
   // ----- Orbes : tombent des ennemis vaincus, à ramasser du doigt avant qu'elles ne s'éteignent -----
-  var ORB_LIFE = 6;
+  var ORB_LIFE = 3 * ROUND;
   function spawnOrb(run, c, e) {
     if (c.orbs.length >= 6) return;
     var low = run.hp / run.stats.hp < 0.6, kinds = ['gold', 'heal', 'ult', 'fury'], w = { gold: 40, heal: low ? 45 : 20, ult: 25, fury: 12 };
@@ -849,37 +907,37 @@
   };
   // ----- Projectiles : un ennemi lance un crâne maudit. Le toucher du doigt le renvoie à l'expéditeur. -----
   E.deflect = function (sid) {
-    var run = S.run, c = run && run.combat; if (!c || c.over) return false;
+    var run = S.run, c = run && run.combat; if (!canAct(c)) return false;
     for (var i = 0; i < c.shots.length; i++) if (c.shots[i].sid === sid) {
       var s = c.shots.splice(i, 1)[0], th = null; c.enemies.forEach(function (x) { if (x.id === s.from) th = x; });
       S.stats.deflect = (S.stats.deflect || 0) + 1; bump(run, 'deflect'); ug(run, 6);
       ev(c, { k: 'deflect', sid: sid, id: s.from });
-      if (th && !th.dead) { hit(run, c, th, 1.6, { noCrit: true }); if (!th.dead && !th.boss) stun(c, th, 0.6); }
+      if (th && !th.dead) { hit(run, c, th, 2.2, { noCrit: true }); if (!th.dead && !th.boss) stun(c, th, 0.6); }
       if (c.over) finish(run, c);
+      spend(run, c);
       return true;
     }
     return false;
   };
-  function shotsTick(run, c, dt) {
-    var i, s, th;
-    if (run.floor >= 3 || c.boss) {
-      c.shotT -= dt;
-      if (c.shotT <= 0) {
-        var ths = alive(c).filter(function (x) { return !(x.st.stun > 0) && !(x.hidden > 0) && !x.gold && !x.charge; });
-        if (ths.length) {
-          th = c.boss ? ths[0] : pick(ths); var nn = th.boss ? 3 : 1;
-          for (i = 0; i < nn; i++) { var tt = 2.4 + i * 0.6; s = { sid: c.nextSid++, from: th.id, t: tt, total: tt, dmg: th.atk * (th.boss ? 0.55 : 0.9) }; c.shots.push(s); ev(c, { k: 'shot', sid: s.sid, id: th.id, total: tt }); }
-        }
-        c.shotT = c.boss ? rf(8, 11) : rf(6.5, 10.5);
-      }
-    }
-    for (i = c.shots.length - 1; i >= 0 && !c.over; i--) {
-      s = c.shots[i]; s.t -= dt; th = null; c.enemies.forEach(function (x) { if (x.id === s.from) th = x; });
-      if (!th || th.dead) { c.shots.splice(i, 1); ev(c, { k: 'shotGone', sid: s.sid }); continue; }
-      if (s.t <= 0) { c.shots.splice(i, 1); ev(c, { k: 'shotHit', sid: s.sid }); hurt(run, c, th, s.dmg, { shot: 1 }); }
+  function shotsLand(run, c) {
+    for (var i = c.shots.length - 1; i >= 0 && !c.over; i--) {
+      var s = c.shots[i], th = null; c.enemies.forEach(function (x) { if (x.id === s.from) th = x; });
+      c.shots.splice(i, 1);
+      if (!th || th.dead) { ev(c, { k: 'shotGone', sid: s.sid }); continue; }
+      ev(c, { k: 'shotHit', sid: s.sid }); hurt(run, c, th, s.dmg, { shot: 1 });
     }
   }
-  function endOrWave(run, c) { var rr = run.room; if (rr.waves && (rr.wave || 1) < rr.waves) { if (!c.nextWave) { rr.wave = (rr.wave || 1) + 1; c.nextWave = 1.3; } } else { c.over = true; c.win = true; } }
+  function shotsLaunch(run, c) {
+    if (!(run.floor >= 3 || c.boss)) return;
+    c.shotT -= ROUND; if (c.shotT > 0) return;
+    var ths = alive(c).filter(function (x) { return !(x.st.stun > 0) && !(x.hidden > 0) && !x.gold && !x.charge; });
+    if (ths.length) {
+      var th = c.boss ? ths[0] : pick(ths), nn = th.boss ? 2 : 1;
+      for (var i = 0; i < nn; i++) { var s = { sid: c.nextSid++, from: th.id, dmg: th.atk * (th.boss ? 0.6 : 0.9) }; c.shots.push(s); ev(c, { k: 'shot', sid: s.sid, id: th.id }); }
+    }
+    c.shotT = c.boss ? rf(6, 9) : rf(6.5, 10.5);
+  }
+  function endOrWave(run, c) { var rr = run.room; if (rr.waves && (rr.wave || 1) < rr.waves) { if (!c.nextWave) { rr.wave = (rr.wave || 1) + 1; c.nextWave = 1; if (c.turn === 'hero') { c.hero.ap = 0; } } } else { c.over = true; c.win = true; } }
   // Le héros subit des dégâts. e peut être null (explosion, poison).
   function hurt(run, c, e, raw, o) {
     o = o || {}; var st = run.stats, h = c.hero;
@@ -989,7 +1047,7 @@
   };
   E.useSkill = function (i) {
     var run = S.run, c = run && run.combat; if (!c || c.over) return false;
-    var h = c.hero, st = run.stats; if (h.cds[i] > 0 || !E.skillUnlocked(run.hero, i)) return false;
+    var h = c.hero, st = run.stats; if (!canAct(c) || h.cds[i] > 0 || !E.skillUnlocked(run.hero, i)) return false;
     var sk = E.hero(run.hero).skills[i], e = target(c); if (!e) return false;
     var others = alive(c).filter(function (x) { return x !== e; }), all = alive(c);
     h.cds[i] = E.skillCd(run, i); ug(run, 5); bump(run, 'skills');
@@ -1024,26 +1082,28 @@
     if (st.skillHeal) heroHeal(run, c, st.hp * st.skillHeal / 100);
     if (st.skillEcho && h.cds[i] > 0.5 && rnd() * 100 < st.skillEcho) { h.cds[i] = 0.5; ev(c, { k: 'free', i: i }); }
     if (c.over) finish(run, c);
+    spend(run, c);
     return true;
   };
   function ug(run, n) { run.ult = Math.min(100, (run.ult || 0) + n * (1 + (run.stats.ultP || 0) / 100) * (run.combat && run.combat.cond === 'silence' ? 2 : 1)); }
-  E.PARRY_CD = 5;
+  E.PARRY_CD = 2 * ROUND;
   // Parade : pendant 1 s les coups sont réduits de 70 % et renvoyés. Une attaque chargée parée est annulée.
   E.parry = function () {
-    var run = S.run, c = run && run.combat; if (!c || c.over || c.hero.parryCd > 0) return false;
-    c.hero.parryT = 1.0; c.hero.parryCd = E.PARRY_CD; ev(c, { k: 'parryOn' }); return true;
+    var run = S.run, c = run && run.combat; if (!canAct(c) || c.hero.parryCd > 0) return false;
+    c.hero.parryT = ROUND; c.hero.parryCd = E.PARRY_CD; ev(c, { k: 'parryOn' }); spend(run, c); return true;
   };
   E.setStance = function (s) { var run = S.run; if (!run) return null; run.stance = s || (run.stance === 'a' ? 'd' : run.stance === 'd' ? 'n' : 'a'); return run.stance; };
   E.hitWeak = function (i) {
-    var run = S.run, c = run && run.combat; if (!c || c.over || !c.weak) return false;
+    var run = S.run, c = run && run.combat; if (!canAct(c) || !c.weak) return false;
     var e = c.enemies[i]; if (!e || e.dead || e.id !== c.weak.id) return false;
     c.weak = null; c.weakT = rf(5, 9); S.stats.weak++; bump(run, 'weak'); ev(c, { k: 'weakhit', id: e.id });
     hit(run, c, e, 2.5 * (1 + run.stats.weakP / 100), { crit: true }); if (!e.dead) e.st.vuln = Math.max(e.st.vuln || 0, 3); ug(run, 12);
     if (c.over) finish(run, c);
+    spend(run, c);
     return true;
   };
   E.useUlt = function () {
-    var run = S.run, c = run && run.combat; if (!c || c.over || (run.ult || 0) < 100) return false;
+    var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || (run.ult || 0) < 100) return false;
     var h = c.hero, st = run.stats, u = E.hero(run.hero).ult, all = alive(c), n, tg;
     run.ult = 0; S.stats.ult++; bump(run, 'ult'); ev(c, { k: 'ult', name: u.name, sfx: u.sfx });
     switch (run.hero) {
@@ -1057,20 +1117,22 @@
       case 'pretresse': heroHeal(run, c, st.hp, true); h.shield = Math.max(h.shield, st.hp * 0.3); h.shieldT = 8; delete h.st.poison; delete h.st.burn; delete h.st.bleed; all.forEach(function (x) { stun(c, x, 2); }); break;
     }
     if (c.over) finish(run, c);
+    else if (h.ap <= 0) beginFoes(run, c);
     return true;
   };
   E.usePotion = function () {
     var run = S.run, c = run && run.combat; if (!run || run.potions <= 0 || run.hp >= run.stats.hp) return false;
-    if (c && c.over) return false;
+    if (c && (c.over || c.turn !== 'hero')) return false;
     run.potions--; var h = heal(run, run.stats.hp * 0.35);
     if (c) { ev(c, { k: 'potion' }); ev(c, { k: 'heal', v: h }); }
     return true;
   };
-  function autoPlay(run, c) {
+  E.autoAct = function () {
+    var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero') return false;
     var h = c.hero, hero = E.hero(run.hero), frac = run.hp / run.stats.hp;
     var charging = c.enemies.some(function (e) { return !e.dead && e.charge; });
-    if (h.parryCd <= 0 && c.enemies.some(function (e) { return !e.dead && e.charge && e.charge.t < 0.6; })) E.parry();
-    if ((run.ult || 0) >= 100 && (frac < 0.6 || alive(c).length > 1 || c.boss || c.t > 4)) { if (E.useUlt()) return; }
+    if (frac < 0.35 && run.potions > 0) E.usePotion();
+    if ((run.ult || 0) >= 100 && (frac < 0.6 || alive(c).length > 1 || c.boss || c.round > 2)) { E.useUlt(); if (c.over || c.turn !== 'hero') return true; }
     for (var i = 0; i < 3; i++) {
       if (h.cds[i] > 0 || !E.skillUnlocked(run.hero, i)) continue;
       var id = hero.skills[i].id;
@@ -1079,95 +1141,93 @@
       if ((id === 's2' || id === 'k3') && frac > 0.7) continue;
       if (id === 'b2' && frac < 0.25) continue;
       if (id === 'a3') { var t = target(c); if (t && t.hp / t.maxhp > 0.35 && !t.boss && alive(c).length > 1) continue; }
-      if (E.useSkill(i)) return;
+      if (E.useSkill(i)) return true;
     }
-    if (frac < 0.35 && run.potions > 0) E.usePotion();
+    if (h.parryCd <= 0 && c.enemies.some(function (e) { return !e.dead && e.charge; })) { if (E.parry()) return true; }
+    return E.strike();
+  };
+  // Un ennemi joue son tour. Renvoie true s'il reste des ennemis à faire jouer.
+  E.foeStep = function () {
+    var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'foes') return false;
+    while (c.qi < c.enemies.length && (c.enemies[c.qi].dead || c.enemies[c.qi].born === c.round)) c.qi++;
+    if (c.qi < c.enemies.length) {
+      var e = c.enemies[c.qi++]; ev(c, { k: 'eturn', id: e.id });
+      foeAct(run, c, e, ROUND);
+      if (c.over) finish(run, c);
+      return !c.over;
+    }
+    roundEnd(run, c); return false;
+  };
+  function foeAct(run, c, e, dt) {
+    if (e.flee > 0) { e.flee -= dt; if (e.flee <= 0) { e.flee = 0; e.dead = true; e.fled = true; e.hp = 0; ev(c, { k: 'flee', id: e.id }); if (!alive(c).length) endOrWave(run, c); return; } }
+    ['burn', 'poison', 'bleed'].forEach(function (k) {
+      var s = e.st[k]; if (!s || e.dead) return; s.t -= dt;
+      hit(run, c, e, 0, { flat: s.dps * dt, dot: k, noCrit: true });
+      if (s.t <= 0) delete e.st[k];
+    });
+    if (e.dead || c.over) return;
+    if (e.st.weak > 0) e.st.weak -= dt; if (e.st.vuln > 0) e.st.vuln -= dt;
+    if (e.st.stun > 0) { e.st.stun -= dt; ev(c, { k: 'stunned', id: e.id }); return; }
+    var sp = (e.enraged ? 1.4 : 1) * (c.cond === 'hate' ? 1.3 : 1);
+    var limit = c.boss ? 70 : 40, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1;
+    if (fury > 1 && !c.fury) { c.fury = true; ev(c, { k: 'fury' }); }
+    if (e.ab.heal) { e.healT -= dt; if (e.healT <= 0) { e.healT = 6; var low = alive(c).sort(function (a, b) { return a.hp / a.maxhp - b.hp / b.maxhp; })[0]; if (low && low.hp < low.maxhp) { low.hp = Math.min(low.maxhp, low.hp + low.maxhp * e.ab.heal / 100); ev(c, { k: 'eheal', id: low.id }); } } }
+    if (e.ab.shield) { e.shieldT -= dt; if (e.shieldT <= 0) { e.shieldT = 10; e.shield = e.maxhp * e.ab.shield / 100; ev(c, { k: 'eshield', id: e.id }); } }
+    if (e.ab.summon) { e.summonT -= dt; if (e.summonT <= 0) { e.summonT = 13; if (alive(c).length < 3) { var m = mkEnemy(run, e.ab.summon, 0.55); m.id = c.nextId++; m.born = c.round; m.summoned = true; c.enemies.push(m); ev(c, { k: 'summon', id: m.id }); } } }
+    if (e.boss) bossTick(run, c, e, dt);
+    if (c.over) return;
+    if (e.hidden > 0) { e.hidden -= dt; if (e.hidden <= 0) { e.hidden = 0; e.charge = { t: ROUND, total: ROUND }; ev(c, { k: 'bossfx', id: e.id, txt: 'Il resurgit !' }); ev(c, { k: 'charge', id: e.id }); } return; }
+    if (e.charge) {
+      e.charge.t -= dt;
+      if (e.charge.t <= 0) { e.charge = null; e.chargeCd = e.ab.charge; ev(c, { k: 'eatk', id: e.id, big: 1 }); hurt(run, c, e, e.atk * 2.6 * fury * (e.enraged ? 1.25 : 1), { big: 1 }); e.t = e.int; }
+      return;
+    }
+    if (e.ab.charge) { e.chargeCd -= dt; if (e.chargeCd <= 0) { e.charge = { t: ROUND, total: ROUND }; ev(c, { k: 'charge', id: e.id }); return; } }
+    e.t -= dt * sp; var g = 0;
+    while (e.t <= 0 && !c.over && g++ < 3) { e.t += e.int; ev(c, { k: 'eatk', id: e.id }); hurt(run, c, e, e.atk * fury * (e.enraged ? 1.25 : 1), {}); }
   }
-  E.tick = function (dt) {
-    var run = S.run, c = run && run.combat; if (!c || c.over) return;
-    var st = run.stats, h = c.hero, i, e;
+  // Fin de manche : les projectiles tombent, les effets s'écoulent, puis c'est de nouveau au héros.
+  function roundEnd(run, c) {
+    var st = run.stats, h = c.hero, dt = ROUND, i;
+    shotsLand(run, c);
+    if (c.over) return finish(run, c);
     c.t += dt; run.t += dt;
     if (c.cond === 'brume') { run.hp = Math.max(1, run.hp - st.hp * 0.01 * dt); c.enemies.forEach(function (x) { if (!x.dead) x.hp = Math.max(1, x.hp - x.maxhp * 0.02 * dt); }); }
     if (c.cond === 'beni') heal(run, st.hp * 0.02 * dt);
-    if (c.nextWave > 0) {
-      c.nextWave -= dt;
-      if (c.nextWave <= 0) { c.nextWave = 0; ev(c, { k: 'wave', n: run.room.wave, of: run.room.waves }); enemyGroup(run, 'wave').forEach(function (k) { var m = mkEnemy(run, k, 0.9); m.id = c.nextId++; c.enemies.push(m); ev(c, { k: 'summon', id: m.id, quiet: 1 }); }); }
-    }
-    // héros : effets
+    if (c.nextWave > 0) { c.nextWave = 0; ev(c, { k: 'wave', n: run.room.wave, of: run.room.waves }); enemyGroup(run, 'wave').forEach(function (k) { var m = mkEnemy(run, k, 0.9); m.id = c.nextId++; m.born = c.round; c.enemies.push(m); ev(c, { k: 'summon', id: m.id, quiet: 1 }); }); }
     if (st.regen) heal(run, st.hp * st.regen / 100 * dt);
     for (var bk in h.buffs) { h.buffs[bk].t -= dt; if (h.buffs[bk].t <= 0) delete h.buffs[bk]; }
     if (h.shieldT > 0 && h.shieldT < 900) { h.shieldT -= dt; if (h.shieldT <= 0) h.shield = 0; }
     ['poison', 'burn', 'bleed'].forEach(function (k) {
-      var s = h.st[k]; if (!s) return; s.t -= dt; s.acc = (s.acc || 0) + s.dps * dt;
-      if (s.acc >= 1 && (s.tick = (s.tick || 0) + dt) >= 0.5) { hurt(run, c, null, s.acc, { dot: k }); s.acc = 0; s.tick = 0; }
+      var s = h.st[k]; if (!s || c.over) return; s.t -= dt;
+      hurt(run, c, null, s.dps * dt, { dot: k });
       if (s.t <= 0) delete h.st[k];
     });
-    if (h.st.weak > 0) h.st.weak -= dt; if (h.st.slow > 0) h.st.slow -= dt;
     if (c.over) return finish(run, c);
+    if (h.st.weak > 0) h.st.weak -= dt; if (h.st.slow > 0) h.st.slow -= dt;
     for (i = 0; i < 3; i++) if (h.cds[i] > 0) h.cds[i] -= dt * (c.cond === 'silence' ? 0.5 : c.cond === 'echo' ? 1.4 : 1);
     if (h.parryT > 0) h.parryT -= dt; if (h.parryCd > 0) h.parryCd -= dt; if (h.invuln > 0) h.invuln -= dt;
-    if (c.weak) { c.weak.t -= dt; var we = null; c.enemies.forEach(function (x) { if (x.id === c.weak.id) we = x; }); if (c.weak.t <= 0 || !we || we.dead) { c.weak = null; c.weakT = rf(5, 9); } }
-    else { c.weakT -= dt * (c.cond === 'tenebres' ? 2 : 1) * (run.hero === 'chasseuse' ? 2 : 1); if (c.weakT <= 0) { var al0 = alive(c); if (al0.length) { c.weak = { id: pick(al0).id, t: 2.6 }; ev(c, { k: 'weak', id: c.weak.id }); } } }
-    if (S.settings.auto) autoPlay(run, c);
-    if (c.over) return finish(run, c);
-    // héros : attaque
-    var spd = (h.st.slow > 0 ? 0.5 : 1) * (c.cond === 'hate' ? 1.3 : 1) * st.spd * (1 + (h.buffs.spd ? h.buffs.spd.v : 0) / 100) * (1 + st.frenzy * h.frenzy / 100);
-    h.atkT -= dt * spd;
-    var guard = 0;
-    while (h.atkT <= 0 && !c.over && guard++ < 5) { h.atkT += 1; heroAttack(run, c); }
-    if (h.skel > 0 && !c.over) {
-      h.skelT -= dt * (h.buffs.skelF ? 3 : 1);
-      if (h.skelT <= 0) { h.skelT += 1; var te = target(c); if (te) { hit(run, c, te, 0.35 * h.skel * (1 + st.skelP / 100), { noCrit: true, dot: 'skel' }); ev(c, { k: 'skel' }); } }
-    }
     for (i = c.orbs.length - 1; i >= 0; i--) { c.orbs[i].t -= dt; if (c.orbs[i].t <= 0) { ev(c, { k: 'orbGone', oid: c.orbs[i].oid }); c.orbs.splice(i, 1); } }
-    if (!c.over) shotsTick(run, c, dt);
-    if (c.over) return finish(run, c);
-    if (run.ally && !c.over) { h.allyT = (h.allyT == null ? 1 : h.allyT) - dt; if (h.allyT <= 0) { h.allyT += 1.3; allyAct(run, c); } }
-    // ennemis
-    for (i = 0; i < c.enemies.length && !c.over; i++) {
-      e = c.enemies[i]; if (e.dead) continue;
-      if (e.flee > 0) { e.flee -= dt; if (e.flee <= 0) { e.flee = 0; e.dead = true; e.fled = true; e.hp = 0; ev(c, { k: 'flee', id: e.id }); if (!alive(c).length) endOrWave(run, c); continue; } }
-      ['burn', 'poison', 'bleed'].forEach(function (k) {
-        var s = e.st[k]; if (!s || e.dead) return; s.t -= dt; s.acc = (s.acc || 0) + s.dps * dt; s.tick = (s.tick || 0) + dt;
-        if (s.tick >= 0.5) { hit(run, c, e, 0, { flat: s.acc, dot: k, noCrit: true }); s.acc = 0; s.tick = 0; }
-        if (s.t <= 0) delete e.st[k];
-      });
-      if (e.dead) continue;
-      if (e.st.weak > 0) e.st.weak -= dt; if (e.st.vuln > 0) e.st.vuln -= dt;
-      if (e.st.stun > 0) { e.st.stun -= dt; continue; }
-      var sp = (e.enraged ? 1.4 : 1) * (c.cond === 'hate' ? 1.3 : 1);
-      var limit = c.boss ? 70 : 40, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1;
-      if (fury > 1 && !c.fury) { c.fury = true; ev(c, { k: 'fury' }); }
-      if (e.ab.heal) { e.healT -= dt; if (e.healT <= 0) { e.healT = 6; var low = alive(c).sort(function (a, b) { return a.hp / a.maxhp - b.hp / b.maxhp; })[0]; if (low && low.hp < low.maxhp) { low.hp = Math.min(low.maxhp, low.hp + low.maxhp * e.ab.heal / 100); ev(c, { k: 'eheal', id: low.id }); } } }
-      if (e.ab.shield) { e.shieldT -= dt; if (e.shieldT <= 0) { e.shieldT = 10; e.shield = e.maxhp * e.ab.shield / 100; ev(c, { k: 'eshield', id: e.id }); } }
-      if (e.ab.summon) { e.summonT -= dt; if (e.summonT <= 0) { e.summonT = 13; if (alive(c).length < 3) { var m = mkEnemy(run, e.ab.summon, 0.55); m.id = c.nextId++; m.summoned = true; c.enemies.push(m); ev(c, { k: 'summon', id: m.id }); } } }
-      if (e.boss) bossTick(run, c, e, dt);
-      if (e.hidden > 0) { e.hidden -= dt; if (e.hidden <= 0) { e.hidden = 0; e.charge = { t: 1.7, total: 1.7 }; ev(c, { k: 'bossfx', id: e.id, txt: 'Il resurgit !' }); ev(c, { k: 'charge', id: e.id }); } continue; }
-      if (e.charge) {
-        e.charge.t -= dt;
-        if (e.charge.t <= 0) { e.charge = null; e.chargeCd = e.ab.charge; ev(c, { k: 'eatk', id: e.id, big: 1 }); hurt(run, c, e, e.atk * 2.6 * fury * (e.enraged ? 1.25 : 1), { big: 1 }); e.t = e.int; }
-        continue;
-      }
-      if (e.ab.charge) { e.chargeCd -= dt; if (e.chargeCd <= 0) { var ct = e.boss ? 2.4 : 2.0; e.charge = { t: ct, total: ct }; ev(c, { k: 'charge', id: e.id }); continue; } }
-      e.t -= dt * sp;
-      if (e.t <= 0) { e.t += e.int; ev(c, { k: 'eatk', id: e.id }); hurt(run, c, e, e.atk * fury * (e.enraged ? 1.25 : 1), {}); }
-    }
-    if (c.over) finish(run, c);
-  };
+    shotsLaunch(run, c);
+    // point faible : visible pendant un tour
+    if (c.weak) { c.weak = null; c.weakT = rf(5, 9); }
+    else { c.weakT -= dt * (c.cond === 'tenebres' ? 2 : 1) * (run.hero === 'chasseuse' ? 2 : 1); if (c.weakT <= 0) { var al0 = alive(c); if (al0.length) { c.weak = { id: pick(al0).id, t: ROUND }; ev(c, { k: 'weak', id: c.weak.id }); } } }
+    c.round++; c.turn = 'hero'; h.ap = AP; ev(c, { k: 'pturn', n: c.round });
+  }
   // Spécialité de chaque boss
   function bossTick(run, c, e, dt) {
     var ab = e.ab, st = run.stats, h = c.hero, fr = e.hp / e.maxhp, i;
     e.bt = (e.bt || 0) + dt;
     if (ab.burst && !e.b1 && fr < 0.5) {
       e.b1 = 1; ev(c, { k: 'bossfx', id: e.id, txt: 'Levez-vous !', big: 1 });
-      for (i = 0; i < 2 && alive(c).length < 4; i++) { var m = mkEnemy(run, ab.summon, 0.5); m.id = c.nextId++; m.summoned = true; c.enemies.push(m); ev(c, { k: 'summon', id: m.id }); }
+      for (i = 0; i < 2 && alive(c).length < 4; i++) { var m = mkEnemy(run, ab.summon, 0.5); m.id = c.nextId++; m.born = c.round; m.summoned = true; c.enemies.push(m); ev(c, { k: 'summon', id: m.id }); }
     }
     if (ab.roots && e.bt >= ab.roots) { e.bt = 0; h.st.slow = 4; ev(c, { k: 'bossfx', id: e.id, txt: 'Racines !', hero: 'Entravé' }); }
     if (ab.dive && e.bt >= ab.dive && !e.charge && !(e.st.stun > 0)) { e.bt = 0; e.hidden = 2.6; ev(c, { k: 'bossfx', id: e.id, txt: 'Il plonge...' }); }
     if (ab.ward) [0.66, 0.33].forEach(function (t, k) {
       if (fr < t && !((e.wd || 0) & (1 << k))) { e.wd = (e.wd || 0) | (1 << k); e.shield = e.maxhp * 0.12; for (i = 0; i < 3; i++) h.cds[i] = Math.max(h.cds[i], 0) + 3; ev(c, { k: 'bossfx', id: e.id, txt: 'Silence !', hero: 'Réduit au silence', big: 1 }); }
     });
-    if (ab.heat) { e.heatT = (e.heatT || 0) + dt; if (e.heatT >= 0.5) { e.heatT = 0; hurt(run, c, null, st.hp * Math.min(0.03, 0.004 + c.t * 0.0003) * 0.5, { dot: 'burn' }); } }
+    if (ab.heat) hurt(run, c, null, st.hp * Math.min(0.03, 0.004 + c.t * 0.0003) * dt, { dot: 'burn' });
   }
   // Le mercenaire agit toutes les 1,3 s
   function allyAct(run, c) {
