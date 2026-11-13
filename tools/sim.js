@@ -30,6 +30,7 @@ function playRun() {
       else if (t === 'marchand') { r.room.stock.forEach((s, i) => { if (s.kind === 'artifact' || s.kind === 'boon' || (s.kind === 'heal' && r.hp < r.stats.hp * 0.5) || s.kind === 'item') E.roomAction('buy', i); }); E.roomAction('leave'); }
       else if (t === 'repos') E.roomAction(r.hp < r.stats.hp * 0.65 ? 'heal' : 'sharpen');
       else if (t === 'autel') E.roomAction(Math.random() < 0.5 ? 'take' : 'skip', 0);
+      else if (t === 'mercenaire') { if (E.roomAction('hire', 0) === false) E.roomAction('leave'); }
       else if (t === 'event') { const ev = E.byId(D.EVENTS, r.room.event); let i = Math.floor(Math.random() * ev.opts.length); if (E.roomAction('opt', i) === false) E.roomAction('opt', ev.opts.length - 1); }
       continue;
     }

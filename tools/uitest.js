@@ -10,10 +10,10 @@ const srv = http.createServer((q, r) => {
   const f = path.join(ROOT, p);
   fs.readFile(f, (e, d) => { if (e) { r.writeHead(404); r.end(); } else { r.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' }); r.end(d); } });
 }).listen(8377);
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep = ms => new Promise(r => setTimeout(r, ms)); let edge = null;
 (async () => {
   const prof = path.join(OUT, 'edge-profile-' + Date.now());
-  const edge = spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe', ['--headless=new', '--remote-debugging-port=9333', '--user-data-dir=' + prof, '--no-first-run', '--autoplay-policy=no-user-gesture-required', '--mute-audio', 'about:blank'], { stdio: 'ignore' });
+  edge = spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe', ['--headless=new', '--remote-debugging-port=9333', '--user-data-dir=' + prof, '--no-first-run', '--autoplay-policy=no-user-gesture-required', '--mute-audio', 'about:blank'], { stdio: 'ignore' });
   let browser; for (let i = 0; i < 40 && !browser; i++) { await sleep(500); try { browser = await puppeteer.connect({ browserURL: 'http://127.0.0.1:9333' }); } catch (e) { } }
   const page = await browser.newPage(); const errors = [];
   await page.setViewport({ width: 390, height: 780, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
@@ -40,6 +40,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     else if (ph === 'death') { deaths++; await sleep(900); await shot('death' + deaths); if (deaths >= maxDeaths) break; await click('[data-act=deathBest]'); await sleep(200); await click('[data-act=again]'); await sleep(500); if (!shots.omen) { shots.omen = 1; await shot('omen'); } await click('[data-act=omen]'); await sleep(600); await page.evaluate(() => { ENGINE.S.settings.speed = 3; }); }
     else await sleep(200);
   }
+  const endInfo = await page.evaluate(() => { const r = ENGINE.S.run; return r ? { phase: r.phase, floor: r.floor, room: r.room && r.room.type, variant: r.room && r.room.variant, cond: r.room && r.room.cond, wave: r.room && r.room.wave, pending: r.pendingBoons, hp: Math.round(r.hp), t: r.combat && Math.round(r.combat.t), alive: r.combat && r.combat.enemies.filter(e => !e.dead).map(e => e.name + ':' + Math.round(e.hp)), nextWave: r.combat && r.combat.nextWave, over: r.combat && r.combat.over, overlay: document.querySelector('#overlay').className } : { screen: UI.st.screen }; });
+  console.log('endInfo', JSON.stringify(endInfo));
+  if (endInfo.phase) { await shot('stuck'); await page.evaluate(() => UI.run.end(true)); await sleep(500); }
   await click('[data-act=toHub]'); await sleep(600); await shot('hub-after');
   for (const t of ['hero', 'sac', 'autel', 'pactes', 'faits']) { await click('[data-act=tab][data-tab=' + t + ']'); await sleep(350); await shot('tab-' + t); }
   // changement de héros : aller sur un héros verrouillé puis revenir (c'était le blocage signalé)
@@ -62,4 +65,4 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await shot('offline-reload');
   console.log(JSON.stringify({ save: before === after ? 'ok ' + after : 'DIFF ' + before + ' vs ' + after, sw, offline, deaths, stats: await page.evaluate(() => ENGINE.S.stats).catch(() => null), errors: errors.slice(0, 15) }, null, 1));
   await browser.close(); edge.kill(); srv.close(); process.exit(0);
-})().catch(e => { console.error('TEST FAIL', e); process.exit(1); });
+})().catch(e => { console.error("TEST FAIL", e); try { if (edge) edge.kill(); } catch (x) { } process.exit(1); });

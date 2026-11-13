@@ -185,6 +185,38 @@ var DATA = (function () {
     { id: 'o_duel', name: 'Loi du duel', icon: '🤺', desc: 'Parade : riposte +200 %. Points faibles : +100 % dégâts. Mais -10 % PV max.', mods: { parryP: 200, weakP: 100, hpP: -10 } }
   ];
 
+  // ---------- Préfixes de monstres (rendent les combats différents) ----------
+  var MOBFIX = [
+    { id: 'vamp', name: 'vampirique', ab: { leech: 70 } }, { id: 'feu', name: 'enflammé', ab: { burn: 60 } },
+    { id: 'blinde', name: 'blindé', def: 1.3, hp: 1.15 }, { id: 'rapide', name: 'rapide', int: 0.62 },
+    { id: 'regen', name: 'régénérant', ab: { heal: 5 } }, { id: 'explosif', name: 'explosif', ab: { explode: 220 } },
+    { id: 'spectral', name: 'spectral', ab: { dodge: 30 } }, { id: 'geant', name: 'géant', hp: 1.8, atk: 1.2 },
+    { id: 'toxique', name: 'toxique', ab: { poison: 65 } }, { id: 'maudit', name: 'maudit', ab: { weak: 55 } }
+  ];
+  // ---------- Conditions de salle ----------
+  var CONDS = [
+    { id: 'brume', name: 'Brume toxique', icon: '☣️', desc: 'Tout le monde perd des PV chaque seconde, les ennemis deux fois plus vite.' },
+    { id: 'beni', name: 'Sol béni', icon: '✨', desc: 'Tu régénères 2 % PV par seconde.' },
+    { id: 'tenebres', name: 'Ténèbres', icon: '🌑', desc: 'Les ennemis esquivent 20 % des coups, mais les points faibles apparaissent 2 fois plus souvent.' },
+    { id: 'sang', name: 'Lune de sang', icon: '🩸', desc: 'Tous les dégâts +40 %, pour toi comme pour eux.' },
+    { id: 'hate', name: 'Vent de hâte', icon: '💨', desc: 'Tout le monde attaque 30 % plus vite.' },
+    { id: 'or', name: "Veine d'or", icon: '💰', desc: 'Or et Cendres doublés dans cette salle.' },
+    { id: 'defi', name: 'Défi du bourreau', icon: '⏱️', desc: 'Tue tout en moins de 20 secondes pour gagner un coffre bonus.' },
+    { id: 'silence', name: 'Silence', icon: '🤐', desc: 'Tes pouvoirs se rechargent 2 fois moins vite, mais ton ultime 2 fois plus vite.' }
+  ];
+  // ---------- Mercenaires (un autre héros se bat à tes côtés jusqu'au prochain boss) ----------
+  var ALLIES = {
+    chevalier: 'Frappe et te donne un petit bouclier à chaque coup.', pyro: 'Brûle tous les ennemis.',
+    assassin: 'Coups rapides, souvent doublés.', necro: 'Draine les ennemis et te rend des PV.',
+    berserker: 'Frappe très fort.', pretresse: 'Te soigne en continu.'
+  };
+  // ---------- Contrats du jour : [statistique, quantité, texte] ----------
+  var CONTRACTS = [
+    ['kills', 40, 'Tue 40 ennemis'], ['kills', 90, 'Tue 90 ennemis'], ['elites', 3, 'Vaincs 3 élites'], ['bosses', 1, 'Vaincs un boss'],
+    ['chests', 2, 'Ouvre 2 coffres'], ['items', 8, 'Trouve 8 objets'], ['runs', 3, 'Lance 3 descentes'], ['upgrades', 3, 'Améliore 3 fois un objet'],
+    ['weak', 10, 'Touche 10 points faibles'], ['parry', 3, 'Réussis 3 parades parfaites'], ['ult', 5, 'Lance 5 ultimes'], ['arenes', 1, 'Gagne une arène']
+  ];
+
   // ---------- Zones et ennemis ----------
   // Stats de base à l'étage 1. ab = capacités : poison, burn, bleed, charge (attaque chargée), heal, explode,
   // summon, enrage, leech, dodge (%), shield, weak (affaiblit le héros), fast
@@ -484,6 +516,8 @@ var DATA = (function () {
     repos: { name: 'Feu de camp', icon: '🔥', hint: 'Soigne-toi ou affûte ta lame' },
     autel: { name: 'Autel maudit', icon: '🩸', hint: 'Un pouvoir contre un prix' },
     event: { name: 'Mystère', icon: '❓', hint: 'Qui sait ?' },
+    mercenaire: { name: 'Mercenaires', icon: '🤝', hint: "Un allié jusqu'au boss" },
+    arene: { name: 'Arène', icon: '🏟️', hint: '3 vagues. Grosse récompense' },
     boss: { name: 'BOSS', icon: '☠️', hint: 'Le gardien de la zone' }
   };
 
@@ -498,7 +532,7 @@ var DATA = (function () {
 
   return {
     RARITIES: RARITIES, MODS: MODS, HEROES: HEROES, ENEMIES: ENEMIES, ZONES: ZONES, SLOTS: SLOTS, BASES: BASES,
-    SETS: SETS, OMENS: OMENS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
+    SETS: SETS, OMENS: OMENS, MOBFIX: MOBFIX, CONDS: CONDS, ALLIES: ALLIES, CONTRACTS: CONTRACTS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
     PACTS: PACTS, ACHIEVEMENTS: ACHIEVEMENTS, EVENTS: EVENTS, ROOMS: ROOMS, ALTARS: ALTARS
   };
 })();

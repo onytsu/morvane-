@@ -42,7 +42,7 @@
   function newSave() {
     var s = {
       v: 1, cendres: 0, essence: 0, hero: 'chevalier', heroes: {}, inv: [], nextUid: 1, meta: {}, pacts: [], ach: {},
-      stats: { kills: 0, deaths: 0, chests: 0, maxLvl: 0, leg: 0, uni: 0, best: 0, elites: 0, upgrades: 0, epic: 0, runs: 0, heroes: 1, bossMax: 0, boss1: 0, boss2: 0, boss3: 0, boss4: 0, boss5: 0, boss6: 0, bosses: 0, items: 0 },
+      stats: { kills: 0, deaths: 0, chests: 0, maxLvl: 0, leg: 0, uni: 0, best: 0, elites: 0, upgrades: 0, epic: 0, runs: 0, heroes: 1, weak: 0, parry: 0, ult: 0, arenes: 0, bossMax: 0, boss1: 0, boss2: 0, boss3: 0, boss4: 0, boss5: 0, boss6: 0, bosses: 0, items: 0 },
       settings: { sfx: true, music: true, speed: 1, auto: false, autoSalvage: -1 },
       idleAt: Date.now(), run: null, tuto: {}, pityU: 0, created: Date.now()
     };
@@ -324,6 +324,26 @@
     if (got.length) { E.newAch = (E.newAch || []).concat(got); }
     return got;
   };
+  function dayKey() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  E.contracts = function () {
+    var key = dayKey();
+    if (!S.contracts || S.contracts.day !== key) {
+      var pool = D.CONTRACTS.slice(), list = [], used = {};
+      while (list.length < 3 && pool.length) {
+        var ct = pool.splice(Math.floor(rnd() * pool.length), 1)[0]; if (used[ct[0]]) continue; used[ct[0]] = 1;
+        var ess = list.length === 2;
+        list.push({ stat: ct[0], need: ct[1], name: ct[2], base: S.stats[ct[0]] || 0, kind: ess ? 'essence' : 'cendres', amount: ess ? Math.ceil(15 * (1 + S.stats.best / 6)) : Math.ceil(50 * Math.pow(GROW.cend, S.stats.best)), claimed: false });
+      }
+      S.contracts = { day: key, list: list };
+    }
+    return S.contracts.list;
+  };
+  E.contractProgress = function (ct) { return Math.max(0, Math.min(ct.need, (S.stats[ct.stat] || 0) - ct.base)); };
+  E.claimContract = function (i) {
+    var ct = E.contracts()[i]; if (!ct || ct.claimed || E.contractProgress(ct) < ct.need) return false;
+    ct.claimed = true; S[ct.kind] += ct.amount; return ct;
+  };
+  E.contractReady = function () { return E.contracts().some(function (ct) { return !ct.claimed && E.contractProgress(ct) >= ct.need; }); };
   E.idleInfo = function () {
     var st = E.heroStats(S.hero, null);
     var rate = S.stats.best > 0 ? 10 * Math.pow(GROW.cend, S.stats.best) * (1 + st.idleP / 100) : 0;
@@ -400,11 +420,11 @@
   function genDoors(run) {
     var next = run.floor + 1, pos = ((next - 1) % 10) + 1;
     if (pos === 10) return ['boss'];
-    var w = { combat: 50, elite: (next - run.startFloor) < 2 ? 0 : 13 * (run.stats.eliteW ? 3 : 1), tresor: 9, marchand: run.gold >= 40 ? 10 : 4, repos: run.stats.noRest ? 0 : run.hp < run.stats.hp * 0.6 ? 14 : 7, autel: 6, event: 10 };
+    var w = { combat: 50, elite: (next - run.startFloor) < 2 ? 0 : 13 * (run.stats.eliteW ? 3 : 1), tresor: 9, marchand: run.gold >= 40 ? 10 : 4, repos: run.stats.noRest ? 0 : run.hp < run.stats.hp * 0.6 ? 14 : 7, autel: 6, event: 10, mercenaire: (run.ally || next - run.startFloor < 3) ? 0 : 6, arene: next - run.startFloor < 4 ? 0 : 5 };
     if (run.lastRoom && w[run.lastRoom] && run.lastRoom !== 'combat') w[run.lastRoom] *= 0.25;
     var types = Object.keys(w).filter(function (k) { return w[k] > 0; }), n = rnd() < 0.35 ? 3 : 2, out = [];
     while (out.length < n) { var t = wpick(types, function (k) { return w[k]; }); if (out.indexOf(t) < 0) out.push(t); }
-    if (out.indexOf('combat') < 0 && out.indexOf('elite') < 0) out[0] = 'combat';
+    if (out.indexOf('combat') < 0 && out.indexOf('elite') < 0 && out.indexOf('arene') < 0) out[0] = 'combat';
     if (pos === 9 && out.indexOf('repos') < 0 && out.indexOf('marchand') < 0) out[out.length - 1] = rnd() < 0.6 && !run.stats.noRest ? 'repos' : 'marchand';
     return out;
   }
@@ -414,15 +434,28 @@
     if (type === 'mimic') return ['mimique'];
     if (type === 'elite') return rnd() < 0.5 ? [z.elite, pick(z.mobs)] : [z.elite];
     if (run.floor <= 2) return [z.mobs[run.floor - 1]];
+    // un monstre peut porter un préfixe (vampirique, géant...) : plus dur, mais rapporte plus
+    function fixed(k) { return run.floor >= 4 && rnd() < Math.min(0.4, 0.14 + run.floor * 0.004) ? { k: k, fix: pick(D.MOBFIX).id } : k; }
+    if (type === 'combat' && run.floor >= 4 && run.room) {
+      var rv = rnd();
+      if (rv < 0.09) { run.room.variant = 'horde'; var hg = []; for (var hi = 0; hi < 5; hi++) hg.push({ k: pick(z.mobs), hp: 0.42, atk: 0.7 }); return hg; }
+      if (rv < 0.17) { run.room.variant = 'champion'; return [{ k: pick(z.mobs), hp: 2.4, atk: 1.25, fix: 'geant', fix2: pick(D.MOBFIX.filter(function (f) { return f.id !== 'geant'; })).id, champ: 1 }]; }
+      if (rv < 0.205) { run.room.variant = 'porteur'; return [{ k: 'rat', hp: 3.2, atk: 0.3, flee: 12, gold: 1 }, pick(z.mobs)]; }
+    }
     var n = rnd() < (pos >= 6 ? 0.45 : 0.2) ? 3 : 2, g = [];
     if (run.floor === 3) n = 2;
-    for (var i = 0; i < n; i++) g.push(pick(z.mobs));
+    for (var i = 0; i < n; i++) g.push(fixed(pick(z.mobs)));
     return g;
   }
   function enterRoom(run, type) {
     run.room = { type: type }; run.result = null; run.lastRoom = type;
     var r = run.room, z = E.zoneOf(run.floor), pm = 1 + 0.12 * (E.zoneNum(run.floor) - 1);
-    if (type === 'combat' || type === 'elite' || type === 'boss') { r.group = enemyGroup(run, type); run.hpEntry = run.hp; run.phase = 'combat'; E._buildCombat(run); return; }
+    if (type === 'combat' || type === 'elite' || type === 'boss' || type === 'arene') {
+      if (type === 'arene') { r.waves = 3; r.wave = 1; }
+      r.group = enemyGroup(run, type === 'arene' ? 'wave' : type);
+      if ((type === 'combat' || type === 'elite') && run.floor >= 3 && rnd() < 0.3) r.cond = pick(D.CONDS).id;
+      run.hpEntry = run.hp; run.phase = 'combat'; E._buildCombat(run); return;
+    }
     run.phase = 'room';
     if (type === 'tresor') {
       if (rnd() < 0.12) { r.mimic = true; }
@@ -441,6 +474,9 @@
       r.altars = [D.ALTARS.indexOf(o1), D.ALTARS.indexOf(o2)];
     } else if (type === 'event') {
       r.event = pick(D.EVENTS).id;
+    } else if (type === 'mercenaire') {
+      var hl = D.HEROES.filter(function (x) { return x.id !== run.hero; }).map(function (x) { return x.id; });
+      r.mercs = [hl.splice(Math.floor(rnd() * hl.length), 1)[0], hl.splice(Math.floor(rnd() * hl.length), 1)[0]]; r.price = Math.round(45 * pm);
     }
   }
   E.chooseDoor = function (i) {
@@ -475,6 +511,11 @@
       else if (s.kind === 'artifact') giveArtifact(run, s.id);
       else if (s.kind === 'item') { s.item.uid = S.nextUid++; giveItem(s.item); run.loot.push({ uid: s.item.uid, rar: s.item.rar }); }
       run.gold -= s.price; if (s.kind !== 'heal' && s.kind !== 'potion') s.sold = true; E.save(); return 'buy';
+    }
+    if (r.type === 'mercenaire') {
+      if (action === 'hire') { if (run.gold < r.price || !r.mercs[arg]) return false; run.gold -= r.price; run.ally = r.mercs[arg]; txt = E.hero(run.ally).name + ' te rejoint jusqu’au prochain boss.'; }
+      else txt = 'Tu continues seul.';
+      toDoors(run); return txt;
     }
     if (r.type === 'repos') {
       if (action === 'heal') { heal(run, run.stats.hp * 0.45); txt = 'Tu te reposes près du feu. +45 % PV.'; }
@@ -516,13 +557,21 @@
   };
 
   // ---------- combat ----------
-  function mkEnemy(run, key, hpMul) {
-    var b = D.ENEMIES[key], F = run.floor;
+  function mkEnemy(run, spec, hpMul) {
+    var sp = typeof spec === 'string' ? { k: spec } : spec, key = sp.k, b = D.ENEMIES[key], F = run.floor;
     var hs = Math.pow(GROW.hp, F - 1), as = Math.pow(GROW.atk, F - 1);
-    var hp = b.hp * hs * (hpMul || 1) * (1 + (run.stats.enemyHpP || 0) / 100);
+    var ab = b.ab, name = b.name, hm = (hpMul || 1) * (sp.hp || 1), am = sp.atk || 1, im = 1, defK = 0;
+    [sp.fix, sp.fix2].forEach(function (fid) {
+      var f = fid ? byId(D.MOBFIX, fid) : null; if (!f) return;
+      if (f.ab) { var nab = {}, k; for (k in ab) nab[k] = ab[k]; for (k in f.ab) nab[k] = Math.max(nab[k] || 0, f.ab[k]); ab = nab; }
+      hm *= f.hp || 1; am *= f.atk || 1; im *= f.int || 1; defK += f.def || 0; name += ' ' + f.name;
+    });
+    if (sp.gold) name = "Porteur d'or";
+    var hp = b.hp * hs * hm * (1 + (run.stats.enemyHpP || 0) / 100), atk = b.atk * as * am * (1 + (run.stats.enemyAtkP || 0) / 100);
     return {
-      key: key, name: b.name, hp: hp, maxhp: hp, atk: b.atk * as * (1 + (run.stats.enemyAtkP || 0) / 100), def: b.def * as, int: b.int, t: b.int * rf(0.5, 1), ab: b.ab,
-      elite: !!b.elite, boss: !!b.boss, st: {}, charge: null, chargeCd: b.ab.charge ? b.ab.charge * rf(0.6, 0.9) : 0,
+      key: key, name: name, hp: hp, maxhp: hp, atk: atk, def: b.def * as + defK * atk, int: b.int * im, t: b.int * im * rf(0.5, 1), ab: ab,
+      fix: sp.fix || null, fix2: sp.fix2 || null, champ: !!sp.champ, big: sp.fix === 'geant' || sp.fix2 === 'geant', flee: sp.flee || 0, gold: !!sp.gold,
+      elite: !!b.elite, boss: !!b.boss, st: {}, charge: null, chargeCd: ab.charge ? ab.charge * rf(0.6, 0.9) : 0,
       healT: 6, summonT: 10, shieldT: 5, shield: 0, enraged: false, dead: false, id: 0
     };
   }
@@ -530,7 +579,7 @@
     if (restore) run.hp = run.hpEntry || run.hp;
     var r = run.room, st = run.stats, n = r.group.length;
     var c = {
-      t: 0, over: false, win: false, boss: r.type === 'boss', events: [], target: 0, nextId: 1, weak: null, weakT: 4 + rnd() * 3, drops: [], gold: 0, cendres: 0, xp: 0, kills: 0,
+      t: 0, over: false, win: false, boss: r.type === 'boss', cond: r.cond || null, events: [], target: 0, nextId: 1, weak: null, weakT: 4 + rnd() * 3, drops: [], gold: 0, cendres: 0, xp: 0, kills: 0,
       hero: { maxhp: st.hp, shield: st.startShield ? st.hp * st.startShield / 100 : 0, shieldT: st.startShield ? 999 : 0, atkT: 0.6, cds: [1.5, 3, 5], st: {}, buffs: {}, parryT: 0, parryCd: 0, invuln: 0, frenzy: 0, hits: 0, first: true, skel: run.hero === 'necro' ? 1 : 0, skelT: 1, nextCrit: false },
       enemies: []
     };
@@ -552,7 +601,8 @@
   function hit(run, c, e, mult, o) {
     o = o || {}; if (!e || e.dead) return 0;
     var st = run.stats, h = c.hero;
-    if (o.auto && e.ab.dodge && !e.st.stun && rnd() * 100 < e.ab.dodge) { ev(c, { k: 'miss', id: e.id }); return 0; }
+    var edg = (e.ab.dodge || 0) + (c.cond === 'tenebres' ? 20 : 0);
+    if (o.auto && edg && !e.st.stun && rnd() * 100 < edg) { ev(c, { k: 'miss', id: e.id }); return 0; }
     var dmg = o.flat != null ? o.flat : st.atk * mult, crit = false;
     if (o.skill) dmg *= (1 + st.pow / 100) * (1 + (st['s' + o.skill + 'P'] || 0) / 100);
     if (!o.dot) {
@@ -566,6 +616,7 @@
     if (e.st.vuln > 0) dmg *= 1.25;
     if (run.stance === 'a') dmg *= 1.25; else if (run.stance === 'd') dmg *= 0.8;
     if (o.ult) dmg *= 1 + st.pow / 100;
+    if (c.cond === 'sang') dmg *= 1.4;
     if (!o.dot && e.def > 0) dmg *= (2 * st.atk) / (2 * st.atk + e.def);
     if (e.shield > 0) { var ab = Math.min(e.shield, dmg); e.shield -= ab; dmg -= ab; if (dmg <= 0) { ev(c, { k: 'dmg', id: e.id, v: 0, sh: 1 }); return 0; } }
     e.hp -= dmg;
@@ -589,9 +640,12 @@
     var st = run.stats, F = run.floor, g = 1 + st.gf / 100;
     var cm = e.boss ? 30 : e.elite ? 6 : 1;
     if (e.summoned) cm *= 0.4;
+    if (e.fix) cm *= 1.6; if (e.champ) cm *= 3; if (e.gold) cm *= 8;
     var cend = Math.ceil(cm * Math.pow(GROW.cend, F - 1) * g), gold = Math.round((e.boss ? 60 : e.elite ? 25 : ri(4, 8)) * g * (e.summoned ? 0.4 : 1));
+    if (e.gold) gold *= 12; else if (e.champ) gold *= 3;
+    if (c.cond === 'or') { cend *= 2; gold *= 2; }
     ug(run, 5); c.cendres += cend; c.gold += gold; c.kills++; run.kills++; S.stats.kills++;
-    c.xp += (e.boss ? 30 : e.elite ? 16 : 6.5) * (e.summoned ? 0.4 : 1);
+    c.xp += (e.boss ? 30 : e.elite ? 16 : 6.5) * (e.summoned ? 0.4 : 1) * (e.champ ? 2.5 : e.fix ? 1.5 : 1);
     if (e.elite) S.stats.elites++;
     ev(c, { k: 'die', id: e.id, boss: e.boss });
     if (st.killHeal) heroHeal(run, c, st.hp * st.killHeal / 100);
@@ -605,10 +659,13 @@
         if (rnd() < uChance) { var u = E.makeItem(F + 2, 5, { unique: pick(z.uniques) }); c.drops.push(giveItem(u)); run.loot.push({ uid: u.uid, rar: 5 }); S.pityU = 0; } else S.pityU++;
         c.drops.push(dropItem(run, 'boss', first ? 3 : 2)); c.drops.push(dropItem(run, 'boss')); if (rnd() < 0.5) c.drops.push(dropItem(run, 'boss'));
       } else if (e.elite) { c.drops.push(dropItem(run, 'elite')); if (rnd() < 0.3 || st.eliteW) c.drops.push(dropItem(run, 'elite')); }
-      else if (rnd() < 0.14) c.drops.push(dropItem(run, 'mob'));
+      else if (e.champ) { c.drops.push(dropItem(run, 'elite')); if (rnd() < 0.4) c.drops.push(dropItem(run, 'elite')); }
+      else if (e.gold) c.drops.push(dropItem(run, 'chest', 2));
+      else if (rnd() < (e.fix ? 0.3 : 0.14)) c.drops.push(dropItem(run, 'mob'));
     }
-    if (!alive(c).length) { c.over = true; c.win = true; }
+    if (!alive(c).length) endOrWave(run, c);
   }
+  function endOrWave(run, c) { var rr = run.room; if (rr.waves && (rr.wave || 1) < rr.waves) { if (!c.nextWave) { rr.wave = (rr.wave || 1) + 1; c.nextWave = 1.3; } } else { c.over = true; c.win = true; } }
   // Le héros subit des dégâts. e peut être null (explosion, poison).
   function hurt(run, c, e, raw, o) {
     o = o || {}; var st = run.stats, h = c.hero;
@@ -616,14 +673,14 @@
     var pm = 1;
     if (h.invuln > 0 && !o.dot) { ev(c, { k: 'hurt', v: 0, sh: 1 }); return 0; }
     if (h.parryT > 0 && e && !o.dot) {
-      if (o.big) { ev(c, { k: 'parry', perfect: 1 }); stun(c, e, 2); hit(run, c, e, 3 * (1 + st.parryP / 100), {}); ug(run, 25); return 0; }
+      if (o.big) { S.stats.parry++; ev(c, { k: 'parry', perfect: 1 }); stun(c, e, 2); hit(run, c, e, 3 * (1 + st.parryP / 100), {}); ug(run, 25); return 0; }
       pm = 0.3; ev(c, { k: 'parry' }); hit(run, c, e, 0.8 * (1 + st.parryP / 100), { noCrit: true, dot: 'thorns' });
     }
     if (!o.dot) {
       var dg = st.dodge + (h.buffs.dodge ? h.buffs.dodge.v : 0);
       if (rnd() * 100 < dg) { ev(c, { k: 'dodge' }); return 0; }
     }
-    var dmg = raw, blocked = false;
+    var dmg = raw * (c.cond === 'sang' && !o.dot ? 1.4 : 1), blocked = false;
     if (!o.dot) {
       if (e && e.st.weak > 0) dmg *= 0.75;
       if (rnd() * 100 < st.block) { dmg *= 0.5; blocked = true; }
@@ -697,7 +754,7 @@
     if (c.over) finish(run, c);
     return true;
   };
-  function ug(run, n) { run.ult = Math.min(100, (run.ult || 0) + n * (1 + (run.stats.ultP || 0) / 100)); }
+  function ug(run, n) { run.ult = Math.min(100, (run.ult || 0) + n * (1 + (run.stats.ultP || 0) / 100) * (run.combat && run.combat.cond === 'silence' ? 2 : 1)); }
   E.PARRY_CD = 5;
   // Parade : pendant 1 s les coups sont réduits de 70 % et renvoyés. Une attaque chargée parée est annulée.
   E.parry = function () {
@@ -708,7 +765,7 @@
   E.hitWeak = function (i) {
     var run = S.run, c = run && run.combat; if (!c || c.over || !c.weak) return false;
     var e = c.enemies[i]; if (!e || e.dead || e.id !== c.weak.id) return false;
-    c.weak = null; c.weakT = rf(5, 9); ev(c, { k: 'weakhit', id: e.id });
+    c.weak = null; c.weakT = rf(5, 9); S.stats.weak++; ev(c, { k: 'weakhit', id: e.id });
     hit(run, c, e, 2.5 * (1 + run.stats.weakP / 100), { crit: true }); if (!e.dead) e.st.vuln = Math.max(e.st.vuln || 0, 3); ug(run, 12);
     if (c.over) finish(run, c);
     return true;
@@ -716,7 +773,7 @@
   E.useUlt = function () {
     var run = S.run, c = run && run.combat; if (!c || c.over || (run.ult || 0) < 100) return false;
     var h = c.hero, st = run.stats, u = E.hero(run.hero).ult, all = alive(c), n, tg;
-    run.ult = 0; ev(c, { k: 'ult', name: u.name, sfx: u.sfx });
+    run.ult = 0; S.stats.ult++; ev(c, { k: 'ult', name: u.name, sfx: u.sfx });
     switch (run.hero) {
       case 'chevalier': h.invuln = 4; all.forEach(function (x) { hit(run, c, x, 4, { ult: 1 }); }); break;
       case 'pyro': for (n = 0; n < 6; n++) { var al = alive(c); if (!al.length) break; tg = pick(al); hit(run, c, tg, 1.6, { ult: 1 }); } alive(c).forEach(function (x) { applyDot(run, x, 'burn'); }); break;
@@ -756,6 +813,12 @@
     var run = S.run, c = run && run.combat; if (!c || c.over) return;
     var st = run.stats, h = c.hero, i, e;
     c.t += dt; run.t += dt;
+    if (c.cond === 'brume') { run.hp = Math.max(1, run.hp - st.hp * 0.01 * dt); c.enemies.forEach(function (x) { if (!x.dead) x.hp = Math.max(1, x.hp - x.maxhp * 0.02 * dt); }); }
+    if (c.cond === 'beni') heal(run, st.hp * 0.02 * dt);
+    if (c.nextWave > 0) {
+      c.nextWave -= dt;
+      if (c.nextWave <= 0) { c.nextWave = 0; ev(c, { k: 'wave', n: run.room.wave, of: run.room.waves }); enemyGroup(run, 'wave').forEach(function (k) { var m = mkEnemy(run, k, 0.9); m.id = c.nextId++; c.enemies.push(m); ev(c, { k: 'summon', id: m.id, quiet: 1 }); }); }
+    }
     // héros : effets
     if (st.regen) heal(run, st.hp * st.regen / 100 * dt);
     for (var bk in h.buffs) { h.buffs[bk].t -= dt; if (h.buffs[bk].t <= 0) delete h.buffs[bk]; }
@@ -767,14 +830,14 @@
     });
     if (h.st.weak > 0) h.st.weak -= dt;
     if (c.over) return finish(run, c);
-    for (i = 0; i < 3; i++) if (h.cds[i] > 0) h.cds[i] -= dt;
+    for (i = 0; i < 3; i++) if (h.cds[i] > 0) h.cds[i] -= dt * (c.cond === 'silence' ? 0.5 : 1);
     if (h.parryT > 0) h.parryT -= dt; if (h.parryCd > 0) h.parryCd -= dt; if (h.invuln > 0) h.invuln -= dt;
     if (c.weak) { c.weak.t -= dt; var we = null; c.enemies.forEach(function (x) { if (x.id === c.weak.id) we = x; }); if (c.weak.t <= 0 || !we || we.dead) { c.weak = null; c.weakT = rf(5, 9); } }
-    else { c.weakT -= dt; if (c.weakT <= 0) { var al0 = alive(c); if (al0.length) { c.weak = { id: pick(al0).id, t: 2.6 }; ev(c, { k: 'weak', id: c.weak.id }); } } }
+    else { c.weakT -= dt * (c.cond === 'tenebres' ? 2 : 1); if (c.weakT <= 0) { var al0 = alive(c); if (al0.length) { c.weak = { id: pick(al0).id, t: 2.6 }; ev(c, { k: 'weak', id: c.weak.id }); } } }
     if (S.settings.auto) autoPlay(run, c);
     if (c.over) return finish(run, c);
     // héros : attaque
-    var spd = st.spd * (1 + (h.buffs.spd ? h.buffs.spd.v : 0) / 100) * (1 + st.frenzy * h.frenzy / 100);
+    var spd = (c.cond === 'hate' ? 1.3 : 1) * st.spd * (1 + (h.buffs.spd ? h.buffs.spd.v : 0) / 100) * (1 + st.frenzy * h.frenzy / 100);
     h.atkT -= dt * spd;
     var guard = 0;
     while (h.atkT <= 0 && !c.over && guard++ < 5) { h.atkT += 1; heroAttack(run, c); }
@@ -782,9 +845,11 @@
       h.skelT -= dt * (h.buffs.skelF ? 3 : 1);
       if (h.skelT <= 0) { h.skelT += 1; var te = target(c); if (te) { hit(run, c, te, 0.35 * h.skel * (1 + st.skelP / 100), { noCrit: true, dot: 'skel' }); ev(c, { k: 'skel' }); } }
     }
+    if (run.ally && !c.over) { h.allyT = (h.allyT == null ? 1 : h.allyT) - dt; if (h.allyT <= 0) { h.allyT += 1.3; allyAct(run, c); } }
     // ennemis
     for (i = 0; i < c.enemies.length && !c.over; i++) {
       e = c.enemies[i]; if (e.dead) continue;
+      if (e.flee > 0) { e.flee -= dt; if (e.flee <= 0) { e.flee = 0; e.dead = true; e.fled = true; e.hp = 0; ev(c, { k: 'flee', id: e.id }); if (!alive(c).length) endOrWave(run, c); continue; } }
       ['burn', 'poison', 'bleed'].forEach(function (k) {
         var s = e.st[k]; if (!s || e.dead) return; s.t -= dt; s.acc = (s.acc || 0) + s.dps * dt; s.tick = (s.tick || 0) + dt;
         if (s.tick >= 0.5) { hit(run, c, e, 0, { flat: s.acc, dot: k, noCrit: true }); s.acc = 0; s.tick = 0; }
@@ -793,7 +858,7 @@
       if (e.dead) continue;
       if (e.st.weak > 0) e.st.weak -= dt; if (e.st.vuln > 0) e.st.vuln -= dt;
       if (e.st.stun > 0) { e.st.stun -= dt; continue; }
-      var sp = e.enraged ? 1.4 : 1;
+      var sp = (e.enraged ? 1.4 : 1) * (c.cond === 'hate' ? 1.3 : 1);
       var limit = c.boss ? 70 : 40, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1;
       if (fury > 1 && !c.fury) { c.fury = true; ev(c, { k: 'fury' }); }
       if (e.ab.heal) { e.healT -= dt; if (e.healT <= 0) { e.healT = 6; var low = alive(c).sort(function (a, b) { return a.hp / a.maxhp - b.hp / b.maxhp; })[0]; if (low && low.hp < low.maxhp) { low.hp = Math.min(low.maxhp, low.hp + low.maxhp * e.ab.heal / 100); ev(c, { k: 'eheal', id: low.id }); } } }
@@ -810,11 +875,27 @@
     }
     if (c.over) finish(run, c);
   };
+  // Le mercenaire agit toutes les 1,3 s
+  function allyAct(run, c) {
+    var st = run.stats, h = c.hero, e = target(c); if (!e) return;
+    ev(c, { k: 'ally' });
+    switch (run.ally) {
+      case 'chevalier': hit(run, c, e, 0.5, { noCrit: true, dot: 'ally' }); h.shield = Math.min(st.hp * 0.2, h.shield + st.hp * 0.025); h.shieldT = Math.max(h.shieldT, 4); break;
+      case 'pyro': alive(c).forEach(function (x) { hit(run, c, x, 0.3, { noCrit: true, dot: 'ally' }); if (!x.dead) applyDot(run, x, 'burn'); }); break;
+      case 'assassin': hit(run, c, e, rnd() < 0.4 ? 1.7 : 0.85, { noCrit: true, dot: 'ally' }); break;
+      case 'necro': var d = hit(run, c, e, 0.45, { noCrit: true, dot: 'ally' }); heroHeal(run, c, Math.min(d, st.hp * 0.015)); break;
+      case 'berserker': hit(run, c, e, 0.8, { noCrit: true, dot: 'ally' }); break;
+      case 'pretresse': hit(run, c, e, 0.25, { noCrit: true, dot: 'ally' }); heroHeal(run, c, st.hp * 0.018); break;
+    }
+  }
   function finish(run, c) {
     if (c.done) return; c.done = true;
     if (!c.win) { ev(c, { k: 'dead' }); run.phase = 'dead'; return; }
     var r = run.room, res = { items: c.drops, gold: c.gold, cendres: c.cendres, xp: c.xp, type: r.type };
     run.gold += c.gold; run.cendres += c.cendres; S.cendres += c.cendres;
+    if (c.cond === 'defi') { res.defi = c.t <= 20; if (res.defi) { res.items.push(dropItem(run, 'chest', 2)); run.gold += 40; res.gold += 40; } }
+    if (r.type === 'arene') { res.artifact = giveArtifact(run); run.pendingBoons++; res.items.push(dropItem(run, 'chest', 2)); res.arene = true; S.stats.arenes++; }
+    if (r.variant) res.variant = r.variant;
     if (r.type === 'elite' || r.forceElite) { res.artifact = giveArtifact(run); }
     if (r.wasMimic) { res.items.push(dropItem(run, 'chest', 2)); S.stats.chests++; }
     if (r.type === 'boss') {
@@ -822,7 +903,7 @@
       S.stats['boss' + zi]++; S.stats.bosses++; run.bosses++;
       if (zn > S.stats.bossMax) { S.stats.bossMax = zn; res.firstKill = true; }
       res.artifact = giveArtifact(run); run.potions = Math.min(run.potionsMax, run.potions + 1);
-      heal(run, run.stats.hp * 0.3, true); res.boss = true;
+      heal(run, run.stats.hp * 0.3, true); res.boss = true; if (run.ally) { res.allyLeft = run.ally; run.ally = null; }
     }
     heal(run, run.stats.hp * 0.08, true);
     res.lvlUps = gainXp(run, c.xp);

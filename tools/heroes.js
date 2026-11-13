@@ -9,8 +9,8 @@ function play(hero) {
     if (r.pendingBoons > 0) { if (!r.offer) E.makeOffer(r); E.chooseBoon(Math.floor(Math.random() * r.offer.length)); continue; }
     if (r.phase === 'combat') { let n = 0; while (r.combat && !r.combat.over && n++ < 20000) { E.tick(0.1); r.combat.events.length = 0; } if (r.combat && !r.combat.over) { r.phase = 'dead'; } continue; }
     if (r.phase === 'victory') { E.continueRun(); continue; }
-    if (r.phase === 'doors') { const f = r.hp / r.stats.hp; let i = r.doors.indexOf(f < 0.55 ? 'repos' : 'combat'); E.chooseDoor(i < 0 ? 0 : i); continue; }
-    if (r.phase === 'room') { const t = r.room.type; if (t === 'tresor') E.roomAction('open'); else if (t === 'marchand') E.roomAction('leave'); else if (t === 'repos') E.roomAction('heal'); else if (t === 'autel') E.roomAction('skip'); else { const ev = E.byId(D.EVENTS, r.room.event); E.roomAction('opt', ev.opts.length - 1); } continue; }
+    if (r.phase === 'doors') { const f = r.hp / r.stats.hp; let i = r.doors.indexOf(f < 0.55 ? 'repos' : 'combat'); if (i < 0) i = r.doors.indexOf('combat'); E.chooseDoor(i < 0 ? 0 : i); continue; }
+    if (r.phase === 'room') { const t = r.room.type; if (t === 'tresor') E.roomAction('open'); else if (t === 'marchand') E.roomAction('leave'); else if (t === 'repos') E.roomAction('heal'); else if (t === 'autel') E.roomAction('skip'); else if (t === 'mercenaire') { if (E.roomAction('hire', 0) === false) E.roomAction('leave'); } else { const ev = E.byId(D.EVENTS, r.room.event); E.roomAction('opt', ev.opts.length - 1); } continue; }
     if (r.phase === 'dead') break; }
   const s = E.endRun(false); E.equipBest(hero); E.salvageBelow(0);
   for (let k = 0; k < 200; k++) { let b = null, bc = Infinity; D.META.forEach(m => { const c = E.metaCost(m.id); if (c != null && c < bc) { bc = c; b = m.id; } }); if (!b || !E.buyMeta(b)) break; }

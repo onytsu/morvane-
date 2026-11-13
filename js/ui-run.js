@@ -22,7 +22,7 @@ UI.run = (function () {
       '<button class="ultb" id="bult" data-act="ult"><i></i><span>' + h.ult.icon + ' ' + h.ult.name + '</span></button>' +
       '<button class="act" id="bstance" data-act="stance"><span class="ai"></span><b></b></button></div>' +
       '<button class="relics" id="relics" data-act="relics" style="width:100%"></button></div>';
-    built = null; shownPhase = null;
+    built = null; shownPhase = null; updateHud.key = null;
     if (run.phase !== 'combat') SND.music(zoneMusic(run));
     if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); }
     syncPhase(true);
@@ -36,19 +36,19 @@ UI.run = (function () {
     var run = S().run, c = run.combat, z = E.zoneOf(run.floor), a = $('#arena');
     a.style.setProperty('--z1', z.bg[0]); a.style.setProperty('--z2', z.bg[1]); a.style.setProperty('--zc', z.color);
     if (typeof Backgrounds !== 'undefined') { a.style.backgroundImage = 'url(' + Backgrounds.url(z.id) + ')'; a.classList.add('hasbg'); }
-    a.innerHTML = '<div class="unit hero" id="uhero">' + UI.spr(run.hero) + '</div><div class="minions" id="minions"></div><div class="combo" id="combo"></div>';
+    a.innerHTML = '<div class="unit hero" id="uhero">' + UI.spr(run.hero) + '</div><div class="minions" id="minions"></div><div class="combo" id="combo"></div>' + extraHtml(run);
     els = {}; posOf = {}; floats = 0; lootShown = 0; combo = 0;
     fxL = typeof FX !== 'undefined' ? FX.attach(a, { ambient: ['dust', 'leaves', 'fireflies', 'gold', 'embers', 'void'][z.id - 1], warm: 2 }) : null;
     if (c) { c.enemies.forEach(function (e, i) { if (!e.dead) addEnemy(e, i, false); }); built = c; }
     else built = 'empty';
   }
   function addEnemy(e, i, spawn) {
-    var c = S().run.combat, bossFight = c.enemies[0].boss, P = bossFight ? BPOS : POS, used = {}, k;
+    var c = S().run.combat, bossFight = c.enemies[0].boss || c.enemies[0].champ, P = bossFight ? BPOS : POS, used = {}, k;
     for (k in posOf) if (els[k] && !els[k].classList.contains('dead')) used[posOf[k]] = 1;
     var pi = 0; while (used[pi] && pi < P.length - 1) pi++;
     posOf[e.id] = pi;
     var d = document.createElement('div');
-    d.className = 'unit en' + (e.boss ? ' boss' : e.elite ? ' elite' : '') + (spawn ? ' spawn' : '');
+    d.className = 'unit en' + (e.boss ? ' boss' : e.elite ? ' elite' : '') + (spawn ? ' spawn' : '') + (e.fix ? ' fixed fx-' + e.fix : '') + (e.big ? ' giant' : '') + (e.gold ? ' golden' : '') + (e.champ ? ' champ' : '');
     d.id = 'en' + e.id; d.dataset.act = 'target'; d.dataset.i = i;
     d.style.right = P[pi].r + '%'; d.style.bottom = P[pi].b + '%'; d.style.zIndex = 10 - Math.round(P[pi].b / 5);
     d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + '</div><div class="cbar"><i></i></div><div class="ebar"><i></i><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">🎯</span>';
@@ -63,6 +63,25 @@ UI.run = (function () {
     a.appendChild(f); floats++;
     setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); floats--; }, 800);
   }
+  // --- variété : condition de salle, mercenaire, annonces ---
+  function extraHtml(run) {
+    var r = run.room, h = '', cd = r.cond ? E.byId(D.CONDS, r.cond) : null;
+    if (cd) h += '<button class="cond" id="cond" data-act="cond">' + cd.icon + ' <b>' + cd.name + '</b><span id="condt"></span></button>';
+    if (r.waves) h += '<div class="cond" id="wavec">🏟️ <b>Vague <span id="waven">' + (r.wave || 1) + '</span>/' + r.waves + '</b></div>';
+    if (run.ally) h += '<div class="ally" id="ally">' + UI.spr(run.ally) + '</div>';
+    return h;
+  }
+  function intro(run) {
+    var r = run.room, cd = r.cond ? E.byId(D.CONDS, r.cond) : null;
+    if (r.variant === 'horde') { banner('HORDE', 'ILS SONT NOMBREUX'); }
+    else if (r.variant === 'champion') { banner('CHAMPION', 'UN MONSTRE GÉANT'); SND.play('boss_intro', 0.6); }
+    else if (r.variant === 'porteur') { banner("PORTEUR D'OR", 'TUE-LE AVANT QU’IL FUIE'); SND.play('gold'); tuto('porteur', "💰 Le <b>Porteur d'or</b> s’enfuit au bout de 12 secondes. Touche-le pour le cibler et tue-le vite : il est plein d’or."); }
+    else if (r.type === 'arene') { banner('ARÈNE', 'VAGUE 1/3'); SND.play('boss_intro', 0.6); }
+    else if (cd) banner(cd.name.toUpperCase(), 'CONDITION');
+    if (cd) UI.toast(cd.icon + ' <b>' + cd.name + '</b> : ' + cd.desc, true);
+    if (S().run.combat.enemies.some(function (x) { return x.fix && !x.champ; })) tuto('fix', '✴️ Les monstres au <b>nom doré</b> ont un pouvoir en plus (vampirique, explosif, géant...). Ils sont plus durs, mais rapportent plus.');
+  }
+  ACT.cond = function () { var r = S().run && S().run.room, cd = r && r.cond ? E.byId(D.CONDS, r.cond) : null; if (cd) UI.toast(cd.icon + ' <b>' + cd.name + '</b> : ' + cd.desc, true); };
   // --- petits effets ---
   function center(el) { var a = $('#arena'); if (!el || !a) return null; var ar = a.getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left - ar.left + r.width / 2, y: r.top - ar.top + r.height * 0.55, w: ar.width, h: ar.height, b: r.bottom - ar.top }; }
   function fxAt(el, kind, n) { if (!fxL) return; var p = center(el); if (p) FX.burst(fxL, p.x, p.y, kind, n); }
@@ -100,7 +119,7 @@ UI.run = (function () {
     for (i = 0; i < evs.length; i++) {
       e = evs[i]; el = e.id ? els[e.id] : null;
       switch (e.k) {
-        case 'start': SND.music(zoneMusic(run)); tuto('skill', '👆 Ton héros frappe tout seul. Touche un <b>pouvoir</b> dès qu’il brille !'); break;
+        case 'start': SND.music(zoneMusic(run)); intro(run); tuto('skill', '👆 Ton héros frappe tout seul. Touche un <b>pouvoir</b> dès qu’il brille !'); break;
         case 'boss': SND.music(E.zoneOf(run.floor).id === 6 ? 'final' : 'boss'); SND.play('boss_intro'); banner(c.enemies[0].name.toUpperCase(), 'BOSS'); UI.flash('#c2283a66'); break;
         case 'dmg':
           if (e.sh) { floatAt(el, 'Bouclier', 'txt'); break; }
@@ -127,7 +146,7 @@ UI.run = (function () {
         case 'charge': tuto('charge', '⚠️ <b>Attaque chargée !</b> Touche <b>🤺 Parer</b> juste avant le coup pour l’annuler et riposter. Un étourdissement l’interrompt aussi.'); break;
         case 'interrupt': floatAt(el, 'Interrompu !', 'txt'); break;
         case 'enrage': floatAt(el, 'ENRAGÉ', 'big'); break;
-        case 'summon': var idx = -1; c.enemies.forEach(function (x, j) { if (x.id === e.id) idx = j; }); if (idx >= 0) { addEnemy(c.enemies[idx], idx, true); floatAt(els[e.id], 'Invoqué', 'txt'); } break;
+        case 'summon': var idx = -1; c.enemies.forEach(function (x, j) { if (x.id === e.id) idx = j; }); if (idx >= 0) { addEnemy(c.enemies[idx], idx, true); if (!e.quiet) floatAt(els[e.id], 'Invoqué', 'txt'); } break;
         case 'eheal': floatAt(el, 'Soin', 'heal'); break;
         case 'eshield': floatAt(el, 'Bouclier', 'txt'); break;
         case 'revive': fxAt(hero, 'gold', 40); UI.flash('#ffe9b8cc'); SND.play('skill_holy'); banner('RESSUSCITÉ', ''); break;
@@ -139,6 +158,9 @@ UI.run = (function () {
         case 'ult': fxAt(hero, 'gold', 45); fxAt(hero, 'crit', 25); banner(e.name.toUpperCase(), 'ULTIME'); UI.flash('#d9a441aa'); SND.play(e.sfx); SND.play('levelup', 0.6); anim($('#arena'), 'shake', 250); break;
         case 'weak': tuto('weak', '🎯 <b>Point faible !</b> Touche vite l’ennemi marqué d’une cible pour un coup critique énorme.'); break;
         case 'weakhit': fxAt(el, 'star', 22); floatAt(el, 'POINT FAIBLE !', 'crit'); anim($('#arena'), 'shake', 250); break;
+        case 'flee': if (el) { floatAt(el, 'Il s’enfuit !', 'txt'); el.classList.add('dead'); } SND.play('error'); break;
+        case 'wave': banner('VAGUE ' + e.n + '/' + e.of, 'ARÈNE'); SND.play('door'); var wn = $('#waven'); if (wn) wn.textContent = e.n; break;
+        case 'ally': anim($('#ally'), 'atk', 220); break;
         case 'win': break;
       }
     }
@@ -193,6 +215,7 @@ UI.run = (function () {
       var s = stIcons(e.st), se = el.children[5]; if (se.textContent !== s) se.textContent = s;
       el.classList.toggle('weak', !!c.weak && c.weak.id === e.id);
     });
+    var ctm = $('#condt'); if (ctm && c.cond === 'defi') { var left = Math.max(0, 20 - c.t); ctm.textContent = ' ' + left.toFixed(1) + ' s'; ctm.parentNode.classList.toggle('late', left <= 0); }
     var hu = $('#uhero'); if (hu) { hu.classList.toggle('invuln', c.hero.invuln > 0); hu.classList.toggle('undying', !!c.hero.buffs.undying); }
     var m = $('#minions'), n = c.hero.skel || 0;
     if (m && m.children.length !== n) { var h = ''; for (var i = 0; i < n; i++) h += UI.spr('serviteur'); m.innerHTML = h; }
@@ -253,9 +276,12 @@ UI.run = (function () {
   }
   function sheetVictory(run) {
     var r = run.result, h = '';
-    h += '<h2>' + (r.chest ? '🧰 Coffre ouvert' : r.boss ? '☠️ BOSS VAINCU' : r.type === 'elite' ? '👹 Élite vaincue' : 'Victoire') + '</h2>';
+    h += '<h2>' + (r.chest ? '🧰 Coffre ouvert' : r.arene ? '🏟️ Arène conquise' : r.variant === 'champion' ? '💪 Champion terrassé' : r.variant === 'horde' ? 'Horde massacrée' : r.boss ? '☠️ BOSS VAINCU' : r.type === 'elite' ? '👹 Élite vaincue' : 'Victoire') + '</h2>';
     if (r.firstKill) h += '<div class="center gold small" style="margin-bottom:6px">Nouvelle zone débloquée : tu pourras repartir d’ici !</div>';
     h += '<div class="gains">' + (r.gold ? '<span class="gold">+' + r.gold + ' 💰</span>' : '') + (r.cendres ? '<span class="ash">+' + E.fmt(r.cendres) + ' 🔥</span>' : '') + (r.lvlUps ? '<span style="color:#b3a6ff">Niveau ' + run.lvl + ' !</span>' : '') + '</div>';
+    if (r.defi != null) h += '<div class="center small ' + (r.defi ? 'good' : 'dim') + '" style="margin-bottom:6px">⏱️ Défi du bourreau : ' + (r.defi ? '<b>réussi !</b> Coffre bonus.' : 'trop lent cette fois.') + '</div>';
+    if (r.arene) h += '<div class="center small gold" style="margin-bottom:6px">Récompense : un artefact, une aubaine et un objet.</div>';
+    if (r.allyLeft) h += '<div class="center small dim" style="margin-bottom:6px">' + E.hero(r.allyLeft).name + ' te salue et repart : son contrat est rempli.</div>';
     if (r.artifact) h += '<div class="choice b3" style="pointer-events:none"><div class="ic">' + r.artifact.icon + '</div><div><span class="tag">Artefact</span><b>' + r.artifact.name + '</b><div class="d">' + r.artifact.desc + '</div></div></div>';
     if (r.items.length) h += '<div class="loot">' + lootCards(r.items) + '</div><div class="tiny dim center">Touche un objet pour le voir ou l’équiper</div>';
     else if (!r.artifact) h += '<div class="center dim small" style="margin:8px 0">Pas d’objet cette fois.</div>';
@@ -296,6 +322,15 @@ UI.run = (function () {
   };
   function sheetRoom(run) {
     var r = run.room, t = r.type, h = '';
+    if (t === 'mercenaire') {
+      h = '<h2>🤝 Camp de mercenaires</h2><p class="center dim small" style="margin-top:-6px">« Notre lame contre ton or. Jusqu’au prochain boss. » · Tu as <b class="gold">💰 ' + run.gold + '</b></p>';
+      r.mercs.forEach(function (id, i) {
+        var m = E.hero(id), no = run.gold < r.price;
+        h += '<button class="choice b1' + (no ? ' off' : '') + '"' + (no ? ' style="opacity:.45"' : '') + ' data-act="room" data-a="hire" data-arg="' + i + '"><div class="ic">' + UI.spr(id).replace('<img', '<img style="width:42px;height:42px"') + '</div><div class="grow"><span class="tag">' + m.title + '</span><b>' + m.name + ' — 💰 ' + r.price + '</b><div class="d">' + D.ALLIES[id] + '</div></div></button>';
+      });
+      h += '<div class="btns"><button class="btn" data-act="room" data-a="leave">Continuer seul</button></div>';
+      UI.overlay(h); return;
+    }
     if (t === 'tresor') h = '<h2>Salle du trésor</h2><div class="room-art">🧰</div><p class="center dim">Un coffre cerclé de fer. Il a l’air... de respirer ?</p><div class="btns"><button class="btn goldb big" data-act="room" data-a="open">OUVRIR</button></div>';
     else if (t === 'marchand') {
       h = '<h2>⚖️ Le Colporteur</h2><p class="center dim small" style="margin-top:-6px">« Tout a un prix. Surtout toi. » · Tu as <b class="gold">💰 ' + run.gold + '</b></p>';
