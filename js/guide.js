@@ -37,6 +37,10 @@ UI.guide = (function () {
     // icônes pixel des pouvoirs et des ultimes de chaque héros
     DATA.HEROES.forEach(function (h) { h.skills.forEach(function (k) { k.icon = UI.spr('sk_' + k.id, 'ski'); }); h.ult.icon = UI.spr('ul_' + h.id, 'ski'); h.passive.icon = UI.spr('pa_' + h.id, 'ski'); });
     Object.keys(DATA.DICE).forEach(function (t) { DATA.DICE[t].icon = UI.spr('dt_' + t, 'dgl'); });
+    // icônes pixel des passifs : aubaines, aubaines propres à chaque héros (celles qui renforcent un pouvoir reprennent son icône) et pactes
+    DATA.BOONS.forEach(function (b) { b.icon = UI.spr('bn_' + b.id.slice(2), 'ski'); });
+    DATA.HEROES.forEach(function (h) { h.boons.forEach(function (b) { var m = b.mods, k = m.s1P ? 0 : m.s2P ? 1 : m.s3P ? 2 : -1; b.icon = UI.spr(k >= 0 ? 'up_' + h.skills[k].id : 'cb_' + b.id.slice(2), 'ski'); }); });
+    DATA.PACTS.forEach(function (p) { p.icon = UI.spr('pc_' + p.id.slice(3), 'ski'); });
   })();
 
   function build() {

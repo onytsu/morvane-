@@ -709,7 +709,7 @@ UI.run = (function () {
       r.stock.forEach(function (s, i) {
         var no = s.sold || run.gold < s.price || (s.kind === 'potion' && run.potions >= run.potionsMax) || (s.kind === 'heal' && run.hp >= run.stats.hp);
         var rc = s.kind === 'item' ? ' c' + s.item.rar : '';
-        h += '<div class="li"><div class="ic">' + s.icon + '</div><div class="grow"><b class="' + rc + '">' + s.name + '</b><div class="small dim">' + s.desc + '</div></div><button class="btn sm ' + (no ? 'off' : 'goldb') + '" data-act="room" data-a="buy" data-arg="' + i + '">' + (s.sold ? 'Vendu' : '💰 ' + s.price) + '</button></div>';
+        h += '<div class="li"><div class="ic">' + (s.kind === 'boon' ? UI.spr('bn_tout', 'ski') : s.icon) + '</div><div class="grow"><b class="' + rc + '">' + s.name + '</b><div class="small dim">' + s.desc + '</div></div><button class="btn sm ' + (no ? 'off' : 'goldb') + '" data-act="room" data-a="buy" data-arg="' + i + '">' + (s.sold ? 'Vendu' : '💰 ' + s.price) + '</button></div>';
       });
       h += '<div class="btns"><button class="btn primary" data-act="room" data-a="leave">Repartir</button></div>';
     } else if (t === 'repos') {
