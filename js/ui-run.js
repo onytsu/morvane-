@@ -75,8 +75,9 @@ UI.run = (function () {
     var d = document.createElement('div');
     d.className = 'unit en' + (e.boss ? ' boss' : e.elite ? ' elite' : '') + (spawn ? ' spawn' : '') + (e.fix ? ' fixed fx-' + e.fix : '') + (e.big ? ' giant' : '') + (e.gold ? ' golden' : '') + (e.champ ? ' champ' : '');
     d.id = 'en' + e.id; d.dataset.act = 'target'; d.dataset.i = i; d.dataset.info = 'foe:' + i;
-    d.style.right = P[pi].r + '%'; d.style.bottom = P[pi].b + '%'; d.style.zIndex = 10 - Math.round(P[pi].b / 5);
+    d.style.setProperty('--bd', -(Math.random() * 2.2).toFixed(2) + 's'); d.style.right = P[pi].r + '%'; d.style.bottom = P[pi].b + '%'; d.style.zIndex = 10 - Math.round(P[pi].b / 5);
     d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span><span class="intent"></span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">' + UI.spr('i_burst', 'ic') + '</span>';
+    if (e.boss || e.elite || e.champ) d.insertAdjacentHTML('beforeend', '<i class="aura"></i>'); // en dernier : updateArena lit les enfants par position
     $('#arena').appendChild(d); els[e.id] = d;
   }
   function floatAt(el, txt, cls) {
@@ -415,7 +416,7 @@ UI.run = (function () {
         case 'elanbreak': floatAt(hero, 'Élan brisé', 'hurt'); break;
         case 'evo': fxAt(hero, 'star', 10); break;
         case 'free': floatAt(hero, 'Rechargé !', 'crit'); anim($('#sk' + e.i), 'bump', 300); SND.play('upgrade', 0.6); break;
-        case 'win': break;
+        case 'win': hero.classList.add('victory'); fxAt(hero, 'gold', e.boss ? 30 : 14); break;
       }
     }
     evs.length = 0;
