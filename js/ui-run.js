@@ -730,6 +730,35 @@ UI.run = (function () {
     } else if (t === 'event') { eventTalk(run); return; }
     UI.overlay(h);
   }
+  // Ce que rapporte (ou coûte) un choix, affiché en grand au milieu de l'écran
+  function snap(run) { return { gold: run.gold, hp: run.hp, max: run.stats.hp, atk: run.stats.atk, pot: run.potions, boons: run.pendingBoons, cend: run.cendres || 0, arts: (run.artifacts || []).length, taken: run.stats.takenP || 0, item: run.room && run.room.gotItem }; }
+  function gainLines(a, run) {
+    var b = snap(run), L = [], n;
+    function add(ic, txt, good) { L.push('<div class="gl ' + (good ? 'up' : 'dn') + '">' + (ic ? UI.spr(ic, 'gi') : '') + '<b>' + txt + '</b></div>'); }
+    if (b.gold !== a.gold) add('bn_or', (b.gold > a.gold ? '+' : '−') + Math.abs(b.gold - a.gold) + ' or', b.gold > a.gold);
+    if (b.max !== a.max) { n = Math.round(b.max - a.max); add('e_heart', (n > 0 ? '+' : '−') + Math.abs(n) + ' PV max', n > 0); }
+    if (Math.round(b.hp - a.hp) !== 0) { n = Math.round(b.hp - a.hp); add('e_heart', (n > 0 ? '+' : '−') + E.fmt(Math.abs(n)) + ' PV', n > 0); }
+    if (b.atk !== a.atk) { n = Math.round((b.atk / a.atk - 1) * 100); if (n) add('i_sword', (n > 0 ? '+' : '−') + Math.abs(n) + ' % attaque', n > 0); }
+    if (b.taken !== a.taken) { n = b.taken - a.taken; add('e_drop', '+' + n + ' % dégâts subis', n < 0); }
+    if (b.pot > a.pot) add('i_potion', '+' + (b.pot - a.pot) + ' fiole', true);
+    if (b.boons > a.boons) add('bn_tout', '+' + (b.boons - a.boons) + ' aubaine', true);
+    if (b.arts > a.arts) { var ar = E.byId(D.ARTIFACTS, run.artifacts[run.artifacts.length - 1]); add('i_ult', 'Artefact : ' + (ar ? ar.name : ''), true); }
+    if (b.cend > a.cend) add('bn_flamme', '+' + E.fmt(b.cend - a.cend) + ' Cendres', true);
+    if (b.item && b.item !== a.item) { var it = E.findItem(b.item); if (it) add(null, '<span class="c' + it.rar + '">' + E.itemName(it) + '</span>', true); }
+    return L;
+  }
+  function bigGains(a, run, msg) {
+    var L = gainLines(a, run); if (!L.length) return false;
+    var old = document.getElementById('gainpop'); if (old && old.parentNode) old.parentNode.removeChild(old);
+    var g = document.createElement('div'); g.id = 'gainpop';
+    g.innerHTML = '<div class="gp">' + (msg ? '<p>' + msg + '</p>' : '') + L.join('') + '<span class="gtap">Touche pour continuer</span></div>';
+    document.getElementById('app').appendChild(g);
+    var up = L.some(function (x) { return x.indexOf('gl up') >= 0; }); SND.play(up ? 'gold' : 'hurt', 0.8);
+    function close() { if (g.parentNode) g.parentNode.removeChild(g); }
+    g.addEventListener('click', function (e) { e.stopPropagation(); close(); });
+    setTimeout(close, 3500);
+    return true;
+  }
   // Salle Mystère : une vraie scène de dialogue, avec le personnage rencontré, sa voix, et les choix dans la bulle
   function eventTalk(run) {
     if (UI.story.talking()) return;
@@ -743,7 +772,8 @@ UI.run = (function () {
       choices: ev.opts.map(function (o) { var g = o.need && o.need.gold; return { t: o.t, off: !!g && run.gold < g, sub: g ? (run.gold < g ? 'Il te faut ' + g + ' or' : 'Tu as ' + run.gold + ' or') : '' }; }),
       onReady: function () { if (!r.talked) { r.talked = 1; E.save(); } },
       onChoice: function (i) {
-        var res = E.roomAction('opt', i); if (res === false) return false;
+        var before = snap(run), res = E.roomAction('opt', i); if (res === false) return false;
+        setTimeout(function () { bigGains(before, run); }, 250);
         updateHud.key = null;
         return { pages: [[null, typeof res === 'string' && res ? res : '…']] };
       },
@@ -751,13 +781,13 @@ UI.run = (function () {
     });
   }
   ACT.room = function (d) {
-    var run = S().run, t = run.room.type, res = E.roomAction(d.a, d.arg != null ? +d.arg : undefined);
+    var run = S().run, t = run.room.type, before = snap(run), res = E.roomAction(d.a, d.arg != null ? +d.arg : undefined);
     if (res === false) { SND.play('error'); return; }
     if (res === 'mimic') { UI.overlay(null); built = null; setTimeout(function () { banner('MIMIQUE !', 'PIÈGE'); SND.play('boss_intro'); }, 60); }
     else if (res === 'chest') SND.play('door');
     else if (res === 'buy') { SND.play('buy'); if (run.pendingBoons > 0) { shownPhase = null; } else { sheetRoom(run); updateHud.key = null; return; } }
-    else if (t === 'repos') { SND.play(d.a === 'heal' ? 'heal' : d.a === 'potion' ? 'potion' : 'upgrade'); UI.toast(res, true); }
-    else if (res !== 'leave' && typeof res === 'string' && res) { UI.toast(res, true); SND.play(t === 'autel' && d.a === 'take' ? 'skill_dark' : 'click'); if (run.phase === 'combat') { UI.overlay(null); built = null; } }
+    else if (t === 'repos') { SND.play(d.a === 'heal' ? 'heal' : d.a === 'potion' ? 'potion' : 'upgrade'); if (!bigGains(before, run, res)) UI.toast(res, true); }
+    else if (res !== 'leave' && typeof res === 'string' && res) { if (!bigGains(before, run, res)) UI.toast(res, true); SND.play(t === 'autel' && d.a === 'take' ? 'skill_dark' : 'click'); if (run.phase === 'combat') { UI.overlay(null); built = null; } }
     updateHud.key = null; syncPhase(true);
   };
 

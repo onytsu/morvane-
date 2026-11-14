@@ -1097,3 +1097,14 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 .st-opt.off { opacity: .45; }
 @keyframes stoptin { from { opacity: 0; transform: translateY(6px); } }
 #story.talk .st-chap { color: var(--sc); }
+/* v4.1 : les icônes d'intention restent petites (elles héritaient de la taille des monstres) */
+.unit img.emo, .unit .ename img.emo, .unit .sts img.emo { width: 13px; height: 13px; font-size: inherit; vertical-align: -2px; animation: none; filter: none; display: inline-block; }
+/* v4.1 : gains d'un choix, en grand */
+#gainpop { position: absolute; inset: 0; z-index: 85; display: flex; align-items: center; justify-content: center; background: #05040a99; animation: fade .2s; }
+#gainpop .gp { min-width: 230px; max-width: 86%; padding: 18px 20px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; border: 8px solid transparent; border-image: var(--fr-gold) 4 / 8px / 0 stretch; image-rendering: pixelated; background: #120d19; background-clip: padding-box; animation: pop .3s cubic-bezier(.2, 1.4, .4, 1); }
+#gainpop p { margin: 0 0 4px; text-align: center; font-size: 13px; color: #cfc6dc; font-style: italic; }
+#gainpop .gl { display: flex; align-items: center; gap: 10px; font-size: 24px; font-family: var(--serif); letter-spacing: .03em; animation: pop .35s backwards; }
+#gainpop .gl:nth-of-type(2) { animation-delay: .1s; } #gainpop .gl:nth-of-type(3) { animation-delay: .2s; } #gainpop .gl:nth-of-type(4) { animation-delay: .3s; }
+#gainpop .gl.up b { color: #ffe08a; text-shadow: 0 0 10px #f2bd5e88, 2px 2px 0 #000; } #gainpop .gl.dn b { color: #ff8a8a; text-shadow: 0 0 10px #c2283a88, 2px 2px 0 #000; }
+#gainpop .gi { width: 32px; height: 32px; image-rendering: pixelated; }
+#gainpop .gtap { margin-top: 6px; font-size: 11px; color: #8e869c; }

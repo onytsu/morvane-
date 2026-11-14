@@ -385,8 +385,10 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.0';
+  var VERSION = '4.1';
   var NEWS = [
+    ['💰', 'Des gains qui se voient', 'Après un choix (Mystère, feu de camp, autel...), ce que tu gagnes ou perds s’affiche en grand au milieu de l’écran : or, PV, attaque, aubaine, objet.'],
+    ['👁️', 'Des intentions discrètes', 'Les icônes géantes au-dessus des ennemis redeviennent une petite étiquette sous leur nom.'],
     ['🎲', 'Des combats plus simples', 'La table de 9 cases disparaît. Touche un dé de ta main, retouche-le : il agit tout de suite. Ou glisse-le dans un pouvoir. Plus de cases ×2, +2 ni de voisins à calculer.'],
     ['✨', 'Des figures qui se lisent', 'Les 3 premiers dés joués dans un tour forment une figure, d’après le chiffre affiché sur chacun : Paire, Suite (2-3-4, dans n’importe quel ordre) ou Brelan. Le cadre « Ce tour » les montre en direct.'],
     ['🎭', 'Des Mystères qui parlent', 'Chaque salle Mystère devient une vraie scène : tu rencontres le personnage (le pendu, l’ombre marchande, ton propre reflet...), il te parle, et tu choisis ta réponse dans la bulle.'],
