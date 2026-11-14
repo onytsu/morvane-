@@ -63,6 +63,8 @@ UI.guide = (function () {
   function place() {
     var st = steps[idx], el = target(st), app = document.getElementById('app').getBoundingClientRect(), hole = root.firstChild, bub = root.lastChild;
     bub.querySelector('.g-t').innerHTML = st.t; bub.querySelector('.g-x').innerHTML = st.x;
+    // la Veilleuse parle : quelques bips de sa voix
+    if (typeof SND !== 'undefined' && SND.blip) for (var bi = 0; bi < 7; bi++) setTimeout(function () { SND.blip(300, 0.7, 'triangle'); }, 60 + bi * 55);
     var many = steps.length > 1, d = ''; if (many) for (var i = 0; i < steps.length; i++) d += '<i class="' + (i === idx ? 'on' : '') + '"></i>';
     bub.querySelector('.g-dots').innerHTML = d;
     bub.querySelector('.g-next').textContent = st.btn || (idx < steps.length - 1 ? 'Suivant' : 'Compris');

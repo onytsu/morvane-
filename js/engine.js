@@ -781,7 +781,8 @@
   // pioche un dé de plus (pouvoirs qui remplissent la main)
   function drawOne(run, c) { if (!c.pile.length) { c.pile = shuffle(c.disc); c.disc = []; } if (!c.pile.length) return; c.hand.push(rollDie(run, c.pile.pop())); ev(c, { k: 'draw', n: c.hand.length, again: 1 }); }
   // retourne un dé sur sa face opposée, sans dépenser de retournement
-  function flipValue(run, d) { var f = run.bag[d.bi].f, b = run.stats.diceV || 0; d.v = Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b)) + b; d.ice = false; }
+  function flipOf(run, d) { var f = run.bag[d.bi].f, b = run.stats.diceV || 0, k = d.bonus || 0; return Math.min(VMAX, Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b - k)) + b + k); }
+  function flipValue(run, d) { d.v = flipOf(run, d); d.ice = false; }
   function drawTurn(run, c) {
     var h = c.hero, n = 3 + (run.stats.diceHand || 0);
     c.dfx = {}; c.acted = false; h.ap = AP + (run.hero === 'berserker' && run.hp < run.stats.hp * 0.3 ? 1 : 0); c.weakRefund = false; c.foyerX2 = false;
@@ -822,7 +823,7 @@
     else if (t === 'echo') {
       // Écho : les autres dés de ta main gagnent la moitié de sa valeur. Seul, il charge l'ultime.
       var b = Math.ceil(v / 2);
-      if (c.hand.length) { c.hand.forEach(function (d) { d.v = Math.min(VMAX, d.v + b); d.ice = false; d.up = 1; }); ev(c, { k: 'echoUp', v: b }); }
+      if (c.hand.length) { c.hand.forEach(function (d) { var nv = Math.min(VMAX, d.v + b); d.bonus = (d.bonus || 0) + nv - d.v; d.v = nv; d.ice = false; d.up = 1; }); ev(c, { k: 'echoUp', v: b }); }
       else { ug(run, 2 * v); ev(c, { k: 'dult', v: 2 * v }); }
     }
   }
@@ -870,7 +871,7 @@
   // Retourne le dé n° hi sur sa face opposée (1↔6, 2↔5, 3↔4) : une fois par tour, sans action
   E.flipDie = function (hi) {
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || !c.hand[hi] || !(c.flips > 0)) return false;
-    var d = c.hand[hi], f = run.bag[d.bi].f, b = run.stats.diceV || 0, nv = Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b)) + b;
+    var d = c.hand[hi], nv = flipOf(run, d);
     if (nv === d.v) return false;
     c.flips--; d.v = nv; d.ice = false; ev(c, { k: 'flip', hi: hi, v: nv }); return true;
   };
@@ -1363,7 +1364,7 @@
       if (id === 'b2' && frac < 0.25) continue;
       if (id === 'a3') { var t = target(c); if (t && t.hp / t.maxhp > 0.35 && !t.boss && alive(c).length > 1) continue; }
       var hi = bestDie(run, c, i);
-      if (hi < 0 && c.flips > 0) { for (var fj = 0; fj < c.hand.length && hi < 0; fj++) { var fd = c.hand[fj], ff = run.bag[fd.bi].f, fb = run.stats.diceV || 0; if (!fd.ice && D.NEEDS[hero.skills[i].need].ok(Math.max(1, ff[0] + ff[5] - (fd.v - fb)) + fb) && E.flipDie(fj)) hi = fj; } }
+      if (hi < 0 && c.flips > 0) { for (var fj = 0; fj < c.hand.length && hi < 0; fj++) { var fd = c.hand[fj]; if (!fd.ice && D.NEEDS[hero.skills[i].need].ok(flipOf(run, fd)) && E.flipDie(fj)) hi = fj; } }
       if (hi >= 0 && E.useSkill(i, hi)) return true;
     }
     autoPlace(run, c); if (c.over || c.turn !== 'hero') return true;
