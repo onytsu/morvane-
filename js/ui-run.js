@@ -723,12 +723,28 @@ UI.run = (function () {
       h = '<h2>🩸 Autel maudit</h2><p class="center dim small" style="margin-top:-6px">Il offre. Il prend. Pour toute la descente.</p>';
       r.altars.forEach(function (ai, i) { var a = D.ALTARS[ai]; h += '<button class="choice b2" data-act="room" data-a="take" data-arg="' + i + '"><div class="ic">🩸</div><div><b>' + a.name + '</b><div class="d">' + a.desc + '</div></div></button>'; });
       h += '<div class="btns"><button class="btn" data-act="room" data-a="skip">Refuser et partir</button></div>';
-    } else if (t === 'event') {
-      var ev = E.byId(D.EVENTS, r.event);
-      h = '<h2>' + ev.title + '</h2><p class="center" style="font-style:italic">' + ev.text + '</p>';
-      ev.opts.forEach(function (o, i) { var no = o.need && o.need.gold && run.gold < o.need.gold; h += '<button class="choice b' + (i === ev.opts.length - 1 ? 0 : 1) + (no ? ' off' : '') + '"' + (no ? ' style="opacity:.4"' : '') + ' data-act="room" data-a="opt" data-arg="' + i + '"><div class="ic">' + (i === 0 ? '🅰️' : i === 1 ? '🅱️' : '🚪') + '</div><div><b>' + o.t + '</b></div></button>'; });
-    }
+    } else if (t === 'event') { eventTalk(run); return; }
     UI.overlay(h);
+  }
+  // Salle Mystère : une vraie scène de dialogue, avec le personnage rencontré, sa voix, et les choix dans la bulle
+  function eventTalk(run) {
+    if (UI.story.talking()) return;
+    if (UI.story.open()) { setTimeout(function () { if (S().run === run && run.phase === 'room' && run.room.type === 'event') eventTalk(run); }, 400); return; }
+    var r = run.room, ev = E.byId(D.EVENTS, r.event), z = E.zoneOf(run.floor), npc = ev.npc || {}, pages = [[null, ev.text]];
+    if (ev.narr) pages.push([null, ev.narr]);
+    if (ev.say) pages.push(['N', ev.say]);
+    UI.overlay(null);
+    UI.story.talk({
+      npc: npc, bg: z.id, color: z.color, title: 'Mystère · ' + ev.title, pages: pages, skipIntro: !!r.talked,
+      choices: ev.opts.map(function (o) { var g = o.need && o.need.gold; return { t: o.t, off: !!g && run.gold < g, sub: g ? (run.gold < g ? 'Il te faut ' + g + ' or' : 'Tu as ' + run.gold + ' or') : '' }; }),
+      onReady: function () { if (!r.talked) { r.talked = 1; E.save(); } },
+      onChoice: function (i) {
+        var res = E.roomAction('opt', i); if (res === false) return false;
+        updateHud.key = null;
+        return { pages: [[null, typeof res === 'string' && res ? res : '…']] };
+      },
+      done: function () { if (run.phase === 'combat') { UI.overlay(null); built = null; } updateHud.key = null; shownPhase = null; syncPhase(true); }
+    });
   }
   ACT.room = function (d) {
     var run = S().run, t = run.room.type, res = E.roomAction(d.a, d.arg != null ? +d.arg : undefined);

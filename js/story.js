@@ -186,20 +186,32 @@ UI.story = (function () {
   // ---------- lecture d'une scène ----------
   var root = null, queue = [], cur = null, typeT = null, isOpen = false, fxL = null;
   function heroId() { var s = S(); return (s.run && s.run.hero) || s.hero || 'chevalier'; }
-  function sprOf(v, zone) { if (v === 'H') return heroId(); if (v === 'B') return zone ? D.ZONES[zone - 1].boss : null; return v || null; }
-  function whoName(w, zone) { return w === 'V' ? 'La Veilleuse' : w === 'H' ? E.hero(heroId()).name : w === 'B' && zone ? D.ENEMIES[D.ZONES[zone - 1].boss].name : ''; }
+  function sprOf(v, zone) { if (v === 'H') return heroId(); if (v === 'N') return cur && cur.npc ? (cur.npc.spr === 'H' ? heroId() : cur.npc.spr) : null; if (v === 'B') return zone ? D.ZONES[zone - 1].boss : null; return v || null; }
+  function whoName(w, zone) { if (w === 'N') return cur && cur.npc ? cur.npc.name : ''; return w === 'V' ? 'La Veilleuse' : w === 'H' ? E.hero(heroId()).name : w === 'B' && zone ? D.ENEMIES[D.ZONES[zone - 1].boss].name : ''; }
   function txtOf(t, zone) { if (t === '@hero') return HERO_LINE[heroId()] || HERO_LINE.chevalier; if (t === '@taunt') return D.ZONES[zone - 1].taunt; return t; }
+  // Voix : chaque personnage a sa hauteur de bip pendant que son texte s'écrit
+  var HV = { chevalier: 150, pyro: 190, assassin: 170, necro: 120, berserker: 100, pretresse: 260, chasseuse: 230, moine: 140 };
+  function voiceOf(w) {
+    if (w === 'V') return [300, 0.8, 'triangle'];
+    if (w === 'H') return [HV[heroId()] || 160, 0.8, 'square'];
+    if (w === 'B') return [85, 0.9, 'sawtooth'];
+    if (w === 'N') return [(cur && cur.npc && cur.npc.voice) || 160, 0.85, (cur && cur.npc && cur.npc.wave) || 'square'];
+    return [560, 0.35, 'triangle'];
+  }
   function ensure() {
     if (root) return;
     root = document.createElement('div'); root.id = 'story';
     root.innerHTML = '<div class="st-scene"><div class="st-bg a"></div><div class="st-bg b"></div><div class="st-ch st-l"></div><div class="st-ch st-r"></div><div class="st-vig"></div></div>' +
       '<div class="st-top"><span class="st-chap"></span><button class="st-skip" data-st="skip">Passer ⏭</button></div>' +
-      '<div class="st-box"><div class="st-who"></div><p class="st-txt"></p><div class="st-foot"><span class="st-dots"></span><span class="st-next">▼</span></div></div>' +
+      '<div class="st-box"><div class="st-who"></div><p class="st-txt"></p><div class="st-opts"></div><div class="st-foot"><span class="st-dots"></span><span class="st-next">▼</span></div></div>' +
       '<div class="st-card"><div class="st-orn">✦</div><div class="st-num"></div><h1></h1><div class="st-rule"></div><div class="st-sub"></div><div class="st-tap">Touche pour continuer</div></div>';
     document.getElementById('app').appendChild(root);
     root.addEventListener('click', function (e) {
       e.stopPropagation();
-      if (e.target.closest && e.target.closest('[data-st=skip]')) { SND.play('click'); finish(); return; }
+      var opt = e.target.closest && e.target.closest('[data-st=opt]');
+      if (opt) { pickOpt(+opt.getAttribute('data-i')); return; }
+      if (e.target.closest && e.target.closest('[data-st=skip]')) { SND.play('click'); if (cur && cur.talk && cur.talk.phase === 'intro') { endType(); showOpts(); } else if (!(cur && cur.talk && cur.talk.phase === 'choose')) finish(); return; }
+      if (cur && cur.talk && cur.talk.phase === 'choose') return;
       advance();
     });
   }
@@ -221,19 +233,21 @@ UI.story = (function () {
     el.innerHTML = UI.spr(id); void el.offsetWidth; el.classList.add('on');
   }
   function showPage() {
-    var b = cur.beat, c = CHOF[b.key], p = b.pages[cur.i], o = p[2] || {};
+    var b = cur.beat, c = cur.ch, p = b.pages[cur.i], o = p[2] || {};
     if (o.bg !== undefined) cur.wantBg = o.bg; if (o.l !== undefined) cur.wantL = o.l; if (o.r !== undefined) cur.wantR = o.r;
     setBg(cur.wantBg); setCh('l', sprOf(cur.wantL, c.zone)); setCh('r', sprOf(cur.wantR, c.zone));
     var who = p[0], name = whoName(who, c.zone), box = q('.st-box');
-    box.className = 'st-box' + (who ? ' say' : ' narr') + (who === 'B' ? ' foe' : '');
+    box.className = 'st-box' + (who ? ' say' : ' narr') + (who === 'B' || (who === 'N' && cur.npc && cur.npc.foe) ? ' foe' : '');
+    q('.st-opts').innerHTML = '';
     q('.st-who').textContent = name;
-    q('.st-l').classList.toggle('dim', who === 'V' || who === 'B'); q('.st-r').classList.toggle('dim', who === 'H');
+    q('.st-l').classList.toggle('dim', who === 'V' || who === 'B' || who === 'N'); q('.st-r').classList.toggle('dim', who === 'H');
     q('.st-dots').innerHTML = b.pages.map(function (x, k) { return '<i' + (k === cur.i ? ' class="on"' : '') + '></i>'; }).join('');
-    var full = txtOf(p[1], c.zone), el = q('.st-txt'), n = 0;
+    var full = txtOf(p[1], c.zone), el = q('.st-txt'), n = 0, tick = 0, vo = voiceOf(who);
     cur.full = full; cur.typing = true; el.textContent = ''; box.classList.remove('done');
     clearInterval(typeT);
     typeT = setInterval(function () {
-      n += 2; el.textContent = full.slice(0, n);
+      var chunk = full.slice(n, n + 2); n += 2; el.textContent = full.slice(0, n);
+      if (tick++ % 2 === 0 && /[A-Za-zÀ-ÿ0-9]/.test(chunk)) SND.blip(vo[0], vo[1], vo[2]);
       if (n >= full.length) endType();
     }, 24);
   }
@@ -243,14 +257,46 @@ UI.story = (function () {
     if (cur.card) { cur.card = false; root.classList.remove('card'); SND.play('click', 0.6); showPage(); return; }
     if (cur.typing) { endType(); return; }
     SND.play('click', 0.5);
-    if (++cur.i >= cur.beat.pages.length) { finish(); return; }
+    if (++cur.i >= cur.beat.pages.length) { if (cur.talk && cur.talk.phase === 'intro') { cur.i--; showOpts(); return; } finish(); return; }
     showPage();
+  }
+  // ---------- dialogue avec choix (salles Mystère) ----------
+  function showOpts() {
+    var t = cur.talk; t.phase = 'choose'; if (t.onReady) t.onReady();
+    var box = q('.st-box'); box.classList.remove('done'); box.classList.add('choose');
+    q('.st-opts').innerHTML = t.choices.map(function (o, i) { return '<button class="st-opt' + (o.off ? ' off' : '') + '" data-st="opt" data-i="' + i + '"><span>' + (i + 1) + '</span><b>' + o.t + '</b>' + (o.sub ? '<em>' + o.sub + '</em>' : '') + '</button>'; }).join('');
+    q('.st-dots').innerHTML = '';
+  }
+  function pickOpt(i) {
+    var t = cur && cur.talk; if (!t || t.phase !== 'choose' || !t.choices[i]) return;
+    if (t.choices[i].off) { SND.play('error'); return; }
+    var res = t.onChoice(i);
+    if (res === false) { SND.play('error'); return; }
+    SND.play('click', 0.7); q('.st-box').classList.remove('choose');
+    t.phase = 'after';
+    if (!res || !res.pages || !res.pages.length) { finish(); return; }
+    cur.beat = { key: 'talk', pages: res.pages }; cur.i = 0; showPage();
+  }
+  // Ouvre un dialogue : o = { npc: { spr, name, voice, wave, foe }, bg, color, title, pages, choices: [{ t, sub, off }], onChoice(i) -> { pages } | false | null, skipIntro, done }
+  function talk(o) {
+    ensure();
+    if (isOpen && cur && cur.talk) return false;
+    cur = { beat: { key: 'talk', pages: o.pages && o.pages.length && !o.skipIntro ? o.pages : [o.pages[o.pages.length - 1]] }, ch: { zone: 0, num: '', title: '' }, i: 0, done: o.done, bg: null, flip: false, lId: undefined, rId: undefined,
+      wantBg: o.bg || 'camp', wantL: 'H', wantR: 'N', npc: o.npc || null, talk: { phase: 'intro', choices: o.choices || [], onChoice: o.onChoice, onReady: o.onReady } };
+    isOpen = true;
+    root.style.setProperty('--sc', o.color || '#ffb347');
+    q('.st-chap').textContent = o.title || '';
+    q('.st-l').className = 'st-ch st-l'; q('.st-r').className = 'st-ch st-r';
+    root.className = 'on talk';
+    showPage();
+    if (o.skipIntro) { endType(); showOpts(); }
+    return true;
   }
   function start(item) {
     ensure();
     var b = BEAT[item.key], c = CHOF[b.key];
     if (!item.replay) { seen()[b.key] = 1; E.save(); }
-    cur = { beat: b, i: 0, done: item.done, bg: null, flip: false, lId: undefined, rId: undefined, wantBg: b.bg || c.zone || 'camp', wantL: b.l !== undefined ? b.l : null, wantR: b.r !== undefined ? b.r : null, card: !!item.card };
+    cur = { beat: b, ch: c, i: 0, done: item.done, bg: null, flip: false, lId: undefined, rId: undefined, wantBg: b.bg || c.zone || 'camp', wantL: b.l !== undefined ? b.l : null, wantR: b.r !== undefined ? b.r : null, card: !!item.card };
     isOpen = true;
     root.style.setProperty('--sc', c.color || (c.zone ? D.ZONES[c.zone - 1].color : '#ffb347'));
     q('.st-chap').textContent = c.num + ' · ' + c.title;
@@ -317,5 +363,5 @@ UI.story = (function () {
     return '<button class="chroncard" data-act="chron" style="--sc:' + (c.color || (z ? z.color : '#ffb347')) + '"><div class="cthumb" style="background-image:url(' + bgUrl(c.zone || (c.id === 'epi' ? 'camp' : 'title')) + ')"></div>' +
       '<div class="grow"><span class="cnum">📖 Chronique · ' + c.num + '</span><b>' + c.title + '</b><div class="bar"><i style="width:' + (n / TOTAL * 100) + '%"></i></div><div class="tiny dim">' + n + ' / ' + TOTAL + ' scènes · relis l’histoire de Morvane</div></div>' + (fresh() ? '<i class="dot"></i>' : '') + '<span class="cgo">›</span></button>';
   }
-  return { play: play, enterZone: enterZone, inZone: inZone, open: function () { return isOpen; }, chron: chron, hubCard: hubCard, fresh: fresh, seen: seen, CH: CH };
+  return { play: play, talk: talk, talking: function () { return isOpen && !!(cur && cur.talk); }, enterZone: enterZone, inZone: inZone, open: function () { return isOpen; }, chron: chron, hubCard: hubCard, fresh: fresh, seen: seen, CH: CH };
 })();
