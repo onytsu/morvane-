@@ -1364,6 +1364,23 @@ ic('pa_pretresse', function () { E(8, 9, 5, 5, '#e6dfc8'); R(7, 5, 2, 8, '!' + R
 ic('pa_chasseuse', function () { E(8, 8, 6.5, 4, '#e6dfc8'); E(8, 8, 3, 3, '#5a7a3a'); E(8, 8, 1.5, 1.5, '!' + OUT); D('!#ffffff', 7, 7); L(1, 8, 2, 8, RD); L(14, 8, 15, 8, RD); L(8, 1, 8, 2, RD); L(8, 14, 8, 15, RD); });
 ic('pa_moine', function () { O(8, 8, 6.5, 6.5, '!' + F3); O(8, 8, 4.5, 4.5, '!' + F2); E(8, 8, 2.5, 2.5, F1); D('!#ffffff', 8, 8); D('!' + F1, 14, 4, 2, 12, 12, 13); });
 
+
+/* glyphes des types de dé (dt_*) 10x10 et outils du plateau */
+function gl(id, fn) { def(id, 10, 10, {}, fn); }
+gl('dt_lame', function () { L(2, 7, 8, 1, '!#ffffff'); L(1, 6, 3, 8, '!' + A1); D('!' + W2, 1, 9, 0, 9); });
+gl('dt_garde', function () { P('!#e8f0ff', [1, 1, 8, 1, 8, 5, 5, 9, 4, 9, 1, 5]); R(4, 2, 2, 6, '!#5f93dc'); R(2, 4, 6, 1, '!#5f93dc'); });
+gl('dt_seve', function () { P('!#ffffff', [5, 9, 1, 5, 1, 2, 3, 1, 5, 3, 7, 1, 9, 2, 9, 5]); D('!#ffd0d8', 2, 2, 3, 2); });
+gl('dt_echo', function () { O(5, 5, 4, 4, '!#fff1c4'); O(5, 5, 1.5, 1.5, '!#fff1c4'); });
+gl('dt_miroir', function () { R(2, 0, 6, 10, '!#dfe6f5'); R(3, 1, 4, 8, '!#8fa8c8'); L(3, 7, 6, 2, '!#ffffff'); });
+gl('dt_braise', function () { P('!#fff1a8', [5, 0, 8, 4, 8, 7, 5, 9, 2, 7, 2, 4, 4, 5]); D('!#ff6a1f', 5, 6, 5, 7, 4, 7, 6, 7); });
+gl('dt_venin', function () { E(5, 4, 3.5, 3.5, '!#e8ffd8'); D('!' + OUT, 4, 4, 6, 4, 5, 6); R(4, 8, 3, 2, '!#e8ffd8'); });
+gl('dt_foudre', function () { P('!#fff6a8', [6, 0, 2, 5, 5, 5, 3, 9, 8, 4, 5, 4]); });
+gl('dt_astre', function () { star(5, 5, 4, 4.5, 1.6, '!#fff6c8', -Math.PI / 2); D('!#ffffff', 5, 5); });
+ic('i_bag', function () { P('#8a6440', [3, 6, 13, 6, 14, 14, 2, 14]); R(5, 3, 6, 3, '#6a4a2c'); L(5, 6, 11, 6, A2); D('!' + A1, 8, 6); R(6, 9, 4, 3, '#e6dfc8'); D('!' + RD, 7, 10, 9, 11); });
+ic('i_reroll', function () { O(8, 8, 5.5, 5.5, '!#9fd0ff'); X(2, 6, 3, 2); X(11, 8, 3, 2); P('!#9fd0ff', [0, 7, 5, 7, 2, 10]); P('!#9fd0ff', [11, 9, 16, 9, 13, 6]); R(6, 6, 4, 4, '#e6dfc8'); D('!' + OUT, 7, 7, 8, 8); });
+ic('i_flip', function () { R(4, 4, 8, 8, '#e6dfc8'); R(4, 10, 8, 2, '#b9b094'); D('!' + OUT, 6, 6, 9, 6, 6, 9, 9, 9); P('!#ffd87a', [7, 0, 9, 0, 9, 2, 11, 2, 8, 4, 5, 2, 7, 2]); P('!#ffd87a', [7, 15, 9, 15, 9, 14, 11, 14, 8, 12, 5, 14, 7, 14]); });
+ic('i_lock', function () { O(8, 6, 3, 3.5, S1); X(5, 7, 7, 3); R(3, 7, 10, 8, A2); R(3, 7, 10, 1, A1); R(7, 9, 2, 4, '!' + OUT); });
+
 /* ---------- API ---------- */
 function has(id) { return Object.prototype.hasOwnProperty.call(defs, id) && String(id).charAt(0) !== '_'; }
 function key(id) { return has(id) ? id : '_fallback'; }

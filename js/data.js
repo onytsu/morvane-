@@ -387,8 +387,9 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '3.8';
+  var VERSION = '3.9';
   var NEWS = [
+    ['🎲', 'Un plateau de dés repensé', 'Dés taillés en pixel art avec l’icône de leur type, table sertie de fer, outils Sac / Relance / Retourne lisibles, et une ligne d’aide qui te dit à chaque instant quoi faire avec le dé choisi.'],
     ['🌟', 'Des passifs réinventés', 'Chaque héros a un nouveau passif lié aux dés ou au tour : les blocages d’Aldric renforcent ta main, les 1 de Corvin deviennent des 6, les serviteurs de Mortis renforcent ses pouvoirs, Hrolf gagne une 3e action sous 30 % PV...'],
     ['🕯️', 'Des pouvoirs propres à Morvane', 'Les 8 héros ont des pouvoirs entièrement repensés : Écu du Parjure, Bûcher du Roi Creux, Minuit Moins Trois, Exhumation, Ronde des Loups, Psaume Inversé, Carreau de Gibet, Cent Cendres... chacun avec sa propre icône.'],
     ['🎲', 'Des pouvoirs qui jouent avec les dés', 'Certains pouvoirs changent tes dés (un petit dé devient un 6, les Lames deviennent des Braises, toute ta main se retourne), te font piocher, te rendent une action ou ouvrent un point faible.'],

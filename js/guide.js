@@ -11,7 +11,7 @@ UI.guide = (function () {
     { s: '#aps', t: 'Tes actions', x: 'Ces deux losanges d’or sont tes <b>actions</b>. Frapper ou parer en coûte une.' },
     { s: '#bstrike', t: 'Frapper', x: 'Ta lame contre l’ennemi visé.<br>Quand un ennemi baisse sa garde, ce bouton se couvre d’<b class="g-y">or</b> et devient <b class="g-y">Critique</b>. Ne laisse pas passer ta chance.' },
     { s: '#bparry', t: 'Parer', x: 'Quand un ennemi rassemble ses forces pour un grand coup, ce bouton s’embrase de <b class="g-c">bleu</b>.<br>Pare à cet instant : le coup est brisé, et tu ripostes.' },
-    { s: '#dtray', t: 'Tes dés', x: 'À chaque tour, tu tires <b>trois dés</b> de ton sac. Pose-les sur la table : ils agissent aussitôt, et ne coûtent rien.' },
+    { s: '#dtray', t: 'Tes dés', x: 'À chaque tour, tu tires <b>trois dés</b> de ton sac. Touche un dé de ta main, puis une case de la table : il agit aussitôt, et ne coûte rien. La ligne du haut te dit toujours quoi faire.' },
     { s: '.skills', t: 'Tes pouvoirs', x: 'Tes pouvoirs se nourrissent d’un dé, pas d’une action. L’étiquette dit lequel ils réclament. Quand ton dé convient, le cadre <b class="g-g">s’illumine</b>.' },
     { s: '#tpass', t: 'Fin du tour', x: 'Quand tu as tout joué, rends la main. Les ennemis agiront.' },
     { s: '[data-act=runMenu]', t: 'Le menu', x: 'L’aide, la vitesse, le jeu automatique et la posture dorment ici. Tu pourras m’y rappeler.' },
@@ -36,6 +36,7 @@ UI.guide = (function () {
     ['iron', 'gold', 'cyan', 'dark'].forEach(function (k) { r.setProperty('--fr-' + k, 'url(' + Sprites.url('ui_' + k) + ')'); });
     // icônes pixel des pouvoirs et des ultimes de chaque héros
     DATA.HEROES.forEach(function (h) { h.skills.forEach(function (k) { k.icon = UI.spr('sk_' + k.id, 'ski'); }); h.ult.icon = UI.spr('ul_' + h.id, 'ski'); h.passive.icon = UI.spr('pa_' + h.id, 'ski'); });
+    Object.keys(DATA.DICE).forEach(function (t) { DATA.DICE[t].icon = UI.spr('dt_' + t, 'dgl'); });
   })();
 
   function build() {

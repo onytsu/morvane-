@@ -1003,3 +1003,65 @@ img.ski { display: inline-block; width: 32px; height: 32px; image-rendering: pix
 .skb .e .ski { width: 32px; height: 32px; }
 #toasts img.ski, .float img.ski { width: 20px; height: 20px; }
 .li .ic img.ski, .sk .ic img.ski, .skhead .ic img.ski, .choice .ic img.ski { width: 32px; height: 32px; }
+
+/* ================= v3.9 : plateau de dés en pixel art ================= */
+.dtray { display: block; padding: 4px 8px 8px; background: repeating-linear-gradient(0deg, #ffffff05 0 1px, transparent 1px 3px), linear-gradient(180deg, #1d1528, #110c19); border-top: 0; box-shadow: 0 -3px 0 #000, 0 -5px 0 #4a4658, 0 -6px 0 #000; }
+.dtray.idle { opacity: .55; }
+.dhint { height: 20px; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; color: #b7aac6; white-space: nowrap; overflow: hidden; }
+.dhint b { font-family: var(--serif); font-size: 12px; letter-spacing: .06em; color: #ffe2a0; }
+.dhint b.t-lame { color: #ff9a8c; } .dhint b.t-garde { color: #a9cbff; } .dhint b.t-seve { color: #8dffa6; } .dhint b.t-braise { color: #ffb070; } .dhint b.t-venin { color: #b6ff8a; } .dhint b.t-foudre { color: #fff08a; }
+.dhint i { font-style: normal; color: #f2bd5e; } .dhint u { text-decoration: none; color: #ffe2a0; font-weight: 700; }
+.dbody { display: flex; align-items: flex-end; gap: 8px; }
+.dlab { display: block; text-align: center; font-family: var(--serif); font-size: 8.5px; letter-spacing: .24em; text-transform: uppercase; color: #7d7090; margin-bottom: 3px; }
+.dhand-w { flex: 1; min-width: 0; align-self: stretch; display: flex; flex-direction: column; }
+.dhand { flex: 1; gap: 6px; padding: 4px 0 2px; }
+.dgrid-w { flex: none; }
+.dtray.wait .dhand, .dtray.wait .dside { opacity: .45; }
+/* outils */
+.dside { gap: 3px; }
+.dtool { position: relative; width: 58px; height: 34px; padding: 0 2px; display: flex; align-items: center; gap: 2px; border: 6px solid transparent; border-image: var(--fr-dark) 4 / 6px / 0 stretch; image-rendering: pixelated; border-radius: 0; background: #17121f; background-clip: padding-box; box-shadow: 0 2px 0 #000a; color: #d8cce6; }
+.dtool .ic { width: 16px; height: 16px; }
+.dtool span { font-family: var(--serif); font-size: 7.5px; letter-spacing: .04em; text-transform: uppercase; line-height: 1; }
+.dtool b { position: absolute; right: -7px; top: -7px; min-width: 14px; height: 14px; padding: 0 2px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #1a1220; background: #e6d3a0; box-shadow: 0 0 0 1px #000; }
+.dtool.off { opacity: .4; } .dre { color: #d8cce6; font-weight: 500; } .dfl { color: #d8cce6; }
+.dtool:active { transform: translateY(1px); }
+@media (max-width: 360px) { .dtool { width: 46px; } .dtool span { display: none; } }
+/* dés taillés */
+.tdie { width: 44px; height: 44px; border-radius: 0; gap: 0; background: linear-gradient(180deg, var(--c1) 0 62%, var(--c2) 62%);
+  box-shadow: inset 3px 3px 0 #ffffff59, inset -3px -3px 0 #00000059, 0 0 0 2px #0a070d, 0 4px 0 2px #0a070dcc; }
+.tdie i { line-height: 0; filter: none; } .tdie i .dg { width: 20px; height: 20px; image-rendering: pixelated; filter: drop-shadow(1px 1px 0 #0008); }
+.tdie b { font-family: var(--ui); font-size: 18px; font-weight: 800; line-height: 1; margin-top: 1px; color: #fff; text-shadow: 2px 2px 0 #0a070d; }
+.hd { padding: 0; border: 0; border-radius: 0; position: relative; background: none; }
+.hd.sel { transform: translateY(-6px); background: none; box-shadow: none; border: 0; }
+.hd.sel .tdie { box-shadow: inset 3px 3px 0 #ffffff59, inset -3px -3px 0 #00000059, 0 0 0 2px #0a070d, 0 0 0 4px #f2bd5e, 0 0 16px 4px #f2bd5e88, 0 6px 0 4px #0a070dcc; }
+.hd.sel::before { content: ''; position: absolute; left: 50%; top: -11px; margin-left: -5px; border: 5px solid transparent; border-top: 6px solid #f2bd5e; filter: drop-shadow(0 1px 0 #000); animation: bob .9s steps(2) infinite; }
+.tdie.fire, .tdie.ice { outline: 0; }
+.tdie.fire { box-shadow: inset 3px 3px 0 #ffffff59, inset -3px -3px 0 #00000059, 0 0 0 2px #ff8a3c, 0 0 12px 2px #ff5a1f; }
+.tdie.ice { box-shadow: inset 3px 3px 0 #ffffff59, inset -3px -3px 0 #00000059, 0 0 0 2px #bfe3ff, 0 0 10px 2px #7fb8ff; }
+.tdie.mir { outline: 0; box-shadow: inset 3px 3px 0 #ffffff59, inset -3px -3px 0 #00000059, 0 0 0 2px #dfe6f5; }
+/* la table */
+.dgrid { grid-template-columns: repeat(3, 38px); gap: 3px; padding: 2px; border: 8px solid transparent; border-image: var(--fr-iron) 4 / 8px / 0 stretch; image-rendering: pixelated; border-radius: 0; background: #07050a; background-clip: padding-box; box-shadow: 0 3px 0 #000a; }
+.dc { border: 0; border-radius: 0; background: repeating-linear-gradient(0deg, #ffffff04 0 1px, transparent 1px 3px), #15101d; box-shadow: inset 2px 2px 0 #000, inset -1px -1px 0 #ffffff14; }
+.dc em { font-family: var(--serif); font-size: 13px; font-weight: 700; }
+.dc.r-x2 { border: 0; background: radial-gradient(#5a4012, #2a1e08); box-shadow: inset 2px 2px 0 #000, inset -1px -1px 0 #f2bd5e55, inset 0 0 0 1px #f2bd5e66; } .dc.r-x2 em { color: #ffd87a; text-shadow: 0 0 6px #f2bd5e, 1px 1px 0 #000; }
+.dc.r-p2 { border: 0; background: radial-gradient(#1f3a66, #0f1a30); box-shadow: inset 2px 2px 0 #000, inset -1px -1px 0 #7fb0ff55, inset 0 0 0 1px #7fb0ff66; } .dc.r-p2 em { color: #bcd6ff; text-shadow: 0 0 6px #7fb0ff, 1px 1px 0 #000; }
+.dc.r-seal { border: 0; background: repeating-linear-gradient(45deg, #1a1320 0 4px, #2c1820 4px 8px); } .dc.r-seal .ic { width: 16px; height: 16px; opacity: .85; }
+.dc.full { background: #07050a; box-shadow: none; }
+.dc .tdie { width: 38px; height: 38px; box-shadow: inset 2px 2px 0 #ffffff59, inset -2px -2px 0 #00000059, 0 0 0 1px #0a070d; }
+.dc .tdie i .dg { width: 10px; height: 10px; } .dc .tdie b { font-size: 15px; }
+.dc.can { animation: cancell 1s steps(2) infinite; }
+@keyframes cancell { 50% { box-shadow: inset 2px 2px 0 #000, inset 0 0 0 1px #f2bd5e, 0 0 8px #f2bd5e66; } }
+.dc.fig { box-shadow: inset 0 0 0 2px #f2bd5e, 0 0 8px #f2bd5e77; animation: none; }
+.dc.lit { box-shadow: 0 0 0 2px #ffe08a, 0 0 14px #f2bd5e; border-radius: 0; }
+.dc s { right: 1px; bottom: 0; font-size: 10px; text-shadow: 1px 1px 0 #000; }
+img.dgl { display: inline-block; width: 20px; height: 20px; image-rendering: pixelated; vertical-align: middle; }
+/* compteurs de primes et figures sur l'arène */
+.primes { gap: 4px; }
+.pr { border-radius: 0; border: 6px solid transparent; border-image: var(--fr-dark) 4 / 6px / 0 stretch; image-rendering: pixelated; background: #0d0a14d8; background-clip: padding-box; padding: 0 4px 2px; font-family: var(--serif); font-size: 11px; }
+.pr i { height: 2px; }
+.cdice { border-radius: 0; border: 8px solid transparent; border-image: var(--fr-dark) 4 / 8px / 0 stretch; image-rendering: pixelated; background: #0d0a14e0; background-clip: padding-box; padding: 0 6px; }
+.runbar .icon-btn { border-radius: 0; border: 8px solid transparent; border-image: var(--fr-dark) 4 / 8px / 0 stretch; image-rendering: pixelated; background: #17121f; background-clip: padding-box; box-shadow: 0 2px 0 #000a; font-family: var(--serif); }
+
+.unit.en .wk img.ic { width: 32px; height: 32px; animation: none; filter: none; }
+.unit.weak img:not(.ic) { filter: drop-shadow(0 0 12px var(--weak)) brightness(1.3); }
+.dtool { width: 64px; height: 36px; gap: 3px; } .dtool .ic { width: 16px; height: 16px; } .dtool span { font-size: 8px; }

@@ -5,6 +5,7 @@ UI.run = (function () {
   var running = false, paused = false, last = 0, shownPhase = null, phaseTimer = null, els = {}, posOf = {}, floats = 0, built = null, fxL = null, lootShown = 0, combo = 0, comboT = null;
   // v2.0 : lumière, orbes, projectiles, primes
   var vfx = null, orbEls = {}, shotEls = {}, stopT = 0, primeKey = '', wiping = false, stepT = 0, lastTurn = '', moving = false, diceKey = '', selDie = 0, trayKey = '', lastPlaced = -1, figLine = null, handRoll = false, diceMode = null;
+  var DSHORT = { lame: 'frappe', garde: 'protège', seve: 'soigne', echo: 'renforce ses voisins', miroir: 'copie un voisin', braise: 'frappe et brûle', venin: 'empoisonne', foudre: 'frappe tous', astre: 'charge l’ultime' };
   var RANGED = { pyro: 'fire', necro: 'dark', chasseuse: 'blade', pretresse: 'holy' };
   var ORB = { gold: '💰', heal: '❤️', ult: '🌟', fury: '🔥' };
   var FXMAP = { burn: 'fire', bleed: 'blood', thorns: 'hit', chain: 'ice', skel: 'death', ally: 'hit', star: 'crit' };
@@ -25,7 +26,12 @@ UI.run = (function () {
     $('#screen').innerHTML =
       '<div class="runbar"><div class="grow"><div class="zone" id="rzone"></div><div class="pips" id="rpips"></div></div><span class="cur gold" id="rgold"></span><span class="cur ash" id="rcend"></span><button class="icon-btn" data-act="runMenu">☰</button></div>' +
       '<div class="arena" id="arena"></div>' +
-      '<div class="dtray" id="dtray"><div class="dside"><button class="dbag" id="dbag" data-act="bag">🎒<b></b></button><button class="dre" id="dre" data-act="dreroll">↻<b></b></button><button class="dre dfl" id="dfl" data-act="dflip">⇅<b></b></button></div><div class="dhand" id="dhand"></div><div class="dgrid" id="dgrid"></div></div>' +
+      '<div class="dtray" id="dtray"><div class="dhint" id="dhint"></div><div class="dbody"><div class="dside">' +
+      '<button class="dtool dbag" id="dbag" data-act="bag">' + UI.spr('i_bag', 'ic') + '<span>Sac</span><b></b></button>' +
+      '<button class="dtool dre" id="dre" data-act="dreroll">' + UI.spr('i_reroll', 'ic') + '<span>Relance</span><b></b></button>' +
+      '<button class="dtool dre dfl" id="dfl" data-act="dflip">' + UI.spr('i_flip', 'ic') + '<span>Retourne</span><b></b></button></div>' +
+      '<div class="dhand-w"><span class="dlab">Ta main</span><div class="dhand" id="dhand"></div></div>' +
+      '<div class="dgrid-w"><span class="dlab">La table</span><div class="dgrid" id="dgrid"></div></div></div></div>' +
       '<div class="hud">' +
       '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><span></span></div></div></div>' +
       '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + UI.spr('ul_' + h.id, 'ic') + h.ult.name + '</span></button>' +
@@ -142,7 +148,7 @@ UI.run = (function () {
     anim(el, 'atk', 280);
   }
   // --- dés de combat (v3.2) : la main, la table de 9 cases, les figures ---
-  function tdie(t, v, cls) { return '<span class="tdie t-' + t + (cls || '') + '"><i>' + D.DICE[t].icon + '</i><b>' + v + '</b></span>'; }
+  function tdie(t, v, cls) { return '<span class="tdie t-' + t + (cls || '') + '"><i>' + UI.spr('dt_' + t, 'dg') + '</i><b>' + v + '</b></span>'; }
   function facesTxt(f) { return f[0] + '-' + f[5]; }
   function showFig(e, still) {
     var el = $('#cdice'); if (!el) return;
@@ -160,7 +166,7 @@ UI.run = (function () {
     var tr = $('#dtray'); if (!tr) return;
     var c = run.phase === 'combat' && run.combat && !run.combat.over ? run.combat : null, mine = !!c && c.turn === 'hero', auto = !!S().settings.auto, i;
     if (c && selDie >= c.hand.length) selDie = Math.max(0, c.hand.length - 1);
-    var key = !c ? 'x' + run.bag.length : [mine ? 1 : 0, selDie, c.rerolls, c.flips, auto ? 1 : 0, lastPlaced, figLine ? figLine.join('') : '', c.hand.map(function (d) { return d.t + d.v + (d.fire ? 'f' : '') + (d.ice ? 'i' : ''); }).join(','), c.grid.map(function (g) { return (g.r || '') + (g.d ? g.d.t + g.d.v : ''); }).join(',')].join('|');
+    var key = !c ? 'x' + run.bag.length : [mine ? 1 : 0, selDie, c.rerolls, c.flips, auto ? 1 : 0, lastPlaced, figLine ? figLine.join('') : '', c.hand.map(function (d) { return d.t + d.v + (d.fire ? 'f' : '') + (d.ice ? 'i' : ''); }).join(','), c.hero.ap, c.grid.map(function (g) { return (g.r || '') + (g.d ? g.d.t + g.d.v : ''); }).join(',')].join('|');
     if (key === trayKey) return; trayKey = key;
     tr.className = 'dtray' + (!c ? ' idle' : mine ? '' : ' wait');
     $('#dbag').lastChild.textContent = run.bag.length;
@@ -170,12 +176,17 @@ UI.run = (function () {
     if (c && c.hand.length) c.hand.forEach(function (d, k) { hh += '<button class="hd' + (k === selDie && mine && !auto ? ' sel' : '') + (handRoll ? ' roll' : '') + '" style="animation-delay:' + (k * 0.06) + 's" data-act="hdie" data-i="' + k + '">' + tdie(d.t, d.v, (d.fire ? ' fire' : '') + (d.ice ? ' ice' : '')) + '</button>'; });
     else hh = '<span class="dnone">' + (c ? (mine ? 'Tous tes dés sont posés' : 'Les ennemis jouent...') : '🎲 Ton sac : ' + run.bag.length + ' dés') + '</span>';
     $('#dhand').innerHTML = hh; handRoll = false;
+    var hint = '', sd = mine && !auto && c && c.hand[selDie];
+    if (!c) hint = ''; else if (auto) hint = 'Jeu automatique'; else if (!mine) hint = 'Les ennemis jouent…';
+    else if (sd) hint = '<b class="t-' + sd.t + '">' + D.DICE[sd.t].name + ' ' + sd.v + '</b> ' + DSHORT[sd.t] + ' <i>›</i> touche une <u>case</u> ou un <u>pouvoir</u>';
+    else hint = c.hero.ap > 0 ? 'Dés posés · frappe, pare, ou termine ton tour' : 'Il ne te reste plus qu’à <u>terminer ton tour</u>';
+    var dh = $('#dhint'); if (dh) dh.innerHTML = hint;
     var gh = '', sel = mine && !auto && c.hand[selDie] ? c.hand[selDie] : null;
     for (i = 0; i < 9; i++) {
-      var g = c ? c.grid[i] : { r: null, d: null }, cls = 'dc' + (g.r ? ' r-' + g.r : '') + (g.d ? ' full' : '') + (i === lastPlaced && g.d ? ' pop' : '') + (figLine && figLine.indexOf(i) >= 0 ? ' lit' : ''), inner = '';
+      var g = c ? c.grid[i] : { r: null, d: null }, cls = 'dc' + (g.r ? ' r-' + g.r : '') + (g.d ? ' full' : '') + (sel && !g.d && g.r !== 'seal' ? ' can' : '') + (i === lastPlaced && g.d ? ' pop' : '') + (figLine && figLine.indexOf(i) >= 0 ? ' lit' : ''), inner = '';
       if (g.d) inner = tdie(g.d.t, g.d.v, g.d.mir ? ' mir' : '');
       else {
-        inner = g.r === 'x2' ? '<em>×2</em>' : g.r === 'p2' ? '<em>+2</em>' : g.r === 'seal' ? '<em>🔒</em>' : '';
+        inner = g.r === 'x2' ? '<em>×2</em>' : g.r === 'p2' ? '<em>+2</em>' : g.r === 'seal' ? UI.spr('i_lock', 'ic') : '';
         if (sel && g.r !== 'seal') {
           var pv = E.dieCalc(selDie, i), fg = E.figAt(selDie, i);
           if (pv && (pv.v !== sel.v || pv.t !== sel.t)) inner += '<s class="' + (pv.v > sel.v ? 'up' : 'dn') + '">' + (pv.t !== sel.t && pv.v ? D.DICE[pv.t].icon : '') + pv.v + '</s>';
