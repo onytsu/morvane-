@@ -10,6 +10,41 @@ var UI = (function () {
     if (typeof Sprites === 'undefined') return '<span class="emo">👤</span>';
     return '<img class="px ' + (cls || '') + '" src="' + Sprites.url(id) + '" alt="" draggable="false">';
   }
+  // Emojis -> icônes pixel : chaque emoji écrit dans la page est remplacé à l'affichage par son icône (Sprites.emo)
+  var emoRe = null;
+  function emoNode(t) {
+    var v = t.nodeValue; if (!v || v.length > 4000) return;
+    if (!emoRe) emoRe = new RegExp('(' + Object.keys(Sprites.emo).join('|') + ')\uFE0F?', 'g');
+    emoRe.lastIndex = 0; if (!emoRe.test(v)) return;
+    var f = document.createDocumentFragment(), last = 0, m; emoRe.lastIndex = 0;
+    while ((m = emoRe.exec(v))) {
+      if (m.index > last) f.appendChild(document.createTextNode(v.slice(last, m.index)));
+      var im = document.createElement('img'); im.className = 'emo px'; im.alt = ''; im.draggable = false; im.src = Sprites.url(Sprites.emo[m[1]]);
+      f.appendChild(im); last = m.index + m[0].length;
+    }
+    if (last < v.length) f.appendChild(document.createTextNode(v.slice(last)));
+    if (t.parentNode) t.parentNode.replaceChild(f, t);
+  }
+  function emoScan(n) {
+    if (n.nodeType === 3) return emoNode(n);
+    if (n.nodeType !== 1 || /^(SCRIPT|STYLE|TEXTAREA|INPUT|CANVAS)$/.test(n.tagName)) return;
+    var w = document.createTreeWalker(n, NodeFilter.SHOW_TEXT), list = [], t;
+    while ((t = w.nextNode())) list.push(t);
+    list.forEach(emoNode);
+  }
+  function emoWatch(root) {
+    if (typeof Sprites === 'undefined' || !Sprites.emo || !root || typeof MutationObserver === 'undefined') return;
+    emoScan(root);
+    new MutationObserver(function (ms) {
+      for (var i = 0; i < ms.length; i++) {
+        var m = ms[i];
+        if (m.type === 'characterData') emoNode(m.target);
+        else for (var j = 0; j < m.addedNodes.length; j++) emoScan(m.addedNodes[j]);
+      }
+    }).observe(root, { childList: true, subtree: true, characterData: true });
+  }
+  // écrit un texte seulement s'il a changé (le texte affiché ne contient plus les emojis, devenus des images)
+  function setTxt(el, s) { if (el && el._raw !== s) { el._raw = s; el.textContent = s; } }
   function fmtMod(k, v) {
     var m = D.MODS[k]; if (!m || !v) return null;
     var a = Math.abs(v), num;
@@ -492,5 +527,5 @@ var UI = (function () {
   function boot() { E.load(); applySettings(); st.view = S().hero; splash(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else setTimeout(boot, 0);
 
-  return { ACT: ACT, $: $, S: S, spr: spr, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, famHtml: famHtml, vib: vib, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod, skillSheet: skillSheet, foeSheet: foeSheet, tagsHtml: tagsHtml, abIcons: abIcons };
+  return { ACT: ACT, $: $, S: S, spr: spr, emoWatch: emoWatch, setTxt: setTxt, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, famHtml: famHtml, vib: vib, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod, skillSheet: skillSheet, foeSheet: foeSheet, tagsHtml: tagsHtml, abIcons: abIcons };
 })();

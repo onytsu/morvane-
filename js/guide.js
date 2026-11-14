@@ -41,6 +41,9 @@ UI.guide = (function () {
     DATA.BOONS.forEach(function (b) { b.icon = UI.spr('bn_' + b.id.slice(2), 'ski'); });
     DATA.HEROES.forEach(function (h) { h.boons.forEach(function (b) { var m = b.mods, k = m.s1P ? 0 : m.s2P ? 1 : m.s3P ? 2 : -1; b.icon = UI.spr(k >= 0 ? 'up_' + h.skills[k].id : 'cb_' + b.id.slice(2), 'ski'); }); });
     DATA.PACTS.forEach(function (p) { p.icon = UI.spr('pc_' + p.id.slice(3), 'ski'); });
+    // icônes utilisées par la feuille de style, puis remplacement de tous les emojis du jeu par leurs icônes pixel
+    [['bolt', 'bn_foudre'], ['fire', 'bn_flamme'], ['ice', 'e_snow'], ['glass', 'bn_tempo']].forEach(function (k) { r.setProperty('--e-' + k[0], 'url(' + Sprites.url(k[1]) + ')'); });
+    UI.emoWatch(document.getElementById('app'));
   })();
 
   function build() {
