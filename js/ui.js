@@ -179,7 +179,7 @@ var UI = (function () {
       html += '<div class="lock"><div style="font-size:26px">🔒</div><b>' + h.role + '</b>' + how + '</div>';
     }
     html += '</div>';
-    if (!un) return html + '<div class="card"><div class="small gold">' + h.role + '</div><div class="small dim">' + h.desc + '</div><div class="small" style="margin-top:6px">🌟 <b>' + h.passive.name + '</b> — ' + h.passive.desc + '</div></div>';
+    if (!un) return html + '<div class="card"><div class="small gold">' + h.role + '</div><div class="small dim">' + h.desc + '</div><div class="small" style="margin-top:6px">' + h.passive.icon + ' <b>' + h.passive.name + '</b> — ' + h.passive.desc + '</div></div>';
     if (S().run) html += '<button class="btn primary big camp-go" data-act="resume">REPRENDRE · ÉTAGE ' + S().run.floor + '</button>';
     else {
       var mz = E.maxStartZone(); if (st.zone == null || st.zone > mz) st.zone = mz;
@@ -199,7 +199,7 @@ var UI = (function () {
     html += '<button class="stats" data-act="allStats" style="width:100%"><div class="stat"><b>' + E.fmt(s.hp) + '</b><span>PV</span></div><div class="stat"><b>' + E.fmt(s.atk) + '</b><span>Attaque</span></div><div class="stat"><b>' + E.fmt(s.def) + '</b><span>Armure</span></div><div class="stat"><b>' + Math.round(s.crit) + '%</b><span>Critique</span></div></button>';
     html += '<div class="equip">' + D.SLOTS.map(function (sl) { var it = hs.equip[sl.id] ? E.findItem(hs.equip[sl.id]) : null; return it ? itemTile(it) : '<button class="slot empty" data-act="slotEmpty" data-slot="' + sl.id + '">' + sl.icon + '</button>'; }).join('') + '</div>';
     var scn = E.setCounts(h.id), sk = Object.keys(scn); if (sk.length) html += '<div class="card"><b>Sets portés</b>' + sk.map(function (id) { return setHtml(id, scn[id]); }).join('') + '</div>';
-    html += '<div class="small dim" style="margin:4px 2px 8px">' + h.desc + '</div><div class="skills-list"><div class="sk"><div class="ic">🌟</div><div><b>' + h.passive.name + '</b> <span class="tiny dim">passif</span><div class="small dim">' + h.passive.desc + '</div></div></div>' +
+    html += '<div class="small dim" style="margin:4px 2px 8px">' + h.desc + '</div><div class="skills-list"><div class="sk"><div class="ic">' + h.passive.icon + '</div><div><b>' + h.passive.name + '</b> <span class="tiny dim">passif</span><div class="small dim">' + h.passive.desc + '</div></div></div>' +
       '<div class="sk"><div class="ic">' + h.ult.icon + '</div><div><b>' + h.ult.name + '</b> <span class="tiny gold">ultime</span><div class="small dim">' + h.ult.desc + '</div></div></div>' +
       h.skills.map(function (k, i) { var ok = E.skillUnlocked(h.id, i); return '<button class="sk tap' + (ok ? '' : ' locked') + '" data-act="skillInfo" data-h="' + h.id + '" data-i="' + i + '"><div class="ic">' + (ok ? k.icon : '🔒') + '</div><div class="grow"><b>' + k.name + '</b> <span class="tiny dim">' + (ok ? '' : 'Maîtrise ' + (i + 1)) + '</span>' + tagsHtml(k) + '<div class="small dim">' + k.desc + '</div></div><span class="dim">›</span></button>'; }).join('') + '</div>';
     html += '<div class="btns"><button class="btn sm" data-act="lexique">📖 Lexique</button><button class="btn primary" data-act="close">Fermer</button></div>';

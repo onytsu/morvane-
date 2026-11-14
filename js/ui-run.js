@@ -388,6 +388,7 @@ UI.run = (function () {
         case 'parry': if (e.perfect) { UI.vib(30); fxAt(hero, 'ice', 24); var pc = center(hero); if (vfx && pc) { VFX.ring(vfx, pc.x + 20, pc.y, 'ice', 130, 0.4, 8); VFX.flash(vfx, pc.x + 20, pc.y, 'ice', 110, 0.2); } hitstop(90); floatAt(hero, 'PARADE PARFAITE !', 'crit'); UI.flash('#ffe9b888'); SND.play('block'); anim($('#arena'), 'shake', 250); } else { floatAt(hero, 'Paré', 'txt'); SND.play('block', 0.6); } break;
         case 'ult': var uc = center(hero), upts = []; c.enemies.forEach(function (x) { if (els[x.id] && !els[x.id].classList.contains('dead')) upts.push(center(els[x.id])); });
           if (vfx && uc) { VFX.pillar(vfx, uc.x, uc.y, 'ult', 120, 0.9); VFX.cast(vfx, sfxKind(e.sfx), uc.x, uc.y, upts, true); VFX.sparks(vfx, uc.x, uc.y, 'ult', 50, { speed: 420, g: -80, life: 1.2 }); } hitstop(140); banner(e.name.toUpperCase(), 'ULTIME'); UI.flash('#d9a441aa'); SND.play(e.sfx); SND.play('levelup', 0.6); anim($('#arena'), 'shake', 250); break;
+        case 'passive': floatAt(hero, e.txt, 'txt'); break;
         case 'weak': if (el) floatAt(el, 'POINT FAIBLE', 'crit'); break;
         case 'weakhit': fxAt(el, 'star', 22); var wp = center(el); if (vfx && wp) { VFX.ring(vfx, wp.x, wp.y, 'crit', 110, 0.35, 7); VFX.flash(vfx, wp.x, wp.y, 'crit', 120, 0.2); } hitstop(80); floatAt(el, 'POINT FAIBLE !', 'crit'); anim($('#arena'), 'shake', 250); break;
         case 'flee': if (el) { floatAt(el, 'Il s’enfuit !', 'txt'); el.classList.add('dead'); } SND.play('error'); break;
@@ -774,7 +775,7 @@ UI.run = (function () {
   function helpSheet(first) {
     var run = S().run; if (!run) return; var hero = E.hero(run.hero);
     var h = '<h2>' + (first ? 'Voici tes pouvoirs' : 'Aide') + '</h2><div class="tiny dim center" style="margin:-6px 0 10px">' + hero.name + ', ' + hero.title + ' · le combat est en pause</div>';
-    h += '<div class="li"><div class="ic">🌟</div><div class="grow"><b>' + hero.passive.name + '</b> <span class="tiny dim">passif, toujours actif</span><div class="small dim">' + hero.passive.desc + '</div></div></div>';
+    h += '<div class="li"><div class="ic">' + hero.passive.icon + '</div><div class="grow"><b>' + hero.passive.name + '</b> <span class="tiny dim">passif, toujours actif</span><div class="small dim">' + hero.passive.desc + '</div></div></div>';
     hero.skills.forEach(function (k, i) {
       var ok = E.skillUnlocked(run.hero, i);
       var nums = ok ? E.skillNumbers(run.hero, i, run) : [], evn = k.evos.filter(function (v) { return run.evos.indexOf(v.id) >= 0; });

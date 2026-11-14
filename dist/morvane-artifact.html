@@ -1064,7 +1064,7 @@ var DATA = (function () {
       id: 'chevalier', name: 'Aldric', title: 'Chevalier Déchu', role: 'Tank — facile',
       desc: "Un mur d'acier. Encaisse, étourdit, punit.",
       base: { hp: 150, atk: 10, def: 9, spd: 1.0, crit: 5 },
-      passive: { name: 'Rempart', desc: '20 % de chance de bloquer un coup (dégâts divisés par 2).', mods: { block: 20 } },
+      passive: { name: "Serment de Pierre", desc: "20 % de chance de bloquer un coup (dégâts divisés par 2). Chaque coup bloqué ajoute +1 à un dé de ta prochaine main (jusqu’à +3).", mods: { block: 20 } },
       unlock: null, start: { artifact: null, potions: 0 },
       skills: [
         { id: 'k1', name: "Écu du Parjure", icon: '', cd: 7, sfx: 'block', desc: "180 % dégâts et étourdit 1 tour. Interrompt les attaques chargées. Te donne un bouclier de 4 % PV par point du dé." },
@@ -1081,7 +1081,7 @@ var DATA = (function () {
       id: 'pyro', name: 'Ysolde', title: 'Sorcière des Cendres', role: 'Mage — dégâts de zone',
       desc: 'Tout brûle. Fragile, mais rien ne lui survit longtemps.',
       base: { hp: 100, atk: 14, def: 3, spd: 0.9, crit: 5 },
-      passive: { name: 'Braise vive', desc: 'Chaque attaque embrase la cible (brûlure 3 s).', mods: { burnHit: 100 } },
+      passive: { name: "Cendres Fidèles", desc: "Chaque attaque embrase la cible. Quand un ennemi en feu meurt pendant ton tour, ton plus petit dé gagne +2.", mods: { burnHit: 100 } },
       unlock: { boss: 1 }, start: {},
       skills: [
         { id: 'p1', name: "Cendre Vive", icon: '', cd: 6, sfx: 'skill_fire', desc: "220 % dégâts et embrase la cible. Le feu se propage : les ennemis déjà en feu prennent 90 %, les autres s’embrasent." },
@@ -1098,7 +1098,7 @@ var DATA = (function () {
       id: 'assassin', name: 'Corvin', title: 'Lame de Minuit', role: 'Assassin — critiques',
       desc: 'Rapide, mortel, insaisissable. Empoisonne à chaque critique.',
       base: { hp: 105, atk: 9, def: 4, spd: 1.5, crit: 18 },
-      passive: { name: 'Lames souillées', desc: 'Les coups critiques empoisonnent (cumulable).', mods: {} },
+      passive: { name: "Heure Noire", desc: "Tes coups critiques empoisonnent (cumulable). Dans l’ombre, la pire chance devient la meilleure : un dé qui tombe sur 1 devient un 6.", mods: {} },
       unlock: { cost: 300 }, start: {},
       skills: [
         { id: 'a1', name: "Minuit Moins Trois", icon: '', cd: 5, sfx: 'skill_blade', desc: "3 coups de 85 % dégâts, +1 coup pour chaque dé Lame encore dans ta main." },
@@ -1115,7 +1115,7 @@ var DATA = (function () {
       id: 'necro', name: 'Mortis', title: "Fossoyeur d'Âmes", role: 'Invocateur — armée',
       desc: 'Chaque ennemi tué se relève pour lui. Plus le combat dure, plus il est fort.',
       base: { hp: 100, atk: 9, def: 3, spd: 1.0, crit: 5 },
-      passive: { name: 'Levée des morts', desc: 'Chaque ennemi tué relève un serviteur squelette (max 3) qui frappe pour toi.', mods: {} },
+      passive: { name: "Ossements Comptés", desc: "Chaque ennemi tué relève un serviteur squelette (max 3). Chaque serviteur ajoute +1 au dé que tu glisses dans un pouvoir.", mods: {} },
       unlock: { boss: 2 }, start: {},
       skills: [
         { id: 'n1', name: "Première Pelletée", icon: '', cd: 6, sfx: 'skill_dark', desc: "200 % dégâts et relève un serviteur. Si ton armée est déjà pleine, tu pioches un dé." },
@@ -1132,7 +1132,7 @@ var DATA = (function () {
       id: 'berserker', name: 'Hrolf', title: 'Écorché du Nord', role: 'Berserker — risque',
       desc: 'Plus il saigne, plus il frappe fort. Se soigne en tuant.',
       base: { hp: 135, atk: 12, def: 3, spd: 1.1, crit: 8 },
-      passive: { name: 'Fureur écarlate', desc: '+1 % dégâts par 1 % de PV manquant.', mods: {} },
+      passive: { name: "Peau d’Écorché", desc: "+1 % dégâts par 1 % de PV manquant. Sous 30 % PV, tu as 3 actions ⚡ par tour au lieu de 2.", mods: {} },
       unlock: { cost: 2500 }, start: {},
       skills: [
         { id: 'b1', name: "Entaille d’Écorché", icon: '', cd: 5, sfx: 'skill_war', desc: "200 % dégâts et fait saigner. Sous 50 % PV, tu frappes une seconde fois (100 %)." },
@@ -1149,7 +1149,7 @@ var DATA = (function () {
       id: 'pretresse', name: 'Séraphine', title: 'Sainte Hérétique', role: 'Soutien — immortelle',
       desc: 'Se soigne sans cesse. Ses PV sont son arme.',
       base: { hp: 125, atk: 9, def: 5, spd: 1.0, crit: 5 },
-      passive: { name: 'Grâce impie', desc: 'Régénère 1 % PV par seconde. Les soins en trop deviennent un bouclier.', mods: { regen: 1 } },
+      passive: { name: "Grâce Impie", desc: "Régénère 1 % PV par seconde, et les soins en trop deviennent un bouclier. Chaque dé pair posé sur la table te soigne de 2 % PV.", mods: { regen: 1 } },
       unlock: { boss: 4 }, start: {},
       skills: [
         { id: 's1', name: "Stigmate", icon: '', cd: 6, sfx: 'skill_holy', desc: "190 % dégâts, affaiblit la cible 2 tours (-25 % attaque) et te soigne de 5 % PV." },
@@ -1166,7 +1166,7 @@ var DATA = (function () {
       id: 'chasseuse', name: 'Maëlle', title: 'Traqueuse des Pendus', role: 'Tireuse — points faibles',
       desc: 'Elle voit où frapper. Fragile de près, mortelle si tu vises juste.',
       base: { hp: 100, atk: 11, def: 3, spd: 1.25, crit: 10 },
-      passive: { name: 'Œil de traqueuse', desc: 'Les points faibles apparaissent 2 fois plus souvent et font +50 % dégâts.', mods: { weakP: 50 } },
+      passive: { name: "Œil du Gibet", desc: "Les points faibles apparaissent 2 fois plus souvent et font +50 % dégâts. Le premier frappé à chaque tour te rend ton action.", mods: { weakP: 50 } },
       unlock: { boss: 3 }, start: {},
       skills: [
         { id: 'h1', name: "Carreau de Gibet", icon: '', cd: 5, sfx: 'skill_blade', desc: "230 % dégâts qui ignorent l’armure, rend la cible vulnérable 2 tours et lui ouvre un point faible." },
@@ -1183,7 +1183,7 @@ var DATA = (function () {
       id: 'moine', name: 'Frère Odon', title: 'Poing de Cendre', role: 'Combattant — élan',
       desc: 'Chaque coup le rend plus fort. Ne laisse pas un gros coup briser son élan.',
       base: { hp: 120, atk: 10, def: 5, spd: 1.3, crit: 8 },
-      passive: { name: 'Élan', desc: 'Chaque coup donne +4 % dégâts (jusqu’à x10). L’élan retombe à zéro si tu encaisses une attaque chargée.', mods: {} },
+      passive: { name: "Élan de Cendre", desc: "Chaque coup donne +4 % dégâts (jusqu’à x10). À élan maximum, le premier dé que tu poses chaque tour compte double. L’élan retombe à zéro si tu encaisses une attaque chargée.", mods: {} },
       unlock: { cost: 8000 }, start: {},
       skills: [
         { id: 'm1', name: "Paume de Braise", icon: '', cd: 4, sfx: 'hit', desc: "170 % dégâts, étourdit et embrase. Interrompt les attaques chargées. +2 élan." },
@@ -1397,8 +1397,9 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '3.7';
+  var VERSION = '3.8';
   var NEWS = [
+    ['🌟', 'Des passifs réinventés', 'Chaque héros a un nouveau passif lié aux dés ou au tour : les blocages d’Aldric renforcent ta main, les 1 de Corvin deviennent des 6, les serviteurs de Mortis renforcent ses pouvoirs, Hrolf gagne une 3e action sous 30 % PV...'],
     ['🕯️', 'Des pouvoirs propres à Morvane', 'Les 8 héros ont des pouvoirs entièrement repensés : Écu du Parjure, Bûcher du Roi Creux, Minuit Moins Trois, Exhumation, Ronde des Loups, Psaume Inversé, Carreau de Gibet, Cent Cendres... chacun avec sa propre icône.'],
     ['🎲', 'Des pouvoirs qui jouent avec les dés', 'Certains pouvoirs changent tes dés (un petit dé devient un 6, les Lames deviennent des Braises, toute ta main se retourne), te font piocher, te rendent une action ou ouvrent un point faible.'],
     ['👑', 'Huit nouveaux ultimes', 'Le Serment Tenu, La Dernière Flamme, Douze Coups de Minuit, Le Grand Ossuaire, Hiver Rouge, Miracle Profane, La Corde Tranchée, Le Foyer Intérieur.'],
@@ -2809,7 +2810,9 @@ if (typeof module !== 'undefined') module.exports = DATA;
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function startBag(heroId) { return (D.BAGS[heroId] || D.BAGS.chevalier).map(function (t) { return { t: t, f: [1, 2, 3, 4, 5, 6] }; }); }
   E.startBag = startBag;
-  function rollDie(run, bi) { var d = run.bag[bi]; return { bi: bi, t: d.t, v: pick(d.f) + (run.stats.diceV || 0) }; }
+  function rollDie(run, bi) { var d = run.bag[bi], f = pick(d.f); if (run.hero === 'assassin' && f === 1) return { bi: bi, t: d.t, v: 6 + (run.stats.diceV || 0), night: true }; return { bi: bi, t: d.t, v: f + (run.stats.diceV || 0) }; }
+  // passifs : +n au plus petit dé de la main
+  function boostLow(c, n) { if (!c.hand.length) return false; var lo = c.hand.reduce(function (a, b) { return b.v < a.v ? b : a; }); lo.v = Math.min(9, lo.v + n); lo.ice = false; return true; }
   // pioche un dé de plus (pouvoirs qui remplissent la main)
   function drawOne(run, c) { if (!c.pile.length) { c.pile = shuffle(c.disc); c.disc = []; } if (!c.pile.length) return; c.hand.push(rollDie(run, c.pile.pop())); ev(c, { k: 'draw', n: c.hand.length, again: 1 }); }
   // retourne un dé sur sa face opposée, sans dépenser de retournement
@@ -2817,7 +2820,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
   function freeCells(c) { var o = []; c.grid.forEach(function (g, i) { if (!g.d && g.r !== 'seal') o.push(i); }); return o; }
   function drawTurn(run, c) {
     var h = c.hero, n = 3 + (run.stats.diceHand || 0);
-    c.dfx = {}; c.acted = false; h.ap = AP;
+    c.dfx = {}; c.acted = false; h.ap = AP + (run.hero === 'berserker' && run.hp < run.stats.hp * 0.3 ? 1 : 0); c.weakRefund = false; c.foyerX2 = false;
     if (!freeCells(c).length) { c.grid.forEach(function (g) { g.d = null; }); ug(run, 10); ev(c, { k: 'gclear' }); }
     c.hand = [];
     while (c.hand.length < n) {
@@ -2831,6 +2834,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
       if (h.st.burn) pick(c.hand).fire = true;
       if (h.st.slow > 0) { var top = c.hand.reduce(function (a, b) { return b.v > a.v ? b : a; }); if (top.v > 1) { top.v = 1; top.ice = true; } }
     }
+    if (run.hero === 'chevalier' && h.oath) { for (var oi = 0; oi < Math.min(3, h.oath); oi++) boostLow(c, 1); ev(c, { k: 'passive', txt: '+' + Math.min(3, h.oath) + ' Serment' }); h.oath = 0; }
     ev(c, { k: 'draw', n: c.hand.length });
   }
   // Ce que vaudrait le dé `die` posé sur la case ci (sans rien changer). Le Miroir prend le type et la valeur du plus fort voisin.
@@ -2844,6 +2848,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     }
     ADJ[ci].forEach(function (a) { var d = g[a].d; if (d && d.t === 'echo') bonus += Math.ceil(d.v / 2); });
     if (g[ci].r === 'x2') v *= 2; else if (g[ci].r === 'p2') v += 2;
+    if (S.run && S.run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2) v *= 2;
     return { t: t, v: Math.min(20, v + bonus), base: die.v, mir: mir, bonus: bonus };
   }
   E.dieCalc = function (hi, ci) { var c = S.run && S.run.combat; return c && c.hand[hi] && c.grid[ci] && !c.grid[ci].d && c.grid[ci].r !== 'seal' ? dieCalc(c, c.hand[hi], ci) : null; };
@@ -2893,6 +2898,8 @@ if (typeof module !== 'undefined') module.exports = DATA;
     var die = c.hand.splice(hi, 1)[0], r = dieCalc(c, die, ci);
     dieBurn(run, c, die);
     c.grid[ci].d = { t: r.t, v: r.v, base: r.base, mir: r.mir }; c.disc.push(die.bi); c.acted = true;
+    if (run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2) { c.foyerX2 = true; ev(c, { k: 'passive', txt: 'Foyer ×2' }); }
+    if (run.hero === 'pretresse' && r.base % 2 === 0) heroHeal(run, c, run.stats.hp * 0.02);
     S.stats.dice = (S.stats.dice || 0) + 1;
     ev(c, { k: 'place', ci: ci, t: r.t, v: r.v, mir: r.mir });
     dieFx(run, c, r.t, r.v);
@@ -3118,6 +3125,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     ev(c, { k: 'die', id: e.id, boss: e.boss });
     if (st.killHeal) heroHeal(run, c, st.hp * st.killHeal / 100);
     if (run.hero === 'necro') c.hero.skel = Math.min(3 + st.skel, c.hero.skel + 1);
+    if (run.hero === 'pyro' && e.st.burn && c.turn === 'hero' && boostLow(c, 2)) ev(c, { k: 'passive', txt: 'Cendres +2' });
     if (e.ab.explode) { ev(c, { k: 'explode', id: e.id }); hurt(run, c, null, e.atk * e.ab.explode / 100, {}); }
     // butin
     if (!e.summoned) {
@@ -3208,7 +3216,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     var dmg = raw * (c.cond === 'sang' && !o.dot ? 1.4 : 1), blocked = false;
     if (!o.dot) {
       if (e && e.st.weak > 0) dmg *= 0.75;
-      if (rnd() * 100 < st.block) { dmg *= 0.5; blocked = true; }
+      if (rnd() * 100 < st.block) { dmg *= 0.5; blocked = true; if (run.hero === 'chevalier') c.hero.oath = (c.hero.oath || 0) + 1; }
       dmg *= (2 * raw) / (2 * raw + st.def);
     }
     if (c.dfx && c.dfx.guard && !o.dot) dmg *= 1 - c.dfx.guard / 100;
@@ -3306,7 +3314,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     var sk = E.hero(run.hero).skills[i], e = target(c); if (!e) return false;
     if (hi == null) hi = bestDie(run, c, i);
     if (!fits(run, c, i, hi)) return false;
-    var die = c.hand.splice(hi, 1)[0], pw = sk.flat ? 1 : E.diePower(die.v); c.disc.push(die.bi); c.pw = pw;
+    var die = c.hand.splice(hi, 1)[0], pw = sk.flat ? 1 : E.diePower(die.v + (run.hero === 'necro' ? (h.skel || 0) : 0)); c.disc.push(die.bi); c.pw = pw;
     S.stats.dice = (S.stats.dice || 0) + 1; ev(c, { k: 'slot', i: i, t: die.t, v: die.v, pw: pw }); dieBurn(run, c, die);
     var others = alive(c).filter(function (x) { return x !== e; }), all = alive(c);
     h.cds[i] = E.skillCd(run, i); ug(run, 5); bump(run, 'skills');
@@ -3358,6 +3366,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     var e = c.enemies[i]; if (!e || e.dead || e.id !== c.weak.id) return false;
     c.weak = null; c.weakT = rf(5, 9); S.stats.weak++; bump(run, 'weak'); ev(c, { k: 'weakhit', id: e.id });
     hit(run, c, e, 2.5 * (1 + run.stats.weakP / 100), { crit: true }); if (!e.dead) e.st.vuln = Math.max(e.st.vuln || 0, 3); ug(run, 12);
+    if (run.hero === 'chasseuse' && !c.weakRefund) { c.weakRefund = true; c.hero.ap += 1; ev(c, { k: 'passive', txt: 'Action rendue' }); }
     if (c.over) finish(run, c);
     spend(run, c);
     return true;
@@ -4941,6 +4950,17 @@ ic('sk_m2', function () { R(3, 10, 10, 4, S3); R(2, 9, 12, 2, S2); E(8, 7, 3, 3,
 ic('sk_m3', function () { R(6, 5, 7, 7, '#d8a070'); R(6, 5, 7, 2, '#e8b888'); D('!#8a5a34', 8, 5, 10, 5, 12, 5); L(1, 6, 4, 6, F2); L(1, 9, 4, 9, F1); L(2, 12, 4, 12, F2); });
 ic('ul_moine', function () { E(8, 8, 6.5, 6.5, F2); E(8, 8, 4.5, 4.5, F1); E(8, 8, 2.5, 2.5, '!#ffffff'); D('!' + F3, 8, 0, 8, 15, 0, 8, 15, 8, 2, 2, 13, 2, 2, 13, 13, 13); GE(8, 8, 8, 8, '#ffd27a2a'); });
 
+
+/* icones des passifs (pa_*) */
+ic('pa_chevalier', function () { R(3, 6, 10, 9, '#6a6476'); R(3, 6, 10, 2, '#8a8496'); D('!#3a3442', 5, 9, 8, 11, 10, 9, 6, 13, 11, 12); R(6, 1, 4, 5, A2); D('!' + A1, 7, 2, 8, 3); G('#ffe08a77', 8, 0, 5, 1, 11, 1); });
+ic('pa_pyro', function () { E(8, 11, 5, 3, '#4a4048'); E(8, 11, 3.5, 2, '#6a5a62'); D('!' + F2, 6, 10, 9, 11, 11, 10, 7, 12); D('!' + F1, 8, 10); E(8, 5, 2, 3, F2); E(8, 6, 1, 1.5, F1); G('#ff8a2a66', 8, 2, 5, 9, 11, 9); });
+ic('pa_assassin', function () { R(3, 3, 10, 10, '#e6dfc8'); R(3, 11, 10, 2, '#b9b094'); D('!' + OUT, 5, 5, 10, 5, 5, 7, 10, 7, 5, 9, 10, 9); E(12, 4, 3, 3, '!' + BLK); X(13, 3, 2, 2); G('#a04cff77', 12, 1, 14, 6); });
+ic('pa_necro', function () { R(3, 3, 10, 10, '#e6dfc8'); R(3, 11, 10, 2, '#b9b094'); D('!' + OUT, 8, 8); E(8, 5, 2, 2, '!' + B2); D('!#4fe07a', 7, 5, 9, 5); L(4, 13, 12, 13, '!' + B2); G('#4fe07a66', 8, 1, 2, 8, 14, 8); });
+ic('pa_berserker', function () { R(3, 3, 10, 10, '#c8b098'); D('!' + RD, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 10, 5, 9, 6, 6, 9, 5, 10); D('!#ffd23c', 3, 1, 8, 0, 13, 1); G('#ff5b6b66', 2, 8, 14, 8); });
+ic('pa_pretresse', function () { E(8, 9, 5, 5, '#e6dfc8'); R(7, 5, 2, 8, '!' + RD); R(5, 7, 6, 2, '!' + RD); O(8, 3, 4, 1.5, '!' + A1); G('#6cf08a66', 3, 13, 13, 13, 8, 15); });
+ic('pa_chasseuse', function () { E(8, 8, 6.5, 4, '#e6dfc8'); E(8, 8, 3, 3, '#5a7a3a'); E(8, 8, 1.5, 1.5, '!' + OUT); D('!#ffffff', 7, 7); L(1, 8, 2, 8, RD); L(14, 8, 15, 8, RD); L(8, 1, 8, 2, RD); L(8, 14, 8, 15, RD); });
+ic('pa_moine', function () { O(8, 8, 6.5, 6.5, '!' + F3); O(8, 8, 4.5, 4.5, '!' + F2); E(8, 8, 2.5, 2.5, F1); D('!#ffffff', 8, 8); D('!' + F1, 14, 4, 2, 12, 12, 13); });
+
 /* ---------- API ---------- */
 function has(id) { return Object.prototype.hasOwnProperty.call(defs, id) && String(id).charAt(0) !== '_'; }
 function key(id) { return has(id) ? id : '_fallback'; }
@@ -6316,7 +6336,7 @@ var UI = (function () {
       html += '<div class="lock"><div style="font-size:26px">🔒</div><b>' + h.role + '</b>' + how + '</div>';
     }
     html += '</div>';
-    if (!un) return html + '<div class="card"><div class="small gold">' + h.role + '</div><div class="small dim">' + h.desc + '</div><div class="small" style="margin-top:6px">🌟 <b>' + h.passive.name + '</b> — ' + h.passive.desc + '</div></div>';
+    if (!un) return html + '<div class="card"><div class="small gold">' + h.role + '</div><div class="small dim">' + h.desc + '</div><div class="small" style="margin-top:6px">' + h.passive.icon + ' <b>' + h.passive.name + '</b> — ' + h.passive.desc + '</div></div>';
     if (S().run) html += '<button class="btn primary big camp-go" data-act="resume">REPRENDRE · ÉTAGE ' + S().run.floor + '</button>';
     else {
       var mz = E.maxStartZone(); if (st.zone == null || st.zone > mz) st.zone = mz;
@@ -6336,7 +6356,7 @@ var UI = (function () {
     html += '<button class="stats" data-act="allStats" style="width:100%"><div class="stat"><b>' + E.fmt(s.hp) + '</b><span>PV</span></div><div class="stat"><b>' + E.fmt(s.atk) + '</b><span>Attaque</span></div><div class="stat"><b>' + E.fmt(s.def) + '</b><span>Armure</span></div><div class="stat"><b>' + Math.round(s.crit) + '%</b><span>Critique</span></div></button>';
     html += '<div class="equip">' + D.SLOTS.map(function (sl) { var it = hs.equip[sl.id] ? E.findItem(hs.equip[sl.id]) : null; return it ? itemTile(it) : '<button class="slot empty" data-act="slotEmpty" data-slot="' + sl.id + '">' + sl.icon + '</button>'; }).join('') + '</div>';
     var scn = E.setCounts(h.id), sk = Object.keys(scn); if (sk.length) html += '<div class="card"><b>Sets portés</b>' + sk.map(function (id) { return setHtml(id, scn[id]); }).join('') + '</div>';
-    html += '<div class="small dim" style="margin:4px 2px 8px">' + h.desc + '</div><div class="skills-list"><div class="sk"><div class="ic">🌟</div><div><b>' + h.passive.name + '</b> <span class="tiny dim">passif</span><div class="small dim">' + h.passive.desc + '</div></div></div>' +
+    html += '<div class="small dim" style="margin:4px 2px 8px">' + h.desc + '</div><div class="skills-list"><div class="sk"><div class="ic">' + h.passive.icon + '</div><div><b>' + h.passive.name + '</b> <span class="tiny dim">passif</span><div class="small dim">' + h.passive.desc + '</div></div></div>' +
       '<div class="sk"><div class="ic">' + h.ult.icon + '</div><div><b>' + h.ult.name + '</b> <span class="tiny gold">ultime</span><div class="small dim">' + h.ult.desc + '</div></div></div>' +
       h.skills.map(function (k, i) { var ok = E.skillUnlocked(h.id, i); return '<button class="sk tap' + (ok ? '' : ' locked') + '" data-act="skillInfo" data-h="' + h.id + '" data-i="' + i + '"><div class="ic">' + (ok ? k.icon : '🔒') + '</div><div class="grow"><b>' + k.name + '</b> <span class="tiny dim">' + (ok ? '' : 'Maîtrise ' + (i + 1)) + '</span>' + tagsHtml(k) + '<div class="small dim">' + k.desc + '</div></div><span class="dim">›</span></button>'; }).join('') + '</div>';
     html += '<div class="btns"><button class="btn sm" data-act="lexique">📖 Lexique</button><button class="btn primary" data-act="close">Fermer</button></div>';
@@ -7023,6 +7043,7 @@ UI.run = (function () {
         case 'parry': if (e.perfect) { UI.vib(30); fxAt(hero, 'ice', 24); var pc = center(hero); if (vfx && pc) { VFX.ring(vfx, pc.x + 20, pc.y, 'ice', 130, 0.4, 8); VFX.flash(vfx, pc.x + 20, pc.y, 'ice', 110, 0.2); } hitstop(90); floatAt(hero, 'PARADE PARFAITE !', 'crit'); UI.flash('#ffe9b888'); SND.play('block'); anim($('#arena'), 'shake', 250); } else { floatAt(hero, 'Paré', 'txt'); SND.play('block', 0.6); } break;
         case 'ult': var uc = center(hero), upts = []; c.enemies.forEach(function (x) { if (els[x.id] && !els[x.id].classList.contains('dead')) upts.push(center(els[x.id])); });
           if (vfx && uc) { VFX.pillar(vfx, uc.x, uc.y, 'ult', 120, 0.9); VFX.cast(vfx, sfxKind(e.sfx), uc.x, uc.y, upts, true); VFX.sparks(vfx, uc.x, uc.y, 'ult', 50, { speed: 420, g: -80, life: 1.2 }); } hitstop(140); banner(e.name.toUpperCase(), 'ULTIME'); UI.flash('#d9a441aa'); SND.play(e.sfx); SND.play('levelup', 0.6); anim($('#arena'), 'shake', 250); break;
+        case 'passive': floatAt(hero, e.txt, 'txt'); break;
         case 'weak': if (el) floatAt(el, 'POINT FAIBLE', 'crit'); break;
         case 'weakhit': fxAt(el, 'star', 22); var wp = center(el); if (vfx && wp) { VFX.ring(vfx, wp.x, wp.y, 'crit', 110, 0.35, 7); VFX.flash(vfx, wp.x, wp.y, 'crit', 120, 0.2); } hitstop(80); floatAt(el, 'POINT FAIBLE !', 'crit'); anim($('#arena'), 'shake', 250); break;
         case 'flee': if (el) { floatAt(el, 'Il s’enfuit !', 'txt'); el.classList.add('dead'); } SND.play('error'); break;
@@ -7409,7 +7430,7 @@ UI.run = (function () {
   function helpSheet(first) {
     var run = S().run; if (!run) return; var hero = E.hero(run.hero);
     var h = '<h2>' + (first ? 'Voici tes pouvoirs' : 'Aide') + '</h2><div class="tiny dim center" style="margin:-6px 0 10px">' + hero.name + ', ' + hero.title + ' · le combat est en pause</div>';
-    h += '<div class="li"><div class="ic">🌟</div><div class="grow"><b>' + hero.passive.name + '</b> <span class="tiny dim">passif, toujours actif</span><div class="small dim">' + hero.passive.desc + '</div></div></div>';
+    h += '<div class="li"><div class="ic">' + hero.passive.icon + '</div><div class="grow"><b>' + hero.passive.name + '</b> <span class="tiny dim">passif, toujours actif</span><div class="small dim">' + hero.passive.desc + '</div></div></div>';
     hero.skills.forEach(function (k, i) {
       var ok = E.skillUnlocked(run.hero, i);
       var nums = ok ? E.skillNumbers(run.hero, i, run) : [], evn = k.evos.filter(function (v) { return run.evos.indexOf(v.id) >= 0; });
@@ -8033,7 +8054,7 @@ UI.guide = (function () {
     var r = document.documentElement.style;
     ['iron', 'gold', 'cyan', 'dark'].forEach(function (k) { r.setProperty('--fr-' + k, 'url(' + Sprites.url('ui_' + k) + ')'); });
     // icônes pixel des pouvoirs et des ultimes de chaque héros
-    DATA.HEROES.forEach(function (h) { h.skills.forEach(function (k) { k.icon = UI.spr('sk_' + k.id, 'ski'); }); h.ult.icon = UI.spr('ul_' + h.id, 'ski'); });
+    DATA.HEROES.forEach(function (h) { h.skills.forEach(function (k) { k.icon = UI.spr('sk_' + k.id, 'ski'); }); h.ult.icon = UI.spr('ul_' + h.id, 'ski'); h.passive.icon = UI.spr('pa_' + h.id, 'ski'); });
   })();
 
   function build() {

@@ -54,7 +54,7 @@ var DATA = (function () {
       id: 'chevalier', name: 'Aldric', title: 'Chevalier Déchu', role: 'Tank — facile',
       desc: "Un mur d'acier. Encaisse, étourdit, punit.",
       base: { hp: 150, atk: 10, def: 9, spd: 1.0, crit: 5 },
-      passive: { name: 'Rempart', desc: '20 % de chance de bloquer un coup (dégâts divisés par 2).', mods: { block: 20 } },
+      passive: { name: "Serment de Pierre", desc: "20 % de chance de bloquer un coup (dégâts divisés par 2). Chaque coup bloqué ajoute +1 à un dé de ta prochaine main (jusqu’à +3).", mods: { block: 20 } },
       unlock: null, start: { artifact: null, potions: 0 },
       skills: [
         { id: 'k1', name: "Écu du Parjure", icon: '', cd: 7, sfx: 'block', desc: "180 % dégâts et étourdit 1 tour. Interrompt les attaques chargées. Te donne un bouclier de 4 % PV par point du dé." },
@@ -71,7 +71,7 @@ var DATA = (function () {
       id: 'pyro', name: 'Ysolde', title: 'Sorcière des Cendres', role: 'Mage — dégâts de zone',
       desc: 'Tout brûle. Fragile, mais rien ne lui survit longtemps.',
       base: { hp: 100, atk: 14, def: 3, spd: 0.9, crit: 5 },
-      passive: { name: 'Braise vive', desc: 'Chaque attaque embrase la cible (brûlure 3 s).', mods: { burnHit: 100 } },
+      passive: { name: "Cendres Fidèles", desc: "Chaque attaque embrase la cible. Quand un ennemi en feu meurt pendant ton tour, ton plus petit dé gagne +2.", mods: { burnHit: 100 } },
       unlock: { boss: 1 }, start: {},
       skills: [
         { id: 'p1', name: "Cendre Vive", icon: '', cd: 6, sfx: 'skill_fire', desc: "220 % dégâts et embrase la cible. Le feu se propage : les ennemis déjà en feu prennent 90 %, les autres s’embrasent." },
@@ -88,7 +88,7 @@ var DATA = (function () {
       id: 'assassin', name: 'Corvin', title: 'Lame de Minuit', role: 'Assassin — critiques',
       desc: 'Rapide, mortel, insaisissable. Empoisonne à chaque critique.',
       base: { hp: 105, atk: 9, def: 4, spd: 1.5, crit: 18 },
-      passive: { name: 'Lames souillées', desc: 'Les coups critiques empoisonnent (cumulable).', mods: {} },
+      passive: { name: "Heure Noire", desc: "Tes coups critiques empoisonnent (cumulable). Dans l’ombre, la pire chance devient la meilleure : un dé qui tombe sur 1 devient un 6.", mods: {} },
       unlock: { cost: 300 }, start: {},
       skills: [
         { id: 'a1', name: "Minuit Moins Trois", icon: '', cd: 5, sfx: 'skill_blade', desc: "3 coups de 85 % dégâts, +1 coup pour chaque dé Lame encore dans ta main." },
@@ -105,7 +105,7 @@ var DATA = (function () {
       id: 'necro', name: 'Mortis', title: "Fossoyeur d'Âmes", role: 'Invocateur — armée',
       desc: 'Chaque ennemi tué se relève pour lui. Plus le combat dure, plus il est fort.',
       base: { hp: 100, atk: 9, def: 3, spd: 1.0, crit: 5 },
-      passive: { name: 'Levée des morts', desc: 'Chaque ennemi tué relève un serviteur squelette (max 3) qui frappe pour toi.', mods: {} },
+      passive: { name: "Ossements Comptés", desc: "Chaque ennemi tué relève un serviteur squelette (max 3). Chaque serviteur ajoute +1 au dé que tu glisses dans un pouvoir.", mods: {} },
       unlock: { boss: 2 }, start: {},
       skills: [
         { id: 'n1', name: "Première Pelletée", icon: '', cd: 6, sfx: 'skill_dark', desc: "200 % dégâts et relève un serviteur. Si ton armée est déjà pleine, tu pioches un dé." },
@@ -122,7 +122,7 @@ var DATA = (function () {
       id: 'berserker', name: 'Hrolf', title: 'Écorché du Nord', role: 'Berserker — risque',
       desc: 'Plus il saigne, plus il frappe fort. Se soigne en tuant.',
       base: { hp: 135, atk: 12, def: 3, spd: 1.1, crit: 8 },
-      passive: { name: 'Fureur écarlate', desc: '+1 % dégâts par 1 % de PV manquant.', mods: {} },
+      passive: { name: "Peau d’Écorché", desc: "+1 % dégâts par 1 % de PV manquant. Sous 30 % PV, tu as 3 actions ⚡ par tour au lieu de 2.", mods: {} },
       unlock: { cost: 2500 }, start: {},
       skills: [
         { id: 'b1', name: "Entaille d’Écorché", icon: '', cd: 5, sfx: 'skill_war', desc: "200 % dégâts et fait saigner. Sous 50 % PV, tu frappes une seconde fois (100 %)." },
@@ -139,7 +139,7 @@ var DATA = (function () {
       id: 'pretresse', name: 'Séraphine', title: 'Sainte Hérétique', role: 'Soutien — immortelle',
       desc: 'Se soigne sans cesse. Ses PV sont son arme.',
       base: { hp: 125, atk: 9, def: 5, spd: 1.0, crit: 5 },
-      passive: { name: 'Grâce impie', desc: 'Régénère 1 % PV par seconde. Les soins en trop deviennent un bouclier.', mods: { regen: 1 } },
+      passive: { name: "Grâce Impie", desc: "Régénère 1 % PV par seconde, et les soins en trop deviennent un bouclier. Chaque dé pair posé sur la table te soigne de 2 % PV.", mods: { regen: 1 } },
       unlock: { boss: 4 }, start: {},
       skills: [
         { id: 's1', name: "Stigmate", icon: '', cd: 6, sfx: 'skill_holy', desc: "190 % dégâts, affaiblit la cible 2 tours (-25 % attaque) et te soigne de 5 % PV." },
@@ -156,7 +156,7 @@ var DATA = (function () {
       id: 'chasseuse', name: 'Maëlle', title: 'Traqueuse des Pendus', role: 'Tireuse — points faibles',
       desc: 'Elle voit où frapper. Fragile de près, mortelle si tu vises juste.',
       base: { hp: 100, atk: 11, def: 3, spd: 1.25, crit: 10 },
-      passive: { name: 'Œil de traqueuse', desc: 'Les points faibles apparaissent 2 fois plus souvent et font +50 % dégâts.', mods: { weakP: 50 } },
+      passive: { name: "Œil du Gibet", desc: "Les points faibles apparaissent 2 fois plus souvent et font +50 % dégâts. Le premier frappé à chaque tour te rend ton action.", mods: { weakP: 50 } },
       unlock: { boss: 3 }, start: {},
       skills: [
         { id: 'h1', name: "Carreau de Gibet", icon: '', cd: 5, sfx: 'skill_blade', desc: "230 % dégâts qui ignorent l’armure, rend la cible vulnérable 2 tours et lui ouvre un point faible." },
@@ -173,7 +173,7 @@ var DATA = (function () {
       id: 'moine', name: 'Frère Odon', title: 'Poing de Cendre', role: 'Combattant — élan',
       desc: 'Chaque coup le rend plus fort. Ne laisse pas un gros coup briser son élan.',
       base: { hp: 120, atk: 10, def: 5, spd: 1.3, crit: 8 },
-      passive: { name: 'Élan', desc: 'Chaque coup donne +4 % dégâts (jusqu’à x10). L’élan retombe à zéro si tu encaisses une attaque chargée.', mods: {} },
+      passive: { name: "Élan de Cendre", desc: "Chaque coup donne +4 % dégâts (jusqu’à x10). À élan maximum, le premier dé que tu poses chaque tour compte double. L’élan retombe à zéro si tu encaisses une attaque chargée.", mods: {} },
       unlock: { cost: 8000 }, start: {},
       skills: [
         { id: 'm1', name: "Paume de Braise", icon: '', cd: 4, sfx: 'hit', desc: "170 % dégâts, étourdit et embrase. Interrompt les attaques chargées. +2 élan." },
@@ -387,8 +387,9 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '3.7';
+  var VERSION = '3.8';
   var NEWS = [
+    ['🌟', 'Des passifs réinventés', 'Chaque héros a un nouveau passif lié aux dés ou au tour : les blocages d’Aldric renforcent ta main, les 1 de Corvin deviennent des 6, les serviteurs de Mortis renforcent ses pouvoirs, Hrolf gagne une 3e action sous 30 % PV...'],
     ['🕯️', 'Des pouvoirs propres à Morvane', 'Les 8 héros ont des pouvoirs entièrement repensés : Écu du Parjure, Bûcher du Roi Creux, Minuit Moins Trois, Exhumation, Ronde des Loups, Psaume Inversé, Carreau de Gibet, Cent Cendres... chacun avec sa propre icône.'],
     ['🎲', 'Des pouvoirs qui jouent avec les dés', 'Certains pouvoirs changent tes dés (un petit dé devient un 6, les Lames deviennent des Braises, toute ta main se retourne), te font piocher, te rendent une action ou ouvrent un point faible.'],
     ['👑', 'Huit nouveaux ultimes', 'Le Serment Tenu, La Dernière Flamme, Douze Coups de Minuit, Le Grand Ossuaire, Hiver Rouge, Miracle Profane, La Corde Tranchée, Le Foyer Intérieur.'],
