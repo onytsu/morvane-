@@ -1178,3 +1178,5 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 @keyframes bin5 { 0% { transform: translateY(40px) scale(.2); opacity: 0; filter: brightness(3) sepia(1) saturate(4); } 45% { transform: translateY(-34px) scale(1.15); opacity: 1; } 72% { transform: translateY(0) scale(1.08, .9); filter: brightness(1.4); } 100% { transform: none; filter: none; } }
 @keyframes bin6 { 0% { transform: scale(0) rotate(-200deg); opacity: 0; filter: brightness(0); } 55% { transform: scale(.4) rotate(-40deg); opacity: .8; filter: brightness(.3); } 72% { transform: scale(1.12) rotate(4deg); opacity: 1; filter: brightness(1.6); } 100% { transform: none; filter: none; } }
 @media (prefers-reduced-motion: reduce) { .camp-hero .spr[class*="g-"], .unit.en.boss[class*="bin-"] { animation: none !important; } }
+/* v4.4.1 : sur un héros verrouillé, le voile ne doit pas couvrir les flèches ni le nom (sinon on reste coincé) */
+.camp-scene .nav, .camp-name { z-index: 6; }
