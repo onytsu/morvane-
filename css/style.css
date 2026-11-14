@@ -1003,6 +1003,7 @@ img.ski { display: inline-block; width: 32px; height: 32px; image-rendering: pix
 .skb .e .ski { width: 32px; height: 32px; }
 #toasts img.ski, .float img.ski { width: 20px; height: 20px; }
 .tiny img.ski { width: 16px; height: 16px; vertical-align: -3px; }
+h2 img.ski { width: 24px; height: 24px; vertical-align: -3px; }
 .li .ic img.ski, .sk .ic img.ski, .skhead .ic img.ski, .choice .ic img.ski { width: 32px; height: 32px; }
 
 /* ================= v3.9 : plateau de dés en pixel art ================= */

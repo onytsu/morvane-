@@ -579,7 +579,7 @@ UI.run = (function () {
   ACT.cont = function () { SND.play('click'); E.continueRun(); syncPhase(true); };
   function sheetBoon(run) {
     if (!run.offer) E.makeOffer(run);
-    var h = '<h2>🌒 Choisis une aubaine</h2><div class="tiny dim center" style="margin:-6px 0 8px">Niveau ' + run.lvl + ' · elle dure jusqu’à la fin de cette descente' + (run.pendingBoons > 1 ? ' · encore ' + run.pendingBoons : '') + '</div>';
+    var h = '<h2>' + UI.spr('bn_tout', 'ski') + ' Choisis une aubaine</h2><div class="tiny dim center" style="margin:-6px 0 8px">Niveau ' + run.lvl + ' · elle dure jusqu’à la fin de cette descente' + (run.pendingBoons > 1 ? ' · encore ' + run.pendingBoons : '') + '</div>';
     run.offer.forEach(function (id, i) {
       var b = E.boonById(id), n = run.boons[id] || 0;
       h += '<button class="choice b' + b.rar + '" style="animation-delay:' + (i * 0.07) + 's" data-act="boon" data-i="' + i + '"><div class="ic">' + b.icon + '</div><div class="grow"><span class="tag">' + BRAR[b.rar] + (b.cls ? ' · ' + E.hero(run.hero).name : '') + (n ? ' · déjà x' + n : '') + '</span><b>' + b.name + '</b><div class="d">' + b.desc + '</div></div></button>';
