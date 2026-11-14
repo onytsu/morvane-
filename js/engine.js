@@ -780,11 +780,17 @@
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function startBag(heroId) { return (D.BAGS[heroId] || D.BAGS.chevalier).map(function (t) { return { t: t, f: [1, 2, 3, 4, 5, 6] }; }); }
   E.startBag = startBag;
-  function rollDie(run, bi) { var d = run.bag[bi]; return { bi: bi, t: d.t, v: pick(d.f) + (run.stats.diceV || 0) }; }
+  function rollDie(run, bi) { var d = run.bag[bi], f = pick(d.f); if (run.hero === 'assassin' && f === 1) return { bi: bi, t: d.t, v: 6 + (run.stats.diceV || 0), night: true }; return { bi: bi, t: d.t, v: f + (run.stats.diceV || 0) }; }
+  // passifs : +n au plus petit dé de la main
+  function boostLow(c, n) { if (!c.hand.length) return false; var lo = c.hand.reduce(function (a, b) { return b.v < a.v ? b : a; }); lo.v = Math.min(9, lo.v + n); lo.ice = false; return true; }
+  // pioche un dé de plus (pouvoirs qui remplissent la main)
+  function drawOne(run, c) { if (!c.pile.length) { c.pile = shuffle(c.disc); c.disc = []; } if (!c.pile.length) return; c.hand.push(rollDie(run, c.pile.pop())); ev(c, { k: 'draw', n: c.hand.length, again: 1 }); }
+  // retourne un dé sur sa face opposée, sans dépenser de retournement
+  function flipValue(run, d) { var f = run.bag[d.bi].f, b = run.stats.diceV || 0; d.v = Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b)) + b; d.ice = false; }
   function freeCells(c) { var o = []; c.grid.forEach(function (g, i) { if (!g.d && g.r !== 'seal') o.push(i); }); return o; }
   function drawTurn(run, c) {
     var h = c.hero, n = 3 + (run.stats.diceHand || 0);
-    c.dfx = {}; c.acted = false; h.ap = AP;
+    c.dfx = {}; c.acted = false; h.ap = AP + (run.hero === 'berserker' && run.hp < run.stats.hp * 0.3 ? 1 : 0); c.weakRefund = false; c.foyerX2 = false;
     if (!freeCells(c).length) { c.grid.forEach(function (g) { g.d = null; }); ug(run, 10); ev(c, { k: 'gclear' }); }
     c.hand = [];
     while (c.hand.length < n) {
@@ -798,6 +804,7 @@
       if (h.st.burn) pick(c.hand).fire = true;
       if (h.st.slow > 0) { var top = c.hand.reduce(function (a, b) { return b.v > a.v ? b : a; }); if (top.v > 1) { top.v = 1; top.ice = true; } }
     }
+    if (run.hero === 'chevalier' && h.oath) { for (var oi = 0; oi < Math.min(3, h.oath); oi++) boostLow(c, 1); ev(c, { k: 'passive', txt: '+' + Math.min(3, h.oath) + ' Serment' }); h.oath = 0; }
     ev(c, { k: 'draw', n: c.hand.length });
   }
   // Ce que vaudrait le dé `die` posé sur la case ci (sans rien changer). Le Miroir prend le type et la valeur du plus fort voisin.
@@ -811,6 +818,7 @@
     }
     ADJ[ci].forEach(function (a) { var d = g[a].d; if (d && d.t === 'echo') bonus += Math.ceil(d.v / 2); });
     if (g[ci].r === 'x2') v *= 2; else if (g[ci].r === 'p2') v += 2;
+    if (S.run && S.run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2) v *= 2;
     return { t: t, v: Math.min(20, v + bonus), base: die.v, mir: mir, bonus: bonus };
   }
   E.dieCalc = function (hi, ci) { var c = S.run && S.run.combat; return c && c.hand[hi] && c.grid[ci] && !c.grid[ci].d && c.grid[ci].r !== 'seal' ? dieCalc(c, c.hand[hi], ci) : null; };
@@ -860,6 +868,8 @@
     var die = c.hand.splice(hi, 1)[0], r = dieCalc(c, die, ci);
     dieBurn(run, c, die);
     c.grid[ci].d = { t: r.t, v: r.v, base: r.base, mir: r.mir }; c.disc.push(die.bi); c.acted = true;
+    if (run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2) { c.foyerX2 = true; ev(c, { k: 'passive', txt: 'Foyer ×2' }); }
+    if (run.hero === 'pretresse' && r.base % 2 === 0) heroHeal(run, c, run.stats.hp * 0.02);
     S.stats.dice = (S.stats.dice || 0) + 1;
     ev(c, { k: 'place', ci: ci, t: r.t, v: r.v, mir: r.mir });
     dieFx(run, c, r.t, r.v);
@@ -1085,6 +1095,7 @@
     ev(c, { k: 'die', id: e.id, boss: e.boss });
     if (st.killHeal) heroHeal(run, c, st.hp * st.killHeal / 100);
     if (run.hero === 'necro') c.hero.skel = Math.min(3 + st.skel, c.hero.skel + 1);
+    if (run.hero === 'pyro' && e.st.burn && c.turn === 'hero' && boostLow(c, 2)) ev(c, { k: 'passive', txt: 'Cendres +2' });
     if (e.ab.explode) { ev(c, { k: 'explode', id: e.id }); hurt(run, c, null, e.atk * e.ab.explode / 100, {}); }
     // butin
     if (!e.summoned) {
@@ -1175,7 +1186,7 @@
     var dmg = raw * (c.cond === 'sang' && !o.dot ? 1.4 : 1), blocked = false;
     if (!o.dot) {
       if (e && e.st.weak > 0) dmg *= 0.75;
-      if (rnd() * 100 < st.block) { dmg *= 0.5; blocked = true; }
+      if (rnd() * 100 < st.block) { dmg *= 0.5; blocked = true; if (run.hero === 'chevalier') c.hero.oath = (c.hero.oath || 0) + 1; }
       dmg *= (2 * raw) / (2 * raw + st.def);
     }
     if (c.dfx && c.dfx.guard && !o.dot) dmg *= 1 - c.dfx.guard / 100;
@@ -1273,36 +1284,36 @@
     var sk = E.hero(run.hero).skills[i], e = target(c); if (!e) return false;
     if (hi == null) hi = bestDie(run, c, i);
     if (!fits(run, c, i, hi)) return false;
-    var die = c.hand.splice(hi, 1)[0], pw = sk.flat ? 1 : E.diePower(die.v); c.disc.push(die.bi); c.pw = pw;
+    var die = c.hand.splice(hi, 1)[0], pw = sk.flat ? 1 : E.diePower(die.v + (run.hero === 'necro' ? (h.skel || 0) : 0)); c.disc.push(die.bi); c.pw = pw;
     S.stats.dice = (S.stats.dice || 0) + 1; ev(c, { k: 'slot', i: i, t: die.t, v: die.v, pw: pw }); dieBurn(run, c, die);
     var others = alive(c).filter(function (x) { return x !== e; }), all = alive(c);
     h.cds[i] = E.skillCd(run, i); ug(run, 5); bump(run, 'skills');
     ev(c, { k: 'skill', i: i, id: sk.id, sfx: sk.sfx, name: sk.name });
     switch (sk.id) {
-      case 'k1': hit(run, c, e, 1.8, { skill: 1 }); stun(c, e, 1.5); break;
-      case 'k2': hit(run, c, e, 3.5, { skill: 2 }); heroHeal(run, c, st.hp * 0.10); break;
-      case 'k3': h.shield = Math.max(h.shield, st.hp * 0.30 * pw * (1 + st.pow / 200)); h.shieldT = 6; h.buffs.thorns = { t: 6, v: 1 }; break;
-      case 'p1': hit(run, c, e, 2.2, { skill: 1 }); applyDot(run, e, 'burn'); others.forEach(function (x) { hit(run, c, x, 0.9, { skill: 1 }); applyDot(run, x, 'burn'); }); break;
-      case 'p2': all.forEach(function (x) { hit(run, c, x, 1.7, { skill: 2 }); applyDot(run, x, 'burn'); }); break;
-      case 'p3': hit(run, c, e, e.st.burn ? 6.4 : 4.0, { skill: 3 }); h.buffs.spd = { t: 5, v: 50 }; break;
-      case 'a1': for (var n = 0; n < 3; n++) { var tg = target(c); if (tg) hit(run, c, tg, 0.85, { skill: 1 }); } break;
-      case 'a2': h.buffs.dodge = { t: 3, v: 60 }; h.nextCrit = true; break;
-      case 'a3': var low = e.hp / e.maxhp < 0.35; hit(run, c, e, low ? 7.5 : 3.0, { skill: 3 }); if (e.dead) h.cds[i] = 0.5; break;
-      case 'n1': hit(run, c, e, 2.0, { skill: 1 }); h.skel = Math.min(3 + st.skel, h.skel + 1); break;
-      case 'n2': hit(run, c, e, 1.9, { skill: 2, drain: true }); break;
-      case 'n3': h.skel = 3 + st.skel; h.buffs.skelF = { t: 5, v: 3 }; break;
-      case 'b1': hit(run, c, e, 2.0, { skill: 1 }); if (!e.dead) applyDot(run, e, 'bleed'); break;
-      case 'b2': run.hp = Math.max(1, run.hp - run.hp * 0.10); h.buffs.spd = { t: 6, v: 60 }; h.buffs.ls = { t: 6, v: 15 }; break;
-      case 'b3': var cnt = all.length; all.forEach(function (x) { hit(run, c, x, 2.2, { skill: 3 }); }); heroHeal(run, c, st.hp * 0.05 * cnt); break;
-      case 'h1': hit(run, c, e, 2.3, { skill: 1, pierce: 1 }); if (!e.dead) e.st.vuln = Math.max(e.st.vuln || 0, 3); break;
+      case 'k1': hit(run, c, e, 1.8, { skill: 1 }); stun(c, e, 1.5); h.shield = Math.max(h.shield, st.hp * 0.04 * die.v * (1 + st.pow / 200)); h.shieldT = Math.max(h.shieldT || 0, ROUND); break;
+      case 'k2': hit(run, c, e, 3.2, { skill: 2 }); heroHeal(run, c, st.hp * 0.08); if (c.hand.length) { var lo = c.hand.reduce(function (a, b) { return b.v < a.v ? b : a; }); lo.v = Math.max(lo.v, 6); lo.ice = false; } break;
+      case 'k3': h.shield = Math.max(h.shield, st.hp * 0.30 * pw * (1 + st.pow / 200)); h.shieldT = 6; h.buffs.thorns = { t: 6, v: 1 }; h.ap += 1; break;
+      case 'p1': hit(run, c, e, 2.2, { skill: 1 }); applyDot(run, e, 'burn'); others.forEach(function (x) { if (x.st.burn) hit(run, c, x, 0.9, { skill: 1 }); else applyDot(run, x, 'burn'); }); break;
+      case 'p2': all.forEach(function (x) { hit(run, c, x, 1.4, { skill: 2 }); applyDot(run, x, 'burn'); }); c.hand.forEach(function (d) { if (d.t === 'lame') { d.t = 'braise'; d.v += 1; } }); break;
+      case 'p3': hit(run, c, e, e.st.burn ? 6.4 : 4.0, { skill: 3 }); others.forEach(function (x) { if (!x.dead && x.st.burn) { delete x.st.burn; hit(run, c, x, 1.5, { skill: 3 }); } }); break;
+      case 'a1': var na = 3 + c.hand.filter(function (d) { return d.t === 'lame'; }).length; for (var n = 0; n < na; n++) { var tg = target(c); if (tg) hit(run, c, tg, 0.85, { skill: 1 }); } break;
+      case 'a2': h.buffs.dodge = { t: 4, v: 60 }; h.nextCrit = true; c.hand.forEach(function (d) { flipValue(run, d); }); break;
+      case 'a3': var low = e.hp / e.maxhp < 0.35; hit(run, c, e, low ? 7.5 : 3.0, { skill: 3 }); if (e.dead) h.ap += 1; break;
+      case 'n1': hit(run, c, e, 2.0, { skill: 1 }); if (h.skel >= 3 + st.skel) drawOne(run, c); else h.skel = h.skel + 1; break;
+      case 'n2': hit(run, c, e, 1.9 * (1 + 0.3 * (h.skel || 0)), { skill: 2, drain: true }); break;
+      case 'n3': h.skel = 3 + st.skel; h.buffs.skelF = { t: 6, v: 3 }; var buried = 0; c.grid.forEach(function (g) { if (g.d) { g.d = null; buried++; } }); if (buried) { ug(run, 5 * buried); ev(c, { k: 'gclear' }); } break;
+      case 'b1': hit(run, c, e, 2.0, { skill: 1 }); if (!e.dead) applyDot(run, e, 'bleed'); if (!e.dead && run.hp < st.hp * 0.5) hit(run, c, e, 1.0, { skill: 1 }); break;
+      case 'b2': run.hp = Math.max(1, run.hp - run.hp * 0.10); h.buffs.spd = { t: 6, v: 60 }; h.buffs.ls = { t: 6, v: 15 }; h.ap += 1; break;
+      case 'b3': var cnt = all.length; all.forEach(function (x) { hit(run, c, x, x.st.bleed ? 3.3 : 2.2, { skill: 3 }); }); heroHeal(run, c, st.hp * 0.05 * cnt); break;
+      case 'h1': hit(run, c, e, 2.3, { skill: 1, pierce: 1 }); if (!e.dead) { e.st.vuln = Math.max(e.st.vuln || 0, 4); c.weak = { id: e.id, t: ROUND }; ev(c, { k: 'weak', id: e.id }); } break;
       case 'h2': hit(run, c, e, 1.5, { skill: 2 }); stun(c, e, 2); if (!e.dead) applyDot(run, e, 'bleed'); break;
-      case 'h3': for (var hn = 0; hn < 5; hn++) { var hal = alive(c); if (!hal.length) break; hit(run, c, pick(hal), 0.75, { skill: 3 }); } break;
-      case 'm1': hit(run, c, e, 1.7, { skill: 1 }); stun(c, e, 0.8); break;
-      case 'm2': heroHeal(run, c, st.hp * 0.15 * pw * (1 + st.pow / 200)); delete h.st.poison; delete h.st.burn; delete h.st.bleed; h.elan = 10; break;
-      case 'm3': for (var mn = 0; mn < 6; mn++) { var mt = target(c); if (!mt) break; hit(run, c, mt, 0.6, { skill: 3 }); h.elan = Math.min(10, (h.elan || 0) + 1); } break;
-      case 's1': hit(run, c, e, 1.9, { skill: 1 }); if (!e.dead) e.st.weak = 4; break;
-      case 's2': heroHeal(run, c, st.hp * 0.25 * pw * (1 + st.pow / 200)); delete h.st.poison; delete h.st.burn; delete h.st.bleed; delete h.st.weak; break;
-      case 's3': all.forEach(function (x) { hit(run, c, x, 0, { skill: 3, flat: st.hp * 0.30, noCrit: true }); stun(c, x, 1); }); break;
+      case 'h3': for (var hn = 0; hn < 5; hn++) { var hal = alive(c); if (!hal.length) break; var ht = pick(hal); hit(run, c, ht, 0.75 * ((ht.st.vuln > 0 || (c.weak && c.weak.id === ht.id)) ? 1.5 : 1), { skill: 3 }); } break;
+      case 'm1': hit(run, c, e, 1.7, { skill: 1 }); stun(c, e, 0.8); if (!e.dead) applyDot(run, e, 'burn'); h.elan = Math.min(10, (h.elan || 0) + 2); break;
+      case 'm2': heroHeal(run, c, st.hp * 0.15 * pw * (1 + st.pow / 200)); delete h.st.poison; delete h.st.burn; delete h.st.bleed; h.elan = 10; c.rerolls = (c.rerolls || 0) + 1; break;
+      case 'm3': var full0 = (h.elan || 0) >= 10; for (var mn = 0; mn < 6; mn++) { var mt = target(c); if (!mt) break; hit(run, c, mt, 0.6, { skill: 3 }); h.elan = Math.min(10, (h.elan || 0) + 1); } if (!full0 && h.elan >= 10) h.ap += 1; break;
+      case 's1': hit(run, c, e, 1.9, { skill: 1 }); if (!e.dead) e.st.weak = 4; heroHeal(run, c, st.hp * 0.05); break;
+      case 's2': heroHeal(run, c, st.hp * 0.25 * pw * (1 + st.pow / 200)); delete h.st.poison; delete h.st.burn; delete h.st.bleed; delete h.st.weak; drawOne(run, c); c.rerolls = (c.rerolls || 0) + 1; break;
+      case 's3': all.forEach(function (x) { hit(run, c, x, 0, { skill: 3, flat: st.hp * 0.30, noCrit: true }); stun(c, x, 2); }); break;
     }
     evoFx(run, c, i, e);
     if (st.skillHeal) heroHeal(run, c, st.hp * st.skillHeal / 100);
@@ -1325,6 +1336,7 @@
     var e = c.enemies[i]; if (!e || e.dead || e.id !== c.weak.id) return false;
     c.weak = null; c.weakT = rf(5, 9); S.stats.weak++; bump(run, 'weak'); ev(c, { k: 'weakhit', id: e.id });
     hit(run, c, e, 2.5 * (1 + run.stats.weakP / 100), { crit: true }); if (!e.dead) e.st.vuln = Math.max(e.st.vuln || 0, 3); ug(run, 12);
+    if (run.hero === 'chasseuse' && !c.weakRefund) { c.weakRefund = true; c.hero.ap += 1; ev(c, { k: 'passive', txt: 'Action rendue' }); }
     if (c.over) finish(run, c);
     spend(run, c);
     return true;
@@ -1334,13 +1346,13 @@
     var h = c.hero, st = run.stats, u = E.hero(run.hero).ult, all = alive(c), n, tg;
     run.ult = 0; S.stats.ult++; bump(run, 'ult'); ev(c, { k: 'ult', name: u.name, sfx: u.sfx });
     switch (run.hero) {
-      case 'chevalier': h.invuln = 4; all.forEach(function (x) { hit(run, c, x, 4, { ult: 1 }); }); break;
-      case 'pyro': for (n = 0; n < 6; n++) { var al = alive(c); if (!al.length) break; tg = pick(al); hit(run, c, tg, 1.6, { ult: 1 }); } alive(c).forEach(function (x) { applyDot(run, x, 'burn'); }); break;
-      case 'assassin': for (n = 0; n < 8; n++) { var al2 = alive(c); if (!al2.length) break; hit(run, c, pick(al2), 0.9, { ult: 1, crit: true }); } break;
+      case 'chevalier': h.invuln = 4; all.forEach(function (x) { hit(run, c, x, 4, { ult: 1 }); }); h.ap += 1; break;
+      case 'pyro': for (n = 0; n < 6; n++) { var al = alive(c); if (!al.length) break; tg = pick(al); hit(run, c, tg, 1.6, { ult: 1 }); } alive(c).forEach(function (x) { applyDot(run, x, 'burn'); }); h.cds = h.cds.map(function () { return 0; }); break;
+      case 'assassin': for (n = 0; n < 12; n++) { var al2 = alive(c); if (!al2.length) break; hit(run, c, pick(al2), 0.6, { ult: 1, crit: true }); } break;
       case 'necro': var tot = 0; all.forEach(function (x) { tot += hit(run, c, x, 4, { ult: 1 }); }); heroHeal(run, c, tot * 0.5); h.skel = Math.min(3 + st.skel, h.skel + 2); break;
-      case 'berserker': h.buffs.spd = { t: 6, v: 100 }; h.buffs.ls = { t: 6, v: 20 }; h.buffs.undying = { t: 4, v: 1 }; break;
+      case 'berserker': h.buffs.spd = { t: 6, v: 100 }; h.buffs.ls = { t: 6, v: 20 }; h.buffs.undying = { t: 4, v: 1 }; c.hand.forEach(function (d) { d.v = Math.max(d.v, 6); d.ice = false; }); break;
       case 'chasseuse': tg = target(c); if (tg) { hit(run, c, tg, 9, { ult: 1, crit: true, pierce: 1 }); if (tg.dead) run.ult = 50; } break;
-      case 'moine': h.buffs.spd = { t: 8, v: 80 }; h.buffs.dodge = { t: 8, v: 40 }; h.buffs.eveil = { t: 8, v: 1 }; h.elan = 10; break;
+      case 'moine': h.buffs.spd = { t: 8, v: 80 }; h.buffs.dodge = { t: 8, v: 40 }; h.buffs.eveil = { t: 8, v: 1 }; h.elan = 10; drawOne(run, c); drawOne(run, c); break;
       case 'pretresse': heroHeal(run, c, st.hp, true); h.shield = Math.max(h.shield, st.hp * 0.3); h.shieldT = 8; delete h.st.poison; delete h.st.burn; delete h.st.bleed; all.forEach(function (x) { stun(c, x, 2); }); break;
     }
     if (c.over) finish(run, c);

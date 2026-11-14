@@ -125,7 +125,7 @@ var UI = (function () {
   ACT.enter = function () {
     SND.unlock(); SND.play('door');
     if (!S().stats.runs && !S().run) {
-      modal('<h2>La descente</h2><p class="center">Le Roi Creux a éteint le monde. Six royaumes pourrissent sous la terre de Morvane.</p><p class="center">Descends. Meurs. <b>Garde ton butin.</b> Reviens plus fort.</p><p class="center dim small">Ton héros attaque tout seul.<br>Toi, tu déclenches ses <b>pouvoirs</b> au bon moment.</p><div class="btns"><button class="btn primary big" data-act="firstRun">DESCENDRE</button></div>', true);
+      modal('<h2>La descente</h2><p class="center">Le Roi Creux a éteint le monde. Six royaumes pourrissent sous la terre de Morvane.</p><p class="center">Descends. Meurs. <b>Garde ton butin.</b> Reviens plus fort.</p><p class="center dim small">Le combat se joue au tour par tour.<br>Un petit tutoriel te guidera au premier combat.</p><div class="btns"><button class="btn primary big" data-act="firstRun">DESCENDRE</button></div>', true);
       return;
     }
     if (S().run) { UI.run.show(); return; }
@@ -141,76 +141,91 @@ var UI = (function () {
     SND.music('hub');
     var idle = E.idleInfo(), newItems = S().inv.some(function (i) { return i.isNew; });
     var metaOk = D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; });
-    var tabs = [['hero', '🏰', 'Héros', idle.full || E.contractReady() || E.talentPoints(S().hero) > 0 || E.dailyInfo().claimable || UI.story.fresh()], ['sac', '🎒', 'Sac', newItems], ['autel', '⚱️', 'Autel', metaOk], ['pactes', '📜', 'Pactes', pactFree() || E.famNew()], ['faits', '🏆', 'Hauts faits', false]];
+    var tabs = [['hero', '🔥', 'Camp', idle.full || E.contractReady() || E.talentPoints(S().hero) > 0 || E.dailyInfo().claimable || UI.story.fresh()], ['sac', '🎒', 'Sac', newItems], ['autel', '⚱️', 'Autel', metaOk], ['pactes', '📜', 'Pactes', pactFree() || E.famNew()], ['faits', '🏆', 'Hauts faits', false]];
     var body = { hero: tabHero, sac: tabSac, autel: tabAutel, pactes: tabPactes, faits: tabFaits }[st.tab]();
     $('#screen').innerHTML = '<div class="topbar"><span class="title grow">MORVANE</span><span class="cur ash">🔥 ' + E.fmt(S().cendres) + '</span><span class="cur ess">💠 ' + E.fmt(S().essence) + '</span><button class="icon-btn" data-act="settings">⚙️</button></div>' +
       '<div class="content" id="content">' + body + '</div><div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (st.tab === t[0] ? ' on' : '') + '" data-act="tab" data-tab="' + t[0] + '"><span class="ti">' + t[1] + '</span>' + t[2] + (t[3] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
-    if (st.tab === 'hero' && typeof FX !== 'undefined') FX.attach($('.hero-stage'), { ambient: 'embers', fire: { x: 0.82, y: 0.76 }, warm: 2 });
+    if (st.tab === 'hero' && typeof FX !== 'undefined') FX.attach($('.camp-scene'), { ambient: 'embers', fire: { x: 0.66, y: 0.86, s: 2.6 }, warm: 2 });
+    $('#content').classList.toggle('camp', st.tab === 'hero');
     flushAch();
     if (S().stats.boss6 > 0 && !S().run && UI.story.seen()['c6.end']) UI.story.play('epi', null, { card: true });
     var vk = 'v' + D.VERSION, seenV = S().tuto[vk]; S().tuto[vk] = 1;
     if (S().tuto.hub && !seenV) { E.save(); ACT.news(); }
-    if (!S().tuto.hub) { S().tuto.hub = 1; E.save(); modal('<h2>Le sanctuaire</h2><p class="center dim small" style="margin-top:-4px">C’est ici que tu deviens plus fort entre deux descentes.</p>' +
-      '<div class="li"><div class="ic">🎒</div><div class="grow"><b>Sac</b><div class="small dim">Équipe tes objets. Une flèche verte ▲ montre ceux qui sont meilleurs. Tu peux aussi les <b>fusionner</b> (3 objets → 1 meilleur) ou les recycler.</div></div></div>' +
-      '<div class="li"><div class="ic">⚱️</div><div class="grow"><b>Autel</b><div class="small dim">Dépense tes Cendres 🔥 en bonus permanents pour tous tes héros.</div></div></div>' +
-      '<div class="li"><div class="ic">📜</div><div class="grow"><b>Pactes et contrats</b><div class="small dim">Les pactes sont des passifs à équiper. Les contrats du jour donnent des récompenses.</div></div></div>' +
-      '<div class="li"><div class="ic">🏰</div><div class="grow"><b>Héros</b><div class="small dim">Touche un portrait en haut pour changer de héros. Chacun progresse à part.</div></div></div>' +
-      '<div class="btns"><button class="btn primary big" data-act="close">COMPRIS</button></div>'); }
+    if (!S().tuto.hub) { S().tuto.hub = 1; E.save(); }
+    if (st.tab === 'hero' && UI.guide && !$('#modal').classList.contains('on')) UI.guide.camp();
   }
   function pactFree() { var hs = S().heroes[S().hero]; return S().pacts.length > hs.pacts.length && hs.pacts.length < E.pactSlots(S().hero); }
   function keepScroll(fn) { var c = $('#content'), y = c ? c.scrollTop : 0; fn(); c = $('#content'); if (c) c.scrollTop = y; }
   ACT.tab = function (d) { SND.play('click'); hub(d.tab); };
 
+  // ---------- le camp : le héros au coin du feu ----------
   function tabHero() {
     var h = E.hero(st.view), un = E.heroUnlocked(h.id), hs = S().heroes[h.id], html = '';
-    html += '<div class="roster">' + D.HEROES.map(function (x) { var u = E.heroUnlocked(x.id); return '<button class="rh' + (x.id === h.id ? ' on' : '') + (u ? '' : ' lk') + '" data-act="heroPick" data-id="' + x.id + '">' + spr(x.id) + (u ? '' : '<span>🔒</span>') + '</button>'; }).join('') + '</div>';
     var aura = -1; if (un) { for (var asl in hs.equip) { var ait = E.findItem(hs.equip[asl]); if (ait && ait.rar > aura) aura = ait.rar; } }
-    var sprH = spr(h.id, 'spr'); if (aura >= 2) sprH = sprH.replace('<img', '<img style="filter:drop-shadow(0 0 9px ' + D.RARITIES[aura].color + ') drop-shadow(0 6px 6px #000a)"');
-    html += '<div class="hero-stage" style="background-image:url(' + Backgrounds.url('camp') + ')">' + spr('veilleuse', 'veil') + '<div class="fireglow"></div><div class="floorglow"></div><div class="name"><b>' + h.name + '</b><div class="small gold">' + h.title + '</div></div>' + sprH + (un ? famHtml('famh') : '');
+    var sprH = spr(h.id, 'spr'); if (aura >= 2) sprH = sprH.replace('<img', '<img style="--aura:' + D.RARITIES[aura].color + '"');
+    var idle = E.idleInfo(), dl = E.dailyInfo();
+    html += '<div class="camp-scene' + (un ? '' : ' locked') + '" style="background-image:url(' + Backgrounds.url('camp') + ')"><div class="camp-sky"></div><div class="camp-glow"></div>';
+    html += '<button class="camp-name" data-act="roster"><b>' + h.name + '</b><span>' + h.title + '</span></button>';
+    html += '<button class="camp-hero" data-act="heroSheet">' + sprH + spr('p_buche', 'log') + '</button>' + (un ? famHtml('famh') : '');
     html += '<button class="nav l" data-act="heroNav" data-d="-1">‹</button><button class="nav r" data-act="heroNav" data-d="1">›</button>';
     if (un) {
-      html += '<div class="mast">Maîtrise <b class="gold">' + hs.lvl + '</b><div class="bar" style="width:90px"><i style="width:' + Math.min(100, hs.xp / E.masteryNeed(hs.lvl) * 100) + '%"></i></div></div><div class="pwr">⚡ ' + E.fmt(E.power(h.id)) + '</div>';
+      html += '<div class="camp-chips"><span>Maîtrise <b>' + hs.lvl + '</b></span><span>Puissance <b>' + E.fmt(E.power(h.id)) + '</b></span></div>';
+      var gifts = '';
+      if (dl.claimable) gifts += '<button class="gift" data-act="daily">' + spr('i_gift', 'ic') + '<span>Offrande</span></button>';
+      if (S().stats.best > 0 && idle.amount > 0) gifts += '<button class="gift" data-act="idle">' + spr('i_urn', 'ic') + '<span>+' + E.fmt(idle.amount) + '</span></button>';
+      if (gifts) html += '<div class="camp-gifts">' + gifts + '</div>';
     } else {
-      var how = h.unlock.cost ? '<button class="btn goldb' + (S().cendres >= h.unlock.cost ? '' : ' off') + '" data-act="unlock" data-id="' + h.id + '">Recruter — 🔥 ' + E.fmt(h.unlock.cost) + '</button>' : '<div class="gold">Vaincs ' + D.ENEMIES[D.ZONES[h.unlock.boss - 1].boss].name + '<br><span class="dim small">(boss de la zone ' + h.unlock.boss + ')</span></div>';
-      html += '<div class="lock"><div style="font-size:30px">🔒</div><b>' + h.name + ' — ' + h.role + '</b>' + how + '</div>';
+      var how = h.unlock.cost ? '<button class="btn goldb' + (S().cendres >= h.unlock.cost ? '' : ' off') + '" data-act="unlock" data-id="' + h.id + '">Recruter — 🔥 ' + E.fmt(h.unlock.cost) + '</button>' : '<div class="gold small">Vaincs ' + D.ENEMIES[D.ZONES[h.unlock.boss - 1].boss].name + '<br><span class="dim">(boss de la zone ' + h.unlock.boss + ')</span></div>';
+      html += '<div class="lock"><div style="font-size:26px">🔒</div><b>' + h.role + '</b>' + how + '</div>';
     }
     html += '</div>';
-    if (un) {
-      var s = E.heroStats(h.id, null);
-      html += '<button class="stats" data-act="allStats" style="width:100%"><div class="stat"><b>' + E.fmt(s.hp) + '</b><span>PV</span></div><div class="stat"><b>' + E.fmt(s.atk) + '</b><span>Attaque</span></div><div class="stat"><b>' + E.fmt(s.def) + '</b><span>Armure</span></div><div class="stat"><b>' + s.spd.toFixed(2) + '</b><span>Coups/s</span></div><div class="stat"><b>' + Math.round(s.crit) + '%</b><span>Critique</span></div></button>';
-      html += '<div class="equip">' + D.SLOTS.map(function (sl) {
-        var it = hs.equip[sl.id] ? E.findItem(hs.equip[sl.id]) : null;
-        return it ? itemTile(it) : '<button class="slot empty" data-act="slotEmpty" data-slot="' + sl.id + '">' + sl.icon + '</button>';
-      }).join('') + '</div>';
-      var idle = E.idleInfo();
-      if (S().run) html += '<button class="btn primary big" data-act="resume">REPRENDRE — étage ' + S().run.floor + '</button>';
-      else {
-        var mz = E.maxStartZone(); if (st.zone == null || st.zone > mz) st.zone = mz;
-        if (mz > 1) html += '<div class="zone-pick"><button class="icon-btn" data-act="zone" data-d="-1">‹</button><div class="zn"><b>' + E.zoneLabel(st.zone) + '</b><div class="tiny dim">Départ étage ' + ((st.zone - 1) * 10 + 1) + (st.zone > 1 ? ' · ' + ((st.zone - 1) * 3) + ' aubaines offertes' : '') + '</div></div><button class="icon-btn" data-act="zone" data-d="1">›</button></div>';
-        html += '<button class="btn primary big" data-act="descend">⚔️ DESCENDRE</button>';
-      }
-      html += '<div class="tiny dim center" style="margin:6px 0 10px">Record : étage ' + S().stats.best + '</div>';
-      html += UI.story.hubCard();
-      var gl = E.gloryInfo(); html += '<div class="card glory"><div class="row"><b>🏅 Gloire · palier ' + gl.lvl + '</b><span class="grow"></span><span class="tiny dim">' + gl.pts + ' / ' + gl.need + '</span></div><div class="bar" style="margin:6px 0 4px"><i style="width:' + Math.min(100, gl.pts / gl.need * 100) + '%"></i></div><div class="tiny dim">Chaque descente la remplit. Prochaine récompense : <span style="color:var(--text)">' + gl.next + '</span>' + (S().stats.bestScore ? ' · meilleur score ' + S().stats.bestScore : '') + '</div></div>';
-      var scn = E.setCounts(h.id), sk = Object.keys(scn); if (sk.length) html += '<div class="card"><b>Sets portés</b>' + sk.map(function (id) { return setHtml(id, scn[id]); }).join('') + '</div>';
-      var dl = E.dailyInfo();
-      if (dl.claimable) html += '<button class="daily" data-act="daily"><span style="font-size:26px">🎁</span><span class="grow" style="text-align:left"><b>Offrande du jour</b> <span class="tiny">jour ' + dl.streak + '/7</span><br><span class="small">🔥 ' + E.fmt(dl.cendres) + ' · 💠 ' + dl.essence + (dl.item ? ' · <b class="c3">1 objet épique</b>' : '') + '</span></span><b>PRENDRE</b></button>';
-      var tpts = E.talentPoints(h.id);
-      html += '<button class="btn wide' + (tpts ? ' goldb' : '') + '" data-act="talents" style="margin-bottom:10px">🌟 Talents de ' + h.name + (tpts ? ' — <b>&nbsp;' + tpts + ' point' + (tpts > 1 ? 's' : '') + ' à placer</b>' : '') + '</button>';
-      html += '<div class="card"><div class="row"><b>📜 Contrats du jour</b><span class="grow"></span><span class="tiny dim">nouveaux chaque jour</span></div>' + E.contracts().map(function (ct, i) {
-        var v = E.contractProgress(ct), ok = v >= ct.need, rw = (ct.kind === 'essence' ? '💠 ' : '🔥 ') + E.fmt(ct.amount);
-        return '<div class="ctr' + (ct.claimed ? ' done' : '') + '"><div class="grow"><div class="small">' + ct.name + ' <span class="dim">' + v + '/' + ct.need + '</span></div><div class="bar" style="margin-top:3px"><i style="width:' + (v / ct.need * 100) + '%;background:' + (ok ? 'var(--ok)' : 'var(--gold)') + '"></i></div></div>' +
-          (ct.claimed ? '<span class="small good">✔ reçu</span>' : '<button class="btn sm ' + (ok ? 'goldb' : 'off') + '" data-act="contract" data-i="' + i + '">' + rw + '</button>') + '</div>';
-      }).join('') + '</div>';
-      if (S().stats.best > 0) html += '<div class="card idle"><div style="font-size:26px">⚱️</div><div class="grow"><b>Ossuaire</b><div class="small dim">Les morts travaillent pour toi : ' + E.fmt(idle.rate) + ' 🔥/h (réserve ' + idle.cap + ' h)</div><div class="bar" style="margin-top:4px"><i style="width:' + (idle.hours / idle.cap * 100) + '%;background:var(--ash)"></i></div></div><button class="btn goldb sm' + (idle.amount > 0 ? '' : ' off') + '" data-act="idle">+' + E.fmt(idle.amount) + ' 🔥</button></div>';
-      html += '<div class="card"><div class="small gold">' + h.role + '</div><div class="small dim" style="margin-bottom:6px">' + h.desc + '</div><div class="skills-list"><div class="sk"><div class="ic">🌟</div><div><b>' + h.passive.name + '</b> <span class="tiny dim">passif</span><div class="small dim">' + h.passive.desc + '</div></div></div>' +
-        '<div class="sk"><div class="ic">' + h.ult.icon + '</div><div><b>' + h.ult.name + '</b> <span class="tiny gold">ultime</span><div class="small dim">' + h.ult.desc + '</div></div></div>' +
-        h.skills.map(function (k, i) { var ok = E.skillUnlocked(h.id, i); return '<button class="sk tap' + (ok ? '' : ' locked') + '" data-act="skillInfo" data-h="' + h.id + '" data-i="' + i + '"><div class="ic">' + (ok ? k.icon : '🔒') + '</div><div class="grow"><b>' + k.name + '</b> <span class="tiny dim">' + (ok ? k.cd + ' s' : 'Maîtrise ' + (i + 1)) + '</span>' + tagsHtml(k) + '<div class="small dim">' + k.desc + '</div></div><span class="dim">›</span></button>'; }).join('') + '</div><div class="btns" style="margin-top:8px"><button class="btn sm" data-act="lexique">📖 Lexique : tous les mots expliqués</button></div><div class="tiny dim center" style="margin-top:6px">Touche un pouvoir pour voir ses chiffres, un conseil et ses éveils ✨</div></div>';
-    } else html += '<div class="card"><div class="small gold">' + h.role + '</div><div class="small dim">' + h.desc + '</div><div class="small" style="margin-top:6px">🌟 <b>' + h.passive.name + '</b> — ' + h.passive.desc + '</div></div>';
+    if (!un) return html + '<div class="card"><div class="small gold">' + h.role + '</div><div class="small dim">' + h.desc + '</div><div class="small" style="margin-top:6px">' + h.passive.icon + ' <b>' + h.passive.name + '</b> — ' + h.passive.desc + '</div></div>';
+    if (S().run) html += '<button class="btn primary big camp-go" data-act="resume">REPRENDRE · ÉTAGE ' + S().run.floor + '</button>';
+    else {
+      var mz = E.maxStartZone(); if (st.zone == null || st.zone > mz) st.zone = mz;
+      if (mz > 1) html += '<div class="zone-pick"><button class="icon-btn" data-act="zone" data-d="-1">‹</button><div class="zn"><b>' + E.zoneLabel(st.zone) + '</b><div class="tiny dim">Départ étage ' + ((st.zone - 1) * 10 + 1) + (st.zone > 1 ? ' · ' + ((st.zone - 1) * 3) + ' aubaines offertes' : '') + '</div></div><button class="icon-btn" data-act="zone" data-d="1">›</button></div>';
+      html += '<button class="btn primary big camp-go" data-act="descend">DESCENDRE</button>';
+    }
+    html += '<div class="tiny dim center" style="margin:6px 0 12px">Record : étage ' + S().stats.best + '</div>';
+    var tpts = E.talentPoints(h.id), gl = E.gloryInfo();
+    var q = [['talents', 'i_star', 'Talents', tpts ? tpts + ' point' + (tpts > 1 ? 's' : '') : 'Maîtrise ' + hs.lvl, tpts > 0], ['quests', 'i_scroll', 'Quêtes', 'contrats du jour', E.contractReady() || idle.full], ['chron', 'i_book', 'Histoire', 'la Chronique', UI.story.fresh()], ['glory', 'i_medal', 'Gloire', 'palier ' + gl.lvl, false]];
+    html += '<div class="camp-quick">' + q.map(function (x) { return '<button class="qk" data-act="' + x[0] + '">' + spr(x[1], 'ic') + '<b>' + x[2] + '</b><span>' + x[3] + '</span>' + (x[4] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
     return html;
   }
+  // Fiche du héros : stats, équipement, pouvoirs
+  ACT.heroSheet = function () {
+    var h = E.hero(st.view); if (!E.heroUnlocked(h.id)) return; SND.play('click');
+    var hs = S().heroes[h.id], s = E.heroStats(h.id, null), html = '<h2>' + h.name + '</h2><div class="tiny gold center" style="margin:-6px 0 10px">' + h.title + ' · ' + h.role + '</div>';
+    html += '<button class="stats" data-act="allStats" style="width:100%"><div class="stat"><b>' + E.fmt(s.hp) + '</b><span>PV</span></div><div class="stat"><b>' + E.fmt(s.atk) + '</b><span>Attaque</span></div><div class="stat"><b>' + E.fmt(s.def) + '</b><span>Armure</span></div><div class="stat"><b>' + Math.round(s.crit) + '%</b><span>Critique</span></div></button>';
+    html += '<div class="equip">' + D.SLOTS.map(function (sl) { var it = hs.equip[sl.id] ? E.findItem(hs.equip[sl.id]) : null; return it ? itemTile(it) : '<button class="slot empty" data-act="slotEmpty" data-slot="' + sl.id + '">' + sl.icon + '</button>'; }).join('') + '</div>';
+    var scn = E.setCounts(h.id), sk = Object.keys(scn); if (sk.length) html += '<div class="card"><b>Sets portés</b>' + sk.map(function (id) { return setHtml(id, scn[id]); }).join('') + '</div>';
+    html += '<div class="small dim" style="margin:4px 2px 8px">' + h.desc + '</div><div class="skills-list"><div class="sk"><div class="ic">' + h.passive.icon + '</div><div><b>' + h.passive.name + '</b> <span class="tiny dim">passif</span><div class="small dim">' + h.passive.desc + '</div></div></div>' +
+      '<div class="sk"><div class="ic">' + h.ult.icon + '</div><div><b>' + h.ult.name + '</b> <span class="tiny gold">ultime</span><div class="small dim">' + h.ult.desc + '</div></div></div>' +
+      h.skills.map(function (k, i) { var ok = E.skillUnlocked(h.id, i); return '<button class="sk tap' + (ok ? '' : ' locked') + '" data-act="skillInfo" data-h="' + h.id + '" data-i="' + i + '"><div class="ic">' + (ok ? k.icon : '🔒') + '</div><div class="grow"><b>' + k.name + '</b> <span class="tiny dim">' + (ok ? '' : 'Maîtrise ' + (i + 1)) + '</span>' + tagsHtml(k) + '<div class="small dim">' + k.desc + '</div></div><span class="dim">›</span></button>'; }).join('') + '</div>';
+    html += '<div class="btns"><button class="btn sm" data-act="lexique">📖 Lexique</button><button class="btn primary" data-act="close">Fermer</button></div>';
+    modal(html);
+  };
+  ACT.roster = function () {
+    SND.play('click');
+    modal('<h2>Choisis ton héros</h2><div class="roster-big">' + D.HEROES.map(function (x) { var u = E.heroUnlocked(x.id); return '<button class="rhb' + (x.id === st.view ? ' on' : '') + (u ? '' : ' lk') + '" data-act="heroPick" data-id="' + x.id + '">' + spr(x.id) + '<b>' + x.name + '</b><span>' + (u ? x.role : '🔒') + '</span></button>'; }).join('') + '</div><div class="btns"><button class="btn" data-act="close">Fermer</button></div>');
+  };
+  ACT.quests = function () {
+    var idle = E.idleInfo(), h = '<h2>📜 Quêtes du jour</h2><div class="tiny dim center" style="margin:-6px 0 10px">Nouvelles chaque jour</div>';
+    h += E.contracts().map(function (ct, i) {
+      var v = E.contractProgress(ct), ok = v >= ct.need, rw = (ct.kind === 'essence' ? '💠 ' : '🔥 ') + E.fmt(ct.amount);
+      return '<div class="ctr' + (ct.claimed ? ' done' : '') + '"><div class="grow"><div class="small">' + ct.name + ' <span class="dim">' + v + '/' + ct.need + '</span></div><div class="bar" style="margin-top:3px"><i style="width:' + (v / ct.need * 100) + '%;background:' + (ok ? 'var(--ok)' : 'var(--gold)') + '"></i></div></div>' +
+        (ct.claimed ? '<span class="small good">✔ reçu</span>' : '<button class="btn sm ' + (ok ? 'goldb' : 'off') + '" data-act="contract" data-i="' + i + '">' + rw + '</button>') + '</div>';
+    }).join('');
+    if (S().stats.best > 0) h += '<div class="card idle" style="margin-top:12px"><div style="font-size:26px">⚱️</div><div class="grow"><b>Ossuaire</b><div class="small dim">Les morts travaillent pour toi : ' + E.fmt(idle.rate) + ' 🔥/h (réserve ' + idle.cap + ' h)</div><div class="bar" style="margin-top:4px"><i style="width:' + (idle.hours / idle.cap * 100) + '%;background:var(--ash)"></i></div></div><button class="btn goldb sm' + (idle.amount > 0 ? '' : ' off') + '" data-act="idle">+' + E.fmt(idle.amount) + ' 🔥</button></div>';
+    h += '<div class="btns"><button class="btn primary" data-act="close">Fermer</button></div>';
+    modal(h);
+  };
+  ACT.glory = function () {
+    SND.play('click'); var gl = E.gloryInfo();
+    modal('<h2>🏅 Gloire</h2><div class="card glory"><div class="row"><b>Palier ' + gl.lvl + '</b><span class="grow"></span><span class="tiny dim">' + gl.pts + ' / ' + gl.need + '</span></div><div class="bar" style="margin:6px 0 4px"><i style="width:' + Math.min(100, gl.pts / gl.need * 100) + '%"></i></div><div class="tiny dim">Chaque descente la remplit selon ton score. Prochaine récompense : <span style="color:var(--text)">' + gl.next + '</span></div></div><div class="center small dim">Record : étage ' + S().stats.best + (S().stats.bestScore ? ' · meilleur score ' + S().stats.bestScore : '') + '</div><div class="btns"><button class="btn primary" data-act="close">Fermer</button></div>');
+  };
   ACT.heroPick = function (d) {
-    st.view = d.id; if (E.heroUnlocked(d.id) && !S().run) { S().hero = d.id; E.save(); }
+    closeModal(); st.view = d.id; if (E.heroUnlocked(d.id) && !S().run) { S().hero = d.id; E.save(); }
     SND.play('click'); hub();
   };
   ACT.heroNav = function (d) {
@@ -255,8 +270,8 @@ var UI = (function () {
     E.setFam(d.id); SND.play('equip'); E.save(); keepScroll(hub);
   };
   ACT.setVib = function () { var s = S().settings; s.vib = s.vib === false; if (s.vib) vib(40); E.save(); ACT.settings(); };
-  ACT.contract = function (d) { var ct = E.claimContract(+d.i); if (ct) { SND.play('gold'); SND.play('levelup', 0.5); flash('#d9a44155'); toast('📜 Contrat rempli : +' + E.fmt(ct.amount) + (ct.kind === 'essence' ? ' 💠' : ' 🔥')); E.save(); keepScroll(hub); } else SND.play('error'); };
-  ACT.idle = function () { var a = E.collectIdle(); if (a > 0) { SND.play('gold'); toast('+' + E.fmt(a) + ' 🔥 Cendres récoltées'); E.save(); keepScroll(hub); } };
+  ACT.contract = function (d) { var ct = E.claimContract(+d.i); if (ct) { SND.play('gold'); SND.play('levelup', 0.5); flash('#d9a44155'); toast('📜 Contrat rempli : +' + E.fmt(ct.amount) + (ct.kind === 'essence' ? ' 💠' : ' 🔥')); E.save(); keepScroll(hub); if ($('#modal.on .ctr')) ACT.quests(); } else SND.play('error'); };
+  ACT.idle = function () { var a = E.collectIdle(); if (a > 0) { SND.play('gold'); toast('+' + E.fmt(a) + ' 🔥 Cendres récoltées'); E.save(); keepScroll(hub); if ($('#modal.on .ctr')) ACT.quests(); } };
   ACT.descend = function () {
     if (!E.heroUnlocked(st.view)) return; S().hero = st.view;
     askOmen(st.view, st.zone || 1);
