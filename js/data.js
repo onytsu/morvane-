@@ -367,8 +367,13 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '3.2';
+  var VERSION = '3.3';
   var NEWS = [
+    ['📖', 'Une histoire en chapitres', 'Un prologue, six chapitres et un épilogue : découvre ce qui est arrivé à Morvane, à son roi, et qui est la Veilleuse. Les scènes se jouent pendant ta descente.'],
+    ['🕯️', 'La Chronique', 'Au sanctuaire, la carte 📖 Chronique garde toutes les scènes découvertes. Touche un chapitre pour le relire.'],
+    ['🏞️', 'Des décors enfin visibles', 'L’arène montre maintenant les voûtes, les vitraux, la forêt et les forges, avec des accessoires propres à chaque zone.'],
+    ['🔥', 'Sanctuaire et écran-titre', 'La chapelle en ruine, la dernière flamme, la Veilleuse au coin du feu, et la lune rouge sur Morvane.'],
+    ['♟️', 'Plateau illustré', 'Chaque plateau porte le décor de sa zone, et le gardien t’attend sur la dernière case.'],
     ['🎒', 'Sac de dés', 'Chaque héros a son sac de dés : ⚔️ Lame, 🛡️ Garde, ❤️ Sève, ✨ Écho... Tu en pioches 3 par tour et tu les poses sur la table.'],
     ['🔲', 'Table de dés', 'Neuf cases. Un dé posé agit tout de suite. ✨ Écho renforce ses voisins, 🪞 Miroir copie son voisin. Les cases ×2 et +2 changent tout.'],
     ['🎲', 'Figures', 'Trois dés alignés forment une figure : Brelan (+1 action, coups critiques), Suite, Sept chanceux, Coup fort, Prudence.'],

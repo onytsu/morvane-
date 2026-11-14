@@ -115,7 +115,7 @@ var UI = (function () {
   // ---------- accueil ----------
   function splash() {
     st.screen = 'splash';
-    $('#screen').innerHTML = '<div class="splash">' + spr('logo') + '<h1>MORVANE</h1><div class="dim" style="font-family:var(--serif);letter-spacing:.2em">LES CENDRES DU ROI CREUX</div>' +
+    $('#screen').innerHTML = '<div class="splash" style="background-image:url(' + Backgrounds.url('title') + ')">' + spr('logo') + '<h1>MORVANE</h1><div class="dim" style="font-family:var(--serif);letter-spacing:.2em">LES CENDRES DU ROI CREUX</div>' +
       '<button class="btn primary big" data-act="enter" style="max-width:300px;margin-top:18px">' + (S().stats.runs ? 'CONTINUER' : 'COMMENCER') + '</button>' +
       '<div class="tiny dim" style="margin-top:10px">Sauvegarde automatique · jouable hors-ligne</div>' +
       '<button class="verb" data-act="news">Version ' + D.VERSION + ' · voir les nouveautés ›</button></div>';
@@ -130,7 +130,7 @@ var UI = (function () {
     if (S().run) { UI.run.show(); return; }
     hub();
   };
-  ACT.firstRun = function () { closeModal(); E.startRun('chevalier', 1); UI.run.show(); };
+  ACT.firstRun = function () { closeModal(); UI.story.play('pro', function () { E.startRun('chevalier', 1); UI.run.show(); }, { card: true }); };
 
   // ---------- sanctuaire ----------
   function hub(tab) {
@@ -140,12 +140,13 @@ var UI = (function () {
     SND.music('hub');
     var idle = E.idleInfo(), newItems = S().inv.some(function (i) { return i.isNew; });
     var metaOk = D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; });
-    var tabs = [['hero', '🏰', 'Héros', idle.full || E.contractReady() || E.talentPoints(S().hero) > 0 || E.dailyInfo().claimable], ['sac', '🎒', 'Sac', newItems], ['autel', '⚱️', 'Autel', metaOk], ['pactes', '📜', 'Pactes', pactFree() || E.famNew()], ['faits', '🏆', 'Hauts faits', false]];
+    var tabs = [['hero', '🏰', 'Héros', idle.full || E.contractReady() || E.talentPoints(S().hero) > 0 || E.dailyInfo().claimable || UI.story.fresh()], ['sac', '🎒', 'Sac', newItems], ['autel', '⚱️', 'Autel', metaOk], ['pactes', '📜', 'Pactes', pactFree() || E.famNew()], ['faits', '🏆', 'Hauts faits', false]];
     var body = { hero: tabHero, sac: tabSac, autel: tabAutel, pactes: tabPactes, faits: tabFaits }[st.tab]();
     $('#screen').innerHTML = '<div class="topbar"><span class="title grow">MORVANE</span><span class="cur ash">🔥 ' + E.fmt(S().cendres) + '</span><span class="cur ess">💠 ' + E.fmt(S().essence) + '</span><button class="icon-btn" data-act="settings">⚙️</button></div>' +
       '<div class="content" id="content">' + body + '</div><div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (st.tab === t[0] ? ' on' : '') + '" data-act="tab" data-tab="' + t[0] + '"><span class="ti">' + t[1] + '</span>' + t[2] + (t[3] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
     if (st.tab === 'hero' && typeof FX !== 'undefined') FX.attach($('.hero-stage'), { ambient: 'embers', fire: { x: 0.82, y: 0.76 }, warm: 2 });
     flushAch();
+    if (S().stats.boss6 > 0 && !S().run && UI.story.seen()['c6.end']) UI.story.play('epi', null, { card: true });
     var vk = 'v' + D.VERSION, seenV = S().tuto[vk]; S().tuto[vk] = 1;
     if (S().tuto.hub && !seenV) { E.save(); ACT.news(); }
     if (!S().tuto.hub) { S().tuto.hub = 1; E.save(); modal('<h2>Le sanctuaire</h2><p class="center dim small" style="margin-top:-4px">C’est ici que tu deviens plus fort entre deux descentes.</p>' +
@@ -164,7 +165,7 @@ var UI = (function () {
     html += '<div class="roster">' + D.HEROES.map(function (x) { var u = E.heroUnlocked(x.id); return '<button class="rh' + (x.id === h.id ? ' on' : '') + (u ? '' : ' lk') + '" data-act="heroPick" data-id="' + x.id + '">' + spr(x.id) + (u ? '' : '<span>🔒</span>') + '</button>'; }).join('') + '</div>';
     var aura = -1; if (un) { for (var asl in hs.equip) { var ait = E.findItem(hs.equip[asl]); if (ait && ait.rar > aura) aura = ait.rar; } }
     var sprH = spr(h.id, 'spr'); if (aura >= 2) sprH = sprH.replace('<img', '<img style="filter:drop-shadow(0 0 9px ' + D.RARITIES[aura].color + ') drop-shadow(0 6px 6px #000a)"');
-    html += '<div class="hero-stage"><div class="fireglow"></div><div class="floorglow"></div><div class="name"><b>' + h.name + '</b><div class="small gold">' + h.title + '</div></div>' + sprH + (un ? famHtml('famh') : '');
+    html += '<div class="hero-stage" style="background-image:url(' + Backgrounds.url('camp') + ')">' + spr('veilleuse', 'veil') + '<div class="fireglow"></div><div class="floorglow"></div><div class="name"><b>' + h.name + '</b><div class="small gold">' + h.title + '</div></div>' + sprH + (un ? famHtml('famh') : '');
     html += '<button class="nav l" data-act="heroNav" data-d="-1">‹</button><button class="nav r" data-act="heroNav" data-d="1">›</button>';
     if (un) {
       html += '<div class="mast">Maîtrise <b class="gold">' + hs.lvl + '</b><div class="bar" style="width:90px"><i style="width:' + Math.min(100, hs.xp / E.masteryNeed(hs.lvl) * 100) + '%"></i></div></div><div class="pwr">⚡ ' + E.fmt(E.power(h.id)) + '</div>';
@@ -188,6 +189,7 @@ var UI = (function () {
         html += '<button class="btn primary big" data-act="descend">⚔️ DESCENDRE</button>';
       }
       html += '<div class="tiny dim center" style="margin:6px 0 10px">Record : étage ' + S().stats.best + '</div>';
+      html += UI.story.hubCard();
       var gl = E.gloryInfo(); html += '<div class="card glory"><div class="row"><b>🏅 Gloire · palier ' + gl.lvl + '</b><span class="grow"></span><span class="tiny dim">' + gl.pts + ' / ' + gl.need + '</span></div><div class="bar" style="margin:6px 0 4px"><i style="width:' + Math.min(100, gl.pts / gl.need * 100) + '%"></i></div><div class="tiny dim">Chaque descente la remplit. Prochaine récompense : <span style="color:var(--text)">' + gl.next + '</span>' + (S().stats.bestScore ? ' · meilleur score ' + S().stats.bestScore : '') + '</div></div>';
       var scn = E.setCounts(h.id), sk = Object.keys(scn); if (sk.length) html += '<div class="card"><b>Sets portés</b>' + sk.map(function (id) { return setHtml(id, scn[id]); }).join('') + '</div>';
       var dl = E.dailyInfo();

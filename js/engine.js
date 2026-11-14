@@ -44,7 +44,7 @@
       v: 1, cendres: 0, essence: 0, hero: 'chevalier', heroes: {}, inv: [], nextUid: 1, meta: {}, pacts: [], ach: {},
       stats: { kills: 0, deaths: 0, chests: 0, maxLvl: 0, leg: 0, uni: 0, best: 0, elites: 0, upgrades: 0, epic: 0, runs: 0, heroes: 1, evos: 0, weak: 0, parry: 0, ult: 0, arenes: 0, fusions: 0, maxHit: 0, maxCombo: 0, bossMax: 0, boss1: 0, boss2: 0, boss3: 0, boss4: 0, boss5: 0, boss6: 0, bosses: 0, items: 0, orbs: 0, deflect: 0, minis: 0, primes: 0, bestScore: 0, doubles: 0, glory: 0 },
       settings: { sfx: true, music: true, speed: 1, auto: false, autoSalvage: -1 },
-      idleAt: Date.now(), run: null, tuto: {}, codex: {}, uniq: {}, fam: null, daily: null, pityU: 0, glory: { lvl: 0, pts: 0 }, created: Date.now()
+      idleAt: Date.now(), run: null, tuto: {}, story: {}, codex: {}, uniq: {}, fam: null, daily: null, pityU: 0, glory: { lvl: 0, pts: 0 }, created: Date.now()
     };
     s.heroes.chevalier = { xp: 0, lvl: 1, equip: {}, pacts: [] };
     return s;

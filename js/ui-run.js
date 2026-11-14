@@ -11,8 +11,10 @@ UI.run = (function () {
   function sfxKind(x) { return x === 'skill_fire' ? 'fire' : x === 'skill_holy' || x === 'heal' ? 'holy' : x === 'skill_dark' ? 'dark' : x === 'skill_blade' ? 'blade' : 'war'; }
   function hitstop(ms) { stopT = Math.max(stopT, ms / 1000); }
   function punch() { anim($('#arena'), 'punch', 260); }
-  var POS = [{ r: 24, b: 20 }, { r: 2, b: 30 }, { r: 42, b: 36 }, { r: 12, b: 48 }, { r: 40, b: 8 }];
-  var BPOS = [{ r: 1, b: 20 }, { r: 47, b: 10 }, { r: 44, b: 44 }, { r: 60, b: 28 }];
+  var POS = [{ r: 24, b: 13 }, { r: 2, b: 21 }, { r: 42, b: 26 }, { r: 12, b: 35 }, { r: 40, b: 3 }];
+  var BPOS = [{ r: 1, b: 13 }, { r: 47, b: 4 }, { r: 44, b: 34 }, { r: 60, b: 21 }];
+  // accessoires de décor posés sur le sol de chaque zone : [sprite, éclairé ? couleur de la lueur : null]
+  var PROPS = [null, [['tombe', null], ['p_bougies', '#8fb4ff']], [['p_souche', null], ['p_lanterne', '#ffc266']], [['p_barque', null], ['p_roseaux', null]], [['p_candelabre', '#ffd27a'], ['p_banc', null]], [['p_enclume', '#ff7a2e'], ['p_brasero', '#ff8a3c']], [['p_colonne', null], ['p_cristal', '#b48cff']]];
   var BRAR = ['Commune', 'Rare', 'Épique', 'Légendaire'];
   var TIPS = ['Les objets que tu trouves restent à toi, même après la mort.', 'Brûle tes Cendres à l’Autel : les bonus sont permanents.', 'Un ennemi qui brille en jaune prépare un gros coup. Étourdis-le !', 'Recycle les vieux objets pour améliorer les bons.', 'Les Élites donnent un artefact. Risqué, mais rentable.', 'Garde une fiole pour le boss.', 'Chaque héros a sa propre Maîtrise : joue-les tous.', 'Retremper un objet le remet au niveau de ton record.', 'Un feu de camp avant le boss peut tout changer.'];
 
@@ -46,7 +48,7 @@ UI.run = (function () {
     var run = S().run, c = run.combat, z = E.zoneOf(run.floor), a = $('#arena');
     a.style.setProperty('--z1', z.bg[0]); a.style.setProperty('--z2', z.bg[1]); a.style.setProperty('--zc', z.color);
     var bg = typeof Backgrounds !== 'undefined' ? ' style="background-image:url(' + Backgrounds.url(z.id) + ')"' : ''; a.classList.add('hasbg'); a.classList.remove('danger');
-    a.innerHTML = '<div class="abg"' + bg + '></div><div class="rays"></div><div class="fog f1"></div><div class="unit hero enter" id="uhero">' + UI.spr(run.hero) + '</div><div class="minions" id="minions"></div><div class="fog f2"></div><div class="vig"></div>' +
+    a.innerHTML = '<div class="abg"' + bg + '></div><div class="rays"></div><div class="fog f1"></div>' + propsHtml(z.id) + '<div class="unit hero enter" id="uhero">' + UI.spr(run.hero) + '</div><div class="minions" id="minions"></div><div class="fog f2"></div><div class="vig"></div>' +
       '<button class="primes" id="primes" data-act="primes"></button><button class="cdice" id="cdice" data-act="cdice"></button><div class="combo" id="combo"></div>' + extraHtml(run);
     els = {}; posOf = {}; floats = 0; lootShown = 0; combo = 0; orbEls = {}; shotEls = {}; primeKey = '';
     vfx = typeof VFX !== 'undefined' ? VFX.attach(a) : null;
@@ -55,6 +57,9 @@ UI.run = (function () {
     trayKey = ''; selDie = 0; lastPlaced = -1; figLine = null;
     if (c) { c.enemies.forEach(function (e, i) { if (!e.dead) { addEnemy(e, i, false); els[e.id].style.animationDelay = (0.15 + i * 0.09) + 's'; } }); built = c; }
     else built = 'empty';
+  }
+  function propsHtml(zid) {
+    return (PROPS[zid] || []).map(function (p, i) { var sz = Sprites.size(p[0]); return '<div class="prop ' + (i ? 'pb' : 'pa') + (sz.w <= 16 ? ' s16' : '') + (p[1] ? ' lit" style="--pg:' + p[1] : '') + '">' + UI.spr(p[0]) + '</div>'; }).join('');
   }
   function addEnemy(e, i, spawn) {
     var c = S().run.combat, bossFight = c.enemies[0].boss || c.enemies[0].champ, P = bossFight ? BPOS : POS, used = {}, k;
@@ -311,8 +316,8 @@ UI.run = (function () {
     for (i = 0; i < evs.length; i++) {
       e = evs[i]; el = e.id ? els[e.id] : null;
       switch (e.k) {
-        case 'start': SND.music(zoneMusic(run)); intro(run); if (!S().tuto['help_' + run.hero]) { S().tuto['help_' + run.hero] = 1; helpSheet(true); } else zoneIntro(run); tuto('skill', '🎲 <b>Tour par tour.</b> À chaque tour tu as <b>2 actions ⚡</b> : ⚔️ Frapper, un pouvoir, 🤺 Parer... Ensuite, chaque ennemi joue.'); tuto('aim', '👆 Touche un ennemi pour le <b>viser</b>. Touche-le encore (ou ⚔️ Frapper) pour le <b>frapper</b>.'); tuto('press', '🔎 <b>Appui long</b> sur un pouvoir ou sur un ennemi : sa fiche s’ouvre et le combat se met en pause.'); break;
-        case 'boss': SND.music(E.zoneOf(run.floor).id === 6 ? 'final' : 'boss'); SND.play('boss_intro'); banner(c.enemies[0].name.toUpperCase(), 'BOSS'); UI.flash('#c2283a66'); UI.vib(80); if (E.zoneOf(run.floor).taunt.length > 4) UI.toast('<i>« ' + E.zoneOf(run.floor).taunt + ' »</i>', true); break;
+        case 'start': SND.music(zoneMusic(run)); UI.story.enterZone(run, function () { intro(run); if (!S().tuto['help_' + run.hero]) { S().tuto['help_' + run.hero] = 1; helpSheet(true); } else zoneIntro(run); tuto('skill', '🎲 <b>Tour par tour.</b> À chaque tour tu as <b>2 actions ⚡</b> : ⚔️ Frapper, un pouvoir, 🤺 Parer... Ensuite, chaque ennemi joue.'); tuto('aim', '👆 Touche un ennemi pour le <b>viser</b>. Touche-le encore (ou ⚔️ Frapper) pour le <b>frapper</b>.'); tuto('press', '🔎 <b>Appui long</b> sur un pouvoir ou sur un ennemi : sa fiche s’ouvre et le combat se met en pause.'); }); break;
+        case 'boss': SND.music(E.zoneOf(run.floor).id === 6 ? 'final' : 'boss'); SND.play('boss_intro'); banner(c.enemies[0].name.toUpperCase(), 'BOSS'); UI.flash('#c2283a66'); UI.vib(80); if (!UI.story.inZone(run, 'boss') && E.zoneOf(run.floor).taunt.length > 4) UI.toast('<i>« ' + E.zoneOf(run.floor).taunt + ' »</i>', true); break;
         case 'dmg':
           if (e.sh) { floatAt(el, 'Bouclier', 'txt'); break; }
           floatAt(el, E.fmt(e.v), e.crit ? 'crit' : e.dot ? 'dot' : '');
@@ -475,7 +480,7 @@ UI.run = (function () {
         if (built !== c) buildArena();
         if (c.turn !== lastTurn) { lastTurn = c.turn; stepT = c.turn === 'foes' ? 0.55 : 0.6; }
         if (stopT > 0) stopT -= dt;
-        else if (!paused && !wiping && !c.over && !$('#modal').classList.contains('on')) {
+        else if (!paused && !wiping && !c.over && !UI.story.open() && !$('#modal').classList.contains('on')) {
           stepT -= dt * (S().settings.speed || 1);
           if (stepT <= 0) {
             if (c.turn === 'foes') stepT = E.foeStep() ? 0.6 : 0.3;
@@ -545,7 +550,8 @@ UI.run = (function () {
     if (r.boss) SND.play('victory'); if (r.gold) SND.play('gold'); if (r.lvlUps) setTimeout(function () { SND.play('levelup'); }, 300);
     if (r.items.length) lootFx(r.items);
     if (r.boss) SND.music(zoneMusic(run));
-    if (r.ending) setTimeout(ending, 1500);
+    if (r.boss && !r.chest) setTimeout(function () { UI.story.inZone(run, 'end', r.ending ? ending : null); }, 1500);
+    else if (r.ending) setTimeout(ending, 1500);
     UI.flushAch();
   }
   ACT.cont = function () { SND.play('click'); E.continueRun(); syncPhase(true); };
@@ -615,14 +621,14 @@ UI.run = (function () {
   function sheetDoors(run) {
     var b = run.board, z = E.zoneOf(run.floor), frac = run.hp / run.stats.hp, dbl = run.dice[0] === run.dice[1], h = '';
     var nk = b.pos + '|' + run.dice.join(',') + '|' + run.rooms, fresh = nk !== diceKey; diceKey = nk;
-    h += '<h2>' + z.name + '</h2><div class="center small dim" style="margin:-6px 0 8px">Étage ' + run.floor + ' · PV <b class="' + (frac < 0.35 ? 'bad' : frac < 0.7 ? 'gold' : 'good') + '">' + Math.round(frac * 100) + ' %</b> · 🧪 ' + run.potions + ' · 💰 ' + run.gold + '</div>';
-    h += '<div class="board" id="board">';
+    h += '<div class="zbanner" style="--zc:' + z.color + ';--zbg:url(' + Backgrounds.url(z.id) + ')"><h2>' + z.name + '</h2><div class="zs">Étage ' + run.floor + ' · PV <b class="' + (frac < 0.35 ? 'bad' : frac < 0.7 ? 'gold' : 'good') + '">' + Math.round(frac * 100) + ' %</b> · 🧪 ' + run.potions + ' · 💰 ' + run.gold + '</div></div>';
+    h += '<div class="board" id="board" style="--zc:' + z.color + '">';
     b.cells.forEach(function (t, i) {
       var r = Math.floor(i / COLS), col = i % COLS; if (r % 2) col = COLS - 1 - col;
       var mv = -1; run.moves.forEach(function (m, k) { if (m.to === i) mv = k; });
       var rm = D.ROOMS[t], boss = t === 'boss';
       h += '<button class="cell ' + t + (i < b.pos ? ' past' : '') + (i === b.pos ? ' here' : '') + (mv >= 0 ? ' go' : '') + '" id="cell' + i + '" style="grid-row:' + (r + 1) + ';grid-column:' + (boss ? '1 / ' + (col + 2) : col + 1) + '" data-act="' + (mv >= 0 ? 'door' : 'cellInfo') + '" data-i="' + (mv >= 0 ? mv : i) + '">' +
-        '<span class="ci">' + rm.icon + '</span>' + (boss ? '<b>' + D.ENEMIES[z.boss].name + '</b>' : '') + (mv >= 0 ? '<em>' + run.moves[mv].d + '</em>' : '') + (i > 0 && (i - 1) % 4 === 0 && !boss ? '<u>' + Math.ceil(i / 4) + '</u>' : '') + '</button>';
+        '<span class="ci">' + (boss ? UI.spr(z.boss) : rm.icon) + '</span>' + (boss ? '<b>' + D.ENEMIES[z.boss].name + '</b>' : '') + (mv >= 0 ? '<em>' + run.moves[mv].d + '</em>' : '') + (i > 0 && (i - 1) % 4 === 0 && !boss ? '<u>' + Math.ceil(i / 4) + '</u>' : '') + '</button>';
     });
     h += '<div class="pawn" id="pawn">' + UI.spr(run.hero) + '</div></div>';
     h += '<div class="dicerow' + (fresh ? ' roll' : '') + '">' + run.moves.map(function (m, k) { var rm = D.ROOMS[m.type]; return '<button class="dbtn ' + m.type + '" data-act="door" data-i="' + k + '">' + die(m.d) + '<span class="grow"><b>' + rm.icon + ' ' + rm.name + '</b><span>' + rm.hint + '</span></span></button>'; }).join('') + '</div>';
@@ -634,6 +640,7 @@ UI.run = (function () {
     var sh = document.querySelector('#overlay .sheet'), here = $('#cell' + b.pos); if (sh && here) sh.scrollTop = Math.max(0, here.offsetTop - 120);
     if (quiet) return;
     if (fresh) { for (var k = 0; k < 4; k++) setTimeout(function () { SND.play('click', 0.7); }, k * 110); }
+    if ((run.floor - 1) % 10 >= 4 && run.floor % 10 !== 0) UI.story.inZone(run, 'mid');
     tuto('board', '🎲 <b>Le plateau.</b> Chaque zone est un chemin de cases jusqu’au boss. À chaque tour tu lances deux dés et tu choisis lequel jouer : regarde où ils t’emmènent.');
   }
   function placePawn(i) { var c = $('#cell' + i), p = $('#pawn'); if (!c || !p) return; p.style.left = (c.offsetLeft + c.offsetWidth / 2) + 'px'; p.style.top = (c.offsetTop + c.offsetHeight / 2) + 'px'; }
