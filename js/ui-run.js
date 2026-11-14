@@ -80,6 +80,23 @@ UI.run = (function () {
     if (e.boss || e.elite || e.champ) d.insertAdjacentHTML('beforeend', '<i class="aura"></i>'); // en dernier : updateArena lit les enfants par position
     $('#arena').appendChild(d); els[e.id] = d;
   }
+  // Entrée du boss, propre à sa zone : il surgit de la terre, tombe des arbres, sort de la brume, descend dans la lumière, jaillit des flammes ou naît du vide
+  var BIN = { 1: ['death', 1000], 2: ['dark', 1100], 3: ['poison', 1200], 4: ['holy', 1150], 5: ['fire', 900], 6: ['dark', 1250] };
+  function bossEntrance(el, z) {
+    if (!el || !BIN[z]) return; var k = BIN[z][0], land = BIN[z][1] * 0.72;
+    el.style.animation = 'none'; var p = center(el); el.style.animation = ''; // position finale, avant le mouvement
+    el.classList.add('bin', 'bin-' + z); setTimeout(function () { el.classList.remove('bin', 'bin-' + z); }, BIN[z][1] + 50);
+    if (!vfx || !p) return;
+    if (z === 4) VFX.pillar(vfx, p.x, p.y, 'holy', 120, 1.1);
+    if (z === 6) { VFX.ring(vfx, p.x, p.y, 'dark', 190, 0.6, 10); VFX.sparks(vfx, p.x, p.y, 'dark', 30, { speed: 260, g: 0, life: 0.9 }); }
+    if (z === 3) VFX.sparks(vfx, p.x, p.b - 10, 'poison', 26, { speed: 120, g: -160, life: 1.2 });
+    if (z === 5) { VFX.flash(vfx, p.x, p.b - 20, 'fire', 160, 0.35); VFX.sparks(vfx, p.x, p.b - 10, 'fire', 40, { speed: 340, g: 300, up: 260, life: 0.9 }); }
+    setTimeout(function () { // l'atterrissage
+      if (!document.body.contains(el)) return;
+      VFX.ring(vfx, p.x, p.b - 6, k, 150, 0.45, 8); VFX.sparks(vfx, p.x, p.b - 6, k, 22, { speed: 260, dir: -Math.PI / 2, spread: 2.4, life: 0.7 });
+      anim($('#arena'), 'shake', 300); UI.vib(70);
+    }, land);
+  }
   function floatAt(el, txt, cls) {
     if (!el || floats > 28) return; var a = $('#arena'); if (!a) return;
     var f = document.createElement('div'); f.className = 'float ' + (cls || ''); f.textContent = txt;
@@ -340,7 +357,7 @@ UI.run = (function () {
       e = evs[i]; el = e.id ? els[e.id] : null;
       switch (e.k) {
         case 'start': SND.music(zoneMusic(run)); UI.story.enterZone(run, function () { intro(run); if (!S().tuto.guide && UI.guide) { S().tuto['help_' + run.hero] = 1; setTimeout(function () { UI.guide.start(); }, 700); } else if (!S().tuto['help_' + run.hero]) { S().tuto['help_' + run.hero] = 1; helpSheet(true); } else zoneIntro(run); }); break;
-        case 'boss': SND.music(E.zoneOf(run.floor).id === 6 ? 'final' : 'boss'); SND.play('boss_intro'); banner(c.enemies[0].name.toUpperCase(), 'BOSS'); UI.flash('#c2283a66'); UI.vib(80); if (!UI.story.inZone(run, 'boss') && E.zoneOf(run.floor).taunt.length > 4) UI.toast('<i>« ' + E.zoneOf(run.floor).taunt + ' »</i>', true); break;
+        case 'boss': bossEntrance(els[c.enemies[0].id], E.zoneOf(run.floor).id); SND.music(E.zoneOf(run.floor).id === 6 ? 'final' : 'boss'); SND.play('boss_intro'); banner(c.enemies[0].name.toUpperCase(), 'BOSS'); UI.flash('#c2283a66'); UI.vib(80); if (!UI.story.inZone(run, 'boss') && E.zoneOf(run.floor).taunt.length > 4) UI.toast('<i>« ' + E.zoneOf(run.floor).taunt + ' »</i>', true); break;
         case 'dmg':
           if (e.sh) { floatAt(el, 'Bouclier', 'txt'); break; }
           floatAt(el, E.fmt(e.v), e.crit ? 'crit' : e.dot ? 'dot' : '');

@@ -1149,3 +1149,32 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 @media (prefers-reduced-motion: reduce) {
   .unit.hero img, .unit.en img, .unit.en .aura, .camp-hero, .camp-hero .spr { animation: none !important; }
 }
+
+/* ===== v4.4 : réactions au camp, entrées des boss ===== */
+.camp-hero .spr.g-swing { animation: gswing .9s cubic-bezier(.3, 1.3, .5, 1); }
+.camp-hero .spr.g-nod { animation: gnod .8s ease-in-out; }
+.camp-hero .spr.g-shrug { animation: gshrug .8s ease-in-out; }
+@keyframes gswing { 0% { transform: none; } 25% { transform: rotate(-4deg) scale(1.03, .96); } 50% { transform: rotate(5deg) scale(.98, 1.02); } 75% { transform: rotate(-1.5deg); } 100% { transform: none; } }
+@keyframes gnod { 0%, 100% { transform: none; } 30% { transform: scale(1.02, .965); } 55% { transform: none; } 75% { transform: scale(1.015, .975); } }
+@keyframes gshrug { 0%, 100% { transform: none; } 35%, 60% { transform: scale(.985, 1.018) rotate(-1deg); } 80% { transform: scale(1.02, .975); } }
+.camp-say { position: absolute; left: 66%; bottom: calc(8% + 128px); margin-left: -160px; width: 196px; z-index: 6; padding: 8px 11px 7px; border-radius: 14px; text-align: left; color: #f3e9d8; font-size: 12.5px; line-height: 1.35; background: #120d18ee; border: 1px solid #f2bd5e77; box-shadow: 0 6px 18px #000a, 0 0 14px #ff8a3c33; animation: sayin .22s ease-out; }
+.camp-say::after { content: ''; position: absolute; left: 44px; bottom: -7px; width: 12px; height: 12px; background: #120d18; border-right: 1px solid #f2bd5e77; border-bottom: 1px solid #f2bd5e77; transform: rotate(45deg); }
+.camp-say .t { display: block; min-height: 17px; font-style: italic; }
+.camp-say b { display: block; margin-top: 4px; font-size: 10.5px; color: var(--gold); opacity: 0; transition: opacity .3s; }
+.camp-say.done b { opacity: 1; } .camp-say.out { opacity: 0; transition: opacity .3s; }
+@keyframes sayin { from { opacity: 0; transform: translateY(6px) scale(.95); } }
+@media (max-width: 360px) { .camp-say { margin-left: -150px; width: 176px; } }
+/* entrées des boss (sur l'unité : l'image garde sa respiration) */
+.unit.en.boss.bin-1 { animation: bin1 1s cubic-bezier(.2, .9, .3, 1) both; }
+.unit.en.boss.bin-2 { transform-origin: 50% -60%; animation: bin2 1.1s cubic-bezier(.3, 1.2, .5, 1) both; }
+.unit.en.boss.bin-3 { animation: bin3 1.2s ease-out both; }
+.unit.en.boss.bin-4 { animation: bin4 1.15s cubic-bezier(.3, .8, .4, 1) both; }
+.unit.en.boss.bin-5 { animation: bin5 .9s cubic-bezier(.2, 1.4, .4, 1) both; }
+.unit.en.boss.bin-6 { animation: bin6 1.25s cubic-bezier(.5, 0, .3, 1.3) both; }
+@keyframes bin1 { 0% { transform: translateY(90px) scale(.9, .6); clip-path: inset(0 0 100% 0); opacity: 0; } 15% { opacity: 1; } 60% { transform: translateY(-8px) scale(.96, 1.06); clip-path: inset(-50% -50% -50% -50%); } 72% { transform: translateY(0) scale(1.06, .94); } 100% { transform: none; clip-path: inset(-50% -50% -50% -50%); } }
+@keyframes bin2 { 0% { transform: translateY(-260px) rotate(0); opacity: 0; } 10% { opacity: 1; } 55% { transform: translateY(0) rotate(14deg); } 72% { transform: rotate(-8deg) scale(1.04, .95); } 86% { transform: rotate(3deg); } 100% { transform: none; } }
+@keyframes bin3 { 0% { transform: translateY(24px) scale(.85); opacity: 0; filter: blur(10px) brightness(.4); } 60% { opacity: .85; filter: blur(3px) brightness(.8); } 72% { transform: none; } 100% { transform: none; opacity: 1; filter: none; } }
+@keyframes bin4 { 0% { transform: translateY(-140px) scale(.9); opacity: 0; filter: brightness(4); } 50% { opacity: 1; } 72% { transform: translateY(0) scale(1.05, .95); filter: brightness(1.8); } 100% { transform: none; filter: none; } }
+@keyframes bin5 { 0% { transform: translateY(40px) scale(.2); opacity: 0; filter: brightness(3) sepia(1) saturate(4); } 45% { transform: translateY(-34px) scale(1.15); opacity: 1; } 72% { transform: translateY(0) scale(1.08, .9); filter: brightness(1.4); } 100% { transform: none; filter: none; } }
+@keyframes bin6 { 0% { transform: scale(0) rotate(-200deg); opacity: 0; filter: brightness(0); } 55% { transform: scale(.4) rotate(-40deg); opacity: .8; filter: brightness(.3); } 72% { transform: scale(1.12) rotate(4deg); opacity: 1; filter: brightness(1.6); } 100% { transform: none; filter: none; } }
+@media (prefers-reduced-motion: reduce) { .camp-hero .spr[class*="g-"], .unit.en.boss[class*="bin-"] { animation: none !important; } }

@@ -180,7 +180,7 @@ var UI = (function () {
     var body = { hero: tabHero, sac: tabSac, autel: tabAutel, pactes: tabPactes, faits: tabFaits }[st.tab]();
     $('#screen').innerHTML = '<div class="topbar"><span class="title grow">MORVANE</span><span class="cur ash">🔥 ' + E.fmt(S().cendres) + '</span><span class="cur ess">💠 ' + E.fmt(S().essence) + '</span><button class="icon-btn" data-act="settings">⚙️</button></div>' +
       '<div class="content" id="content">' + body + '</div><div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (st.tab === t[0] ? ' on' : '') + '" data-act="tab" data-tab="' + t[0] + '"><span class="ti">' + t[1] + '</span>' + t[2] + (t[3] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
-    if (st.tab === 'hero' && typeof FX !== 'undefined') FX.attach($('.camp-scene'), { ambient: 'embers', fire: { x: 0.66, y: 0.86, s: 2.6 }, warm: 2 });
+    campFx = null; if (st.tab === 'hero' && typeof FX !== 'undefined') campFx = FX.attach($('.camp-scene'), { ambient: 'embers', fire: { x: 0.66, y: 0.86, s: 2.6 }, warm: 2 });
     $('#content').classList.toggle('camp', st.tab === 'hero');
     flushAch();
     if (S().stats.boss6 > 0 && !S().run && UI.story.seen()['c6.end']) UI.story.play('epi', null, { card: true });
@@ -201,7 +201,7 @@ var UI = (function () {
     var idle = E.idleInfo(), dl = E.dailyInfo();
     html += '<div class="camp-scene' + (un ? '' : ' locked') + '" style="background-image:url(' + Backgrounds.url('camp') + ')"><div class="camp-sky"></div><div class="camp-glow"></div>';
     html += '<button class="camp-name" data-act="roster"><b>' + h.name + '</b><span>' + h.title + '</span></button>';
-    html += '<button class="camp-hero" data-act="heroSheet">' + sprH + spr('p_buche', 'log') + '</button>' + (un ? famHtml('famh') : '');
+    html += '<button class="camp-hero" data-act="heroPoke">' + sprH + spr('p_buche', 'log') + '</button>' + (un ? famHtml('famh') : '');
     html += '<button class="nav l" data-act="heroNav" data-d="-1">‹</button><button class="nav r" data-act="heroNav" data-d="1">›</button>';
     if (un) {
       html += '<div class="camp-chips"><span>Maîtrise <b>' + hs.lvl + '</b></span><span>Puissance <b>' + E.fmt(E.power(h.id)) + '</b></span></div>';
@@ -227,6 +227,34 @@ var UI = (function () {
     html += '<div class="camp-quick">' + q.map(function (x) { return '<button class="qk" data-act="' + x[0] + '">' + spr(x[1], 'ic') + '<b>' + x[2] + '</b><span>' + x[3] + '</span>' + (x[4] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
     return html;
   }
+  // ---------- le héros réagit quand on le touche au camp : geste, braises, une réplique ; retoucher ouvre sa fiche ----------
+  var campFx = null, pokeT = 0, typeT = 0, lastPoke = {};
+  var POKE = {
+    chevalier: ['Mon serment pèse plus lourd que mon armure.', 'Le feu tient. Moi aussi.', 'Dis-moi quand. Je suis prêt depuis vingt ans.'],
+    pyro: ['Approche, mais pas trop. Je mords.', 'Ce feu est mignon. Le mien brûle mieux.', 'Encore une descente ? J’ai froid aux doigts.'],
+    assassin: ['Tu ne m’as pas entendu arriver. C’est normal.', 'Chaque ombre a son prix.', 'Pas de gloire. Juste du travail propre.'],
+    necro: ['Chut. Les morts parlent, et toi, tu les couvres.', 'Ils m’attendent en bas. Ce serait impoli de tarder.', 'Une âme de plus ou de moins… qui compte ?'],
+    berserker: ['Encore ! Je n’ai pas assez saigné aujourd’hui.', 'Le froid ? Chez moi, ça s’appelle le printemps.', 'Donne-moi une porte. Je la casse.'],
+    pretresse: ['Que la flamme te garde. Elle, au moins, n’a pas menti.', 'Je prie encore. Plus pour les mêmes.', 'Respire. La nuit est longue, mais elle finit.'],
+    chasseuse: ['Chaque corde que je coupe est une prière.', 'Mes flèches sont prêtes. Le bois aussi.', 'Écoute. Les branches grincent. Il m’attend.'],
+    moine: ['Le poing ne frappe pas. Il répond.', 'Assieds-toi. Le feu ne demande rien.', 'La douleur est une maîtresse patiente.']
+  };
+  var PV = { chevalier: 150, pyro: 190, assassin: 170, necro: 120, berserker: 100, pretresse: 260, chasseuse: 230, moine: 140 };
+  ACT.heroPoke = function () {
+    var h = E.hero(st.view), sc = $('.camp-scene'), sp = $('.camp-hero .spr'); if (!sc || !sp || !E.heroUnlocked(h.id)) return;
+    var old = $('.camp-say'); if (old) { ACT.heroSheet(); return; } // la bulle est là : deuxième toucher = fiche
+    ['g-swing', 'g-nod', 'g-shrug'].forEach(function (g) { sp.classList.remove(g); }); void sp.offsetWidth;
+    var g = ['g-swing', 'g-nod', 'g-shrug'][Math.floor(Math.random() * 3)]; sp.classList.add(g); setTimeout(function () { sp.classList.remove(g); }, 1000);
+    var hb = $('.camp-hero').getBoundingClientRect(), sr = sc.getBoundingClientRect();
+    if (campFx) FX.burst(campFx, hb.left - sr.left + hb.width * 0.55, hb.top - sr.top + hb.height * 0.45, g === 'g-swing' ? 'crit' : 'burn', g === 'g-swing' ? 16 : 10);
+    SND.play(g === 'g-swing' ? 'equip' : 'click', 0.6); vib(12);
+    var L = POKE[h.id] || POKE.chevalier, i; do { i = Math.floor(Math.random() * L.length); } while (L.length > 1 && i === lastPoke[h.id]); lastPoke[h.id] = i;
+    var full = L[i], b = document.createElement('button'); b.className = 'camp-say'; b.dataset.act = 'heroSheet';
+    b.innerHTML = '<span class="t"></span><b>Voir sa fiche ›</b>'; sc.appendChild(b);
+    var t = b.firstChild, n = 0, k = 0; clearInterval(typeT); clearTimeout(pokeT);
+    typeT = setInterval(function () { if (!document.body.contains(t)) { clearInterval(typeT); return; } n += 2; t.textContent = full.slice(0, n); if (k++ % 2 === 0 && SND.blip) SND.blip(PV[h.id] || 160, 0.7, 'square'); if (n >= full.length) { clearInterval(typeT); b.classList.add('done'); } }, 26);
+    pokeT = setTimeout(function () { b.classList.add('out'); setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 300); }, 4800);
+  };
   // Fiche du héros : stats, équipement, pouvoirs
   ACT.heroSheet = function () {
     var h = E.hero(st.view); if (!E.heroUnlocked(h.id)) return; SND.play('click');
