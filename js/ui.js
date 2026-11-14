@@ -54,9 +54,10 @@ var UI = (function () {
     var h = E.hero(heroId), k = h.skills[i], own = E.heroUnlocked(heroId), run = S().run && S().run.hero === heroId ? S().run : null;
     var ok = own && E.skillUnlocked(heroId, i), cd = run ? E.skillCd(run, i) : k.cd * (1 - (own ? E.heroStats(heroId, null).cdr : 0) / 100);
     var nums = own ? E.skillNumbers(heroId, i, run) : [];
-    var html = '<div class="skhead"><div class="ic">' + k.icon + '</div><div class="grow"><b>' + k.name + '</b><div class="tiny dim">Pouvoir ' + (i + 1) + ' de ' + h.name + ' · 1 action · recharge ' + E.turns(cd) + ' tours</div>' + tagsHtml(k) + '</div></div>';
+    var html = '<div class="skhead"><div class="ic">' + k.icon + '</div><div class="grow"><b>' + k.name + '</b><div class="tiny dim">Pouvoir ' + (i + 1) + ' de ' + h.name + ' · 🎲 ' + D.NEEDS[k.need].txt + ' · recharge ' + E.turns(cd) + ' tours</div>' + tagsHtml(k) + '</div></div>';
     if (!ok) html += '<div class="card small gold">🔒 Se débloque à Maîtrise ' + (i + 1) + ' : joue ' + h.name + ' pour la monter.</div>';
     html += '<p style="margin:10px 2px">' + k.desc + '</p>';
+    html += '<div class="li on"><div class="ic"><span class="needb">' + D.NEEDS[k.need].label + '</span></div><div class="grow"><b>Emplacement de dé</b><div class="small dim">Se lance en y glissant <b>' + D.NEEDS[k.need].txt + '</b>, sans coûter d’action. ' + (k.flat ? 'La valeur du dé ne change rien : sers-toi d’un petit dé.' : 'La valeur du dé règle sa puissance : 5 = 100 %, 6 = 110 %, 1 = 60 %.') + '</div></div></div>';
     if (nums.length) html += '<div class="card nums"><div class="tiny gold" style="letter-spacing:.08em">AVEC TES STATS ACTUELLES</div>' + nums.map(function (n) { return '<div><b>' + n + '</b></div>'; }).join('') + '<div class="tiny dim">Avant l’armure de l’ennemi et les coups critiques.</div></div>';
     html += '<div class="li"><div class="ic">💡</div><div class="grow"><b>Quand l’utiliser</b><div class="small dim">' + k.tip + '</div></div></div>';
     html += '<h3 class="gold" style="margin:10px 0 2px">✨ Éveils de ce pouvoir</h3><div class="tiny dim" style="margin-bottom:6px">Tous les 4 niveaux d’une descente, tu fais évoluer un pouvoir. Il garde son effet et gagne celui de l’éveil.</div>';
