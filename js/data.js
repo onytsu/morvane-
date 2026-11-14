@@ -387,8 +387,10 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '3.5';
+  var VERSION = '3.6';
   var NEWS = [
+    ['🛠️', 'Une interface forgée', 'Boutons, emplacements de pouvoir et camp sont désormais sertis dans des cadres de fer et d’or en pixel art, avec leurs propres icônes.'],
+    ['🕯️', 'La Veilleuse te guide', 'Le tutoriel est maintenant raconté par la Veilleuse, dans le style des dialogues de l’histoire.'],
     ['🧭', 'Des boutons plus simples', 'En combat, deux grands boutons : ⚔️ Frapper et 🛡️ Parer, avec tes pouvoirs juste en dessous. Vitesse, jeu automatique, posture et aide sont rangés dans le menu ☰.'],
     ['🛡️', 'Une parade qui se voit', 'Quand un ennemi charge un gros coup, le bouton Parer devient bleu vif : PARE ! L’écran s’entoure de bleu et l’ennemi brille de la même couleur.'],
     ['💥', 'Coup critique en un geste', 'Plus besoin de toucher la cible : quand un point faible s’ouvre, ton bouton Frapper devient COUP CRITIQUE, en jaune.'],

@@ -27,13 +27,13 @@ UI.run = (function () {
       '<div class="arena" id="arena"></div>' +
       '<div class="dtray" id="dtray"><div class="dside"><button class="dbag" id="dbag" data-act="bag">🎒<b></b></button><button class="dre" id="dre" data-act="dreroll">↻<b></b></button><button class="dre dfl" id="dfl" data-act="dflip">⇅<b></b></button></div><div class="dhand" id="dhand"></div><div class="dgrid" id="dgrid"></div></div>' +
       '<div class="hud">' +
-      '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><span></span></div></div>' +
-      '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + h.ult.icon + ' ' + h.ult.name + '</span><em>PRÊT · touche !</em></button>' +
-      '<div class="turnrow"><span class="aps" id="aps"></span><b id="tlabel"></b><span class="hsts" id="hsts"></span><span class="grow"></span><button class="tog pass" id="tpass" data-act="pass">Fin du tour ⏭</button></div>' +
-      '<div class="mainacts"><button class="bigact strike" id="bstrike" data-act="strike" data-info="strike"><span class="e">⚔️</span><span class="t"><b>Frapper</b><small>1 ⚡</small></span></button>' +
-      '<button class="bigact parry" id="bparry" data-act="parry" data-info="parry"><span class="e">🛡️</span><span class="t"><b>Parer</b><small>1 ⚡</small></span><span class="cd"></span></button></div>' +
+      '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><span></span></div></div></div>' +
+      '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + UI.spr('i_ult', 'ic') + h.ult.name + '</span></button>' +
+      '<div class="turnrow"><span class="aps" id="aps"></span><b id="tlabel"></b><span class="hsts" id="hsts"></span><span class="grow"></span><button class="tog pass" id="tpass" data-act="pass">Fin du tour</button></div>' +
+      '<div class="mainacts"><button class="bigact strike" id="bstrike" data-act="strike" data-info="strike">' + UI.spr('i_sword', 'ic') + '<b>Frapper</b></button>' +
+      '<button class="bigact parry" id="bparry" data-act="parry" data-info="parry">' + UI.spr('i_shield', 'ic') + '<b>Parer</b><span class="cd"></span></button></div>' +
       '<div class="skills">' + h.skills.map(function (k, i) { return '<button class="skb" id="sk' + i + '" data-act="skill" data-i="' + i + '" data-info="skill:' + i + '"><span class="e">' + k.icon + '</span><span class="cd"></span><span class="ev"></span><span class="nm">' + k.name + '</span><span class="need">' + D.NEEDS[k.need].label + '</span><span class="n"></span></button>'; }).join('') +
-      '<button class="skb potion" id="pot" data-act="potion" data-info="potion">🧪<span class="cnt"></span></button></div></div>';
+      '<button class="skb potion" id="pot" data-act="potion" data-info="potion">' + UI.spr('i_potion', 'ic') + '<span class="cnt"></span></button></div></div>';
     built = null; shownPhase = null; updateHud.key = null; lastTurn = ''; diceKey = ''; trayKey = ''; selDie = 0; lastPlaced = -1;
     if (run.phase !== 'combat') SND.music(zoneMusic(run));
     if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); }
@@ -70,7 +70,7 @@ UI.run = (function () {
     d.className = 'unit en' + (e.boss ? ' boss' : e.elite ? ' elite' : '') + (spawn ? ' spawn' : '') + (e.fix ? ' fixed fx-' + e.fix : '') + (e.big ? ' giant' : '') + (e.gold ? ' golden' : '') + (e.champ ? ' champ' : '');
     d.id = 'en' + e.id; d.dataset.act = 'target'; d.dataset.i = i; d.dataset.info = 'foe:' + i;
     d.style.right = P[pi].r + '%'; d.style.bottom = P[pi].b + '%'; d.style.zIndex = 10 - Math.round(P[pi].b / 5);
-    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span><span class="intent"></span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">🎯</span>';
+    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span><span class="intent"></span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">' + UI.spr('i_burst', 'ic') + '</span>';
     $('#arena').appendChild(d); els[e.id] = d;
   }
   function floatAt(el, txt, cls) {
@@ -429,7 +429,7 @@ UI.run = (function () {
     if (apsEl && apsEl.dataset.k !== apk) { apsEl.dataset.k = apk; var ah = ''; for (i = 0; i < Math.max(E.AP, ap); i++) ah += '<i class="' + (i < ap ? 'on' : '') + '"></i>'; apsEl.innerHTML = ah; }
     var bst = $('#bstrike'), wkOn = mine && ap > 0 && !!c.weak && c.enemies.some(function (x) { return !x.dead && x.id === c.weak.id; });
     bst.classList.toggle('ready', mine && ap > 0 && !S().settings.auto); bst.classList.toggle('weakmode', wkOn); bst.classList.toggle('off', !!c && run.phase === 'combat' && (!mine || ap <= 0));
-    if (bst.dataset.w !== (wkOn ? '1' : '0')) { bst.dataset.w = wkOn ? '1' : '0'; bst.firstChild.textContent = wkOn ? '💥' : '⚔️'; bst.children[1].innerHTML = wkOn ? '<b>COUP CRITIQUE</b><small>point faible ouvert !</small>' : '<b>Frapper</b><small>1 ⚡</small>'; }
+    if (bst.dataset.w !== (wkOn ? '1' : '0')) { bst.dataset.w = wkOn ? '1' : '0'; bst.firstChild.src = Sprites.url(wkOn ? 'i_burst' : 'i_sword'); bst.children[1].textContent = wkOn ? 'Critique !' : 'Frapper'; }
     $('#tpass').classList.toggle('off', !mine);
     var left = mine && ap <= 0 && c.hand.length > 0, tlb = $('#tlabel'), tlt = !c || run.phase !== 'combat' ? '' : left ? 'Pose tes dés' : 'Tour ' + c.round;
     if (tlb && tlb.textContent !== tlt) tlb.textContent = tlt; $('#tpass').classList.toggle('ready', left && !S().settings.auto);
@@ -449,8 +449,8 @@ UI.run = (function () {
     bu.firstChild.style.width = ult + '%'; bu.classList.toggle('ready', ult >= 100);
     if (ult >= 100 && inC) { var hu0 = E.hero(run.hero).ult; tuto('ult_' + run.hero, '🌟 <b>Ultime prêt : ' + hu0.name + '</b><br>' + hu0.desc + '<br><span class="dim">Touche la barre dorée qui brille au-dessus de tes actions. Elle se recharge en combattant.</span>'); }
     var bp = $('#bparry'), pcd = c ? Math.max(0, c.hero.parryCd) : 0, palert = !!inC && pcd <= 0 && charging;
-    bp.classList.toggle('cool', pcd > 0); bp.lastChild.textContent = pcd > 0 ? E.turns(pcd) + ' tour' + (E.turns(pcd) > 1 ? 's' : '') : ''; bp.classList.toggle('alert', palert); bp.classList.toggle('off', !!inC && !palert && (!mine || ap <= 0));
-    if (bp.dataset.a !== (palert ? '1' : '0')) { bp.dataset.a = palert ? '1' : '0'; bp.children[1].innerHTML = palert ? '<b>PARE !</b><small>gros coup en approche</small>' : '<b>Parer</b><small>1 ⚡</small>'; }
+    bp.classList.toggle('cool', pcd > 0); bp.lastChild.textContent = pcd > 0 ? E.turns(pcd) : ''; bp.classList.toggle('alert', palert); bp.classList.toggle('off', !!inC && !palert && (!mine || ap <= 0));
+    if (bp.dataset.a !== (palert ? '1' : '0')) { bp.dataset.a = palert ? '1' : '0'; bp.children[1].textContent = palert ? 'Pare !' : 'Parer'; }
     var ar1 = $('#arena'); if (ar1) ar1.classList.toggle('parrycue', palert);
     if (palert && mine && UI.guide) UI.guide.once('parry');
     if (wkOn && UI.guide) UI.guide.once('weak');
@@ -824,13 +824,13 @@ UI.run = (function () {
     var run = S().run; if (!run) { ACT.settings(); return; } SND.play('click');
     var s = S().settings, stn = run.stance || 'n', inC = run.phase === 'combat';
     var h = '<h2>Menu</h2><div class="tiny dim center" style="margin:-6px 0 12px">Le combat est en pause</div>';
-    h += '<div class="mgrid"><button class="mbtn" data-act="help"><span>❓</span>Aide</button><button class="mbtn" data-act="guideReplay"><span>🎓</span>Tutoriel</button><button class="mbtn" data-act="relics"><span>🎁</span>Ma descente</button><button class="mbtn" data-act="bag"><span>🎒</span>Mes dés</button></div>';
+    h += '<div class="mgrid">' + [['help', 'i_book', 'Aide'], ['guideReplay', 'i_scroll', 'Tutoriel'], ['relics', 'i_ult', 'Descente'], ['bag', 'i_die', 'Mes dés']].map(function (m) { return '<button class="mbtn" data-act="' + m[0] + '">' + UI.spr(m[1], 'ic') + '<b>' + m[2] + '</b></button>'; }).join('') + '</div>';
     if (inC) {
-      h += '<div class="mrow"><span class="grow"><b>Jeu automatique</b><div class="tiny dim">Ton héros joue seul</div></span><button class="seg' + (s.auto ? ' on' : '') + '" data-act="auto" data-m="1">' + (s.auto ? 'Activé' : 'Désactivé') + '</button></div>';
+      h += '<div class="mrow"><span class="grow"><b>Jeu automatique</b><div class="tiny dim">Ton héros joue seul</div></span><button class="seg' + (s.auto ? ' on' : '') + '" data-act="auto" data-m="1">' + (s.auto ? 'Oui' : 'Non') + '</button></div>';
       h += '<div class="mrow"><span class="grow"><b>Vitesse</b></span>' + [1, 2, 3].map(function (v) { return '<button class="seg' + (s.speed === v ? ' on' : '') + '" data-act="speedSet" data-v="' + v + '">x' + v + '</button>'; }).join('') + '</div>';
-      h += '<div class="mrow"><span class="grow"><b>Posture</b><div class="tiny dim">' + (stn === 'a' ? '+25 % dégâts, +20 % subis' : stn === 'd' ? '-25 % subis, -20 % dégâts' : 'aucun bonus ni malus') + '</div></span>' + [['a', '🗡️'], ['n', '⚖️'], ['d', '🛡️']].map(function (p) { return '<button class="seg' + (stn === p[0] ? ' on' : '') + '" data-act="stanceSet" data-s="' + p[0] + '">' + p[1] + '</button>'; }).join('') + '</div>';
+      h += '<div class="mrow"><span class="grow"><b>Posture</b><div class="tiny dim">' + (stn === 'a' ? '+25 % dégâts, +20 % subis' : stn === 'd' ? '-25 % subis, -20 % dégâts' : 'aucun bonus ni malus') + '</div></span>' + [['a', 'i_sword'], ['n', ''], ['d', 'i_shield']].map(function (p) { return '<button class="seg' + (stn === p[0] ? ' on' : '') + '" data-act="stanceSet" data-s="' + p[0] + '">' + (p[1] ? UI.spr(p[1], 'ic') : '◆') + '</button>'; }).join('') + '</div>';
     }
-    h += '<div class="btns"><button class="btn sm" data-act="settings">⚙️ Réglages</button><button class="btn sm" data-act="abandonAsk">🏳️ Abandonner</button></div>';
+    h += '<div class="btns"><button class="btn sm" data-act="settings">Réglages</button><button class="btn sm" data-act="abandonAsk">Abandonner</button></div>';
     h += '<div class="btns"><button class="btn primary big" data-act="close">REPRENDRE</button></div>';
     UI.modal(h);
   };

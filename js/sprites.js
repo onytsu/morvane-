@@ -1240,6 +1240,74 @@ elite('devoreur_etoiles', function () {
   G('#ffffff', 24, 3, 8, 6, 2, 20, 30, 10); G(V1, 4, 9, 27, 6, 23, 30, 9, 22, 24, 20); G('#a04cff90', 16, 31, 1, 13, 29, 18, 12, 2, 21, 1, 25, 26);
 }, { rim: '#7450b4' });
 
+
+/* ---------- interface : cadres (9 tranches) et icones ---------- */
+/* cadre 12x12 : contour, metal biseaute, filet interieur, rivets aux coins. Decoupe a 4 px. */
+function frame(id, o) {
+  def(id, 12, 12, {}, function () {
+    for (var y = 0; y < 12; y++) for (var x = 0; x < 12; x++) {
+      var d = Math.min(x, y, 11 - x, 11 - y), tl = (y <= x && y <= 11 - x) || (x <= y && x <= 11 - y && x < 11 - x), c = null;
+      if (d === 0) c = OUT; else if (d === 1) c = (y === 1 || x === 1) && x < 11 && y < 11 ? o.hi : o.lo; else if (d === 2) c = o.mid; else if (d === 3) c = (y === 3 || x === 3) && x < 8 && y < 8 ? o.rh : o.rule;
+      if (c) D(c, x, y);
+    }
+    [[1, 1], [9, 1], [1, 9], [9, 9]].forEach(function (p) { D(o.rv, p[0], p[1]); D(o.rvl, p[0] + 1, p[1] + 1); D(o.rvm, p[0] + 1, p[1], p[0], p[1] + 1); });
+  });
+}
+frame('ui_iron', { hi: '#8c8a9c', mid: '#4a4658', lo: '#25222f', rule: '#a87a2a', rh: '#f0cf6a', rv: '#ffe7a0', rvm: '#c99a3a', rvl: '#6e4e18' });
+frame('ui_gold', { hi: '#fff1c4', mid: '#d9a441', lo: '#7a5216', rule: '#fff6d8', rh: '#ffffff', rv: '#ffffff', rvm: '#ffe08a', rvl: '#a8701e' });
+frame('ui_cyan', { hi: '#e6ffff', mid: '#5fd8e8', lo: '#1f6a80', rule: '#ffffff', rh: '#ffffff', rv: '#ffffff', rvm: '#a6fbff', rvl: '#1f8aa0' });
+frame('ui_dark', { hi: '#5a5468', mid: '#33303f', lo: '#18161f', rule: '#6e5428', rh: '#a8823a', rv: '#c9a35a', rvm: '#8a6a2a', rvl: '#3a2a12' });
+function star(cx, cy, n, r0, r1, c, rot) { var p = []; for (var k = 0; k < n * 2; k++) { var a = (rot || -Math.PI / 2) + k * Math.PI / n, r = k % 2 ? r1 : r0; p.push(Math.round(cx + Math.cos(a) * r), Math.round(cy + Math.sin(a) * r)); } P(c, p); }
+def('i_sword', 16, 16, {}, function () {
+  L(6, 9, 13, 2, BL, 2); D('#ffffff', 13, 2, 12, 3, 11, 4, 10, 5, 9, 6); D(S2, 8, 9, 9, 8, 10, 7);
+  L(3, 7, 8, 12, A2, 1); D(A1, 4, 8, 5, 9); L(2, 13, 5, 10, W2, 1); D(A1, 1, 14, 2, 14, 1, 13);
+});
+def('i_shield', 16, 16, {}, function () {
+  P(S2, [2, 2, 13, 2, 13, 8, 8, 14, 7, 14, 2, 8]); P(RD, [4, 4, 11, 4, 11, 8, 8, 12, 7, 12, 4, 8]);
+  R(7, 4, 2, 8, A2); R(4, 6, 8, 2, A2); D(A1, 7, 6, 8, 6); D(S1, 3, 2, 4, 2, 5, 2, 2, 3);
+});
+def('i_burst', 16, 16, {}, function () {
+  star(8, 8, 8, 7.5, 3.2, F2, -Math.PI / 2); star(8, 8, 8, 5, 2.4, F1, -Math.PI / 2 + Math.PI / 8); E(8, 8, 1.6, 1.6, '!#ffffff');
+  G('#fff1a8aa', 8, 0, 0, 8, 15, 8, 8, 15);
+});
+def('i_potion', 16, 16, {}, function () {
+  E(8, 10, 4.5, 4.5, '#c81e2c'); R(7, 3, 3, 3, S1); R(6, 2, 5, 1, W1); D('!#ff9aa8', 6, 8, 6, 9, 7, 7); D('!#7a0c18', 10, 13, 11, 12);
+});
+def('i_star', 16, 16, {}, function () { star(8, 8.5, 5, 7.5, 3.2, A1); D('!#fff6c8', 8, 5, 8, 6, 7, 8); });
+def('i_scroll', 16, 16, {}, function () {
+  R(3, 4, 10, 8, '#e6d3a0'); E(3, 8, 1.5, 4.5, '#c9b07a'); E(13, 8, 1.5, 4.5, '#c9b07a');
+  D('!#6e5a3a', 5, 6, 6, 6, 7, 6, 8, 6, 9, 6, 10, 6, 5, 8, 6, 8, 7, 8, 8, 8, 5, 10, 6, 10, 7, 10, 8, 10, 9, 10); D('!#c81e2c', 11, 10);
+});
+def('i_book', 16, 16, {}, function () {
+  R(3, 2, 10, 12, '#7a2a38'); R(4, 12, 9, 2, '#e6d3a0'); R(12, 3, 1, 10, '#e6d3a0'); R(3, 2, 2, 12, '#5a1a28');
+  R(7, 5, 3, 4, A2); D('!' + A1, 8, 6); D('!' + A1, 5, 3, 5, 12);
+});
+def('i_medal', 16, 16, {}, function () {
+  P(RD, [4, 1, 7, 1, 8, 6, 6, 7]); P('#2a5a9a', [12, 1, 9, 1, 8, 6, 10, 7]);
+  E(8, 10.5, 4, 4, A2); E(8, 10.5, 2.4, 2.4, A1); D('!#fff6c8', 7, 9);
+});
+def('i_gift', 16, 16, {}, function () {
+  R(2, 7, 12, 7, W1); R(2, 4, 12, 3, W2); R(7, 4, 2, 10, A2); R(2, 9, 12, 1, A3); D('!' + A1, 7, 8, 8, 8); D('!' + F1, 7, 3, 8, 3, 6, 2, 9, 2);
+  G('#ffe08a88', 4, 2, 12, 2, 1, 5, 14, 5);
+});
+def('i_urn', 16, 16, {}, function () {
+  E(8, 10, 4.5, 4.5, '#6a6076'); R(6, 3, 4, 3, '#6a6076'); R(5, 2, 6, 1, '#8a8098'); R(4, 13, 8, 2, '#4a4252');
+  D('!' + F1, 8, 1, 7, 0); D('!' + F2, 8, 0, 9, 1); D('!#a8a0b8', 5, 8, 5, 9);
+  G('#ff8a3c88', 8, -1, 7, 1, 9, 0);
+});
+def('i_ult', 16, 16, {}, function () {
+  P(A2, [2, 6, 5, 9, 8, 3, 11, 9, 14, 6, 13, 13, 3, 13]); R(3, 12, 11, 2, A3); D('!' + A1, 8, 4, 5, 10, 11, 10); D('!#e6b8ff', 8, 11); D('!#c81e2c', 5, 12, 11, 12);
+});
+def('i_die', 16, 16, {}, function () {
+  R(2, 2, 12, 12, '#e6dfc8'); R(2, 12, 12, 2, '#b9b094'); D('!#c81e2c', 5, 5, 10, 5, 5, 10, 10, 10, 7, 7, 8, 7, 7, 8, 8, 8);
+});
+def('p_buche', 44, 12, {}, function () {
+  R(1, 2, 40, 8, W2); R(1, 2, 40, 2, W1); R(1, 9, 40, 1, W3);
+  for (var k = 3; k < 40; k += 5) D(W3, k, 4 + (k % 3), k + 1, 5 + (k % 3), k + 2, 6);
+  E(41, 6, 2.2, 4, '#b98a5a'); O(41, 6, 1.2, 2.5, '!#8a5a34'); D('!#d8a878', 41, 6);
+  L(10, 2, 8, 0, W2); D(W1, 8, 0);
+});
+
 /* ---------- API ---------- */
 function has(id) { return Object.prototype.hasOwnProperty.call(defs, id) && String(id).charAt(0) !== '_'; }
 function key(id) { return has(id) ? id : '_fallback'; }

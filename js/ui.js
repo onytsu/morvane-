@@ -165,14 +165,14 @@ var UI = (function () {
     var sprH = spr(h.id, 'spr'); if (aura >= 2) sprH = sprH.replace('<img', '<img style="--aura:' + D.RARITIES[aura].color + '"');
     var idle = E.idleInfo(), dl = E.dailyInfo();
     html += '<div class="camp-scene' + (un ? '' : ' locked') + '" style="background-image:url(' + Backgrounds.url('camp') + ')"><div class="camp-sky"></div><div class="camp-glow"></div>';
-    html += '<button class="camp-name" data-act="roster"><b>' + h.name + '</b><span>' + h.title + ' ▾</span></button>';
-    html += '<button class="camp-hero" data-act="heroSheet">' + sprH + '<i class="log"></i></button>' + (un ? famHtml('famh') : '');
+    html += '<button class="camp-name" data-act="roster"><b>' + h.name + '</b><span>' + h.title + '</span></button>';
+    html += '<button class="camp-hero" data-act="heroSheet">' + sprH + spr('p_buche', 'log') + '</button>' + (un ? famHtml('famh') : '');
     html += '<button class="nav l" data-act="heroNav" data-d="-1">‹</button><button class="nav r" data-act="heroNav" data-d="1">›</button>';
     if (un) {
-      html += '<div class="camp-chips"><span>Maîtrise <b>' + hs.lvl + '</b></span><span>⚡ <b>' + E.fmt(E.power(h.id)) + '</b></span></div>';
+      html += '<div class="camp-chips"><span>Maîtrise <b>' + hs.lvl + '</b></span><span>Puissance <b>' + E.fmt(E.power(h.id)) + '</b></span></div>';
       var gifts = '';
-      if (dl.claimable) gifts += '<button class="gift" data-act="daily"><em>🎁</em><span>Cadeau</span></button>';
-      if (S().stats.best > 0 && idle.amount > 0) gifts += '<button class="gift" data-act="idle"><em>⚱️</em><span>+' + E.fmt(idle.amount) + ' 🔥</span></button>';
+      if (dl.claimable) gifts += '<button class="gift" data-act="daily">' + spr('i_gift', 'ic') + '<span>Offrande</span></button>';
+      if (S().stats.best > 0 && idle.amount > 0) gifts += '<button class="gift" data-act="idle">' + spr('i_urn', 'ic') + '<span>+' + E.fmt(idle.amount) + '</span></button>';
       if (gifts) html += '<div class="camp-gifts">' + gifts + '</div>';
     } else {
       var how = h.unlock.cost ? '<button class="btn goldb' + (S().cendres >= h.unlock.cost ? '' : ' off') + '" data-act="unlock" data-id="' + h.id + '">Recruter — 🔥 ' + E.fmt(h.unlock.cost) + '</button>' : '<div class="gold small">Vaincs ' + D.ENEMIES[D.ZONES[h.unlock.boss - 1].boss].name + '<br><span class="dim">(boss de la zone ' + h.unlock.boss + ')</span></div>';
@@ -180,16 +180,16 @@ var UI = (function () {
     }
     html += '</div>';
     if (!un) return html + '<div class="card"><div class="small gold">' + h.role + '</div><div class="small dim">' + h.desc + '</div><div class="small" style="margin-top:6px">🌟 <b>' + h.passive.name + '</b> — ' + h.passive.desc + '</div></div>';
-    if (S().run) html += '<button class="btn primary big camp-go" data-act="resume">⚔️ REPRENDRE — étage ' + S().run.floor + '</button>';
+    if (S().run) html += '<button class="btn primary big camp-go" data-act="resume">REPRENDRE · ÉTAGE ' + S().run.floor + '</button>';
     else {
       var mz = E.maxStartZone(); if (st.zone == null || st.zone > mz) st.zone = mz;
       if (mz > 1) html += '<div class="zone-pick"><button class="icon-btn" data-act="zone" data-d="-1">‹</button><div class="zn"><b>' + E.zoneLabel(st.zone) + '</b><div class="tiny dim">Départ étage ' + ((st.zone - 1) * 10 + 1) + (st.zone > 1 ? ' · ' + ((st.zone - 1) * 3) + ' aubaines offertes' : '') + '</div></div><button class="icon-btn" data-act="zone" data-d="1">›</button></div>';
-      html += '<button class="btn primary big camp-go" data-act="descend">⚔️ DESCENDRE</button>';
+      html += '<button class="btn primary big camp-go" data-act="descend">DESCENDRE</button>';
     }
     html += '<div class="tiny dim center" style="margin:6px 0 12px">Record : étage ' + S().stats.best + '</div>';
     var tpts = E.talentPoints(h.id), gl = E.gloryInfo();
-    var q = [['talents', '🌟', 'Talents', tpts ? tpts + ' point' + (tpts > 1 ? 's' : '') : 'Maîtrise ' + hs.lvl, tpts > 0], ['quests', '📜', 'Quêtes', 'contrats du jour', E.contractReady() || idle.full], ['chron', '📖', 'Histoire', 'la Chronique', UI.story.fresh()], ['glory', '🏅', 'Gloire', 'palier ' + gl.lvl, false]];
-    html += '<div class="camp-quick">' + q.map(function (x) { return '<button class="qk" data-act="' + x[0] + '"><em>' + x[1] + '</em><b>' + x[2] + '</b><span>' + x[3] + '</span>' + (x[4] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
+    var q = [['talents', 'i_star', 'Talents', tpts ? tpts + ' point' + (tpts > 1 ? 's' : '') : 'Maîtrise ' + hs.lvl, tpts > 0], ['quests', 'i_scroll', 'Quêtes', 'contrats du jour', E.contractReady() || idle.full], ['chron', 'i_book', 'Histoire', 'la Chronique', UI.story.fresh()], ['glory', 'i_medal', 'Gloire', 'palier ' + gl.lvl, false]];
+    html += '<div class="camp-quick">' + q.map(function (x) { return '<button class="qk" data-act="' + x[0] + '">' + spr(x[1], 'ic') + '<b>' + x[2] + '</b><span>' + x[3] + '</span>' + (x[4] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
     return html;
   }
   // Fiche du héros : stats, équipement, pouvoirs

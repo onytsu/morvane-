@@ -3,37 +3,42 @@ UI.guide = (function () {
   'use strict';
   var S = UI.S, ACT = UI.ACT, root = null, steps = [], idx = 0, done = null, isOpen = false;
 
-  // Tutoriel du premier combat
+  // Tutoriel du premier combat, raconté par la Veilleuse
   var FIGHT = [
-    { t: 'Ton premier combat', x: 'Le combat se joue <b>au tour par tour</b> : tu joues, puis les ennemis jouent.<br>Je te montre l’essentiel en quelques étapes.' },
-    { s: '.unit.en', t: 'L’ennemi', x: 'Au-dessus de sa tête, tu vois <b>ce qu’il va faire</b> à son tour.<br>⚔️ 12 = il va frapper pour 12.<br>Touche un ennemi pour le viser.' },
-    { s: '.hprow', t: 'Ta vie', x: 'La barre rouge, ce sont tes <b>points de vie</b>. Le petit rond à gauche, c’est ton niveau.' },
-    { s: '#aps', t: 'Tes actions ⚡', x: 'À chaque tour tu as <b>2 actions</b>. Frapper ou Parer coûte 1 action.' },
-    { s: '#bstrike', t: 'Frapper', x: 'Attaque l’ennemi visé.<br>Parfois un ennemi se découvre : ce bouton devient <b class="g-y">💥 COUP CRITIQUE</b> en jaune. Appuie vite, ça fait très mal !' },
-    { s: '#bparry', t: 'Parer', x: 'Quand un ennemi prépare un gros coup, ce bouton s’allume en <b class="g-c">BLEU VIF : PARE !</b><br>Pare à ce moment-là : le coup est annulé et tu ripostes.' },
-    { s: '#dtray', t: 'Tes dés', x: 'Chaque tour, tu reçois <b>3 dés</b>. Touche une case de la table pour en poser un : il agit tout de suite, <b>gratuitement</b>.<br>⚔️ frappe · 🛡️ protège · ❤️ soigne' },
-    { s: '.skills', t: 'Tes pouvoirs', x: 'Un pouvoir se lance <b>avec un dé</b>, sans dépenser d’action.<br>L’étiquette blanche dit quel dé il veut (≤3, PAIR...). Il s’allume en <b class="g-g">vert</b> quand ton dé convient.' },
-    { s: '#tpass', t: 'Fin du tour', x: 'Quand tu as fini, touche ici : les ennemis jouent à leur tour.' },
-    { s: '[data-act=runMenu]', t: 'Le menu', x: 'L’aide, la vitesse, le jeu automatique et la posture sont rangés ici.<br>Tu peux aussi y revoir ce tutoriel.' },
-    { t: 'À toi de jouer !', x: 'Frappe, pose tes dés, et <b>surveille le bouton bleu</b>.', btn: 'C’EST PARTI' }
+    { t: 'Ton premier combat', x: 'Écoute-moi bien, voyageur. Ici, chacun frappe à son tour : <b>toi d’abord</b>, puis tes ennemis. Laisse-moi te montrer.' },
+    { s: '.unit.en', t: 'L’ennemi', x: 'Au-dessus de sa tête, il trahit <b>ce qu’il va faire</b>. Un glaive et un 12 : il frappera pour 12.<br>Touche-le pour le viser.' },
+    { s: '.hprow', t: 'Ta vie', x: 'Cette barre rouge, c’est ce qu’il te reste de vie. Le petit blason à côté porte ton niveau.' },
+    { s: '#aps', t: 'Tes actions', x: 'Ces deux losanges d’or sont tes <b>actions</b>. Frapper ou parer en coûte une.' },
+    { s: '#bstrike', t: 'Frapper', x: 'Ta lame contre l’ennemi visé.<br>Quand un ennemi baisse sa garde, ce bouton se couvre d’<b class="g-y">or</b> et devient <b class="g-y">Critique</b>. Ne laisse pas passer ta chance.' },
+    { s: '#bparry', t: 'Parer', x: 'Quand un ennemi rassemble ses forces pour un grand coup, ce bouton s’embrase de <b class="g-c">bleu</b>.<br>Pare à cet instant : le coup est brisé, et tu ripostes.' },
+    { s: '#dtray', t: 'Tes dés', x: 'À chaque tour, tu tires <b>trois dés</b> de ton sac. Pose-les sur la table : ils agissent aussitôt, et ne coûtent rien.' },
+    { s: '.skills', t: 'Tes pouvoirs', x: 'Tes pouvoirs se nourrissent d’un dé, pas d’une action. L’étiquette dit lequel ils réclament. Quand ton dé convient, le cadre <b class="g-g">s’illumine</b>.' },
+    { s: '#tpass', t: 'Fin du tour', x: 'Quand tu as tout joué, rends la main. Les ennemis agiront.' },
+    { s: '[data-act=runMenu]', t: 'Le menu', x: 'L’aide, la vitesse, le jeu automatique et la posture dorment ici. Tu pourras m’y rappeler.' },
+    { t: 'Va, maintenant', x: 'Frappe juste, pose tes dés… et <b class="g-c">guette la lueur bleue</b>.', btn: 'Au combat' }
   ];
   // Rappels qui apparaissent une seule fois, au bon moment
   var ONCE = {
-    parry: { s: '#bparry', t: 'PARE MAINTENANT !', x: 'Un ennemi charge un gros coup ⚠️.<br>Touche le bouton <b class="g-c">bleu</b> : le coup sera annulé.', tap: 1 },
-    weak: { s: '#bstrike', t: 'Point faible !', x: 'Un ennemi s’est découvert. Ton bouton Frapper est devenu <b class="g-y">💥 COUP CRITIQUE</b> : appuie avant la fin du tour !', tap: 1 }
+    parry: { s: '#bparry', t: 'Pare, maintenant !', x: 'Il rassemble ses forces. Touche le bouton <b class="g-c">bleu</b> : son coup se brisera sur toi.', tap: 1 },
+    weak: { s: '#bstrike', t: 'Sa garde est ouverte', x: 'Ton bouton est devenu <b class="g-y">Critique</b>. Frappe avant la fin du tour !', tap: 1 }
   };
   // Premier passage au camp
   var CAMP = [
-    { t: 'Le camp', x: 'Entre deux descentes, ton héros se repose ici, au coin du feu.' },
-    { s: '.camp-scene', t: 'Ton héros', x: 'Touche-le pour voir ses pouvoirs et ses statistiques. Les flèches ‹ › changent de héros.' },
-    { s: '[data-act=descend]', t: 'Descendre', x: 'Repars au combat. Tu gardes <b>tout ton butin</b>, même si tu meurs.' },
-    { s: '.camp-quick', t: 'Raccourcis', x: 'Talents, quêtes du jour, histoire... Un point rouge 🔴 signale quelque chose à prendre.' },
-    { s: '.tabs', t: 'Le reste', x: '🎒 Sac : ton équipement · ⚱️ Autel : bonus permanents · 📜 Pactes · 🏆 Hauts faits.', btn: 'COMPRIS' }
+    { t: 'Le camp', x: 'Te voilà revenu. Entre deux descentes, on se repose ici, près de la dernière flamme.' },
+    { s: '.camp-hero', t: 'Ton héros', x: 'Touche-le pour voir ses pouvoirs, son équipement et sa force. Les flèches changent de héros.' },
+    { s: '[data-act=descend]', t: 'Descendre', x: 'Quand tu es prêt, retourne dans les profondeurs. Ce que tu trouves, <b>tu le gardes</b>, même dans la mort.' },
+    { s: '.camp-quick', t: 'Autour du feu', x: 'Tes talents, les quêtes du jour, la chronique de Morvane et ta gloire. Une braise rouge signale ce qui t’attend.' },
+    { s: '.tabs', t: 'Le reste', x: 'Ton sac, l’autel des bonus permanents, les pactes et tes hauts faits.', btn: 'Compris' }
   ];
+  // Habillage : les cadres pixel servent de bordures à toute l’interface
+  (function skin() {
+    var r = document.documentElement.style;
+    ['iron', 'gold', 'cyan', 'dark'].forEach(function (k) { r.setProperty('--fr-' + k, 'url(' + Sprites.url('ui_' + k) + ')'); });
+  })();
 
   function build() {
     root = document.createElement('div'); root.id = 'guide';
-    root.innerHTML = '<div class="g-hole"></div><div class="g-bub"><div class="g-t"></div><div class="g-x"></div><div class="g-f"><span class="g-dots"></span><button class="g-skip">Passer</button><button class="g-next"></button></div></div>';
+    root.innerHTML = '<div class="g-hole"></div><div class="g-bub"><span class="g-who">La Veilleuse</span>' + UI.spr('veilleuse', 'g-face') + '<div class="g-t"></div><div class="g-x"></div><div class="g-f"><span class="g-dots"></span><button class="g-skip">Passer</button><button class="g-next"></button></div></div>';
     document.getElementById('app').appendChild(root);
     root.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -49,7 +54,7 @@ UI.guide = (function () {
     bub.querySelector('.g-t').innerHTML = st.t; bub.querySelector('.g-x').innerHTML = st.x;
     var many = steps.length > 1, d = ''; if (many) for (var i = 0; i < steps.length; i++) d += '<i class="' + (i === idx ? 'on' : '') + '"></i>';
     bub.querySelector('.g-dots').innerHTML = d;
-    bub.querySelector('.g-next').textContent = st.btn || (idx < steps.length - 1 ? 'Suivant ›' : st.tap ? 'Compris' : 'OK');
+    bub.querySelector('.g-next').textContent = st.btn || (idx < steps.length - 1 ? 'Suivant' : 'Compris');
     bub.querySelector('.g-skip').style.display = many && idx < steps.length - 1 ? '' : 'none';
     root.classList.toggle('tap', !!st.tap);
     if (!el) { root.classList.add('center'); hole.style.cssText = ''; bub.style.top = ''; bub.style.bottom = ''; return; }
