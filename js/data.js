@@ -110,7 +110,7 @@ var DATA = (function () {
       skills: [
         { id: 'n1', name: "Première Pelletée", icon: '', cd: 6, sfx: 'skill_dark', desc: "200 % dégâts et relève un serviteur. Si ton armée est déjà pleine, tu pioches un dé." },
         { id: 'n2', name: "Dîme des Morts", icon: '', cd: 10, sfx: 'skill_dark', desc: "190 % dégâts, +30 % par serviteur. Te soigne d’autant." },
-        { id: 'n3', name: "Exhumation", icon: '', cd: 20, sfx: 'skill_dark', desc: "Ton armée se relève au complet et frappe 3 fois plus vite pendant 3 tours. Les dés de la table sont enterrés : +5 % d’ultime chacun." }
+        { id: 'n3', name: "Exhumation", icon: '', cd: 20, sfx: 'skill_dark', desc: "Ton armée se relève au complet et frappe 3 fois plus vite pendant 3 tours. Tu pioches un dé de plus et ton ultime se charge de 10 %." }
       ],
       boons: [
         { id: 'c_n1', name: 'Fosse commune', rar: 2, desc: '+1 serviteur maximum.', mods: { skel: 1 } },
@@ -139,7 +139,7 @@ var DATA = (function () {
       id: 'pretresse', name: 'Séraphine', title: 'Sainte Hérétique', role: 'Soutien — immortelle',
       desc: 'Se soigne sans cesse. Ses PV sont son arme.',
       base: { hp: 125, atk: 9, def: 5, spd: 1.0, crit: 5 },
-      passive: { name: "Grâce Impie", desc: "Régénère 1 % PV par seconde, et les soins en trop deviennent un bouclier. Chaque dé pair posé sur la table te soigne de 2 % PV.", mods: { regen: 1 } },
+      passive: { name: "Grâce Impie", desc: "Régénère 1 % PV par seconde, et les soins en trop deviennent un bouclier. Chaque dé pair joué te soigne de 2 % PV.", mods: { regen: 1 } },
       unlock: { boss: 4 }, start: {},
       skills: [
         { id: 's1', name: "Stigmate", icon: '', cd: 6, sfx: 'skill_holy', desc: "190 % dégâts, affaiblit la cible 2 tours (-25 % attaque) et te soigne de 5 % PV." },
@@ -173,7 +173,7 @@ var DATA = (function () {
       id: 'moine', name: 'Frère Odon', title: 'Poing de Cendre', role: 'Combattant — élan',
       desc: 'Chaque coup le rend plus fort. Ne laisse pas un gros coup briser son élan.',
       base: { hp: 120, atk: 10, def: 5, spd: 1.3, crit: 8 },
-      passive: { name: "Élan de Cendre", desc: "Chaque coup donne +4 % dégâts (jusqu’à x10). À élan maximum, le premier dé que tu poses chaque tour compte double. L’élan retombe à zéro si tu encaisses une attaque chargée.", mods: {} },
+      passive: { name: "Élan de Cendre", desc: "Chaque coup donne +4 % dégâts (jusqu’à x10). À élan maximum, le premier dé que tu joues chaque tour compte double. L’élan retombe à zéro si tu encaisses une attaque chargée.", mods: {} },
       unlock: { cost: 8000 }, start: {},
       skills: [
         { id: 'm1', name: "Paume de Braise", icon: '', cd: 4, sfx: 'hit', desc: "170 % dégâts, étourdit et embrase. Interrompt les attaques chargées. +2 élan." },
@@ -215,7 +215,7 @@ var DATA = (function () {
     a3: [['Très gros dégâts', 'Achève', '+1 action'], "Attends que la cible passe sous 35 % PV : s’il la tue, tu rejoues.", [['dmg', 3.0, 1], ['dmg', 7.5, 1, 'sous 35 % PV']]],
     n1: [['Dégâts', 'Serviteur', 'Dés'], "Chaque lancer ajoute un squelette. Armée pleine : il te donne un dé.", [['dmg', 2.0]]],
     n2: [['Dégâts', 'Soin'], "Plus ton armée est grande, plus il frappe et soigne.", [['dmg', 1.9, 1, 'sans serviteur']]],
-    n3: [['Serviteurs', 'Rafale', 'Ultime'], "Remplis d’abord la table de dés : chacun enterré charge ton ultime.", []],
+    n3: [['Serviteurs', 'Rafale', 'Ultime'], "Lance-le tôt dans le tour : le dé pioché peut compléter ta figure.", []],
     b1: [['Dégâts', 'Saignement'], "Sous la moitié de tes PV, il frappe deux fois.", [['dmg', 2.0]]],
     b2: [['Vitesse', 'Vol de vie', '+1 action', 'Coûte des PV'], "Te rend une action : lance-le en début de tour, puis frappe.", []],
     b3: [['Zone', 'Soin', 'Saignement'], "Fais d’abord saigner tout le monde : les loups mordent 50 % plus fort.", [['dmg', 2.2, 1, 'à chaque ennemi'], ['dmg', 3.3, 1, 'sur ceux qui saignent'], ['heal', 5, 'par ennemi touché']]],
@@ -331,8 +331,8 @@ var DATA = (function () {
   // ---------- Lexique : tous les mots du jeu, expliqués ----------
   var GLOSS = [
     ['🎒', 'Sac de dés', 'Les dés de ton héros pour cette descente. Tu en pioches 3 par tour ; quand le sac est vide, il est remélangé. Élites, boss et un combat sur trois t’offrent un dé.'],
-    ['🔲', 'Table de dés', 'Les 9 cases où tu poses tes dés. Un dé posé agit tout de suite et ne coûte aucune action. La table est purgée quand elle est pleine.'],
-    ['🎲', 'Figure', 'Trois dés alignés sur la table : Brelan, Suite, Sept chanceux, Coup fort ou Prudence, selon leurs valeurs.'],
+    ['🔲', 'Jouer un dé', 'Touche un dé de ta main, puis retouche-le : il agit tout de suite et ne coûte aucune action.'],
+    ['🎲', 'Figure', 'Les 3 premiers dés joués dans un tour : Paire (deux identiques), Suite (2-3-4) ou Brelan (trois identiques).'],
     ['👁️', 'Intention', 'Ce qu’un ennemi fera à son prochain tour, affiché sous son nom, avec les dégâts attendus.'],
     ['🔥', 'Brûlure', '25 % de ton attaque par seconde pendant 3 s. Relancer une brûlure la remet à 3 s.'],
     ['☠️', 'Poison', '8 % de ton attaque par seconde et par dose, pendant 5 s. Jusqu’à 8 doses cumulées : c’est le plus fort sur les combats longs.'],
@@ -358,17 +358,17 @@ var DATA = (function () {
     ['⚖️', 'Posture', '🗡️ Assaut : +25 % dégâts, +20 % dégâts subis. 🛡️ Garde : -25 % dégâts subis, -20 % dégâts.']
   ];
 
-  // ---------- Dés de combat (v3.2) : chaque héros a un sac de dés, posés sur une table de 9 cases ----------
+  // ---------- Dés de combat (v4.0) : chaque héros a un sac de dés, joués depuis sa main ----------
   // w : poids dans les offres de dés. Les effets sont écrits « par point » de la valeur du dé.
   var DICE = {
-    lame: { name: 'Lame', icon: '⚔️', w: 20, desc: 'Frappe l’ennemi visé : 18 % de ton attaque par point.' },
-    garde: { name: 'Garde', icon: '🛡️', w: 16, desc: 'Bouclier de 1,5 % de tes PV max par point. Il tient jusqu’à ton prochain tour.' },
-    seve: { name: 'Sève', icon: '❤️', w: 10, desc: 'Te soigne de 0,6 % de tes PV max par point.' },
-    echo: { name: 'Écho', icon: '✨', w: 13, desc: 'Ne fait rien seul : chaque dé posé à côté de lui gagne la moitié de sa valeur. Il reste actif tant que la table n’est pas purgée.' },
-    miroir: { name: 'Miroir', icon: '🪞', w: 8, desc: 'Devient une copie du plus fort dé voisin, puis agit comme lui. Sans voisin, il ne reflète rien.' },
-    braise: { name: 'Braise', icon: '🔥', w: 9, desc: '12 % de ton attaque par point, et enflamme l’ennemi visé.' },
+    lame: { name: 'Lame', icon: '⚔️', w: 20, desc: 'Frappe l’ennemi visé : 22 % de ton attaque par point.' },
+    garde: { name: 'Garde', icon: '🛡️', w: 16, desc: 'Bouclier de 2,1 % de tes PV max par point. Il tient jusqu’à ton prochain tour.' },
+    seve: { name: 'Sève', icon: '❤️', w: 10, desc: 'Te soigne de 0,7 % de tes PV max par point.' },
+    echo: { name: 'Écho', icon: '✨', w: 13, desc: 'Les autres dés de ta main gagnent la moitié de sa valeur (arrondie au-dessus). Joué seul, il charge ton ultime de 2 % par point.' },
+    miroir: { name: 'Miroir', icon: '🪞', w: 8, desc: 'Copie le dernier dé joué ce tour et agit comme lui, avec sa propre valeur. Joué en premier, il frappe comme une Lame.' },
+    braise: { name: 'Braise', icon: '🔥', w: 9, desc: '15 % de ton attaque par point, et enflamme l’ennemi visé.' },
     venin: { name: 'Venin', icon: '☠️', w: 9, desc: 'Empoisonne l’ennemi visé : une dose de poison tous les 2 points.' },
-    foudre: { name: 'Foudre', icon: '⚡', w: 8, desc: '9 % de ton attaque par point à tous les ennemis.' },
+    foudre: { name: 'Foudre', icon: '⚡', w: 8, desc: '10 % de ton attaque par point à tous les ennemis.' },
     astre: { name: 'Astre', icon: '🌟', w: 8, desc: 'Charge ton ultime de 2 % par point.' }
   };
   var BAGS = {
@@ -377,19 +377,24 @@ var DATA = (function () {
     berserker: ['lame', 'lame', 'lame', 'lame', 'seve', 'echo'], chasseuse: ['lame', 'lame', 'lame', 'garde', 'astre', 'echo'],
     moine: ['lame', 'lame', 'garde', 'seve', 'echo', 'echo'], pretresse: ['lame', 'garde', 'garde', 'seve', 'seve', 'echo']
   };
-  // Figures : trois dés alignés (ligne, colonne ou diagonale), d'après leur valeur tirée
+  // Figures : les 3 premiers dés joués dans un tour, d'après le chiffre affiché sur chacun (l'ordre ne compte pas)
   var FIGS = [
-    ['👑', 'Brelan', 'trois valeurs identiques', '+1 action et tous tes coups sont critiques ce tour.'],
-    ['✨', 'Suite', 'trois valeurs qui se suivent', 'Ton prochain coup est critique.'],
-    ['🍀', 'Sept chanceux', 'total de 7', 'Ce tour, tes pouvoirs acceptent n’importe quel dé.'],
-    ['💥', 'Coup fort', 'total de 15 ou plus', '+40 % dégâts ce tour.'],
-    ['🛡️', 'Prudence', 'total de 6 ou moins', '-40 % dégâts subis jusqu’à ton prochain tour.']
+    ['🎲', 'Paire', 'deux valeurs identiques', '+30 % de dégâts ce tour.'],
+    ['✨', 'Suite', 'trois valeurs qui se suivent (2-3-4)', '+1 action ⚡ et ton prochain coup est critique.'],
+    ['👑', 'Brelan', 'trois valeurs identiques', '+1 action ⚡ et tous tes coups sont critiques ce tour.']
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '3.9';
+  var VERSION = '4.0';
   var NEWS = [
-    ['🎲', 'Un plateau de dés repensé', 'Dés taillés en pixel art avec l’icône de leur type, table sertie de fer, outils Sac / Relance / Retourne lisibles, et une ligne d’aide qui te dit à chaque instant quoi faire avec le dé choisi.'],
+    ['🎲', 'Des combats plus simples', 'La table de 9 cases disparaît. Touche un dé de ta main, retouche-le : il agit tout de suite. Ou glisse-le dans un pouvoir. Plus de cases ×2, +2 ni de voisins à calculer.'],
+    ['✨', 'Des figures qui se lisent', 'Les 3 premiers dés joués dans un tour forment une figure, d’après le chiffre affiché sur chacun : Paire, Suite (2-3-4, dans n’importe quel ordre) ou Brelan. Le cadre « Ce tour » les montre en direct.'],
+    ['🎭', 'Des Mystères qui parlent', 'Chaque salle Mystère devient une vraie scène : tu rencontres le personnage (le pendu, l’ombre marchande, ton propre reflet...), il te parle, et tu choisis ta réponse dans la bulle.'],
+    ['🔊', 'Des voix qui tapent', 'Quand un personnage parle, son texte s’écrit avec un petit bruit de machine à écrire, plus grave ou plus aigu selon qui parle. Dans l’histoire aussi.'],
+    ['🗝️', 'Des icônes propres à Morvane', 'Les icônes qui imitaient encore des objets modernes sont réinventées : la sauvegarde devient un registre scellé de cire, le combat automatique un pantin à fils, les réglages un astrolabe, les choix d’événement deux pierres runiques, les stats des encoches sur un os, la peste un masque de médecin...'],
+    ['🎨', 'Plus aucun emoji', 'Toute l’interface passe au pixel art : monnaies, onglets, salles, objets, artefacts, autel, états, réglages, aide... chaque ancien emoji est remplacé par une icône dessinée dans le style du jeu.'],
+    ['🎨', 'Des passifs en pixel art', 'Les 78 aubaines et les 15 pactes ont chacun leur icône dessinée dans le style du jeu. Les aubaines qui renforcent un pouvoir reprennent son icône, marquée d’une flèche dorée.'],
+    ['🎲', 'Un plateau de dés repensé', 'Dés taillés en pixel art avec l’icône de leur type, outils Sac / Relance / Retourne lisibles, et une ligne d’aide qui te dit à chaque instant quoi faire avec le dé choisi.'],
     ['🌟', 'Des passifs réinventés', 'Chaque héros a un nouveau passif lié aux dés ou au tour : les blocages d’Aldric renforcent ta main, les 1 de Corvin deviennent des 6, les serviteurs de Mortis renforcent ses pouvoirs, Hrolf gagne une 3e action sous 30 % PV...'],
     ['🕯️', 'Des pouvoirs propres à Morvane', 'Les 8 héros ont des pouvoirs entièrement repensés : Écu du Parjure, Bûcher du Roi Creux, Minuit Moins Trois, Exhumation, Ronde des Loups, Psaume Inversé, Carreau de Gibet, Cent Cendres... chacun avec sa propre icône.'],
     ['🎲', 'Des pouvoirs qui jouent avec les dés', 'Certains pouvoirs changent tes dés (un petit dé devient un 6, les Lames deviennent des Braises, toute ta main se retourne), te font piocher, te rendent une action ou ouvrent un point faible.'],
@@ -405,16 +410,14 @@ var DATA = (function () {
     ['💪', 'La valeur compte', 'Plus le dé glissé est fort, plus le pouvoir frappe : 5 = 100 %, 6 = 110 %, 1 = 60 %. Les pouvoirs d’appui se contentent d’un petit dé.'],
     ['⇅', 'Retourner un dé', 'Une fois par tour, retourne un dé sur sa face opposée : 1↔6, 2↔5, 3↔4. De quoi remplir la condition qui te manque.'],
     ['🔥', 'Dés enflammés et gelés', 'Embrasé, un de tes dés prend feu : le jouer coûte 3 % de tes PV. Entravé, ton meilleur dé gèle et tombe à 1.'],
-    ['⚔️', 'Deux actions pour frapper', 'Tes 2 actions ⚡ servent à Frapper, Parer, viser un point faible ou renvoyer un crâne. À toi de choisir : un dé sur la table, ou dans un pouvoir ?'],
+    ['⚔️', 'Deux actions pour frapper', 'Tes 2 actions ⚡ servent à Frapper, Parer, viser un point faible ou renvoyer un crâne. À toi de choisir : jouer un dé, ou le glisser dans un pouvoir ?'],
     ['📖', 'Une histoire en chapitres', 'Un prologue, six chapitres et un épilogue : découvre ce qui est arrivé à Morvane, à son roi, et qui est la Veilleuse. Les scènes se jouent pendant ta descente.'],
     ['🕯️', 'La Chronique', 'Au sanctuaire, la carte 📖 Chronique garde toutes les scènes découvertes. Touche un chapitre pour le relire.'],
     ['🏞️', 'Des décors enfin visibles', 'L’arène montre maintenant les voûtes, les vitraux, la forêt et les forges, avec des accessoires propres à chaque zone.'],
     ['🔥', 'Sanctuaire et écran-titre', 'La chapelle en ruine, la dernière flamme, la Veilleuse au coin du feu, et la lune rouge sur Morvane.'],
     ['♟️', 'Plateau illustré', 'Chaque plateau porte le décor de sa zone, et le gardien t’attend sur la dernière case.'],
-    ['🎒', 'Sac de dés', 'Chaque héros a son sac de dés : ⚔️ Lame, 🛡️ Garde, ❤️ Sève, ✨ Écho... Tu en pioches 3 par tour et tu les poses sur la table.'],
-    ['🔲', 'Table de dés', 'Neuf cases. Un dé posé agit tout de suite. ✨ Écho renforce ses voisins, 🪞 Miroir copie son voisin. Les cases ×2 et +2 changent tout.'],
-    ['🎲', 'Figures', 'Trois dés alignés forment une figure : Brelan (+1 action, coups critiques), Suite, Sept chanceux, Coup fort, Prudence.'],
-    ['👁️', 'Intentions', 'Au-dessus de chaque ennemi : ce qu’il fera à son tour, et combien ça fera mal. Pose tes 🛡️ au bon moment.'],
+    ['🎒', 'Sac de dés', 'Chaque héros a son sac de dés : ⚔️ Lame, 🛡️ Garde, ❤️ Sève, ✨ Écho... Tu en pioches 3 par tour et tu les joues depuis ta main.'],
+    ['👁️', 'Intentions', 'Au-dessus de chaque ennemi : ce qu’il fera à son tour, et combien ça fera mal. Joue tes 🛡️ au bon moment.'],
     ['🎁', 'Nouveaux dés', 'Élites, boss et un combat sur trois offrent un dé : ajoute-le au sac, cisèle un dé ou brise-en un.'],
     ['🏅', 'Gloire', 'Chaque descente, même ratée, donne un score qui remplit la piste de Gloire : Cendres, essence, objets épiques et légendaires, sans fin.'],
     ['🏆', 'Score et record', 'Ton score s’affiche à la fin de chaque descente. Bats ton record.'],
@@ -519,7 +522,7 @@ var DATA = (function () {
     ['kills', 40, 'Tue 40 ennemis'], ['kills', 90, 'Tue 90 ennemis'], ['elites', 3, 'Vaincs 3 élites'], ['bosses', 1, 'Vaincs un boss'],
     ['chests', 2, 'Ouvre 2 coffres'], ['items', 8, 'Trouve 8 objets'], ['runs', 3, 'Lance 3 descentes'], ['upgrades', 3, 'Améliore 3 fois un objet'],
     ['weak', 10, 'Touche 10 points faibles'], ['parry', 3, 'Réussis 3 parades parfaites'], ['ult', 5, 'Lance 5 ultimes'], ['fusions', 2, 'Fusionne des objets 2 fois'], ['arenes', 1, 'Gagne une arène'], ['evos', 2, 'Choisis 2 éveils de pouvoir'],
-    ['doubles', 4, 'Forme 4 figures sur la table de dés'], ['orbs', 15, 'Ramasse 15 orbes'], ['deflect', 6, 'Renvoie 6 projectiles'], ['minis', 2, 'Réussis 2 épreuves (forge, runes, crochetage)'], ['primes', 3, 'Remplis 3 primes']
+    ['doubles', 4, 'Forme 4 figures avec tes dés'], ['orbs', 15, 'Ramasse 15 orbes'], ['deflect', 6, 'Renvoie 6 projectiles'], ['minis', 2, 'Réussis 2 épreuves (forge, runes, crochetage)'], ['primes', 3, 'Remplis 3 primes']
   ];
 
   // ---------- Zones et ennemis ----------
@@ -724,7 +727,7 @@ var DATA = (function () {
     { id: 'b_or', name: 'Doigts crochus', icon: '💰', rar: 0, max: 5, desc: "+30 % d'or et de Cendres.", mods: { gf: 30 } },
     { id: 'b_arcane', name: 'Savoir interdit', icon: '📖', rar: 0, max: 8, desc: '+18 % puissance des pouvoirs.', mods: { pow: 18 } },
     { id: 'b_des1', name: 'Dé pipé', icon: '🎲', rar: 1, max: 2, desc: '+1 relance de ta main de dés par combat.', mods: { diceRerolls: 1 } },
-    { id: 'b_des2', name: 'Main lourde', icon: '🎰', rar: 2, max: 2, desc: 'Les figures Coup fort et Prudence sont 50 % plus puissantes.', mods: { diceP: 50 } },
+    { id: 'b_des2', name: 'Main lourde', icon: '🎰', rar: 2, max: 2, desc: 'La Paire donne 50 % de dégâts en plus.', mods: { diceP: 50 } },
     { id: 'b_des3', name: 'Grande main', icon: '🖐️', rar: 3, max: 1, desc: 'Tu pioches 1 dé de plus à chaque tour.', mods: { diceHand: 1 } },
     { id: 'b_des4', name: 'Dés lestés', icon: '⚖️', rar: 2, max: 2, desc: 'Tous tes dés valent 1 point de plus.', mods: { diceV: 1 } },
     { id: 'b_regen', name: 'Chair tenace', icon: '🌿', rar: 0, max: 5, desc: 'Régénère +0,5 % PV par seconde.', mods: { regen: 0.5 } },
@@ -889,70 +892,70 @@ var DATA = (function () {
     { id: 'h_orbs', name: 'Glaneur', desc: 'Ramasser 100 orbes', c: ['orbs', 100], cendres: 400 },
     { id: 'h_deflect', name: 'Retour à l’envoyeur', desc: 'Renvoyer 50 projectiles', c: ['deflect', 50], cendres: 600 },
     { id: 'h_minis', name: 'Doigts d’or', desc: 'Réussir 15 épreuves (forge, runes, crochetage)', c: ['minis', 15], cendres: 800 },
-    { id: 'h_dbl', name: 'Veinard', desc: 'Former 50 figures sur la table de dés', c: ['doubles', 50], cendres: 500 },
+    { id: 'h_dbl', name: 'Veinard', desc: 'Former 50 figures avec tes dés', c: ['doubles', 50], cendres: 500 },
     { id: 'h_score', name: 'Légende', desc: 'Atteindre 300 de score en une descente', c: ['bestScore', 300], cendres: 1500 },
     { id: 'h_primes', name: 'Chasseur de primes', desc: 'Remplir 30 primes', c: ['primes', 30], cendres: 1000 }
   ];
 
   // ---------- Événements ----------
   var EVENTS = [
-    { id: 'e_puits', title: 'Le puits qui murmure', text: 'Une voix monte du fond. Elle connaît ton nom.',
+    { id: 'e_puits', npc: { spr: 'noye', name: 'La voix du puits', voice: 140, wave: 'triangle' }, say: 'Je te connais. Tu es descendu plus bas que les autres… Jette-moi quelque chose. Ou bois. J’ai si soif de compagnie.', title: 'Le puits qui murmure', text: 'Une voix monte du fond. Elle connaît ton nom.',
       opts: [{ t: 'Jeter 40 or', need: { gold: 40 }, fx: { gold: -40, boon: 1 }, r: 'Le puits te rend une aubaine.' },
         { t: 'Boire son eau', fx: { healPct: 35, curse: 'takenP', curseV: 6 }, r: "+35 % PV... mais l'eau était noire (+6 % dégâts subis)." },
         { t: 'Passer ton chemin', fx: {}, r: 'La voix rit derrière toi.' }] },
-    { id: 'e_pendu', title: "L'homme pendu", text: "Il se balance encore. Ses poches sont pleines.",
+    { id: 'e_pendu', npc: { spr: 'pendu', name: 'L’homme pendu', voice: 110 }, say: 'Hhh… Tu as l’air pressé. Moi, j’ai tout mon temps. Mes poches sont pleines, tu sais. Approche.', title: "L'homme pendu", text: "Il se balance encore. Ses poches sont pleines.",
       opts: [{ t: 'Fouiller ses poches', fx: { gold: 60, hpPct: -12 }, r: '+60 or. Il te griffe en se réveillant (-12 % PV).' },
         { t: 'Le décrocher', fx: { boon: 1, hpPct: -6 }, r: 'Reconnaissant, son fantôme te bénit.' },
         { t: 'Partir', fx: {}, r: 'La corde grince.' }] },
-    { id: 'e_statue', title: 'La sainte sans mains', text: 'Une statue pleure du sang dans une coupe.',
+    { id: 'e_statue', npc: { spr: 'ange', name: 'La sainte sans mains', voice: 260, wave: 'triangle' }, say: 'Bois, enfant. Ou trempe ta lame. Ou prie. Je n’ai plus de mains pour te bénir autrement.', title: 'La sainte sans mains', text: 'Une statue pleure du sang dans une coupe.',
       opts: [{ t: 'Boire la coupe', fx: { maxHpP: 10, healPct: 15 }, r: '+10 % PV max pour cette descente.' },
         { t: 'Tremper ta lame', fx: { atkP: 10 }, r: '+10 % attaque pour cette descente.' },
         { t: 'Prier', fx: { healPct: 30 }, r: 'Tu te sens mieux (+30 % PV).' }] },
-    { id: 'e_joueur', title: 'Le joueur de dés', text: 'Un squelette en haillons secoue un gobelet. « Double ou rien ? »',
+    { id: 'e_joueur', npc: { spr: 'squelette', name: 'Le joueur de dés', voice: 180 }, say: 'Double ou rien, l’ami ! Les morts s’ennuient, tu comprends. Et les dés ne mentent jamais. Presque jamais.', title: 'Le joueur de dés', text: 'Un squelette en haillons secoue un gobelet. « Double ou rien ? »',
       opts: [{ t: 'Parier la moitié de ton or', fx: { gamble: 1 }, r: '' },
         { t: 'Refuser', fx: {}, r: 'Il hausse ses épaules. Enfin, ce qu’il en reste.' }] },
-    { id: 'e_forge', title: 'La forge abandonnée', text: 'Les braises sont encore chaudes. Un marteau t’attend.',
+    { id: 'e_forge', npc: { spr: 'forge_esprit', name: 'L’esprit de la forge', voice: 90, wave: 'sawtooth' }, say: 'Le dernier forgeron est parti sans éteindre. Prends le marteau. Le métal se souvient de ceux qui saignent pour lui.', title: 'La forge abandonnée', text: 'Les braises sont encore chaudes. Un marteau t’attend.',
       opts: [{ t: 'Forger (-10 % PV)', fx: { hpPct: -10, item: 2 }, r: 'Tu repars avec une pièce de qualité.' },
         { t: 'Te réchauffer', fx: { healPct: 20 }, r: '+20 % PV.' }] },
-    { id: 'e_marche', title: "Le marché des âmes", text: 'Une ombre te tend un contrat. « Un peu de toi contre beaucoup de moi. »',
+    { id: 'e_marche', npc: { spr: 'ombre', name: 'L’ombre marchande', voice: 100, wave: 'sawtooth', foe: 1 }, say: 'Signe ici. Une goutte suffit. Un peu de toi contre beaucoup de moi : une bonne affaire. Pour l’un de nous deux.', title: "Le marché des âmes", text: 'Une ombre te tend un contrat. « Un peu de toi contre beaucoup de moi. »',
       opts: [{ t: 'Signer (-20 % PV max)', fx: { maxHpP: -20, artifact: 1 }, r: 'Un artefact apparaît dans ta main.' },
         { t: 'Déchirer le contrat', fx: { gold: 25 }, r: 'Des pièces tombent du papier.' }] },
-    { id: 'e_miroir', title: 'Le miroir fêlé', text: 'Ton reflet ne bouge pas en même temps que toi. Il te tend la main.',
+    { id: 'e_miroir', npc: { spr: 'H', name: 'Ton reflet', voice: 200, wave: 'triangle' }, say: 'Tu es fatigué. Moi non. Donne-moi la main, et je porterai un peu de ta charge.', title: 'Le miroir fêlé', text: 'Ton reflet ne bouge pas en même temps que toi. Il te tend la main.',
       opts: [{ t: 'Lui serrer la main', fx: { boon: 1, curse: 'takenP', curseV: 5 }, r: 'Il te donne une aubaine... et garde un peu de toi (+5 % dégâts subis).' },
         { t: 'Briser le miroir', fx: { gold: 45 }, r: 'Sept ans de malheur. Et 45 or dans le cadre.' },
         { t: 'Détourner les yeux', fx: {}, r: 'Il te regarde partir.' }] },
-    { id: 'e_enfant', title: "L'enfant qui chante", text: 'Une petite voix fredonne dans le noir. Il n’y a pas d’enfants ici.',
+    { id: 'e_enfant', npc: { spr: 'spectre', name: 'L’enfant qui chante', voice: 340, wave: 'triangle' }, say: 'Dors, petit roi, dors… la cloche ne sonne plus… Tu as une pièce ? Je chante mieux avec une pièce.', title: "L'enfant qui chante", text: 'Une petite voix fredonne dans le noir. Il n’y a pas d’enfants ici.',
       opts: [{ t: 'Lui donner 30 or', need: { gold: 30 }, fx: { gold: -30, healPct: 50 }, r: 'La chanson te répare (+50 % PV).' },
         { t: 'Suivre la voix', fx: { ambush: 1 }, r: '' },
         { t: 'Boucher tes oreilles', fx: {}, r: 'La chanson s’arrête net.' }] },
-    { id: 'e_alchimiste', title: "L'alchimiste aveugle", text: '« Rouge ou verte ? Je ne sais plus laquelle tue. »',
+    { id: 'e_alchimiste', npc: { spr: 'sorciere', name: 'L’alchimiste aveugle', voice: 210 }, say: 'L’une rend fort, l’autre rend… autre. Je ne sais plus laquelle. Mes yeux sont dans un bocal, quelque part.', title: "L'alchimiste aveugle", text: '« Rouge ou verte ? Je ne sais plus laquelle tue. »',
       opts: [{ t: 'Boire la rouge', fx: { atkP: 12, hpPct: -15 }, r: 'Tes veines brûlent : +12 % attaque, -15 % PV.' },
         { t: 'Boire la verte', fx: { maxHpP: 12 }, r: 'Ta peau durcit : +12 % PV max.' },
         { t: 'Refuser poliment', fx: {}, r: '« Sage. Ou lâche. »' }] },
-    { id: 'e_biblio', title: 'La bibliothèque noyée', text: 'Des livres gonflés d’eau. Un seul est sec. Un autre est en or.',
+    { id: 'e_biblio', npc: { spr: 'liche', name: 'Le bibliothécaire', voice: 120, wave: 'triangle' }, say: 'Chut. Les livres dorment. Celui qui est sec, tu peux le lire. Celui qui est en or… est à moi.', title: 'La bibliothèque noyée', text: 'Des livres gonflés d’eau. Un seul est sec. Un autre est en or.',
       opts: [{ t: 'Lire le livre sec', fx: { boon: 1, hpPct: -8 }, r: 'Les mots te blessent, mais tu apprends une aubaine.' },
         { t: 'Voler le livre en or', fx: { gold: 70, curse: 'takenP', curseV: 4 }, r: '+70 or. Quelque chose a remarqué (+4 % dégâts subis).' },
         { t: 'Ne toucher à rien', fx: {}, r: 'Les pages se tournent toutes seules derrière toi.' }] },
-    { id: 'e_cranes', title: 'Le mur de crânes', text: 'L’un d’eux claque des dents. « Une pièce pour un mort ? »',
+    { id: 'e_cranes', npc: { spr: 'squelette', name: 'Le crâne bavard', voice: 230 }, say: 'Une pièce pour un mort ? Une seule ! Je n’ai rien mangé depuis trois siècles. Façon de parler.', title: 'Le mur de crânes', text: 'L’un d’eux claque des dents. « Une pièce pour un mort ? »',
       opts: [{ t: 'Lui donner 50 or', need: { gold: 50 }, fx: { gold: -50, artifact: 1 }, r: 'Il crache un artefact.' },
         { t: 'Lui arracher une dent', fx: { item: 2, hpPct: -10 }, r: 'Il te mord (-10 % PV), mais sa dent valait le coup.' },
         { t: 'Passer', fx: {}, r: 'Mille orbites te suivent.' }] },
-    { id: 'e_mourant', title: 'Le chevalier mourant', text: 'Adossé au mur, il tient encore son épée. « Finis-en. Ou aide-moi. »',
+    { id: 'e_mourant', npc: { spr: 'paladin', name: 'Le chevalier mourant', voice: 120 }, say: 'J’étais de la garde, moi aussi. Je n’ai pas su le coucher… Finis-en. Ou aide-moi à me relever.', title: 'Le chevalier mourant', text: 'Adossé au mur, il tient encore son épée. « Finis-en. Ou aide-moi. »',
       opts: [{ t: 'Abréger ses souffrances', fx: { cendres: 1 }, r: 'Il te remercie d’un souffle.' },
         { t: 'Panser ses plaies', fx: { hpPct: -12, boon: 1 }, r: 'Tu y laisses de tes forces. Il t’enseigne une aubaine.' },
         { t: 'Prendre son équipement', fx: { item: 1 }, r: 'Il ne proteste pas longtemps.' }] },
-    { id: 'e_tombe', title: 'La tombe ouverte', text: 'Quelqu’un a creusé ici il y a peu. Ou quelque chose en est sorti.',
+    { id: 'e_tombe', npc: { spr: 'tombe', name: '' }, say: '', narr: 'La terre est fraîche. Des griffures montent le long des parois, de l’intérieur.', title: 'La tombe ouverte', text: 'Quelqu’un a creusé ici il y a peu. Ou quelque chose en est sorti.',
       opts: [{ t: 'Descendre fouiller', fx: { ambush: 1 }, r: '' },
         { t: 'Reboucher par respect', fx: { cendres: 1 }, r: 'Les morts te remercient en Cendres.' }] },
-    { id: 'e_maitre', title: 'Le maître d’armes', text: 'Un fantôme en armure répète le même geste depuis cent ans. Il s’arrête et te regarde.',
+    { id: 'e_maitre', npc: { spr: 'armure', name: 'Le maître d’armes', voice: 95 }, say: 'Ta garde est basse. Ton pied est faux. Tu respires comme un bœuf. Veux-tu apprendre, ou mourir ignorant ?', title: 'Le maître d’armes', text: 'Un fantôme en armure répète le même geste depuis cent ans. Il s’arrête et te regarde.',
       opts: [{ t: 'S’entraîner avec lui (-15 % PV)', fx: { hpPct: -15, evo: 1 }, r: 'Il te corrige à coups de plat de lame. Un de tes pouvoirs s’éveille.' },
         { t: 'Lui payer une leçon (60 or)', need: { gold: 60 }, fx: { gold: -60, boon: 1 }, r: 'Il t’enseigne une aubaine.' },
         { t: 'Saluer et passer', fx: {}, r: 'Il reprend son geste.' }] },
-    { id: 'e_fontaine', title: 'La fontaine à l’envers', text: 'L’eau coule vers le plafond. Au fond du bassin, quelque chose brille.',
+    { id: 'e_fontaine', npc: { spr: 'dryade', name: 'La dame de la fontaine', voice: 280, wave: 'triangle' }, say: 'Ici l’eau tombe vers le ciel, et les vœux remontent. Bois, plonge, ou emporte un peu de moi.', title: 'La fontaine à l’envers', text: 'L’eau coule vers le plafond. Au fond du bassin, quelque chose brille.',
       opts: [{ t: 'Boire', fx: { healPct: 40 }, r: 'Elle a un goût de pluie. +40 % PV.' },
         { t: 'Plonger le bras', fx: { hpPct: -10, artifact: 1 }, r: 'Ça mord (-10 % PV), mais tu ressors quelque chose.' },
         { t: 'Remplir une fiole', fx: { potion: 1 }, r: '+1 fiole.' }] },
-    { id: 'e_ossements', title: 'Le tas d’ossements', text: 'Des os bien rangés, par taille. Quelqu’un tient à l’ordre, ici.',
+    { id: 'e_ossements', npc: { spr: 'goule', name: 'Le gardien des os', voice: 130, foe: 1 }, say: 'Ne… dérange… rien. Chaque os… à sa place. Chaque crâne… compté.', title: 'Le tas d’ossements', text: 'Des os bien rangés, par taille. Quelqu’un tient à l’ordre, ici.',
       opts: [{ t: 'Fouiller sans rien ranger', fx: { item: 2, curse: 'takenP', curseV: 4 }, r: 'Tu trouves un objet. Quelqu’un est vexé (+4 % dégâts subis).' },
         { t: 'Ranger les os tombés', fx: { cendres: 1, healPct: 10 }, r: 'Un merci glacé te traverse (+10 % PV).' },
         { t: 'Passer', fx: {}, r: 'Rien ne bouge.' }] }

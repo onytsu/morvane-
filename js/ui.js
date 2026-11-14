@@ -10,6 +10,41 @@ var UI = (function () {
     if (typeof Sprites === 'undefined') return '<span class="emo">👤</span>';
     return '<img class="px ' + (cls || '') + '" src="' + Sprites.url(id) + '" alt="" draggable="false">';
   }
+  // Emojis -> icônes pixel : chaque emoji écrit dans la page est remplacé à l'affichage par son icône (Sprites.emo)
+  var emoRe = null;
+  function emoNode(t) {
+    var v = t.nodeValue; if (!v || v.length > 4000) return;
+    if (!emoRe) emoRe = new RegExp('(' + Object.keys(Sprites.emo).join('|') + ')\uFE0F?', 'g');
+    emoRe.lastIndex = 0; if (!emoRe.test(v)) return;
+    var f = document.createDocumentFragment(), last = 0, m; emoRe.lastIndex = 0;
+    while ((m = emoRe.exec(v))) {
+      if (m.index > last) f.appendChild(document.createTextNode(v.slice(last, m.index)));
+      var im = document.createElement('img'); im.className = 'emo px'; im.alt = ''; im.draggable = false; im.src = Sprites.url(Sprites.emo[m[1]]);
+      f.appendChild(im); last = m.index + m[0].length;
+    }
+    if (last < v.length) f.appendChild(document.createTextNode(v.slice(last)));
+    if (t.parentNode) t.parentNode.replaceChild(f, t);
+  }
+  function emoScan(n) {
+    if (n.nodeType === 3) return emoNode(n);
+    if (n.nodeType !== 1 || /^(SCRIPT|STYLE|TEXTAREA|INPUT|CANVAS)$/.test(n.tagName)) return;
+    var w = document.createTreeWalker(n, NodeFilter.SHOW_TEXT), list = [], t;
+    while ((t = w.nextNode())) list.push(t);
+    list.forEach(emoNode);
+  }
+  function emoWatch(root) {
+    if (typeof Sprites === 'undefined' || !Sprites.emo || !root || typeof MutationObserver === 'undefined') return;
+    emoScan(root);
+    new MutationObserver(function (ms) {
+      for (var i = 0; i < ms.length; i++) {
+        var m = ms[i];
+        if (m.type === 'characterData') emoNode(m.target);
+        else for (var j = 0; j < m.addedNodes.length; j++) emoScan(m.addedNodes[j]);
+      }
+    }).observe(root, { childList: true, subtree: true, characterData: true });
+  }
+  // écrit un texte seulement s'il a changé (le texte affiché ne contient plus les emojis, devenus des images)
+  function setTxt(el, s) { if (el && el._raw !== s) { el._raw = s; el.textContent = s; } }
   function fmtMod(k, v) {
     var m = D.MODS[k]; if (!m || !v) return null;
     var a = Math.abs(v), num;
@@ -398,7 +433,7 @@ var UI = (function () {
     var h = '<div class="card small"><b>' + hero.name + '</b> porte <b class="gold">' + hs.pacts.length + '/' + slots + '</b> pacte' + (slots > 1 ? 's' : '') + '. <span class="dim">Un emplacement de plus à Maîtrise 4 et 8. Les pactes se gagnent avec les Hauts faits.</span></div>';
     D.PACTS.forEach(function (p) {
       var own = S().pacts.indexOf(p.id) >= 0, on = hs.pacts.indexOf(p.id) >= 0;
-      h += '<button class="li' + (on ? ' on' : '') + (own ? '' : ' locked') + '" style="width:100%;text-align:left" data-act="pact" data-id="' + p.id + '"><div class="ic">' + (own ? p.icon : '🔒') + '</div><div class="grow"><b>' + p.name + '</b><div class="small dim">' + p.desc + '</div>' + (own ? '' : '<div class="tiny gold">' + p.how + '</div>') + '</div>' + (on ? '<span class="gold">✔</span>' : '') + '</button>';
+      h += '<button class="li' + (on ? ' on' : '') + (own ? '' : ' locked') + '" style="width:100%;text-align:left" data-act="pact" data-id="' + p.id + '"><div class="ic">' + (own ? p.icon : spr('i_lock', 'ski')) + '</div><div class="grow"><b>' + p.name + '</b><div class="small dim">' + p.desc + '</div>' + (own ? '' : '<div class="tiny gold">' + p.how + '</div>') + '</div>' + (on ? '<span class="gold">✔</span>' : '') + '</button>';
     });
     h += '<h3 style="margin:14px 0 4px">🐾 Familiers</h3><div class="small dim" style="margin-bottom:8px">Tue assez de monstres d’une espèce pour en apprivoiser un. Un seul t’accompagne à la fois, pour tous tes héros.</div>';
     D.FAMILIARS.forEach(function (f) {
@@ -492,5 +527,5 @@ var UI = (function () {
   function boot() { E.load(); applySettings(); st.view = S().hero; splash(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else setTimeout(boot, 0);
 
-  return { ACT: ACT, $: $, S: S, spr: spr, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, famHtml: famHtml, vib: vib, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod, skillSheet: skillSheet, foeSheet: foeSheet, tagsHtml: tagsHtml, abIcons: abIcons };
+  return { ACT: ACT, $: $, S: S, spr: spr, emoWatch: emoWatch, setTxt: setTxt, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, famHtml: famHtml, vib: vib, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod, skillSheet: skillSheet, foeSheet: foeSheet, tagsHtml: tagsHtml, abIcons: abIcons };
 })();

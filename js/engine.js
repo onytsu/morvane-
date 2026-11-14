@@ -763,35 +763,30 @@
     r.group.forEach(function (k) { var e = mkEnemy(run, k, n >= 3 ? 0.8 : 1); e.id = c.nextId++; if (st.vulnStart) e.st.vuln = st.vulnStart; if (c.cond === 'fragile') e.st.vuln = Math.max(e.st.vuln || 0, 8); c.enemies.push(e); });
     run.combat = c;
     c.turn = 'hero'; c.round = 1; c.qi = 0; c.rerolls = 1 + (st.diceRerolls || 0);
-    // table de dés : 9 cases, une case ×2 et une case +2 ; un boss en scelle une
-    var cs = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8]); c.grid = []; for (var gi = 0; gi < 9; gi++) c.grid.push({ r: null, d: null });
-    c.grid[cs[0]].r = 'x2'; c.grid[cs[1]].r = 'p2'; if (c.boss) c.grid[cs[2]].r = 'seal';
     c.pile = shuffle(run.bag.map(function (d, i) { return i; })); c.disc = []; c.hand = []; c.dfx = {};
     c.events.push({ k: r.type === 'boss' ? 'boss' : 'start' }); c.events.push({ k: 'pturn', n: 1 }); drawTurn(run, c);
   };
   // ----- Tour par tour. Un tour vaut ROUND secondes de l'ancien temps réel : les durées et recharges restent écrites en secondes. -----
   var ROUND = 2, AP = 2; E.ROUND = ROUND; E.AP = AP;
   E.turns = function (sec) { return Math.max(1, Math.ceil(sec / ROUND - 1e-9)); };
-  // ----- Dés de combat (v3.2). Le sac de dés du héros : à chaque tour il en pioche, les lance, et les pose sur une table de 9 cases.
-  // Un dé posé agit tout de suite. Les dés restent sur la table jusqu'à ce qu'elle soit pleine : elle est alors purgée au tour suivant.
-  var LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
-  var ADJ = [[1, 3], [0, 2, 4], [1, 5], [0, 4, 6], [1, 3, 5, 7], [2, 4, 8], [3, 7], [4, 6, 8], [5, 7]];
-  E.LINES = LINES; E.ADJ = ADJ;
+  // ----- Dés de combat (v4.0). Le sac de dés du héros : à chaque tour il en pioche 3, les lance, et les joue depuis sa main.
+  // Un dé joué agit tout de suite et ne coûte aucune action. Les 3 premiers dés joués d'un tour (main ou pouvoir) forment une figure.
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function startBag(heroId) { return (D.BAGS[heroId] || D.BAGS.chevalier).map(function (t) { return { t: t, f: [1, 2, 3, 4, 5, 6] }; }); }
   E.startBag = startBag;
+  var VMAX = 12;
   function rollDie(run, bi) { var d = run.bag[bi], f = pick(d.f); if (run.hero === 'assassin' && f === 1) return { bi: bi, t: d.t, v: 6 + (run.stats.diceV || 0), night: true }; return { bi: bi, t: d.t, v: f + (run.stats.diceV || 0) }; }
   // passifs : +n au plus petit dé de la main
-  function boostLow(c, n) { if (!c.hand.length) return false; var lo = c.hand.reduce(function (a, b) { return b.v < a.v ? b : a; }); lo.v = Math.min(9, lo.v + n); lo.ice = false; return true; }
+  function boostLow(c, n) { if (!c.hand.length) return false; var lo = c.hand.reduce(function (a, b) { return b.v < a.v ? b : a; }); lo.v = Math.min(VMAX, lo.v + n); lo.ice = false; return true; }
   // pioche un dé de plus (pouvoirs qui remplissent la main)
   function drawOne(run, c) { if (!c.pile.length) { c.pile = shuffle(c.disc); c.disc = []; } if (!c.pile.length) return; c.hand.push(rollDie(run, c.pile.pop())); ev(c, { k: 'draw', n: c.hand.length, again: 1 }); }
   // retourne un dé sur sa face opposée, sans dépenser de retournement
-  function flipValue(run, d) { var f = run.bag[d.bi].f, b = run.stats.diceV || 0; d.v = Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b)) + b; d.ice = false; }
-  function freeCells(c) { var o = []; c.grid.forEach(function (g, i) { if (!g.d && g.r !== 'seal') o.push(i); }); return o; }
+  function flipOf(run, d) { var f = run.bag[d.bi].f, b = run.stats.diceV || 0, k = d.bonus || 0; return Math.min(VMAX, Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b - k)) + b + k); }
+  function flipValue(run, d) { d.v = flipOf(run, d); d.ice = false; }
   function drawTurn(run, c) {
     var h = c.hero, n = 3 + (run.stats.diceHand || 0);
     c.dfx = {}; c.acted = false; h.ap = AP + (run.hero === 'berserker' && run.hp < run.stats.hp * 0.3 ? 1 : 0); c.weakRefund = false; c.foyerX2 = false;
-    if (!freeCells(c).length) { c.grid.forEach(function (g) { g.d = null; }); ug(run, 10); ev(c, { k: 'gclear' }); }
+    c.played = []; c.lastT = null;
     c.hand = [];
     while (c.hand.length < n) {
       if (!c.pile.length) { c.pile = shuffle(c.disc); c.disc = []; }
@@ -807,73 +802,67 @@
     if (run.hero === 'chevalier' && h.oath) { for (var oi = 0; oi < Math.min(3, h.oath); oi++) boostLow(c, 1); ev(c, { k: 'passive', txt: '+' + Math.min(3, h.oath) + ' Serment' }); h.oath = 0; }
     ev(c, { k: 'draw', n: c.hand.length });
   }
-  // Ce que vaudrait le dé `die` posé sur la case ci (sans rien changer). Le Miroir prend le type et la valeur du plus fort voisin.
-  function dieCalc(c, die, ci) {
-    var g = c.grid, t = die.t, v = die.v, mir = false, bonus = 0;
-    if (t === 'miroir') {
-      var best = null; mir = true;
-      ADJ[ci].forEach(function (a) { var d = g[a].d; if (d && d.t !== 'miroir' && (!best || d.v > best.v)) best = d; });
-      if (!best) return { t: 'miroir', v: 0, base: die.v, mir: true, bonus: 0 };
-      t = best.t; v = best.v;
-    }
-    ADJ[ci].forEach(function (a) { var d = g[a].d; if (d && d.t === 'echo') bonus += Math.ceil(d.v / 2); });
-    if (g[ci].r === 'x2') v *= 2; else if (g[ci].r === 'p2') v += 2;
-    if (S.run && S.run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2) v *= 2;
-    return { t: t, v: Math.min(20, v + bonus), base: die.v, mir: mir, bonus: bonus };
+  function foyerOn(run, c) { return run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2; }
+  // Ce que fera le dé `die` s'il est joué maintenant. Le Miroir prend le type du dernier dé joué ce tour (une Lame s'il n'y en a pas).
+  function dieCalc(run, c, die) {
+    var t = die.t, v = die.v, mir = false;
+    if (t === 'miroir') { mir = true; t = c.lastT || 'lame'; }
+    if (foyerOn(run, c)) v *= 2;
+    return { t: t, v: v, base: die.v, mir: mir };
   }
-  E.dieCalc = function (hi, ci) { var c = S.run && S.run.combat; return c && c.hand[hi] && c.grid[ci] && !c.grid[ci].d && c.grid[ci].r !== 'seal' ? dieCalc(c, c.hand[hi], ci) : null; };
+  E.dieCalc = function (hi) { var c = S.run && S.run.combat; return c && c.hand[hi] ? dieCalc(S.run, c, c.hand[hi]) : null; };
   function dieFx(run, c, t, v) {
     var st = run.stats, h = c.hero, e = target(c), n;
-    if (t === 'lame') { if (e) hit(run, c, e, 0.18 * v, { die: 1 }); }
-    else if (t === 'garde') { n = st.hp * 0.015 * v; h.shield = Math.min(st.hp * 0.6, h.shield + n); h.shieldT = Math.max(h.shieldT, ROUND); ev(c, { k: 'dshield', v: n }); }
-    else if (t === 'seve') heroHeal(run, c, st.hp * 0.006 * v);
-    else if (t === 'braise') { if (e) { hit(run, c, e, 0.12 * v, { die: 1 }); if (!e.dead) applyDot(run, e, 'burn'); } }
+    if (t === 'lame') { if (e) hit(run, c, e, 0.22 * v, { die: 1 }); }
+    else if (t === 'garde') { n = st.hp * 0.021 * v; h.shield = Math.min(st.hp * 0.6, h.shield + n); h.shieldT = Math.max(h.shieldT, ROUND); ev(c, { k: 'dshield', v: n }); }
+    else if (t === 'seve') heroHeal(run, c, st.hp * 0.007 * v);
+    else if (t === 'braise') { if (e) { hit(run, c, e, 0.15 * v, { die: 1 }); if (!e.dead) applyDot(run, e, 'burn'); } }
     else if (t === 'venin') { if (e) { for (n = Math.ceil(v / 2); n > 0; n--) applyDot(run, e, 'poison'); ev(c, { k: 'dpoison', id: e.id }); } }
-    else if (t === 'foudre') { alive(c).forEach(function (x) { hit(run, c, x, 0.09 * v, { die: 1 }); }); ev(c, { k: 'chain' }); }
+    else if (t === 'foudre') { alive(c).forEach(function (x) { hit(run, c, x, 0.1 * v, { die: 1 }); }); ev(c, { k: 'chain' }); }
     else if (t === 'astre') { ug(run, 2 * v); ev(c, { k: 'dult', v: 2 * v }); }
+    else if (t === 'echo') {
+      // Écho : les autres dés de ta main gagnent la moitié de sa valeur. Seul, il charge l'ultime.
+      var b = Math.ceil(v / 2);
+      if (c.hand.length) { c.hand.forEach(function (d) { var nv = Math.min(VMAX, d.v + b); d.bonus = (d.bonus || 0) + nv - d.v; d.v = nv; d.ice = false; d.up = 1; }); ev(c, { k: 'echoUp', v: b }); }
+      else { ug(run, 2 * v); ev(c, { k: 'dult', v: 2 * v }); }
+    }
   }
-  // Figure formée par trois valeurs alignées (ou null)
+  // Les trois figures, lues sur les valeurs des 3 premiers dés joués dans le tour (dans n'importe quel ordre)
   function figKind(vals, st) {
-    var a = vals.slice().sort(function (x, y) { return x - y; }), s = a[0] + a[1] + a[2], p = 1 + (st.diceP || 0) / 100, n;
-    if (a[0] === a[2]) return { id: 'jackpot', name: 'BRELAN', icon: '👑', ap: 1, crit: 1, desc: '+1 action et tous tes coups sont critiques ce tour.' };
-    if (a[1] === a[0] + 1 && a[2] === a[1] + 1) return { id: 'suite', name: 'SUITE', icon: '✨', nextCrit: 1, desc: 'Ton prochain coup est critique.' };
-    if (s === 7) return { id: 'sept', name: 'SEPT CHANCEUX', icon: '🍀', freeSkill: 1, desc: 'Ce tour, tes pouvoirs acceptent n’importe quel dé.' };
-    if (s >= 15) { n = Math.round(40 * p); return { id: 'fort', name: 'COUP FORT', icon: '💥', dmg: n, desc: '+' + n + ' % dégâts ce tour.' }; }
-    if (s <= 6) { n = Math.min(80, Math.round(40 * p)); return { id: 'garde', name: 'PRUDENCE', icon: '🛡️', guard: n, desc: '-' + n + ' % dégâts subis jusqu’à ton prochain tour.' }; }
+    if (vals.length < 3) return null;
+    var a = vals.slice(0, 3).sort(function (x, y) { return x - y; }), n;
+    if (a[0] === a[2]) return { id: 'jackpot', name: 'BRELAN', icon: '👑', ap: 1, crit: 1, desc: '+1 action ⚡ et tous tes coups sont critiques ce tour.' };
+    if (a[1] === a[0] + 1 && a[2] === a[1] + 1) return { id: 'suite', name: 'SUITE', icon: '✨', ap: 1, nextCrit: 1, desc: '+1 action ⚡ et ton prochain coup est critique.' };
+    if (a[0] === a[1] || a[1] === a[2]) { n = Math.round(30 * (1 + (st.diceP || 0) / 100)); return { id: 'paire', name: 'PAIRE', icon: '🎲', dmg: n, desc: '+' + n + ' % de dégâts ce tour.' }; }
     return null;
   }
-  function figure(run, c, L) {
-    var k = figKind(L.map(function (x) { return c.grid[x].d.base; }), run.stats), h = c.hero, f = c.dfx; if (!k) return;
-    if (k.ap) h.ap += k.ap; if (k.crit) f.crit = 1; if (k.freeSkill) f.freeSkill = 1;
-    if (k.dmg) f.dmg = Math.max(f.dmg || 0, k.dmg); if (k.guard) f.guard = Math.max(f.guard || 0, k.guard);
+  E.figKind = function (vals) { return figKind(vals, (S.run && S.run.stats) || {}); };
+  // Enregistre un dé joué ; au 3e dé du tour, la figure se déclenche (une seule fois par tour)
+  function noteDie(run, c, v) {
+    if (!c.played) c.played = [];
+    if (c.played.length >= 3) return;
+    c.played.push(v); if (c.played.length < 3) return;
+    var k = figKind(c.played, run.stats), h = c.hero, f = c.dfx;
+    if (!k) { ev(c, { k: 'figure', id: 'rien', name: 'Pas de figure', icon: '', desc: '', vals: c.played.slice() }); return; }
+    if (k.ap) h.ap += k.ap; if (k.crit) f.crit = 1;
+    if (k.dmg) f.dmg = Math.max(f.dmg || 0, k.dmg);
     if (k.nextCrit) h.nextCrit = true;
     f.id = k.id; f.name = k.name; f.icon = k.icon; f.desc = k.desc;
     S.stats.doubles = (S.stats.doubles || 0) + 1; run.dbl = (run.dbl || 0) + 1; bump(run, 'doubles');
-    ev(c, { k: 'figure', id: k.id, name: k.name, icon: k.icon, desc: k.desc, line: L });
+    ev(c, { k: 'figure', id: k.id, name: k.name, icon: k.icon, desc: k.desc, vals: c.played.slice() });
   }
-  // Figures que formerait le dé n° hi posé sur la case ci (pour l'aperçu)
-  E.figAt = function (hi, ci) {
-    var run = S.run, c = run && run.combat, out = []; if (!c || !c.hand[hi]) return out;
-    LINES.forEach(function (L) {
-      if (L.indexOf(ci) < 0) return; var vals = [], ok = true;
-      L.forEach(function (x) { if (x === ci) vals.push(c.hand[hi].v); else if (c.grid[x].d) vals.push(c.grid[x].d.base); else ok = false; });
-      var k = ok ? figKind(vals, run.stats) : null; if (k) out.push(k);
-    });
-    return out;
-  };
-  // Pose le dé n° hi de la main sur la case ci. Ne coûte aucune action.
-  E.placeDie = function (hi, ci) {
+  // Joue le dé n° hi de la main. Ne coûte aucune action.
+  E.playDie = function (hi) {
     var run = S.run, c = run && run.combat;
-    if (!c || c.over || c.turn !== 'hero' || !c.hand[hi] || !c.grid[ci] || c.grid[ci].d || c.grid[ci].r === 'seal') return false;
-    var die = c.hand.splice(hi, 1)[0], r = dieCalc(c, die, ci);
-    dieBurn(run, c, die);
-    c.grid[ci].d = { t: r.t, v: r.v, base: r.base, mir: r.mir }; c.disc.push(die.bi); c.acted = true;
-    if (run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2) { c.foyerX2 = true; ev(c, { k: 'passive', txt: 'Foyer ×2' }); }
+    if (!c || c.over || c.turn !== 'hero' || !c.hand[hi]) return false;
+    var die = c.hand.splice(hi, 1)[0], r = dieCalc(run, c, die);
+    dieBurn(run, c, die); c.disc.push(die.bi); c.acted = true;
+    if (foyerOn(run, c)) { c.foyerX2 = true; ev(c, { k: 'passive', txt: 'Foyer ×2' }); }
     if (run.hero === 'pretresse' && r.base % 2 === 0) heroHeal(run, c, run.stats.hp * 0.02);
     S.stats.dice = (S.stats.dice || 0) + 1;
-    ev(c, { k: 'place', ci: ci, t: r.t, v: r.v, mir: r.mir });
-    dieFx(run, c, r.t, r.v);
-    if (!c.over) LINES.forEach(function (L) { if (L.indexOf(ci) >= 0 && c.grid[L[0]].d && c.grid[L[1]].d && c.grid[L[2]].d) figure(run, c, L); });
+    ev(c, { k: 'place', t: r.t, v: r.v, mir: r.mir });
+    dieFx(run, c, r.t, r.v); c.lastT = r.t;
+    if (!c.over) noteDie(run, c, r.base);
     if (c.over) finish(run, c); else endIfDone(run, c);
     return true;
   };
@@ -882,7 +871,7 @@
   // Retourne le dé n° hi sur sa face opposée (1↔6, 2↔5, 3↔4) : une fois par tour, sans action
   E.flipDie = function (hi) {
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || !c.hand[hi] || !(c.flips > 0)) return false;
-    var d = c.hand[hi], f = run.bag[d.bi].f, b = run.stats.diceV || 0, nv = Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b)) + b;
+    var d = c.hand[hi], nv = flipOf(run, d);
     if (nv === d.v) return false;
     c.flips--; d.v = nv; d.ice = false; ev(c, { k: 'flip', hi: hi, v: nv }); return true;
   };
@@ -906,10 +895,10 @@
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || !c.hand.length || c.rerolls <= 0) return false;
     c.rerolls--; c.hand = c.hand.map(function (d) { return rollDie(run, d.bi); }); ev(c, { k: 'draw', n: c.hand.length, again: 1 }); return true;
   };
-  // Le tour du héros s'arrête quand il n'a plus d'action ET plus de dé à poser
+  // Le tour du héros s'arrête quand il n'a plus d'action ET plus de dé en main
   function endIfDone(run, c) {
     if (c.over || c.turn !== 'hero' || c.hero.ap > 0) return;
-    if (c.hand.length && alive(c).length && !c.nextWave && (freeCells(c).length || [0, 1, 2].some(function (i) { return c.hero.cds[i] <= 0 && E.skillUnlocked(run.hero, i) && bestDie(run, c, i) >= 0; }))) { ev(c, { k: 'handleft' }); return; }
+    if (c.hand.length && alive(c).length && !c.nextWave) { ev(c, { k: 'handleft' }); return; }
     beginFoes(run, c);
   }
   // Ce que l'ennemi e fera à son prochain tour : { k: atk|big|prep|stun|hidden|wait|flee, n, dmg, heal, shield, summon }
@@ -937,30 +926,23 @@
     return o;
   }
   E.intents = function () { var run = S.run, c = run && run.combat; return c ? c.enemies.map(function (e) { return intentOf(run, c, e); }) : []; };
-  // Pose automatiquement les dés de la main (mode AUTO et robot de test) : au plus offrant, case par case
-  var FIGW = { jackpot: 9, suite: 2, sept: 2.5, fort: 3, garde: 1.5 };
+  // Joue automatiquement les dés de la main (mode AUTO et robot de test) : l'Écho d'abord, le Miroir en dernier, puis au plus offrant
   function autoPlace(run, c) {
     var guard = 0, h = c.hero;
     while (c.hand.length && !c.over && c.turn === 'hero' && guard++ < 12) {
-      var free = freeCells(c), foes = alive(c), frac = run.hp / run.stats.hp, threat = -h.shield, best = null; if (!free.length || !foes.length) break;
+      var foes = alive(c), frac = run.hp / run.stats.hp, threat = -h.shield, best = null; if (!foes.length) break;
       foes.forEach(function (e) { var it = intentOf(run, c, e); threat += (it.dmg || 0) * (it.n || 1); });
       c.hand.forEach(function (die, hi) {
-        free.forEach(function (ci) {
-          var r = dieCalc(c, die, ci), w = 0;
-          if (r.t === 'lame') w = 1; else if (r.t === 'braise') w = 0.9; else if (r.t === 'venin') w = 0.8; else if (r.t === 'foudre') w = 0.45 * foes.length;
-          else if (r.t === 'garde') w = threat > 0 ? 0.9 : 0.15; else if (r.t === 'seve') w = frac > 0.95 ? 0.05 : frac < 0.5 ? 1.3 : 0.8;
-          else if (r.t === 'astre') w = (run.ult || 0) < 100 ? 0.6 : 0;
-          else if (r.t === 'echo') w = 0.25 * ADJ[ci].filter(function (a) { return !c.grid[a].d && c.grid[a].r !== 'seal'; }).length + (c.hand.length > 1 ? 0.3 : 0);
-          var sc = r.v * w;
-          LINES.forEach(function (L) {
-            if (L.indexOf(ci) < 0) return; var vals = [], ok = true;
-            L.forEach(function (x) { if (x === ci) vals.push(r.base); else if (c.grid[x].d) vals.push(c.grid[x].d.base); else ok = false; });
-            var k = ok ? figKind(vals, run.stats) : null; if (k) sc += FIGW[k.id];
-          });
-          if (!best || sc > best.sc) best = { hi: hi, ci: ci, sc: sc };
-        });
+        var r = dieCalc(run, c, die), w = 0;
+        if (die.t === 'echo') w = c.hand.length > 1 ? 9 : 0.5;
+        else if (die.t === 'miroir') w = c.lastT ? 0.6 : 0.1;
+        else if (r.t === 'lame') w = 1; else if (r.t === 'braise') w = 0.9; else if (r.t === 'venin') w = 0.8; else if (r.t === 'foudre') w = 0.45 * foes.length;
+        else if (r.t === 'garde') w = threat > 0 ? 0.9 : 0.15; else if (r.t === 'seve') w = frac > 0.95 ? 0.05 : frac < 0.5 ? 1.3 : 0.8;
+        else if (r.t === 'astre') w = (run.ult || 0) < 100 ? 0.6 : 0;
+        var sc = r.v * w;
+        if (!best || sc > best.sc) best = { hi: hi, sc: sc };
       });
-      if (!best) break; E.placeDie(best.hi, best.ci);
+      if (!best) break; E.playDie(best.hi);
     }
   }
   // ----- Offres de dés : après une élite, un boss, une arène, et un combat ordinaire sur trois -----
@@ -1301,7 +1283,7 @@
       case 'a3': var low = e.hp / e.maxhp < 0.35; hit(run, c, e, low ? 7.5 : 3.0, { skill: 3 }); if (e.dead) h.ap += 1; break;
       case 'n1': hit(run, c, e, 2.0, { skill: 1 }); if (h.skel >= 3 + st.skel) drawOne(run, c); else h.skel = h.skel + 1; break;
       case 'n2': hit(run, c, e, 1.9 * (1 + 0.3 * (h.skel || 0)), { skill: 2, drain: true }); break;
-      case 'n3': h.skel = 3 + st.skel; h.buffs.skelF = { t: 6, v: 3 }; var buried = 0; c.grid.forEach(function (g) { if (g.d) { g.d = null; buried++; } }); if (buried) { ug(run, 5 * buried); ev(c, { k: 'gclear' }); } break;
+      case 'n3': h.skel = 3 + st.skel; h.buffs.skelF = { t: 6, v: 3 }; drawOne(run, c); ug(run, 10); break;
       case 'b1': hit(run, c, e, 2.0, { skill: 1 }); if (!e.dead) applyDot(run, e, 'bleed'); if (!e.dead && run.hp < st.hp * 0.5) hit(run, c, e, 1.0, { skill: 1 }); break;
       case 'b2': run.hp = Math.max(1, run.hp - run.hp * 0.10); h.buffs.spd = { t: 6, v: 60 }; h.buffs.ls = { t: 6, v: 15 }; h.ap += 1; break;
       case 'b3': var cnt = all.length; all.forEach(function (x) { hit(run, c, x, x.st.bleed ? 3.3 : 2.2, { skill: 3 }); }); heroHeal(run, c, st.hp * 0.05 * cnt); break;
@@ -1317,6 +1299,7 @@
     }
     evoFx(run, c, i, e);
     if (st.skillHeal) heroHeal(run, c, st.hp * st.skillHeal / 100);
+    if (!c.over) noteDie(run, c, die.v);
     if (st.skillEcho && h.cds[i] > 0.5 && rnd() * 100 < st.skillEcho) { h.cds[i] = 0.5; ev(c, { k: 'free', i: i }); }
     c.pw = 1;
     if (c.over) finish(run, c);
@@ -1381,7 +1364,7 @@
       if (id === 'b2' && frac < 0.25) continue;
       if (id === 'a3') { var t = target(c); if (t && t.hp / t.maxhp > 0.35 && !t.boss && alive(c).length > 1) continue; }
       var hi = bestDie(run, c, i);
-      if (hi < 0 && c.flips > 0) { for (var fj = 0; fj < c.hand.length && hi < 0; fj++) { var fd = c.hand[fj], ff = run.bag[fd.bi].f, fb = run.stats.diceV || 0; if (!fd.ice && D.NEEDS[hero.skills[i].need].ok(Math.max(1, ff[0] + ff[5] - (fd.v - fb)) + fb) && E.flipDie(fj)) hi = fj; } }
+      if (hi < 0 && c.flips > 0) { for (var fj = 0; fj < c.hand.length && hi < 0; fj++) { var fd = c.hand[fj]; if (!fd.ice && D.NEEDS[hero.skills[i].need].ok(flipOf(run, fd)) && E.flipDie(fj)) hi = fj; } }
       if (hi >= 0 && E.useSkill(i, hi)) return true;
     }
     autoPlace(run, c); if (c.over || c.turn !== 'hero') return true;

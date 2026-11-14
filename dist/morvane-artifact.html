@@ -576,7 +576,7 @@ h3.gold, h3 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
 .turnrow .tog { min-width: 44px; height: 26px; padding: 0 8px; } .tog.pass { color: #ffe7b0; border-color: #f2bd5e66; } .tog.pass.off { opacity: .35; }
 .aps { display: inline-flex; gap: 5px; } .aps.bump { animation: bump .3s ease-out; }
 .aps i { width: 22px; height: 22px; border-radius: 50%; background: #00000080; box-shadow: inset 0 2px 4px #000, 0 0 0 1px #ffffff26; position: relative; transition: background .2s, box-shadow .2s; }
-.aps i::after { content: '⚡'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; opacity: .25; filter: grayscale(1); }
+.aps i::after { content: ''; background: var(--e-bolt) center / 12px 12px no-repeat; image-rendering: pixelated; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; opacity: .25; filter: grayscale(1); }
 .aps i.on { background: radial-gradient(circle at 35% 30%, #fff1c4, #f2bd5e 55%, #a8651a); box-shadow: 0 0 12px #f2bd5eaa, inset 0 1px 0 #ffffffaa; } .aps i.on::after { opacity: 1; filter: none; }
 .skills { justify-content: space-between; gap: 6px; }
 .skb { width: 62px; height: 62px; }
@@ -759,9 +759,9 @@ h3.gold, h3 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
 .skb .nm { margin-top: 11px; } .skb { margin-bottom: 23px; }
 .dside { gap: 4px; } .dbag, .dre { height: 31px; } .dfl { color: #ffd87a; }
 .tdie.fire { outline: 2px solid #ff8a3c; outline-offset: -2px; box-shadow: 0 0 12px #ff5a1f, 0 3px 6px #000b, inset 0 -3px 0 #0005; animation: flicker 1.1s ease-in-out infinite; }
-.tdie.fire::after { content: '🔥'; position: absolute; right: -5px; top: -7px; font-size: 12px; }
+.tdie.fire::after { content: ''; background: var(--e-fire) center / contain no-repeat; image-rendering: pixelated; width: 14px; height: 14px; position: absolute; right: -5px; top: -7px; }
 .tdie.ice { outline: 2px solid #bfe3ff; outline-offset: -2px; filter: saturate(.35) brightness(1.15); box-shadow: 0 0 10px #7fb8ff, 0 3px 6px #000b; }
-.tdie.ice::after { content: '❄️'; position: absolute; right: -5px; top: -7px; font-size: 12px; }
+.tdie.ice::after { content: ''; background: var(--e-ice) center / contain no-repeat; image-rendering: pixelated; width: 14px; height: 14px; position: absolute; right: -5px; top: -7px; }
 .needb { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 24px; padding: 0 6px; border-radius: 7px; font-size: 11.5px; font-weight: 800; color: #1a1220; background: linear-gradient(180deg, #fff, #d8d0e0); box-shadow: 0 2px 5px #000a, inset 0 -2px 0 #0003; }
 
 /* ================= v3.5 : actions épurées, parade visible, tutoriel, camp ================= */
@@ -788,7 +788,7 @@ h3.gold, h3 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
 .bigact.off { filter: saturate(.3) brightness(.6); }
 .bigact .cd { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: #07050ccc; font-size: 13px; font-weight: 700; color: #cfc8dc; }
 .bigact.cool .cd { display: flex; }
-.bigact.cool .cd::before { content: '⏳ '; white-space: pre; }
+.bigact.cool .cd::before { content: ''; display: inline-block; width: 1em; height: 1em; margin-right: .25em; vertical-align: -.15em; background: var(--e-glass) center / contain no-repeat; image-rendering: pixelated; }
 /* parade à faire : bleu électrique impossible à rater */
 .bigact.parry.alert { background: linear-gradient(180deg, #a6fbff, var(--parry) 45%, #00a8d6); color: #04222b; box-shadow: 0 0 0 3px #e6ffff, 0 0 30px var(--parry), 0 0 60px #3ff0ff88; animation: parryAl .5s ease-in-out infinite alternate; filter: none; }
 .bigact.parry.alert .t small { opacity: 1; font-weight: 700; } .bigact.parry.alert .e { animation: tremble .15s infinite; }
@@ -1003,6 +1003,8 @@ h3.gold, h3 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
 img.ski { display: inline-block; width: 32px; height: 32px; image-rendering: pixelated; vertical-align: middle; filter: drop-shadow(0 2px 0 #000a); }
 .skb .e .ski { width: 32px; height: 32px; }
 #toasts img.ski, .float img.ski { width: 20px; height: 20px; }
+.tiny img.ski { width: 16px; height: 16px; vertical-align: -3px; }
+h2 img.ski { width: 24px; height: 24px; vertical-align: -3px; }
 .li .ic img.ski, .sk .ic img.ski, .skhead .ic img.ski, .choice .ic img.ski { width: 32px; height: 32px; }
 
 /* ================= v3.9 : plateau de dés en pixel art ================= */
@@ -1066,6 +1068,36 @@ img.dgl { display: inline-block; width: 20px; height: 20px; image-rendering: pix
 .unit.en .wk img.ic { width: 32px; height: 32px; animation: none; filter: none; }
 .unit.weak img:not(.ic) { filter: drop-shadow(0 0 12px var(--weak)) brightness(1.3); }
 .dtool { width: 64px; height: 36px; gap: 3px; } .dtool .ic { width: 16px; height: 16px; } .dtool span { font-size: 8px; }
+
+/* --- v3.11 : plus aucun emoji, chaque emoji devient une icône pixel --- */
+img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.24em; image-rendering: pixelated; image-rendering: crisp-edges; pointer-events: none; }
+/* v4.0 : la main de dés et le compteur de figure du tour */
+.dhand .tdie { width: 50px; height: 50px; } .dhand .tdie i .dg { width: 22px; height: 22px; } .dhand .tdie b { font-size: 20px; }
+.tdie.up b { color: #b6ffc4; text-shadow: 2px 2px 0 #0a070d, 0 0 8px #5dff88; }
+.dfig-w { flex: none; width: 92px; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 4px 5px; border: 8px solid transparent; border-image: var(--fr-iron) 4 / 8px / 0 stretch; image-rendering: pixelated; border-radius: 0; background: #07050a; background-clip: padding-box; color: inherit; font: inherit; }
+.dfig-w .dlab { margin-bottom: 0; }
+.dslots { display: flex; gap: 3px; }
+.dslots i { width: 22px; height: 24px; display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 800; font-size: 14px; color: #fff; background: #15101d; box-shadow: inset 2px 2px 0 #000, inset -1px -1px 0 #ffffff14; }
+.dslots i.on { background: #3a2c4e; box-shadow: inset 2px 2px 0 #ffffff33, inset -2px -2px 0 #0006; text-shadow: 1px 1px 0 #000; animation: pop .25s backwards; }
+.dfig { height: 14px; font-size: 10px; line-height: 14px; white-space: nowrap; color: #7d7090; font-family: var(--serif); letter-spacing: .06em; }
+.dfig b { color: #ffe2a0; font-size: 11px; } .dfig b.k-jackpot { color: #ffd87a; text-shadow: 0 0 6px #f2bd5e; } .dfig b.k-suite { color: #ffe08a; } .dfig b.k-paire { color: #c9b8ff; }
+.dfig .maybe { color: #b7aac6; }
+.dfig-w.lit { box-shadow: 0 0 0 2px #ffe08a, 0 0 16px #f2bd5e; }
+.cdice.k-paire { border-color: #c9b8ff99; }
+@media (max-width: 360px) { .dfig-w { width: 80px; } .dslots i { width: 19px; } .dhand .tdie { width: 44px; height: 44px; } }
+/* v4.0 : dialogues des salles Mystère, choix dans la bulle */
+.st-opts { display: flex; flex-direction: column; gap: 7px; }
+.st-opts:empty { display: none; }
+.st-box.choose .st-txt { flex: none; margin-bottom: 10px; }
+.st-opt { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 9px 12px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--sc) 55%, #ffffff22); background: #ffffff0c; color: #f1ebf8; font: inherit; font-size: 14.5px; animation: stoptin .35s ease-out backwards; }
+.st-opt:nth-child(2) { animation-delay: .07s; } .st-opt:nth-child(3) { animation-delay: .14s; }
+.st-opt span { flex: none; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #150e16; background: var(--sc); }
+.st-opt b { flex: 1; font-weight: 600; }
+.st-opt em { font-style: normal; font-size: 11px; color: #b7aac6; }
+.st-opt:active { transform: scale(.98); background: #ffffff1c; }
+.st-opt.off { opacity: .45; }
+@keyframes stoptin { from { opacity: 0; transform: translateY(6px); } }
+#story.talk .st-chap { color: var(--sc); }
 
 :root { color-scheme: dark; --sat: 0px; --sab: 0px; } html, body { height: 100%; } #app { height: 100%; }</style>
 <div id="app"><div id="screen"></div><div id="overlay"></div><div id="modal"></div><div id="toasts"></div><div id="flash"></div></div>
@@ -1182,7 +1214,7 @@ var DATA = (function () {
       skills: [
         { id: 'n1', name: "Première Pelletée", icon: '', cd: 6, sfx: 'skill_dark', desc: "200 % dégâts et relève un serviteur. Si ton armée est déjà pleine, tu pioches un dé." },
         { id: 'n2', name: "Dîme des Morts", icon: '', cd: 10, sfx: 'skill_dark', desc: "190 % dégâts, +30 % par serviteur. Te soigne d’autant." },
-        { id: 'n3', name: "Exhumation", icon: '', cd: 20, sfx: 'skill_dark', desc: "Ton armée se relève au complet et frappe 3 fois plus vite pendant 3 tours. Les dés de la table sont enterrés : +5 % d’ultime chacun." }
+        { id: 'n3', name: "Exhumation", icon: '', cd: 20, sfx: 'skill_dark', desc: "Ton armée se relève au complet et frappe 3 fois plus vite pendant 3 tours. Tu pioches un dé de plus et ton ultime se charge de 10 %." }
       ],
       boons: [
         { id: 'c_n1', name: 'Fosse commune', rar: 2, desc: '+1 serviteur maximum.', mods: { skel: 1 } },
@@ -1211,7 +1243,7 @@ var DATA = (function () {
       id: 'pretresse', name: 'Séraphine', title: 'Sainte Hérétique', role: 'Soutien — immortelle',
       desc: 'Se soigne sans cesse. Ses PV sont son arme.',
       base: { hp: 125, atk: 9, def: 5, spd: 1.0, crit: 5 },
-      passive: { name: "Grâce Impie", desc: "Régénère 1 % PV par seconde, et les soins en trop deviennent un bouclier. Chaque dé pair posé sur la table te soigne de 2 % PV.", mods: { regen: 1 } },
+      passive: { name: "Grâce Impie", desc: "Régénère 1 % PV par seconde, et les soins en trop deviennent un bouclier. Chaque dé pair joué te soigne de 2 % PV.", mods: { regen: 1 } },
       unlock: { boss: 4 }, start: {},
       skills: [
         { id: 's1', name: "Stigmate", icon: '', cd: 6, sfx: 'skill_holy', desc: "190 % dégâts, affaiblit la cible 2 tours (-25 % attaque) et te soigne de 5 % PV." },
@@ -1245,7 +1277,7 @@ var DATA = (function () {
       id: 'moine', name: 'Frère Odon', title: 'Poing de Cendre', role: 'Combattant — élan',
       desc: 'Chaque coup le rend plus fort. Ne laisse pas un gros coup briser son élan.',
       base: { hp: 120, atk: 10, def: 5, spd: 1.3, crit: 8 },
-      passive: { name: "Élan de Cendre", desc: "Chaque coup donne +4 % dégâts (jusqu’à x10). À élan maximum, le premier dé que tu poses chaque tour compte double. L’élan retombe à zéro si tu encaisses une attaque chargée.", mods: {} },
+      passive: { name: "Élan de Cendre", desc: "Chaque coup donne +4 % dégâts (jusqu’à x10). À élan maximum, le premier dé que tu joues chaque tour compte double. L’élan retombe à zéro si tu encaisses une attaque chargée.", mods: {} },
       unlock: { cost: 8000 }, start: {},
       skills: [
         { id: 'm1', name: "Paume de Braise", icon: '', cd: 4, sfx: 'hit', desc: "170 % dégâts, étourdit et embrase. Interrompt les attaques chargées. +2 élan." },
@@ -1287,7 +1319,7 @@ var DATA = (function () {
     a3: [['Très gros dégâts', 'Achève', '+1 action'], "Attends que la cible passe sous 35 % PV : s’il la tue, tu rejoues.", [['dmg', 3.0, 1], ['dmg', 7.5, 1, 'sous 35 % PV']]],
     n1: [['Dégâts', 'Serviteur', 'Dés'], "Chaque lancer ajoute un squelette. Armée pleine : il te donne un dé.", [['dmg', 2.0]]],
     n2: [['Dégâts', 'Soin'], "Plus ton armée est grande, plus il frappe et soigne.", [['dmg', 1.9, 1, 'sans serviteur']]],
-    n3: [['Serviteurs', 'Rafale', 'Ultime'], "Remplis d’abord la table de dés : chacun enterré charge ton ultime.", []],
+    n3: [['Serviteurs', 'Rafale', 'Ultime'], "Lance-le tôt dans le tour : le dé pioché peut compléter ta figure.", []],
     b1: [['Dégâts', 'Saignement'], "Sous la moitié de tes PV, il frappe deux fois.", [['dmg', 2.0]]],
     b2: [['Vitesse', 'Vol de vie', '+1 action', 'Coûte des PV'], "Te rend une action : lance-le en début de tour, puis frappe.", []],
     b3: [['Zone', 'Soin', 'Saignement'], "Fais d’abord saigner tout le monde : les loups mordent 50 % plus fort.", [['dmg', 2.2, 1, 'à chaque ennemi'], ['dmg', 3.3, 1, 'sur ceux qui saignent'], ['heal', 5, 'par ennemi touché']]],
@@ -1403,8 +1435,8 @@ var DATA = (function () {
   // ---------- Lexique : tous les mots du jeu, expliqués ----------
   var GLOSS = [
     ['🎒', 'Sac de dés', 'Les dés de ton héros pour cette descente. Tu en pioches 3 par tour ; quand le sac est vide, il est remélangé. Élites, boss et un combat sur trois t’offrent un dé.'],
-    ['🔲', 'Table de dés', 'Les 9 cases où tu poses tes dés. Un dé posé agit tout de suite et ne coûte aucune action. La table est purgée quand elle est pleine.'],
-    ['🎲', 'Figure', 'Trois dés alignés sur la table : Brelan, Suite, Sept chanceux, Coup fort ou Prudence, selon leurs valeurs.'],
+    ['🔲', 'Jouer un dé', 'Touche un dé de ta main, puis retouche-le : il agit tout de suite et ne coûte aucune action.'],
+    ['🎲', 'Figure', 'Les 3 premiers dés joués dans un tour : Paire (deux identiques), Suite (2-3-4) ou Brelan (trois identiques).'],
     ['👁️', 'Intention', 'Ce qu’un ennemi fera à son prochain tour, affiché sous son nom, avec les dégâts attendus.'],
     ['🔥', 'Brûlure', '25 % de ton attaque par seconde pendant 3 s. Relancer une brûlure la remet à 3 s.'],
     ['☠️', 'Poison', '8 % de ton attaque par seconde et par dose, pendant 5 s. Jusqu’à 8 doses cumulées : c’est le plus fort sur les combats longs.'],
@@ -1430,17 +1462,17 @@ var DATA = (function () {
     ['⚖️', 'Posture', '🗡️ Assaut : +25 % dégâts, +20 % dégâts subis. 🛡️ Garde : -25 % dégâts subis, -20 % dégâts.']
   ];
 
-  // ---------- Dés de combat (v3.2) : chaque héros a un sac de dés, posés sur une table de 9 cases ----------
+  // ---------- Dés de combat (v4.0) : chaque héros a un sac de dés, joués depuis sa main ----------
   // w : poids dans les offres de dés. Les effets sont écrits « par point » de la valeur du dé.
   var DICE = {
-    lame: { name: 'Lame', icon: '⚔️', w: 20, desc: 'Frappe l’ennemi visé : 18 % de ton attaque par point.' },
-    garde: { name: 'Garde', icon: '🛡️', w: 16, desc: 'Bouclier de 1,5 % de tes PV max par point. Il tient jusqu’à ton prochain tour.' },
-    seve: { name: 'Sève', icon: '❤️', w: 10, desc: 'Te soigne de 0,6 % de tes PV max par point.' },
-    echo: { name: 'Écho', icon: '✨', w: 13, desc: 'Ne fait rien seul : chaque dé posé à côté de lui gagne la moitié de sa valeur. Il reste actif tant que la table n’est pas purgée.' },
-    miroir: { name: 'Miroir', icon: '🪞', w: 8, desc: 'Devient une copie du plus fort dé voisin, puis agit comme lui. Sans voisin, il ne reflète rien.' },
-    braise: { name: 'Braise', icon: '🔥', w: 9, desc: '12 % de ton attaque par point, et enflamme l’ennemi visé.' },
+    lame: { name: 'Lame', icon: '⚔️', w: 20, desc: 'Frappe l’ennemi visé : 22 % de ton attaque par point.' },
+    garde: { name: 'Garde', icon: '🛡️', w: 16, desc: 'Bouclier de 2,1 % de tes PV max par point. Il tient jusqu’à ton prochain tour.' },
+    seve: { name: 'Sève', icon: '❤️', w: 10, desc: 'Te soigne de 0,7 % de tes PV max par point.' },
+    echo: { name: 'Écho', icon: '✨', w: 13, desc: 'Les autres dés de ta main gagnent la moitié de sa valeur (arrondie au-dessus). Joué seul, il charge ton ultime de 2 % par point.' },
+    miroir: { name: 'Miroir', icon: '🪞', w: 8, desc: 'Copie le dernier dé joué ce tour et agit comme lui, avec sa propre valeur. Joué en premier, il frappe comme une Lame.' },
+    braise: { name: 'Braise', icon: '🔥', w: 9, desc: '15 % de ton attaque par point, et enflamme l’ennemi visé.' },
     venin: { name: 'Venin', icon: '☠️', w: 9, desc: 'Empoisonne l’ennemi visé : une dose de poison tous les 2 points.' },
-    foudre: { name: 'Foudre', icon: '⚡', w: 8, desc: '9 % de ton attaque par point à tous les ennemis.' },
+    foudre: { name: 'Foudre', icon: '⚡', w: 8, desc: '10 % de ton attaque par point à tous les ennemis.' },
     astre: { name: 'Astre', icon: '🌟', w: 8, desc: 'Charge ton ultime de 2 % par point.' }
   };
   var BAGS = {
@@ -1449,19 +1481,24 @@ var DATA = (function () {
     berserker: ['lame', 'lame', 'lame', 'lame', 'seve', 'echo'], chasseuse: ['lame', 'lame', 'lame', 'garde', 'astre', 'echo'],
     moine: ['lame', 'lame', 'garde', 'seve', 'echo', 'echo'], pretresse: ['lame', 'garde', 'garde', 'seve', 'seve', 'echo']
   };
-  // Figures : trois dés alignés (ligne, colonne ou diagonale), d'après leur valeur tirée
+  // Figures : les 3 premiers dés joués dans un tour, d'après le chiffre affiché sur chacun (l'ordre ne compte pas)
   var FIGS = [
-    ['👑', 'Brelan', 'trois valeurs identiques', '+1 action et tous tes coups sont critiques ce tour.'],
-    ['✨', 'Suite', 'trois valeurs qui se suivent', 'Ton prochain coup est critique.'],
-    ['🍀', 'Sept chanceux', 'total de 7', 'Ce tour, tes pouvoirs acceptent n’importe quel dé.'],
-    ['💥', 'Coup fort', 'total de 15 ou plus', '+40 % dégâts ce tour.'],
-    ['🛡️', 'Prudence', 'total de 6 ou moins', '-40 % dégâts subis jusqu’à ton prochain tour.']
+    ['🎲', 'Paire', 'deux valeurs identiques', '+30 % de dégâts ce tour.'],
+    ['✨', 'Suite', 'trois valeurs qui se suivent (2-3-4)', '+1 action ⚡ et ton prochain coup est critique.'],
+    ['👑', 'Brelan', 'trois valeurs identiques', '+1 action ⚡ et tous tes coups sont critiques ce tour.']
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '3.9';
+  var VERSION = '4.0';
   var NEWS = [
-    ['🎲', 'Un plateau de dés repensé', 'Dés taillés en pixel art avec l’icône de leur type, table sertie de fer, outils Sac / Relance / Retourne lisibles, et une ligne d’aide qui te dit à chaque instant quoi faire avec le dé choisi.'],
+    ['🎲', 'Des combats plus simples', 'La table de 9 cases disparaît. Touche un dé de ta main, retouche-le : il agit tout de suite. Ou glisse-le dans un pouvoir. Plus de cases ×2, +2 ni de voisins à calculer.'],
+    ['✨', 'Des figures qui se lisent', 'Les 3 premiers dés joués dans un tour forment une figure, d’après le chiffre affiché sur chacun : Paire, Suite (2-3-4, dans n’importe quel ordre) ou Brelan. Le cadre « Ce tour » les montre en direct.'],
+    ['🎭', 'Des Mystères qui parlent', 'Chaque salle Mystère devient une vraie scène : tu rencontres le personnage (le pendu, l’ombre marchande, ton propre reflet...), il te parle, et tu choisis ta réponse dans la bulle.'],
+    ['🔊', 'Des voix qui tapent', 'Quand un personnage parle, son texte s’écrit avec un petit bruit de machine à écrire, plus grave ou plus aigu selon qui parle. Dans l’histoire aussi.'],
+    ['🗝️', 'Des icônes propres à Morvane', 'Les icônes qui imitaient encore des objets modernes sont réinventées : la sauvegarde devient un registre scellé de cire, le combat automatique un pantin à fils, les réglages un astrolabe, les choix d’événement deux pierres runiques, les stats des encoches sur un os, la peste un masque de médecin...'],
+    ['🎨', 'Plus aucun emoji', 'Toute l’interface passe au pixel art : monnaies, onglets, salles, objets, artefacts, autel, états, réglages, aide... chaque ancien emoji est remplacé par une icône dessinée dans le style du jeu.'],
+    ['🎨', 'Des passifs en pixel art', 'Les 78 aubaines et les 15 pactes ont chacun leur icône dessinée dans le style du jeu. Les aubaines qui renforcent un pouvoir reprennent son icône, marquée d’une flèche dorée.'],
+    ['🎲', 'Un plateau de dés repensé', 'Dés taillés en pixel art avec l’icône de leur type, outils Sac / Relance / Retourne lisibles, et une ligne d’aide qui te dit à chaque instant quoi faire avec le dé choisi.'],
     ['🌟', 'Des passifs réinventés', 'Chaque héros a un nouveau passif lié aux dés ou au tour : les blocages d’Aldric renforcent ta main, les 1 de Corvin deviennent des 6, les serviteurs de Mortis renforcent ses pouvoirs, Hrolf gagne une 3e action sous 30 % PV...'],
     ['🕯️', 'Des pouvoirs propres à Morvane', 'Les 8 héros ont des pouvoirs entièrement repensés : Écu du Parjure, Bûcher du Roi Creux, Minuit Moins Trois, Exhumation, Ronde des Loups, Psaume Inversé, Carreau de Gibet, Cent Cendres... chacun avec sa propre icône.'],
     ['🎲', 'Des pouvoirs qui jouent avec les dés', 'Certains pouvoirs changent tes dés (un petit dé devient un 6, les Lames deviennent des Braises, toute ta main se retourne), te font piocher, te rendent une action ou ouvrent un point faible.'],
@@ -1477,16 +1514,14 @@ var DATA = (function () {
     ['💪', 'La valeur compte', 'Plus le dé glissé est fort, plus le pouvoir frappe : 5 = 100 %, 6 = 110 %, 1 = 60 %. Les pouvoirs d’appui se contentent d’un petit dé.'],
     ['⇅', 'Retourner un dé', 'Une fois par tour, retourne un dé sur sa face opposée : 1↔6, 2↔5, 3↔4. De quoi remplir la condition qui te manque.'],
     ['🔥', 'Dés enflammés et gelés', 'Embrasé, un de tes dés prend feu : le jouer coûte 3 % de tes PV. Entravé, ton meilleur dé gèle et tombe à 1.'],
-    ['⚔️', 'Deux actions pour frapper', 'Tes 2 actions ⚡ servent à Frapper, Parer, viser un point faible ou renvoyer un crâne. À toi de choisir : un dé sur la table, ou dans un pouvoir ?'],
+    ['⚔️', 'Deux actions pour frapper', 'Tes 2 actions ⚡ servent à Frapper, Parer, viser un point faible ou renvoyer un crâne. À toi de choisir : jouer un dé, ou le glisser dans un pouvoir ?'],
     ['📖', 'Une histoire en chapitres', 'Un prologue, six chapitres et un épilogue : découvre ce qui est arrivé à Morvane, à son roi, et qui est la Veilleuse. Les scènes se jouent pendant ta descente.'],
     ['🕯️', 'La Chronique', 'Au sanctuaire, la carte 📖 Chronique garde toutes les scènes découvertes. Touche un chapitre pour le relire.'],
     ['🏞️', 'Des décors enfin visibles', 'L’arène montre maintenant les voûtes, les vitraux, la forêt et les forges, avec des accessoires propres à chaque zone.'],
     ['🔥', 'Sanctuaire et écran-titre', 'La chapelle en ruine, la dernière flamme, la Veilleuse au coin du feu, et la lune rouge sur Morvane.'],
     ['♟️', 'Plateau illustré', 'Chaque plateau porte le décor de sa zone, et le gardien t’attend sur la dernière case.'],
-    ['🎒', 'Sac de dés', 'Chaque héros a son sac de dés : ⚔️ Lame, 🛡️ Garde, ❤️ Sève, ✨ Écho... Tu en pioches 3 par tour et tu les poses sur la table.'],
-    ['🔲', 'Table de dés', 'Neuf cases. Un dé posé agit tout de suite. ✨ Écho renforce ses voisins, 🪞 Miroir copie son voisin. Les cases ×2 et +2 changent tout.'],
-    ['🎲', 'Figures', 'Trois dés alignés forment une figure : Brelan (+1 action, coups critiques), Suite, Sept chanceux, Coup fort, Prudence.'],
-    ['👁️', 'Intentions', 'Au-dessus de chaque ennemi : ce qu’il fera à son tour, et combien ça fera mal. Pose tes 🛡️ au bon moment.'],
+    ['🎒', 'Sac de dés', 'Chaque héros a son sac de dés : ⚔️ Lame, 🛡️ Garde, ❤️ Sève, ✨ Écho... Tu en pioches 3 par tour et tu les joues depuis ta main.'],
+    ['👁️', 'Intentions', 'Au-dessus de chaque ennemi : ce qu’il fera à son tour, et combien ça fera mal. Joue tes 🛡️ au bon moment.'],
     ['🎁', 'Nouveaux dés', 'Élites, boss et un combat sur trois offrent un dé : ajoute-le au sac, cisèle un dé ou brise-en un.'],
     ['🏅', 'Gloire', 'Chaque descente, même ratée, donne un score qui remplit la piste de Gloire : Cendres, essence, objets épiques et légendaires, sans fin.'],
     ['🏆', 'Score et record', 'Ton score s’affiche à la fin de chaque descente. Bats ton record.'],
@@ -1591,7 +1626,7 @@ var DATA = (function () {
     ['kills', 40, 'Tue 40 ennemis'], ['kills', 90, 'Tue 90 ennemis'], ['elites', 3, 'Vaincs 3 élites'], ['bosses', 1, 'Vaincs un boss'],
     ['chests', 2, 'Ouvre 2 coffres'], ['items', 8, 'Trouve 8 objets'], ['runs', 3, 'Lance 3 descentes'], ['upgrades', 3, 'Améliore 3 fois un objet'],
     ['weak', 10, 'Touche 10 points faibles'], ['parry', 3, 'Réussis 3 parades parfaites'], ['ult', 5, 'Lance 5 ultimes'], ['fusions', 2, 'Fusionne des objets 2 fois'], ['arenes', 1, 'Gagne une arène'], ['evos', 2, 'Choisis 2 éveils de pouvoir'],
-    ['doubles', 4, 'Forme 4 figures sur la table de dés'], ['orbs', 15, 'Ramasse 15 orbes'], ['deflect', 6, 'Renvoie 6 projectiles'], ['minis', 2, 'Réussis 2 épreuves (forge, runes, crochetage)'], ['primes', 3, 'Remplis 3 primes']
+    ['doubles', 4, 'Forme 4 figures avec tes dés'], ['orbs', 15, 'Ramasse 15 orbes'], ['deflect', 6, 'Renvoie 6 projectiles'], ['minis', 2, 'Réussis 2 épreuves (forge, runes, crochetage)'], ['primes', 3, 'Remplis 3 primes']
   ];
 
   // ---------- Zones et ennemis ----------
@@ -1796,7 +1831,7 @@ var DATA = (function () {
     { id: 'b_or', name: 'Doigts crochus', icon: '💰', rar: 0, max: 5, desc: "+30 % d'or et de Cendres.", mods: { gf: 30 } },
     { id: 'b_arcane', name: 'Savoir interdit', icon: '📖', rar: 0, max: 8, desc: '+18 % puissance des pouvoirs.', mods: { pow: 18 } },
     { id: 'b_des1', name: 'Dé pipé', icon: '🎲', rar: 1, max: 2, desc: '+1 relance de ta main de dés par combat.', mods: { diceRerolls: 1 } },
-    { id: 'b_des2', name: 'Main lourde', icon: '🎰', rar: 2, max: 2, desc: 'Les figures Coup fort et Prudence sont 50 % plus puissantes.', mods: { diceP: 50 } },
+    { id: 'b_des2', name: 'Main lourde', icon: '🎰', rar: 2, max: 2, desc: 'La Paire donne 50 % de dégâts en plus.', mods: { diceP: 50 } },
     { id: 'b_des3', name: 'Grande main', icon: '🖐️', rar: 3, max: 1, desc: 'Tu pioches 1 dé de plus à chaque tour.', mods: { diceHand: 1 } },
     { id: 'b_des4', name: 'Dés lestés', icon: '⚖️', rar: 2, max: 2, desc: 'Tous tes dés valent 1 point de plus.', mods: { diceV: 1 } },
     { id: 'b_regen', name: 'Chair tenace', icon: '🌿', rar: 0, max: 5, desc: 'Régénère +0,5 % PV par seconde.', mods: { regen: 0.5 } },
@@ -1961,70 +1996,70 @@ var DATA = (function () {
     { id: 'h_orbs', name: 'Glaneur', desc: 'Ramasser 100 orbes', c: ['orbs', 100], cendres: 400 },
     { id: 'h_deflect', name: 'Retour à l’envoyeur', desc: 'Renvoyer 50 projectiles', c: ['deflect', 50], cendres: 600 },
     { id: 'h_minis', name: 'Doigts d’or', desc: 'Réussir 15 épreuves (forge, runes, crochetage)', c: ['minis', 15], cendres: 800 },
-    { id: 'h_dbl', name: 'Veinard', desc: 'Former 50 figures sur la table de dés', c: ['doubles', 50], cendres: 500 },
+    { id: 'h_dbl', name: 'Veinard', desc: 'Former 50 figures avec tes dés', c: ['doubles', 50], cendres: 500 },
     { id: 'h_score', name: 'Légende', desc: 'Atteindre 300 de score en une descente', c: ['bestScore', 300], cendres: 1500 },
     { id: 'h_primes', name: 'Chasseur de primes', desc: 'Remplir 30 primes', c: ['primes', 30], cendres: 1000 }
   ];
 
   // ---------- Événements ----------
   var EVENTS = [
-    { id: 'e_puits', title: 'Le puits qui murmure', text: 'Une voix monte du fond. Elle connaît ton nom.',
+    { id: 'e_puits', npc: { spr: 'noye', name: 'La voix du puits', voice: 140, wave: 'triangle' }, say: 'Je te connais. Tu es descendu plus bas que les autres… Jette-moi quelque chose. Ou bois. J’ai si soif de compagnie.', title: 'Le puits qui murmure', text: 'Une voix monte du fond. Elle connaît ton nom.',
       opts: [{ t: 'Jeter 40 or', need: { gold: 40 }, fx: { gold: -40, boon: 1 }, r: 'Le puits te rend une aubaine.' },
         { t: 'Boire son eau', fx: { healPct: 35, curse: 'takenP', curseV: 6 }, r: "+35 % PV... mais l'eau était noire (+6 % dégâts subis)." },
         { t: 'Passer ton chemin', fx: {}, r: 'La voix rit derrière toi.' }] },
-    { id: 'e_pendu', title: "L'homme pendu", text: "Il se balance encore. Ses poches sont pleines.",
+    { id: 'e_pendu', npc: { spr: 'pendu', name: 'L’homme pendu', voice: 110 }, say: 'Hhh… Tu as l’air pressé. Moi, j’ai tout mon temps. Mes poches sont pleines, tu sais. Approche.', title: "L'homme pendu", text: "Il se balance encore. Ses poches sont pleines.",
       opts: [{ t: 'Fouiller ses poches', fx: { gold: 60, hpPct: -12 }, r: '+60 or. Il te griffe en se réveillant (-12 % PV).' },
         { t: 'Le décrocher', fx: { boon: 1, hpPct: -6 }, r: 'Reconnaissant, son fantôme te bénit.' },
         { t: 'Partir', fx: {}, r: 'La corde grince.' }] },
-    { id: 'e_statue', title: 'La sainte sans mains', text: 'Une statue pleure du sang dans une coupe.',
+    { id: 'e_statue', npc: { spr: 'ange', name: 'La sainte sans mains', voice: 260, wave: 'triangle' }, say: 'Bois, enfant. Ou trempe ta lame. Ou prie. Je n’ai plus de mains pour te bénir autrement.', title: 'La sainte sans mains', text: 'Une statue pleure du sang dans une coupe.',
       opts: [{ t: 'Boire la coupe', fx: { maxHpP: 10, healPct: 15 }, r: '+10 % PV max pour cette descente.' },
         { t: 'Tremper ta lame', fx: { atkP: 10 }, r: '+10 % attaque pour cette descente.' },
         { t: 'Prier', fx: { healPct: 30 }, r: 'Tu te sens mieux (+30 % PV).' }] },
-    { id: 'e_joueur', title: 'Le joueur de dés', text: 'Un squelette en haillons secoue un gobelet. « Double ou rien ? »',
+    { id: 'e_joueur', npc: { spr: 'squelette', name: 'Le joueur de dés', voice: 180 }, say: 'Double ou rien, l’ami ! Les morts s’ennuient, tu comprends. Et les dés ne mentent jamais. Presque jamais.', title: 'Le joueur de dés', text: 'Un squelette en haillons secoue un gobelet. « Double ou rien ? »',
       opts: [{ t: 'Parier la moitié de ton or', fx: { gamble: 1 }, r: '' },
         { t: 'Refuser', fx: {}, r: 'Il hausse ses épaules. Enfin, ce qu’il en reste.' }] },
-    { id: 'e_forge', title: 'La forge abandonnée', text: 'Les braises sont encore chaudes. Un marteau t’attend.',
+    { id: 'e_forge', npc: { spr: 'forge_esprit', name: 'L’esprit de la forge', voice: 90, wave: 'sawtooth' }, say: 'Le dernier forgeron est parti sans éteindre. Prends le marteau. Le métal se souvient de ceux qui saignent pour lui.', title: 'La forge abandonnée', text: 'Les braises sont encore chaudes. Un marteau t’attend.',
       opts: [{ t: 'Forger (-10 % PV)', fx: { hpPct: -10, item: 2 }, r: 'Tu repars avec une pièce de qualité.' },
         { t: 'Te réchauffer', fx: { healPct: 20 }, r: '+20 % PV.' }] },
-    { id: 'e_marche', title: "Le marché des âmes", text: 'Une ombre te tend un contrat. « Un peu de toi contre beaucoup de moi. »',
+    { id: 'e_marche', npc: { spr: 'ombre', name: 'L’ombre marchande', voice: 100, wave: 'sawtooth', foe: 1 }, say: 'Signe ici. Une goutte suffit. Un peu de toi contre beaucoup de moi : une bonne affaire. Pour l’un de nous deux.', title: "Le marché des âmes", text: 'Une ombre te tend un contrat. « Un peu de toi contre beaucoup de moi. »',
       opts: [{ t: 'Signer (-20 % PV max)', fx: { maxHpP: -20, artifact: 1 }, r: 'Un artefact apparaît dans ta main.' },
         { t: 'Déchirer le contrat', fx: { gold: 25 }, r: 'Des pièces tombent du papier.' }] },
-    { id: 'e_miroir', title: 'Le miroir fêlé', text: 'Ton reflet ne bouge pas en même temps que toi. Il te tend la main.',
+    { id: 'e_miroir', npc: { spr: 'H', name: 'Ton reflet', voice: 200, wave: 'triangle' }, say: 'Tu es fatigué. Moi non. Donne-moi la main, et je porterai un peu de ta charge.', title: 'Le miroir fêlé', text: 'Ton reflet ne bouge pas en même temps que toi. Il te tend la main.',
       opts: [{ t: 'Lui serrer la main', fx: { boon: 1, curse: 'takenP', curseV: 5 }, r: 'Il te donne une aubaine... et garde un peu de toi (+5 % dégâts subis).' },
         { t: 'Briser le miroir', fx: { gold: 45 }, r: 'Sept ans de malheur. Et 45 or dans le cadre.' },
         { t: 'Détourner les yeux', fx: {}, r: 'Il te regarde partir.' }] },
-    { id: 'e_enfant', title: "L'enfant qui chante", text: 'Une petite voix fredonne dans le noir. Il n’y a pas d’enfants ici.',
+    { id: 'e_enfant', npc: { spr: 'spectre', name: 'L’enfant qui chante', voice: 340, wave: 'triangle' }, say: 'Dors, petit roi, dors… la cloche ne sonne plus… Tu as une pièce ? Je chante mieux avec une pièce.', title: "L'enfant qui chante", text: 'Une petite voix fredonne dans le noir. Il n’y a pas d’enfants ici.',
       opts: [{ t: 'Lui donner 30 or', need: { gold: 30 }, fx: { gold: -30, healPct: 50 }, r: 'La chanson te répare (+50 % PV).' },
         { t: 'Suivre la voix', fx: { ambush: 1 }, r: '' },
         { t: 'Boucher tes oreilles', fx: {}, r: 'La chanson s’arrête net.' }] },
-    { id: 'e_alchimiste', title: "L'alchimiste aveugle", text: '« Rouge ou verte ? Je ne sais plus laquelle tue. »',
+    { id: 'e_alchimiste', npc: { spr: 'sorciere', name: 'L’alchimiste aveugle', voice: 210 }, say: 'L’une rend fort, l’autre rend… autre. Je ne sais plus laquelle. Mes yeux sont dans un bocal, quelque part.', title: "L'alchimiste aveugle", text: '« Rouge ou verte ? Je ne sais plus laquelle tue. »',
       opts: [{ t: 'Boire la rouge', fx: { atkP: 12, hpPct: -15 }, r: 'Tes veines brûlent : +12 % attaque, -15 % PV.' },
         { t: 'Boire la verte', fx: { maxHpP: 12 }, r: 'Ta peau durcit : +12 % PV max.' },
         { t: 'Refuser poliment', fx: {}, r: '« Sage. Ou lâche. »' }] },
-    { id: 'e_biblio', title: 'La bibliothèque noyée', text: 'Des livres gonflés d’eau. Un seul est sec. Un autre est en or.',
+    { id: 'e_biblio', npc: { spr: 'liche', name: 'Le bibliothécaire', voice: 120, wave: 'triangle' }, say: 'Chut. Les livres dorment. Celui qui est sec, tu peux le lire. Celui qui est en or… est à moi.', title: 'La bibliothèque noyée', text: 'Des livres gonflés d’eau. Un seul est sec. Un autre est en or.',
       opts: [{ t: 'Lire le livre sec', fx: { boon: 1, hpPct: -8 }, r: 'Les mots te blessent, mais tu apprends une aubaine.' },
         { t: 'Voler le livre en or', fx: { gold: 70, curse: 'takenP', curseV: 4 }, r: '+70 or. Quelque chose a remarqué (+4 % dégâts subis).' },
         { t: 'Ne toucher à rien', fx: {}, r: 'Les pages se tournent toutes seules derrière toi.' }] },
-    { id: 'e_cranes', title: 'Le mur de crânes', text: 'L’un d’eux claque des dents. « Une pièce pour un mort ? »',
+    { id: 'e_cranes', npc: { spr: 'squelette', name: 'Le crâne bavard', voice: 230 }, say: 'Une pièce pour un mort ? Une seule ! Je n’ai rien mangé depuis trois siècles. Façon de parler.', title: 'Le mur de crânes', text: 'L’un d’eux claque des dents. « Une pièce pour un mort ? »',
       opts: [{ t: 'Lui donner 50 or', need: { gold: 50 }, fx: { gold: -50, artifact: 1 }, r: 'Il crache un artefact.' },
         { t: 'Lui arracher une dent', fx: { item: 2, hpPct: -10 }, r: 'Il te mord (-10 % PV), mais sa dent valait le coup.' },
         { t: 'Passer', fx: {}, r: 'Mille orbites te suivent.' }] },
-    { id: 'e_mourant', title: 'Le chevalier mourant', text: 'Adossé au mur, il tient encore son épée. « Finis-en. Ou aide-moi. »',
+    { id: 'e_mourant', npc: { spr: 'paladin', name: 'Le chevalier mourant', voice: 120 }, say: 'J’étais de la garde, moi aussi. Je n’ai pas su le coucher… Finis-en. Ou aide-moi à me relever.', title: 'Le chevalier mourant', text: 'Adossé au mur, il tient encore son épée. « Finis-en. Ou aide-moi. »',
       opts: [{ t: 'Abréger ses souffrances', fx: { cendres: 1 }, r: 'Il te remercie d’un souffle.' },
         { t: 'Panser ses plaies', fx: { hpPct: -12, boon: 1 }, r: 'Tu y laisses de tes forces. Il t’enseigne une aubaine.' },
         { t: 'Prendre son équipement', fx: { item: 1 }, r: 'Il ne proteste pas longtemps.' }] },
-    { id: 'e_tombe', title: 'La tombe ouverte', text: 'Quelqu’un a creusé ici il y a peu. Ou quelque chose en est sorti.',
+    { id: 'e_tombe', npc: { spr: 'tombe', name: '' }, say: '', narr: 'La terre est fraîche. Des griffures montent le long des parois, de l’intérieur.', title: 'La tombe ouverte', text: 'Quelqu’un a creusé ici il y a peu. Ou quelque chose en est sorti.',
       opts: [{ t: 'Descendre fouiller', fx: { ambush: 1 }, r: '' },
         { t: 'Reboucher par respect', fx: { cendres: 1 }, r: 'Les morts te remercient en Cendres.' }] },
-    { id: 'e_maitre', title: 'Le maître d’armes', text: 'Un fantôme en armure répète le même geste depuis cent ans. Il s’arrête et te regarde.',
+    { id: 'e_maitre', npc: { spr: 'armure', name: 'Le maître d’armes', voice: 95 }, say: 'Ta garde est basse. Ton pied est faux. Tu respires comme un bœuf. Veux-tu apprendre, ou mourir ignorant ?', title: 'Le maître d’armes', text: 'Un fantôme en armure répète le même geste depuis cent ans. Il s’arrête et te regarde.',
       opts: [{ t: 'S’entraîner avec lui (-15 % PV)', fx: { hpPct: -15, evo: 1 }, r: 'Il te corrige à coups de plat de lame. Un de tes pouvoirs s’éveille.' },
         { t: 'Lui payer une leçon (60 or)', need: { gold: 60 }, fx: { gold: -60, boon: 1 }, r: 'Il t’enseigne une aubaine.' },
         { t: 'Saluer et passer', fx: {}, r: 'Il reprend son geste.' }] },
-    { id: 'e_fontaine', title: 'La fontaine à l’envers', text: 'L’eau coule vers le plafond. Au fond du bassin, quelque chose brille.',
+    { id: 'e_fontaine', npc: { spr: 'dryade', name: 'La dame de la fontaine', voice: 280, wave: 'triangle' }, say: 'Ici l’eau tombe vers le ciel, et les vœux remontent. Bois, plonge, ou emporte un peu de moi.', title: 'La fontaine à l’envers', text: 'L’eau coule vers le plafond. Au fond du bassin, quelque chose brille.',
       opts: [{ t: 'Boire', fx: { healPct: 40 }, r: 'Elle a un goût de pluie. +40 % PV.' },
         { t: 'Plonger le bras', fx: { hpPct: -10, artifact: 1 }, r: 'Ça mord (-10 % PV), mais tu ressors quelque chose.' },
         { t: 'Remplir une fiole', fx: { potion: 1 }, r: '+1 fiole.' }] },
-    { id: 'e_ossements', title: 'Le tas d’ossements', text: 'Des os bien rangés, par taille. Quelqu’un tient à l’ordre, ici.',
+    { id: 'e_ossements', npc: { spr: 'goule', name: 'Le gardien des os', voice: 130, foe: 1 }, say: 'Ne… dérange… rien. Chaque os… à sa place. Chaque crâne… compté.', title: 'Le tas d’ossements', text: 'Des os bien rangés, par taille. Quelqu’un tient à l’ordre, ici.',
       opts: [{ t: 'Fouiller sans rien ranger', fx: { item: 2, curse: 'takenP', curseV: 4 }, r: 'Tu trouves un objet. Quelqu’un est vexé (+4 % dégâts subis).' },
         { t: 'Ranger les os tombés', fx: { cendres: 1, healPct: 10 }, r: 'Un merci glacé te traverse (+10 % PV).' },
         { t: 'Passer', fx: {}, r: 'Rien ne bouge.' }] }
@@ -2856,35 +2891,30 @@ if (typeof module !== 'undefined') module.exports = DATA;
     r.group.forEach(function (k) { var e = mkEnemy(run, k, n >= 3 ? 0.8 : 1); e.id = c.nextId++; if (st.vulnStart) e.st.vuln = st.vulnStart; if (c.cond === 'fragile') e.st.vuln = Math.max(e.st.vuln || 0, 8); c.enemies.push(e); });
     run.combat = c;
     c.turn = 'hero'; c.round = 1; c.qi = 0; c.rerolls = 1 + (st.diceRerolls || 0);
-    // table de dés : 9 cases, une case ×2 et une case +2 ; un boss en scelle une
-    var cs = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8]); c.grid = []; for (var gi = 0; gi < 9; gi++) c.grid.push({ r: null, d: null });
-    c.grid[cs[0]].r = 'x2'; c.grid[cs[1]].r = 'p2'; if (c.boss) c.grid[cs[2]].r = 'seal';
     c.pile = shuffle(run.bag.map(function (d, i) { return i; })); c.disc = []; c.hand = []; c.dfx = {};
     c.events.push({ k: r.type === 'boss' ? 'boss' : 'start' }); c.events.push({ k: 'pturn', n: 1 }); drawTurn(run, c);
   };
   // ----- Tour par tour. Un tour vaut ROUND secondes de l'ancien temps réel : les durées et recharges restent écrites en secondes. -----
   var ROUND = 2, AP = 2; E.ROUND = ROUND; E.AP = AP;
   E.turns = function (sec) { return Math.max(1, Math.ceil(sec / ROUND - 1e-9)); };
-  // ----- Dés de combat (v3.2). Le sac de dés du héros : à chaque tour il en pioche, les lance, et les pose sur une table de 9 cases.
-  // Un dé posé agit tout de suite. Les dés restent sur la table jusqu'à ce qu'elle soit pleine : elle est alors purgée au tour suivant.
-  var LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
-  var ADJ = [[1, 3], [0, 2, 4], [1, 5], [0, 4, 6], [1, 3, 5, 7], [2, 4, 8], [3, 7], [4, 6, 8], [5, 7]];
-  E.LINES = LINES; E.ADJ = ADJ;
+  // ----- Dés de combat (v4.0). Le sac de dés du héros : à chaque tour il en pioche 3, les lance, et les joue depuis sa main.
+  // Un dé joué agit tout de suite et ne coûte aucune action. Les 3 premiers dés joués d'un tour (main ou pouvoir) forment une figure.
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function startBag(heroId) { return (D.BAGS[heroId] || D.BAGS.chevalier).map(function (t) { return { t: t, f: [1, 2, 3, 4, 5, 6] }; }); }
   E.startBag = startBag;
+  var VMAX = 12;
   function rollDie(run, bi) { var d = run.bag[bi], f = pick(d.f); if (run.hero === 'assassin' && f === 1) return { bi: bi, t: d.t, v: 6 + (run.stats.diceV || 0), night: true }; return { bi: bi, t: d.t, v: f + (run.stats.diceV || 0) }; }
   // passifs : +n au plus petit dé de la main
-  function boostLow(c, n) { if (!c.hand.length) return false; var lo = c.hand.reduce(function (a, b) { return b.v < a.v ? b : a; }); lo.v = Math.min(9, lo.v + n); lo.ice = false; return true; }
+  function boostLow(c, n) { if (!c.hand.length) return false; var lo = c.hand.reduce(function (a, b) { return b.v < a.v ? b : a; }); lo.v = Math.min(VMAX, lo.v + n); lo.ice = false; return true; }
   // pioche un dé de plus (pouvoirs qui remplissent la main)
   function drawOne(run, c) { if (!c.pile.length) { c.pile = shuffle(c.disc); c.disc = []; } if (!c.pile.length) return; c.hand.push(rollDie(run, c.pile.pop())); ev(c, { k: 'draw', n: c.hand.length, again: 1 }); }
   // retourne un dé sur sa face opposée, sans dépenser de retournement
-  function flipValue(run, d) { var f = run.bag[d.bi].f, b = run.stats.diceV || 0; d.v = Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b)) + b; d.ice = false; }
-  function freeCells(c) { var o = []; c.grid.forEach(function (g, i) { if (!g.d && g.r !== 'seal') o.push(i); }); return o; }
+  function flipOf(run, d) { var f = run.bag[d.bi].f, b = run.stats.diceV || 0, k = d.bonus || 0; return Math.min(VMAX, Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b - k)) + b + k); }
+  function flipValue(run, d) { d.v = flipOf(run, d); d.ice = false; }
   function drawTurn(run, c) {
     var h = c.hero, n = 3 + (run.stats.diceHand || 0);
     c.dfx = {}; c.acted = false; h.ap = AP + (run.hero === 'berserker' && run.hp < run.stats.hp * 0.3 ? 1 : 0); c.weakRefund = false; c.foyerX2 = false;
-    if (!freeCells(c).length) { c.grid.forEach(function (g) { g.d = null; }); ug(run, 10); ev(c, { k: 'gclear' }); }
+    c.played = []; c.lastT = null;
     c.hand = [];
     while (c.hand.length < n) {
       if (!c.pile.length) { c.pile = shuffle(c.disc); c.disc = []; }
@@ -2900,73 +2930,67 @@ if (typeof module !== 'undefined') module.exports = DATA;
     if (run.hero === 'chevalier' && h.oath) { for (var oi = 0; oi < Math.min(3, h.oath); oi++) boostLow(c, 1); ev(c, { k: 'passive', txt: '+' + Math.min(3, h.oath) + ' Serment' }); h.oath = 0; }
     ev(c, { k: 'draw', n: c.hand.length });
   }
-  // Ce que vaudrait le dé `die` posé sur la case ci (sans rien changer). Le Miroir prend le type et la valeur du plus fort voisin.
-  function dieCalc(c, die, ci) {
-    var g = c.grid, t = die.t, v = die.v, mir = false, bonus = 0;
-    if (t === 'miroir') {
-      var best = null; mir = true;
-      ADJ[ci].forEach(function (a) { var d = g[a].d; if (d && d.t !== 'miroir' && (!best || d.v > best.v)) best = d; });
-      if (!best) return { t: 'miroir', v: 0, base: die.v, mir: true, bonus: 0 };
-      t = best.t; v = best.v;
-    }
-    ADJ[ci].forEach(function (a) { var d = g[a].d; if (d && d.t === 'echo') bonus += Math.ceil(d.v / 2); });
-    if (g[ci].r === 'x2') v *= 2; else if (g[ci].r === 'p2') v += 2;
-    if (S.run && S.run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2) v *= 2;
-    return { t: t, v: Math.min(20, v + bonus), base: die.v, mir: mir, bonus: bonus };
+  function foyerOn(run, c) { return run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2; }
+  // Ce que fera le dé `die` s'il est joué maintenant. Le Miroir prend le type du dernier dé joué ce tour (une Lame s'il n'y en a pas).
+  function dieCalc(run, c, die) {
+    var t = die.t, v = die.v, mir = false;
+    if (t === 'miroir') { mir = true; t = c.lastT || 'lame'; }
+    if (foyerOn(run, c)) v *= 2;
+    return { t: t, v: v, base: die.v, mir: mir };
   }
-  E.dieCalc = function (hi, ci) { var c = S.run && S.run.combat; return c && c.hand[hi] && c.grid[ci] && !c.grid[ci].d && c.grid[ci].r !== 'seal' ? dieCalc(c, c.hand[hi], ci) : null; };
+  E.dieCalc = function (hi) { var c = S.run && S.run.combat; return c && c.hand[hi] ? dieCalc(S.run, c, c.hand[hi]) : null; };
   function dieFx(run, c, t, v) {
     var st = run.stats, h = c.hero, e = target(c), n;
-    if (t === 'lame') { if (e) hit(run, c, e, 0.18 * v, { die: 1 }); }
-    else if (t === 'garde') { n = st.hp * 0.015 * v; h.shield = Math.min(st.hp * 0.6, h.shield + n); h.shieldT = Math.max(h.shieldT, ROUND); ev(c, { k: 'dshield', v: n }); }
-    else if (t === 'seve') heroHeal(run, c, st.hp * 0.006 * v);
-    else if (t === 'braise') { if (e) { hit(run, c, e, 0.12 * v, { die: 1 }); if (!e.dead) applyDot(run, e, 'burn'); } }
+    if (t === 'lame') { if (e) hit(run, c, e, 0.22 * v, { die: 1 }); }
+    else if (t === 'garde') { n = st.hp * 0.021 * v; h.shield = Math.min(st.hp * 0.6, h.shield + n); h.shieldT = Math.max(h.shieldT, ROUND); ev(c, { k: 'dshield', v: n }); }
+    else if (t === 'seve') heroHeal(run, c, st.hp * 0.007 * v);
+    else if (t === 'braise') { if (e) { hit(run, c, e, 0.15 * v, { die: 1 }); if (!e.dead) applyDot(run, e, 'burn'); } }
     else if (t === 'venin') { if (e) { for (n = Math.ceil(v / 2); n > 0; n--) applyDot(run, e, 'poison'); ev(c, { k: 'dpoison', id: e.id }); } }
-    else if (t === 'foudre') { alive(c).forEach(function (x) { hit(run, c, x, 0.09 * v, { die: 1 }); }); ev(c, { k: 'chain' }); }
+    else if (t === 'foudre') { alive(c).forEach(function (x) { hit(run, c, x, 0.1 * v, { die: 1 }); }); ev(c, { k: 'chain' }); }
     else if (t === 'astre') { ug(run, 2 * v); ev(c, { k: 'dult', v: 2 * v }); }
+    else if (t === 'echo') {
+      // Écho : les autres dés de ta main gagnent la moitié de sa valeur. Seul, il charge l'ultime.
+      var b = Math.ceil(v / 2);
+      if (c.hand.length) { c.hand.forEach(function (d) { var nv = Math.min(VMAX, d.v + b); d.bonus = (d.bonus || 0) + nv - d.v; d.v = nv; d.ice = false; d.up = 1; }); ev(c, { k: 'echoUp', v: b }); }
+      else { ug(run, 2 * v); ev(c, { k: 'dult', v: 2 * v }); }
+    }
   }
-  // Figure formée par trois valeurs alignées (ou null)
+  // Les trois figures, lues sur les valeurs des 3 premiers dés joués dans le tour (dans n'importe quel ordre)
   function figKind(vals, st) {
-    var a = vals.slice().sort(function (x, y) { return x - y; }), s = a[0] + a[1] + a[2], p = 1 + (st.diceP || 0) / 100, n;
-    if (a[0] === a[2]) return { id: 'jackpot', name: 'BRELAN', icon: '👑', ap: 1, crit: 1, desc: '+1 action et tous tes coups sont critiques ce tour.' };
-    if (a[1] === a[0] + 1 && a[2] === a[1] + 1) return { id: 'suite', name: 'SUITE', icon: '✨', nextCrit: 1, desc: 'Ton prochain coup est critique.' };
-    if (s === 7) return { id: 'sept', name: 'SEPT CHANCEUX', icon: '🍀', freeSkill: 1, desc: 'Ce tour, tes pouvoirs acceptent n’importe quel dé.' };
-    if (s >= 15) { n = Math.round(40 * p); return { id: 'fort', name: 'COUP FORT', icon: '💥', dmg: n, desc: '+' + n + ' % dégâts ce tour.' }; }
-    if (s <= 6) { n = Math.min(80, Math.round(40 * p)); return { id: 'garde', name: 'PRUDENCE', icon: '🛡️', guard: n, desc: '-' + n + ' % dégâts subis jusqu’à ton prochain tour.' }; }
+    if (vals.length < 3) return null;
+    var a = vals.slice(0, 3).sort(function (x, y) { return x - y; }), n;
+    if (a[0] === a[2]) return { id: 'jackpot', name: 'BRELAN', icon: '👑', ap: 1, crit: 1, desc: '+1 action ⚡ et tous tes coups sont critiques ce tour.' };
+    if (a[1] === a[0] + 1 && a[2] === a[1] + 1) return { id: 'suite', name: 'SUITE', icon: '✨', ap: 1, nextCrit: 1, desc: '+1 action ⚡ et ton prochain coup est critique.' };
+    if (a[0] === a[1] || a[1] === a[2]) { n = Math.round(30 * (1 + (st.diceP || 0) / 100)); return { id: 'paire', name: 'PAIRE', icon: '🎲', dmg: n, desc: '+' + n + ' % de dégâts ce tour.' }; }
     return null;
   }
-  function figure(run, c, L) {
-    var k = figKind(L.map(function (x) { return c.grid[x].d.base; }), run.stats), h = c.hero, f = c.dfx; if (!k) return;
-    if (k.ap) h.ap += k.ap; if (k.crit) f.crit = 1; if (k.freeSkill) f.freeSkill = 1;
-    if (k.dmg) f.dmg = Math.max(f.dmg || 0, k.dmg); if (k.guard) f.guard = Math.max(f.guard || 0, k.guard);
+  E.figKind = function (vals) { return figKind(vals, (S.run && S.run.stats) || {}); };
+  // Enregistre un dé joué ; au 3e dé du tour, la figure se déclenche (une seule fois par tour)
+  function noteDie(run, c, v) {
+    if (!c.played) c.played = [];
+    if (c.played.length >= 3) return;
+    c.played.push(v); if (c.played.length < 3) return;
+    var k = figKind(c.played, run.stats), h = c.hero, f = c.dfx;
+    if (!k) { ev(c, { k: 'figure', id: 'rien', name: 'Pas de figure', icon: '', desc: '', vals: c.played.slice() }); return; }
+    if (k.ap) h.ap += k.ap; if (k.crit) f.crit = 1;
+    if (k.dmg) f.dmg = Math.max(f.dmg || 0, k.dmg);
     if (k.nextCrit) h.nextCrit = true;
     f.id = k.id; f.name = k.name; f.icon = k.icon; f.desc = k.desc;
     S.stats.doubles = (S.stats.doubles || 0) + 1; run.dbl = (run.dbl || 0) + 1; bump(run, 'doubles');
-    ev(c, { k: 'figure', id: k.id, name: k.name, icon: k.icon, desc: k.desc, line: L });
+    ev(c, { k: 'figure', id: k.id, name: k.name, icon: k.icon, desc: k.desc, vals: c.played.slice() });
   }
-  // Figures que formerait le dé n° hi posé sur la case ci (pour l'aperçu)
-  E.figAt = function (hi, ci) {
-    var run = S.run, c = run && run.combat, out = []; if (!c || !c.hand[hi]) return out;
-    LINES.forEach(function (L) {
-      if (L.indexOf(ci) < 0) return; var vals = [], ok = true;
-      L.forEach(function (x) { if (x === ci) vals.push(c.hand[hi].v); else if (c.grid[x].d) vals.push(c.grid[x].d.base); else ok = false; });
-      var k = ok ? figKind(vals, run.stats) : null; if (k) out.push(k);
-    });
-    return out;
-  };
-  // Pose le dé n° hi de la main sur la case ci. Ne coûte aucune action.
-  E.placeDie = function (hi, ci) {
+  // Joue le dé n° hi de la main. Ne coûte aucune action.
+  E.playDie = function (hi) {
     var run = S.run, c = run && run.combat;
-    if (!c || c.over || c.turn !== 'hero' || !c.hand[hi] || !c.grid[ci] || c.grid[ci].d || c.grid[ci].r === 'seal') return false;
-    var die = c.hand.splice(hi, 1)[0], r = dieCalc(c, die, ci);
-    dieBurn(run, c, die);
-    c.grid[ci].d = { t: r.t, v: r.v, base: r.base, mir: r.mir }; c.disc.push(die.bi); c.acted = true;
-    if (run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2) { c.foyerX2 = true; ev(c, { k: 'passive', txt: 'Foyer ×2' }); }
+    if (!c || c.over || c.turn !== 'hero' || !c.hand[hi]) return false;
+    var die = c.hand.splice(hi, 1)[0], r = dieCalc(run, c, die);
+    dieBurn(run, c, die); c.disc.push(die.bi); c.acted = true;
+    if (foyerOn(run, c)) { c.foyerX2 = true; ev(c, { k: 'passive', txt: 'Foyer ×2' }); }
     if (run.hero === 'pretresse' && r.base % 2 === 0) heroHeal(run, c, run.stats.hp * 0.02);
     S.stats.dice = (S.stats.dice || 0) + 1;
-    ev(c, { k: 'place', ci: ci, t: r.t, v: r.v, mir: r.mir });
-    dieFx(run, c, r.t, r.v);
-    if (!c.over) LINES.forEach(function (L) { if (L.indexOf(ci) >= 0 && c.grid[L[0]].d && c.grid[L[1]].d && c.grid[L[2]].d) figure(run, c, L); });
+    ev(c, { k: 'place', t: r.t, v: r.v, mir: r.mir });
+    dieFx(run, c, r.t, r.v); c.lastT = r.t;
+    if (!c.over) noteDie(run, c, r.base);
     if (c.over) finish(run, c); else endIfDone(run, c);
     return true;
   };
@@ -2975,7 +2999,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
   // Retourne le dé n° hi sur sa face opposée (1↔6, 2↔5, 3↔4) : une fois par tour, sans action
   E.flipDie = function (hi) {
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || !c.hand[hi] || !(c.flips > 0)) return false;
-    var d = c.hand[hi], f = run.bag[d.bi].f, b = run.stats.diceV || 0, nv = Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b)) + b;
+    var d = c.hand[hi], nv = flipOf(run, d);
     if (nv === d.v) return false;
     c.flips--; d.v = nv; d.ice = false; ev(c, { k: 'flip', hi: hi, v: nv }); return true;
   };
@@ -2999,10 +3023,10 @@ if (typeof module !== 'undefined') module.exports = DATA;
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || !c.hand.length || c.rerolls <= 0) return false;
     c.rerolls--; c.hand = c.hand.map(function (d) { return rollDie(run, d.bi); }); ev(c, { k: 'draw', n: c.hand.length, again: 1 }); return true;
   };
-  // Le tour du héros s'arrête quand il n'a plus d'action ET plus de dé à poser
+  // Le tour du héros s'arrête quand il n'a plus d'action ET plus de dé en main
   function endIfDone(run, c) {
     if (c.over || c.turn !== 'hero' || c.hero.ap > 0) return;
-    if (c.hand.length && alive(c).length && !c.nextWave && (freeCells(c).length || [0, 1, 2].some(function (i) { return c.hero.cds[i] <= 0 && E.skillUnlocked(run.hero, i) && bestDie(run, c, i) >= 0; }))) { ev(c, { k: 'handleft' }); return; }
+    if (c.hand.length && alive(c).length && !c.nextWave) { ev(c, { k: 'handleft' }); return; }
     beginFoes(run, c);
   }
   // Ce que l'ennemi e fera à son prochain tour : { k: atk|big|prep|stun|hidden|wait|flee, n, dmg, heal, shield, summon }
@@ -3030,30 +3054,23 @@ if (typeof module !== 'undefined') module.exports = DATA;
     return o;
   }
   E.intents = function () { var run = S.run, c = run && run.combat; return c ? c.enemies.map(function (e) { return intentOf(run, c, e); }) : []; };
-  // Pose automatiquement les dés de la main (mode AUTO et robot de test) : au plus offrant, case par case
-  var FIGW = { jackpot: 9, suite: 2, sept: 2.5, fort: 3, garde: 1.5 };
+  // Joue automatiquement les dés de la main (mode AUTO et robot de test) : l'Écho d'abord, le Miroir en dernier, puis au plus offrant
   function autoPlace(run, c) {
     var guard = 0, h = c.hero;
     while (c.hand.length && !c.over && c.turn === 'hero' && guard++ < 12) {
-      var free = freeCells(c), foes = alive(c), frac = run.hp / run.stats.hp, threat = -h.shield, best = null; if (!free.length || !foes.length) break;
+      var foes = alive(c), frac = run.hp / run.stats.hp, threat = -h.shield, best = null; if (!foes.length) break;
       foes.forEach(function (e) { var it = intentOf(run, c, e); threat += (it.dmg || 0) * (it.n || 1); });
       c.hand.forEach(function (die, hi) {
-        free.forEach(function (ci) {
-          var r = dieCalc(c, die, ci), w = 0;
-          if (r.t === 'lame') w = 1; else if (r.t === 'braise') w = 0.9; else if (r.t === 'venin') w = 0.8; else if (r.t === 'foudre') w = 0.45 * foes.length;
-          else if (r.t === 'garde') w = threat > 0 ? 0.9 : 0.15; else if (r.t === 'seve') w = frac > 0.95 ? 0.05 : frac < 0.5 ? 1.3 : 0.8;
-          else if (r.t === 'astre') w = (run.ult || 0) < 100 ? 0.6 : 0;
-          else if (r.t === 'echo') w = 0.25 * ADJ[ci].filter(function (a) { return !c.grid[a].d && c.grid[a].r !== 'seal'; }).length + (c.hand.length > 1 ? 0.3 : 0);
-          var sc = r.v * w;
-          LINES.forEach(function (L) {
-            if (L.indexOf(ci) < 0) return; var vals = [], ok = true;
-            L.forEach(function (x) { if (x === ci) vals.push(r.base); else if (c.grid[x].d) vals.push(c.grid[x].d.base); else ok = false; });
-            var k = ok ? figKind(vals, run.stats) : null; if (k) sc += FIGW[k.id];
-          });
-          if (!best || sc > best.sc) best = { hi: hi, ci: ci, sc: sc };
-        });
+        var r = dieCalc(run, c, die), w = 0;
+        if (die.t === 'echo') w = c.hand.length > 1 ? 9 : 0.5;
+        else if (die.t === 'miroir') w = c.lastT ? 0.6 : 0.1;
+        else if (r.t === 'lame') w = 1; else if (r.t === 'braise') w = 0.9; else if (r.t === 'venin') w = 0.8; else if (r.t === 'foudre') w = 0.45 * foes.length;
+        else if (r.t === 'garde') w = threat > 0 ? 0.9 : 0.15; else if (r.t === 'seve') w = frac > 0.95 ? 0.05 : frac < 0.5 ? 1.3 : 0.8;
+        else if (r.t === 'astre') w = (run.ult || 0) < 100 ? 0.6 : 0;
+        var sc = r.v * w;
+        if (!best || sc > best.sc) best = { hi: hi, sc: sc };
       });
-      if (!best) break; E.placeDie(best.hi, best.ci);
+      if (!best) break; E.playDie(best.hi);
     }
   }
   // ----- Offres de dés : après une élite, un boss, une arène, et un combat ordinaire sur trois -----
@@ -3394,7 +3411,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
       case 'a3': var low = e.hp / e.maxhp < 0.35; hit(run, c, e, low ? 7.5 : 3.0, { skill: 3 }); if (e.dead) h.ap += 1; break;
       case 'n1': hit(run, c, e, 2.0, { skill: 1 }); if (h.skel >= 3 + st.skel) drawOne(run, c); else h.skel = h.skel + 1; break;
       case 'n2': hit(run, c, e, 1.9 * (1 + 0.3 * (h.skel || 0)), { skill: 2, drain: true }); break;
-      case 'n3': h.skel = 3 + st.skel; h.buffs.skelF = { t: 6, v: 3 }; var buried = 0; c.grid.forEach(function (g) { if (g.d) { g.d = null; buried++; } }); if (buried) { ug(run, 5 * buried); ev(c, { k: 'gclear' }); } break;
+      case 'n3': h.skel = 3 + st.skel; h.buffs.skelF = { t: 6, v: 3 }; drawOne(run, c); ug(run, 10); break;
       case 'b1': hit(run, c, e, 2.0, { skill: 1 }); if (!e.dead) applyDot(run, e, 'bleed'); if (!e.dead && run.hp < st.hp * 0.5) hit(run, c, e, 1.0, { skill: 1 }); break;
       case 'b2': run.hp = Math.max(1, run.hp - run.hp * 0.10); h.buffs.spd = { t: 6, v: 60 }; h.buffs.ls = { t: 6, v: 15 }; h.ap += 1; break;
       case 'b3': var cnt = all.length; all.forEach(function (x) { hit(run, c, x, x.st.bleed ? 3.3 : 2.2, { skill: 3 }); }); heroHeal(run, c, st.hp * 0.05 * cnt); break;
@@ -3410,6 +3427,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     }
     evoFx(run, c, i, e);
     if (st.skillHeal) heroHeal(run, c, st.hp * st.skillHeal / 100);
+    if (!c.over) noteDie(run, c, die.v);
     if (st.skillEcho && h.cds[i] > 0.5 && rnd() * 100 < st.skillEcho) { h.cds[i] = 0.5; ev(c, { k: 'free', i: i }); }
     c.pw = 1;
     if (c.over) finish(run, c);
@@ -3474,7 +3492,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
       if (id === 'b2' && frac < 0.25) continue;
       if (id === 'a3') { var t = target(c); if (t && t.hp / t.maxhp > 0.35 && !t.boss && alive(c).length > 1) continue; }
       var hi = bestDie(run, c, i);
-      if (hi < 0 && c.flips > 0) { for (var fj = 0; fj < c.hand.length && hi < 0; fj++) { var fd = c.hand[fj], ff = run.bag[fd.bi].f, fb = run.stats.diceV || 0; if (!fd.ice && D.NEEDS[hero.skills[i].need].ok(Math.max(1, ff[0] + ff[5] - (fd.v - fb)) + fb) && E.flipDie(fj)) hi = fj; } }
+      if (hi < 0 && c.flips > 0) { for (var fj = 0; fj < c.hand.length && hi < 0; fj++) { var fd = c.hand[fj]; if (!fd.ice && D.NEEDS[hero.skills[i].need].ok(flipOf(run, fd)) && E.flipDie(fj)) hi = fj; } }
       if (hi >= 0 && E.useSkill(i, hi)) return true;
     }
     autoPlace(run, c); if (c.over || c.turn !== 'hero') return true;
@@ -5041,6 +5059,242 @@ ic('i_reroll', function () { O(8, 8, 5.5, 5.5, '!#9fd0ff'); X(2, 6, 3, 2); X(11,
 ic('i_flip', function () { R(4, 4, 8, 8, '#e6dfc8'); R(4, 10, 8, 2, '#b9b094'); D('!' + OUT, 6, 6, 9, 6, 6, 9, 9, 9); P('!#ffd87a', [7, 0, 9, 0, 9, 2, 11, 2, 8, 4, 5, 2, 7, 2]); P('!#ffd87a', [7, 15, 9, 15, 9, 14, 11, 14, 8, 12, 5, 14, 7, 14]); });
 ic('i_lock', function () { O(8, 6, 3, 3.5, S1); X(5, 7, 7, 3); R(3, 7, 10, 8, A2); R(3, 7, 10, 1, A1); R(7, 9, 2, 4, '!' + OUT); });
 
+/* ---------- icones des aubaines (bn_*), des aubaines de heros (cb_*) et des pactes (pc_*) : 16x16 ---------- */
+var GR1 = '#9fe07a', GR2 = '#4f9a3a', GR3 = '#2f5a26', ST1 = '#8a8496', ST2 = '#6a6476', ST3 = '#4a4452';
+function drop(x, y, c, hi) { P(c, [x, y - 4, x + 2, y - 1, x + 2, y + 1, x + 1, y + 2, x - 1, y + 2, x - 2, y + 1, x - 2, y - 1]); if (hi) D('!' + hi, x - 1, y - 1, x - 1, y); }
+function heart(x, y, c, hi) { E(x - 2, y, 2.2, 2.2, c); E(x + 2, y, 2.2, 2.2, c); P(c, [x - 4, y + 1, x + 4, y + 1, x, y + 5]); if (hi) D('!' + hi, x - 3, y - 1, x - 2, y - 1); }
+function dice(x, y, s, pips, cBody, cPip) { R(x, y, s, s, cBody || B1); R(x, y + s - 1, s, 1, B2); for (var k = 0; k < pips.length; k += 2) D('!' + (cPip || RD), x + pips[k], y + pips[k + 1]); }
+function glass(c) { R(3, 1, 10, 2, W1); R(3, 13, 10, 2, W1); L(4, 3, 4, 12, W3); L(11, 3, 11, 12, W3); P('#cfd6e6', [5, 3, 10, 3, 8, 8, 10, 12, 5, 12, 7, 8]); P(c, [6, 4, 9, 4, 8, 6, 7, 6]); P(c, [6, 12, 9, 12, 8, 10, 7, 10]); D('!' + c, 7, 8, 7, 9); }
+function keyIc(c, c2) { O(4, 8, 3, 3, c); D('!' + OUT, 4, 8); R(7, 7, 8, 2, c); R(11, 9, 2, 3, c); R(14, 9, 1, 2, c); D('!' + c2, 3, 6, 8, 7); }
+function crown(c, c2, gem) { P(c, [2, 13, 2, 5, 5, 9, 8, 3, 11, 9, 14, 5, 14, 13]); R(2, 11, 13, 3, c2); D('!' + gem, 8, 12, 4, 12, 12, 12); D('!' + gem, 8, 5); }
+function flame(cx, cy, c1, c2, c3) { P(c3, [cx - 4, cy + 3, cx - 4, cy, cx - 2, cy - 3, cx - 1, cy - 6, cx + 1, cy - 4, cx + 2, cy - 7, cx + 4, cy - 2, cx + 4, cy + 3, cx + 2, cy + 5, cx - 2, cy + 5]); P(c2, [cx - 2, cy + 4, cx - 3, cy + 1, cx - 1, cy - 2, cx + 1, cy - 1, cx + 2, cy - 4, cx + 3, cy + 1, cx + 2, cy + 4]); E(cx, cy + 2, 1.2, 1.8, c1); }
+function skull(cx, cy, c, eye) { E(cx, cy, 4, 3.5, c); R(cx - 2, cy + 3, 5, 2, c); D('!' + OUT, cx - 2, cy, cx - 1, cy, cx + 1, cy, cx + 2, cy, cx, cy + 2, cx - 1, cy + 4, cx + 1, cy + 4); if (eye) D('!' + eye, cx - 2, cy, cx + 2, cy); }
+function shield(c, c2) { P(c, [2, 2, 13, 2, 13, 8, 8, 14, 7, 14, 2, 8]); P(c2, [4, 4, 11, 4, 11, 8, 8, 12, 7, 12, 4, 8]); }
+
+/* aubaines */
+ic('bn_force', function () { R(4, 4, 8, 6, S2); R(4, 4, 8, 1, S1); D('!' + S4, 6, 4, 6, 5, 8, 4, 8, 5, 10, 4, 10, 5); R(2, 7, 3, 4, S2); R(4, 10, 8, 2, S3); R(5, 12, 6, 3, W2); D('!' + A1, 5, 13, 10, 13); G('#ff8a2a66', 3, 2, 8, 2, 13, 2, 1, 6); });
+ic('bn_vie', function () { heart(8, 6, RD, '#ff8a96'); D('!#7a0c18', 8, 10, 7, 9, 9, 9); drop(13, 13, RD); });
+ic('bn_fer', function () { P(S2, [3, 2, 6, 3, 10, 3, 13, 2, 14, 6, 12, 8, 12, 14, 4, 14, 4, 8, 2, 6]); P(S3, [7, 4, 9, 4, 9, 13, 7, 13]); D('!' + S1, 4, 3, 5, 3, 12, 3, 11, 3); D('!' + A1, 5, 6, 11, 6, 5, 12, 11, 12); });
+ic('bn_hate', function () { P('#d8b088', [6, 14, 6, 8, 7, 3, 8, 8, 9, 2, 10, 8, 11, 3, 12, 8, 13, 5, 14, 9, 12, 14]); D('!#a07850', 9, 9, 11, 9); L(0, 5, 3, 5, '!' + ICE); L(1, 8, 4, 8, '!#ffffff'); L(0, 11, 3, 11, '!' + ICE); });
+ic('bn_oeil', function () { P('#8a6440', [1, 8, 5, 4, 11, 4, 15, 8, 11, 12, 5, 12]); E(8, 8, 3.5, 3.5, A1); E(8, 8, 2, 2, A2); R(7, 6, 2, 5, '!' + OUT); D('!#ffffff', 6, 6); L(2, 3, 5, 1, '#5a4030'); L(14, 3, 11, 1, '#5a4030'); });
+ic('bn_cruel', function () { L(3, 13, 11, 5, BL, 1); L(4, 13, 12, 5, S1, 1); L(11, 4, 13, 2, BL, 1); R(1, 12, 4, 2, A2); R(2, 13, 2, 3, W2); D('!' + RD, 9, 7, 10, 6, 7, 9); drop(13, 13, RD); });
+ic('bn_or', function () { [[4, 13, 3], [10, 13, 5], [7, 8, 2]].forEach(function (c) { for (var k = 0; k < c[2]; k++) { var y = c[1] - k * 2; E(c[0], y, 3, 1.2, A2); L(c[0] - 2, y - 1, c[0] + 2, y - 1, A1); } }); D('!#fff1a8', 9, 4, 6, 7); G('#ffe08a77', 10, 2, 13, 4, 2, 8) });
+ic('bn_arcane', function () { R(2, 3, 12, 11, V3); R(3, 3, 10, 9, '#e6dfc8'); L(8, 3, 8, 12, '!' + B3); R(2, 12, 12, 2, V3); E(8, 7, 2.5, 1.5, '!' + V2); D('!' + V1, 8, 7); D('!' + OUT, 4, 5, 5, 5, 11, 5, 12, 5, 4, 9, 5, 9, 11, 9); G('#a04cff66', 8, 1, 1, 6, 15, 6); });
+ic('bn_des1', function () { dice(2, 4, 10, [2, 2, 7, 2, 2, 7, 7, 7, 4, 4, 5, 5]); R(11, 10, 4, 5, S3); R(11, 10, 4, 1, S2); D('!' + V2, 6, 13, 6, 14, 5, 15); G('#a04cff77', 1, 3, 13, 3); });
+ic('bn_des2', function () { dice(6, 1, 8, [1, 1, 5, 5, 3, 3]); R(13, 3, 2, 6, B2); dice(1, 7, 8, [1, 1, 5, 1, 1, 5, 5, 5]); D('!' + F1, 12, 12, 14, 12, 13, 11, 13, 13); G('#ff8a2a55', 4, 6, 10, 0); });
+ic('bn_des3', function () { P('#d8b088', [2, 15, 2, 11, 4, 9, 6, 11, 8, 9, 10, 11, 12, 9, 14, 11, 14, 15]); dice(4, 1, 8, [1, 1, 5, 5, 3, 3, 1, 5, 5, 1]); D('!#a07850', 6, 12, 10, 12); G('#ffe08a66', 3, 0, 12, 0); });
+ic('bn_des4', function () { dice(4, 1, 8, [3, 3]); P(ST2, [3, 15, 4, 10, 12, 10, 13, 15]); R(6, 9, 4, 2, ST1); D('!' + ST1, 5, 11, 6, 11); D('!' + A1, 7, 12, 8, 12, 8, 13, 7, 14, 8, 14); });
+ic('bn_regen', function () { L(8, 15, 8, 6, GR2, 1); P(GR2, [8, 10, 3, 7, 2, 3, 6, 4]); P(GR1, [8, 8, 13, 5, 14, 1, 10, 2]); D('!' + GR3, 5, 6, 11, 4); P('#c8b098', [3, 15, 13, 15, 12, 13, 4, 13]); D('!' + N1, 2, 2, 14, 8); });
+ic('bn_sang', function () { P('#7a3040', [1, 3, 15, 3, 14, 6, 2, 6]); P(B1, [3, 5, 5, 5, 4, 11]); P(B1, [11, 5, 13, 5, 12, 11]); D('!' + B1, 7, 6, 8, 6, 9, 6, 7, 7, 9, 7); D('!' + RD, 4, 11, 12, 11, 4, 12); drop(12, 15, RD, '#ff8a96'); X(10, 15, 5, 1); drop(12, 14, RD, '#ff8a96') });
+ic('bn_ombre', function () { P('#3a3046', [3, 15, 4, 7, 6, 3, 8, 2, 10, 4, 11, 15]); P(BLK, [7, 15, 8, 7, 10, 3, 12, 2, 14, 4, 15, 15]); D('!' + V1, 11, 5, 13, 5); L(0, 9, 3, 9, '!#6a5a7a'); L(0, 12, 2, 12, '!#6a5a7a'); G('#a04cff55', 12, 1, 15, 3); });
+ic('bn_tempo', function () { glass(A1); G('#ffe08a55', 8, 0, 8, 15); });
+ic('bn_chance', function () { E(5, 5, 2.5, 2.5, GR2); E(11, 5, 2.5, 2.5, GR2); E(5, 10, 2.5, 2.5, GR2); E(11, 10, 2.5, 2.5, GR2); D('!' + GR1, 4, 4, 10, 4, 4, 9, 10, 9); E(8, 7.5, 1.2, 1.2, GR3); L(8, 9, 10, 15, '#8a6440', 1); O(13, 13, 1.5, 1.5, '!#b9a070'); });
+ic('bn_festin', function () { E(6, 6, 4.5, 4, '#a0402c'); E(5, 5, 2.5, 2, '#c8603c'); L(9, 9, 13, 13, B1, 2); E(14, 12, 1.4, 1.4, B1); E(12, 14, 1.4, 1.4, B1); D('!#e89060', 4, 4); });
+ic('bn_epines', function () { L(1, 14, 14, 1, GR3, 2); [[4, 11, 2, 9], [6, 9, 8, 11], [9, 6, 7, 4], [11, 4, 13, 6], [3, 12, 5, 14]].forEach(function (t) { L(t[0], t[1], t[2], t[3], '!' + B2); }); D('!' + RD, 2, 9, 8, 12, 7, 3, 13, 7); });
+ic('bn_flamme', function () { flame(8, 8, '#ffffff', F1, F2); D('!' + F3, 4, 13, 12, 13); G('#ff8a2a66', 8, 0, 3, 4, 13, 4); });
+ic('bn_venin', function () { O(8, 10, 5, 4, GR2); O(8, 10, 4, 3, GR2); O(8, 10, 2, 1.5, GR3); E(11, 4, 3, 2.5, GR2); P(GR2, [9, 6, 12, 6, 12, 8, 9, 8]); D('!' + F1, 10, 3, 12, 3); D('!' + OUT, 10, 4); L(14, 5, 15, 6, '!' + RD); D('!' + GR1, 5, 8, 4, 10, 6, 13, 10, 13); drop(3, 4, N2, N1) });
+ic('bn_saigne', function () { P(S1, [2, 12, 12, 2, 14, 3, 4, 14]); for (var k = 0; k < 5; k++) D('!' + BL, 4 + k * 2, 11 - k * 2, 5 + k * 2, 11 - k * 2); D('!' + S3, 3, 13, 5, 13); D('!' + RD, 6, 12, 10, 8, 12, 5); drop(12, 13, RD); });
+ic('bn_bourreau', function () { P(W2, [5, 1, 11, 1, 13, 5, 11, 15, 5, 15, 3, 5]); P(W1, [6, 2, 10, 2, 12, 5, 10, 14, 6, 14, 4, 5]); R(7, 4, 2, 7, A2); R(5, 6, 6, 2, A2); D('!' + A1, 7, 4); });
+ic('bn_egide', function () { E(8, 8, 6.5, 6.5, B2); E(8, 8, 5, 5, B1); for (var k = 0; k < 4; k++) L(4, 4 + k * 2.5, 12, 4 + k * 2.5, B2); E(8, 8, 1.6, 1.6, '!' + B3); D('!#ffffff', 5, 3, 4, 4); });
+ic('bn_echo', function () { L(2, 14, 11, 3, '!#6a5a8a', 1); L(5, 14, 14, 3, BL, 1); L(6, 14, 15, 4, S1, 1); R(3, 11, 5, 2, A2); R(4, 13, 2, 3, W2); D('!#a08ac8', 1, 12, 2, 10); G('#a04cff55', 9, 2, 11, 1); });
+ic('bn_embuscade', function () { P('#2a2234', [1, 15, 2, 6, 5, 2, 8, 1, 11, 2, 14, 6, 15, 15]); E(8, 7, 4, 3, '!' + OUT); D('!' + F1, 6, 7, 10, 7); D('!#fff1a8', 6, 6, 10, 6); L(3, 15, 13, 9, BL, 1); D('!' + A2, 2, 15, 3, 14); G('#ffe27a55', 6, 8, 10, 8) });
+ic('bn_foudre', function () { P('#fff1a8', [9, 0, 3, 9, 7, 9, 5, 15, 13, 6, 9, 6, 11, 0]); P(F1, [9, 2, 5, 8, 8, 8, 7, 12, 11, 7, 8, 7, 10, 2]); G('#fff1a866', 2, 3, 14, 10, 12, 1); });
+ic('bn_frenesie', function () { E(8, 4, 6, 2, '#e6dfc8'); R(2, 4, 13, 8, RD); E(8, 12, 6, 2, '#8a1e24'); for (var k = 0; k < 4; k++) L(3 + k * 3, 5, 4 + k * 3, 11, '!' + B1); L(1, 0, 6, 3, W1, 1); L(15, 0, 10, 3, W1, 1); E(8, 4, 4, 1, '#c8c0a8'); });
+ic('bn_verre', function () { P('#9fe0f0', [8, 0, 13, 6, 10, 15, 6, 15, 3, 6]); P('#5ab0d0', [8, 0, 13, 6, 10, 15, 8, 9]); L(5, 7, 9, 10, '!#ffffff'); L(9, 10, 8, 14, '!#ffffff'); D('!#ffffff', 6, 4, 7, 3); G('#bfe3ff66', 2, 3, 14, 3); });
+ic('bn_colosse', function () { R(4, 2, 8, 13, ST2); R(4, 2, 8, 2, ST1); R(3, 5, 10, 3, ST2); R(5, 6, 2, 1, '!' + OUT); R(9, 6, 2, 1, '!' + OUT); D('!' + N2, 5, 6, 10, 6); R(7, 7, 2, 4, ST3); R(5, 12, 6, 1, '!' + ST3); D('!' + ST3, 4, 9, 11, 3, 12, 10); });
+ic('bn_fiole', function () { E(8, 10, 5, 4.5, '#cfd6e6'); R(6, 1, 4, 5, '#cfd6e6'); R(5, 0, 6, 2, W1); E(8, 11, 4, 3, N2); R(4, 9, 9, 1, N1); D('!#ffffff', 5, 8, 6, 3); D('!' + N1, 7, 12, 10, 11); G('#4fe07a55', 3, 5, 13, 5); });
+ic('bn_tout', function () { for (var y = 1; y < 15; y++) for (var x = 1; x < 15; x++) { var a = (x - 7) * (x - 7) + (y - 8) * (y - 8), b = (x - 10) * (x - 10) + (y - 6) * (y - 6); if (a <= 36 && b > 25) set(x, y, A1); } D('!#fff1a8', 3, 7, 4, 5, 3, 9); D('!' + A2, 6, 13, 9, 13); D('!#fff1a8', 13, 3, 14, 2, 12, 12); G('#ffe08a66', 2, 3, 3, 13, 13, 1) });
+ic('bn_sangfroid', function () { P(ICE, [8, 1, 12, 7, 13, 10, 12, 13, 10, 15, 6, 15, 4, 13, 3, 10, 4, 7]); P('#7ab8e8', [8, 4, 11, 9, 11, 12, 8, 14, 9, 10]); D('!#ffffff', 6, 8, 6, 9, 7, 6); L(1, 2, 3, 2, '!' + ICE); L(2, 1, 2, 3, '!' + ICE); L(13, 2, 15, 2, '!#ffffff'); L(14, 1, 14, 3, '!#ffffff'); G('#bfe3ff66', 8, 0, 2, 12, 14, 12) });
+ic('bn_duelliste', function () { L(2, 2, 13, 13, BL, 1); L(13, 2, 2, 13, BL, 1); L(1, 4, 4, 1, A2, 1); L(14, 4, 11, 1, A2, 1); D('!' + A1, 2, 2, 13, 2); R(1, 13, 2, 2, W2); R(13, 13, 2, 2, W2); D('!#ffffff', 8, 7, 7, 8); });
+ic('bn_pillard', function () { P('#8a6440', [5, 6, 11, 6, 14, 10, 14, 14, 12, 15, 4, 15, 2, 14, 2, 10]); P('#a07a50', [5, 7, 11, 7, 12, 9, 4, 9]); P('#6a4a2c', [6, 2, 10, 2, 9, 5, 7, 5]); L(5, 6, 11, 6, '!' + A2); D('!' + A1, 6, 1, 7, 0, 10, 1); E(8, 12, 1.8, 1.8, '!' + A1); D('!' + A2, 8, 12); D('!#5a3a20', 4, 13, 12, 13); G('#ffe08a77', 7, -1, 9, 0, 11, 0) });
+ic('bn_brasier', function () { flame(8, 5, F1, F2, F3); P(S3, [1, 9, 15, 9, 12, 13, 4, 13]); R(1, 9, 15, 1, S2); R(6, 13, 4, 2, S4); D('!' + F2, 4, 10, 8, 11, 11, 10); G('#ff8a2a66', 8, -1, 3, 2, 13, 2); });
+ic('bn_pestilence', function () { E(8, 9, 6.5, 5, '#5a7a3a'); E(5, 6, 3, 3, '#6a9a4a'); E(11, 6, 3, 3, '#6a9a4a'); skull(8, 8, B1, N2); D('!' + N1, 2, 3, 14, 3, 13, 14); });
+ic('bn_ecorcheur', function () { R(3, 2, 10, 7, S1); R(3, 2, 10, 1, BL); L(3, 9, 12, 9, S3); O(10, 4, 1, 1, '!' + S3); R(6, 9, 3, 6, W2); D('!' + W1, 7, 10, 7, 12); D('!' + RD, 4, 7, 5, 8, 12, 8); drop(13, 13, RD); });
+ic('bn_zenith', function () { E(8, 8, 3.5, 3.5, A1); E(8, 8, 2, 2, '#fff1a8'); for (var k = 0; k < 8; k++) { var a = k * Math.PI / 4; L(8 + Math.cos(a) * 5, 8 + Math.sin(a) * 5, 8 + Math.cos(a) * 7, 8 + Math.sin(a) * 7, '!' + (k % 2 ? A2 : A1)); } GE(8, 8, 7, 7, '#ffd27a22'); });
+ic('bn_titan', function () { E(8, 8, 5.5, 5.5, ST2); E(8, 8, 3.5, 3.5, ST1); E(8, 8, 1.5, 1.5, '!' + ST3); for (var k = 0; k < 8; k++) { var a = k * Math.PI / 4; D(B1, 8 + Math.round(Math.cos(a) * 7), 8 + Math.round(Math.sin(a) * 7)); } D('!' + RD, 1, 8, 15, 8); });
+ic('bn_riposte', function () { L(1, 14, 12, 3, BL, 1); E(3, 12, 2, 2, A2); D('!' + A1, 3, 12); L(1, 15, 2, 14, W2); L(14, 1, 12, 3, '!#ffffff'); D('!#ffffff', 11, 1, 15, 4); star(12, 4, 4, 3.5, 1.2, '!' + F1, 0); G('#fff1a888', 13, 2, 10, 5); });
+ic('bn_lynx', function () { O(8, 8, 6, 6, '!' + RD); O(8, 8, 3, 3, '!' + RD); L(8, 0, 8, 4, '!' + B1); L(8, 12, 8, 15, '!' + B1); L(0, 8, 4, 8, '!' + B1); L(12, 8, 15, 8, '!' + B1); star(8, 8, 4, 2.5, 1, '!' + F1); });
+ic('bn_adrenaline', function () { heart(8, 6, RD, '#ff8a96'); P('!#fff1a8', [9, 2, 6, 8, 8, 8, 7, 12, 11, 6, 9, 6, 10, 2]); G('#fff1a866', 1, 4, 15, 4, 8, 13); });
+ic('bn_phenix', function () { P('#e6dfc8', [8, 9, 1, 3, 3, 9, 6, 11]); P('#e6dfc8', [8, 9, 15, 3, 13, 9, 10, 11]); D('!' + B2, 3, 5, 5, 7, 13, 5, 11, 7); flame(8, 9, '#ffffff', F1, F2); G('#ffe27a77', 8, 1, 1, 2, 15, 2); });
+ic('bn_avatar', function () { P(RD, [3, 4, 13, 4, 13, 11, 10, 15, 6, 15, 3, 11]); P('#8a1e24', [3, 11, 6, 15, 10, 15, 13, 11, 8, 12]); P(B1, [3, 5, 1, 0, 5, 4]); P(B1, [13, 5, 15, 0, 11, 4]); R(5, 7, 2, 1, '!' + F1); R(9, 7, 2, 1, '!' + F1); D('!' + OUT, 6, 11, 7, 12, 9, 12, 10, 11); D('!' + B1, 7, 12, 9, 12); });
+ic('bn_bastion', function () { R(3, 5, 10, 10, ST2); R(2, 2, 3, 3, ST2); R(6, 2, 4, 3, ST2); R(11, 2, 3, 3, ST2); R(6, 10, 4, 5, '!' + OUT); E(8, 10, 2, 1.5, '!' + OUT); R(7, 6, 2, 2, '!' + OUT); D('!' + ST3, 4, 8, 11, 7, 4, 12, 12, 13); D('!' + RD, 8, 0, 9, 1, 8, 1); L(8, 0, 8, 2, W2); });
+ic('bn_destin', function () { R(5, 2, 6, 2, W1); R(5, 12, 6, 2, W1); R(6, 4, 4, 8, A2); for (var k = 4; k < 12; k += 2) L(6, k, 9, k, '!' + A1); L(10, 9, 14, 15, '!' + A1); D('!' + A1, 12, 12, 13, 13); G('#ffe08a66', 5, 1, 11, 14, 15, 15); });
+ic('bn_tempete', function () { for (var k = 0; k < 3; k++) { var a = k * 2.094; P(BL, [8, 8, Math.round(8 + Math.cos(a) * 7), Math.round(8 + Math.sin(a) * 7), Math.round(8 + Math.cos(a + 0.5) * 5), Math.round(8 + Math.sin(a + 0.5) * 5)]); } O(8, 8, 6, 6, '!#6a7a9a'); E(8, 8, 1.5, 1.5, '!' + S1); D('!#ffffff', 8, 8); });
+ic('bn_maitrise', function () { R(3, 3, 10, 10, '#e6dfc8'); E(3, 3, 1.5, 1.5, B2); E(13, 13, 1.5, 1.5, B2); O(8, 8, 3.5, 3.5, '!' + V2); D('!' + V2, 8, 5, 8, 11, 5, 8, 11, 8); E(8, 8, 1, 1, '!' + V1); D('!' + RD, 12, 4, 11, 4); G('#a04cff55', 8, 1, 1, 8, 15, 8); });
+ic('bn_rituel', function () { R(6, 6, 4, 8, '#e6dfc8'); R(6, 6, 4, 1, B2); D('!' + B2, 9, 9, 9, 10, 6, 12); R(3, 13, 10, 2, A2); R(4, 13, 8, 1, A1); L(8, 4, 8, 5, '!' + OUT); E(8, 2.5, 1.2, 2, F2); D('!' + F1, 8, 3); GE(8, 3, 4, 4, '#ffd27a33'); });
+ic('bn_opportuniste', function () { star(4, 4, 4, 3.5, 1.2, F1); star(12, 4, 4, 3.5, 1.2, A1); star(8, 10, 5, 4.5, 1.8, '#fff1a8'); D('!#ffffff', 8, 10); L(1, 14, 4, 13, '!' + F2); L(15, 14, 12, 13, '!' + F2); });
+ic('bn_predateur', function () { P('#6a6476', [2, 5, 3, 0, 6, 3, 10, 3, 13, 0, 14, 5, 15, 9, 11, 14, 5, 14, 1, 9]); P('#8a8496', [5, 9, 11, 9, 9, 14, 7, 14]); D('!' + F1, 5, 7, 11, 7); D('!' + OUT, 6, 7, 10, 7, 7, 12, 8, 12, 9, 12); D('!' + B1, 6, 13, 10, 13); D('!' + RD, 3, 2, 13, 2); });
+ic('bn_resonance', function () { P(A2, [4, 12, 5, 6, 6, 3, 8, 2, 10, 3, 11, 6, 12, 12]); R(3, 12, 10, 2, A3); E(8, 14, 1.2, 1.2, A1); D('!' + A1, 6, 5, 6, 7, 6, 9); O(8, 8, 7.5, 7.5, '!#fff1a8'); X(0, 6, 3, 5); X(13, 6, 3, 5); X(5, 0, 6, 1); });
+ic('bn_rempart', function () { for (var y = 0; y < 4; y++) for (var x = -1; x < 4; x++) { var ox = 1 + x * 4 + (y % 2 ? 2 : 0); R(Math.max(1, ox), 3 + y * 3, Math.min(ox + 3, 15) - Math.max(1, ox), 2, y % 2 ? ST2 : ST1); } R(1, 1, 3, 2, ST2); R(6, 1, 4, 2, ST2); R(12, 1, 3, 2, ST2); D('!' + A1, 8, 9, 7, 10, 9, 10); });
+
+/* aubaines de heros qui ne renforcent pas un pouvoir */
+ic('cb_k2', function () { shield(S2, S3); O(8, 7, 3, 3, '!' + A1); D('!' + A1, 8, 7); D(S1, 3, 2, 4, 2, 5, 2); G('#ffe08a77', 2, 1, 13, 1, 8, 15); });
+ic('cb_p1', function () { E(8, 12, 6, 3, '#3a3036'); D('!' + F2, 4, 12, 7, 13, 10, 12, 12, 13); D('!' + F1, 6, 11, 9, 11); flame(8, 6, '#ffffff', F1, F2); G('#ff8a2a77', 2, 9, 14, 9); });
+ic('cb_a1', function () { P(V3, [8, 1, 12, 7, 13, 10, 12, 13, 10, 15, 6, 15, 4, 13, 3, 10, 4, 7]); P(BLK, [8, 4, 11, 9, 11, 12, 8, 14, 9, 10]); D('!' + V1, 6, 8, 6, 9, 7, 6); D('!' + N2, 7, 12, 8, 11, 6, 13); D('!' + N1, 2, 3, 14, 4, 13, 14); G('#4fe07a66', 8, 0, 2, 12, 14, 12); });
+ic('cb_n1', function () { P(W3, [1, 9, 15, 9, 13, 15, 3, 15]); R(1, 8, 14, 2, '#6a4a2a'); skull(5, 5, B1); skull(11, 5, B2); D('!#4fe07a', 3, 5, 7, 5, 9, 5, 13, 5); G('#4fe07a55', 8, 1, 2, 1, 14, 1); });
+ic('cb_n2', function () { L(3, 13, 13, 3, B1, 2); L(3, 3, 13, 13, B2, 2); E(2, 13, 1.5, 1.5, B1); E(14, 2, 1.5, 1.5, B1); E(2, 2, 1.5, 1.5, B2); E(14, 14, 1.5, 1.5, B2); D('!#4fe07a', 7, 8, 8, 7, 9, 8); GE(8, 8, 5, 5, '#4fe07a33'); });
+ic('cb_b1', function () { R(2, 2, 12, 12, '#c8b098'); L(4, 4, 12, 12, '!' + RD); L(4, 5, 11, 12, '!#7a0c18'); L(11, 4, 4, 11, '!' + RD); drop(12, 13, RD); drop(5, 14, RD); });
+ic('cb_s1', function () { P(A2, [4, 2, 12, 2, 11, 6, 9, 8, 9, 12, 12, 14, 4, 14, 7, 12, 7, 8, 5, 6]); P(RD, [5, 3, 11, 3, 10, 5, 6, 5]); D('!' + A1, 5, 2, 8, 13); GE(8, 4, 5, 3, '#6cf08a33'); D('!#6cf08a', 2, 1, 14, 3); });
+ic('cb_h2', function () { O(8, 8, 6, 6, '#e6dfc8'); O(8, 8, 4, 4, RD); E(8, 8, 2, 2, '#e6dfc8'); E(8, 8, 1, 1, '!' + RD); L(15, 1, 9, 7, W1, 1); D('!' + B1, 14, 0, 15, 2, 13, 1); D('!' + S1, 9, 7); });
+ic('cb_m2', function () { for (var k = 0; k < 3; k++) { L(1, 3 + k * 4, 10, 3 + k * 4, '!' + (k === 1 ? '#ffffff' : ICE)); D('!' + ICE, 11, 2 + k * 4, 12, 1 + k * 4, 12, 4 + k * 4 - 4); } E(11, 12, 2, 3, '#d8a070'); D('!#8a5a34', 11, 10, 11, 12); });
+/* les aubaines qui renforcent un pouvoir reprennent son icone, marquee d'une fleche doree */
+['k1', 'k2', 'k3', 'p1', 'p2', 'p3', 'a1', 'a2', 'a3', 'n1', 'n2', 'n3', 'b1', 'b2', 'b3', 's1', 's2', 's3', 'h1', 'h2', 'h3', 'm1', 'm2', 'm3'].forEach(function (s) {
+  var f = defs['sk_' + s].fn;
+  ic('up_' + s, function () { f(); X(10, 9, 6, 7); P('!' + OUT, [13, 8, 16, 12, 10, 12]); R(11, 11, 5, 5, '!' + OUT); P('!' + A1, [13, 9, 15, 11, 11, 11]); R(12, 11, 3, 4, '!' + A1); D('!#fff1a8', 13, 10, 12, 12); G('#ffe08a88', 13, 8, 10, 11, 15, 11); });
+});
+
+/* pactes */
+ic('pc_sang', function () { R(3, 1, 10, 13, '#e6dfc8'); E(3, 1, 1.5, 1.5, B2); E(13, 14, 1.5, 1.5, B2); D('!' + B3, 5, 4, 6, 4, 7, 4, 9, 4, 10, 4, 5, 6, 6, 6, 8, 6, 9, 6, 11, 6); E(8, 10, 2.5, 2.5, RD); D('!#ff8a96', 7, 9); drop(11, 13, RD); });
+ic('pc_fer', function () { [[3, 3, 0], [6, 6, 1], [9, 9, 0], [12, 12, 1]].forEach(function (q) { O(q[0], q[1], 2.5, 2.5, q[2] ? S2 : S1); D('!' + BL, q[0] - 1, q[1] - 2); }); R(9, 1, 6, 3, A2); R(10, 2, 4, 1, A1); D('!' + RD, 2, 13, 3, 14, 4, 13) });
+ic('pc_voleur', function () { keyIc(A1, '#fff1a8'); D('!' + V2, 12, 5, 13, 4, 14, 5); G('#a04cff66', 2, 3, 6, 3, 14, 3); });
+ic('pc_soif', function () { P(A2, [2, 1, 14, 1, 12, 6, 9, 8, 9, 12, 12, 14, 4, 14, 7, 12, 7, 8, 4, 6]); P(RD, [3, 2, 13, 2, 12, 4, 4, 4]); D('!' + A1, 3, 1, 8, 13); drop(8, 10, RD); D('!#ff8a96', 6, 2); });
+ic('pc_fureur', function () { P(B1, [1, 4, 4, 3, 9, 4, 13, 7, 15, 12, 12, 13, 10, 9, 5, 7, 1, 7]); D('!' + B2, 5, 4, 9, 5, 12, 8, 6, 6); R(1, 4, 2, 4, A2); L(4, 9, 11, 13, '!' + W2); D('!' + F2, 15, 14, 14, 15); G('#ff8a2a55', 15, 11, 13, 14); });
+ic('pc_bourreau', function () { L(11, 2, 3, 15, W1, 2); P(S2, [5, 1, 11, 0, 13, 4, 12, 8, 8, 6, 6, 4]); P(S1, [6, 2, 10, 1, 12, 4, 9, 4]); D('!' + BL, 12, 5, 12, 6); D('!' + RD, 6, 5, 7, 6, 11, 8); });
+ic('pc_presage', function () { P(V3, [8, 0, 15, 14, 1, 14]); P(V4, [8, 3, 13, 13, 3, 13]); E(8, 9, 3, 2, '#e6dfc8'); E(8, 9, 1.5, 1.5, '!' + V2); D('!' + V1, 8, 9); D('!' + OUT, 8, 10); G('#a04cff66', 8, -1, 1, 15, 15, 15); });
+ic('pc_maitre', function () { glass(F2); L(15, 0, 9, 6, BL, 1); D('!' + A2, 10, 6, 9, 5, 11, 7); G('#ffe08a66', 14, 0, 15, 1); });
+ic('pc_cendre', function () { heart(8, 8, '#4a3a42', '#6a5a62'); D('!' + F2, 6, 8, 9, 9, 10, 8, 8, 11); D('!' + F1, 7, 9, 8, 10); flame(8, 4, F1, F2, F3); X(4, 4, 8, 2); flame(8, 4, '#ffffff', F1, F2); G('#ff8a2a66', 2, 6, 14, 6); });
+ic('pc_fossoyeur', function () { E(8, 9, 5, 5, '#6a5a52'); R(6, 1, 4, 4, '#6a5a52'); R(5, 0, 6, 2, '#8a7a6a'); R(3, 7, 10, 1, A2); R(4, 13, 8, 2, '#4a3e38'); D('!' + A1, 4, 7, 8, 7, 12, 7); skull(8, 10, '!' + B2); });
+ic('pc_creux', function () { crown(A1, A2, RD); R(5, 8, 7, 3, '!' + OUT); D('!' + V2, 7, 9, 9, 9); G('#ffe08a66', 8, 1, 2, 3, 14, 3); });
+ic('pc_duel', function () { L(1, 1, 14, 14, BL, 1); L(14, 1, 1, 14, BL, 1); O(4, 11, 2, 2, '!' + A1); O(11, 11, 2, 2, '!' + A1); E(8, 8, 1.2, 1.2, '!#ffffff'); O(8, 8, 3, 3, '!' + RD); });
+ic('pc_arene', function () { P(GR2, [2, 3, 1, 8, 3, 13, 7, 15, 4, 11, 3, 7]); P(GR2, [14, 3, 15, 8, 13, 13, 9, 15, 12, 11, 13, 7]); D('!' + GR1, 2, 5, 2, 9, 14, 5, 14, 9, 4, 12, 12, 12); L(5, 3, 9, 12, S1, 1); L(11, 3, 7, 12, S1, 1); R(6, 12, 4, 1, A2); D('!' + A1, 7, 15, 8, 15); });
+ic('pc_alchimie', function () { E(5, 10, 4, 4, '#cfd6e6'); E(5, 11, 3, 2.5, '#d84a6a'); L(8, 7, 14, 3, '#cfd6e6', 2); R(13, 3, 2, 4, '#cfd6e6'); D('!#ffffff', 3, 8, 13, 4); D('!#ff9aaa', 4, 10, 6, 12); P(F2, [4, 15, 6, 15, 5, 14]); G('#ff8aa066', 5, 5, 15, 7); });
+ic('pc_relique', function () { R(2, 6, 12, 9, W2); R(2, 6, 12, 2, W1); P(A2, [2, 6, 4, 2, 12, 2, 14, 6]); R(7, 2, 2, 13, A1); R(2, 9, 12, 1, A2); R(7, 8, 2, 3, '!' + OUT); D('!' + RD, 7, 4, 8, 4); G('#ffe08a77', 8, 0, 3, 1, 13, 1); });
+
+/* ---------- icones de l'interface (e_*) : remplacent les emojis partout dans le jeu, 16x16 ---------- */
+function sword(c, h) { L(3, 13, 12, 4, BL, 1); L(4, 13, 13, 4, S1, 1); L(12, 3, 14, 1, BL, 1); L(2, 10, 6, 14, h || A2, 1); R(1, 13, 3, 3, W2); D('!' + A1, 1, 15); }
+function letter(c, pts) { for (var k = 0; k < pts.length; k += 4) L(pts[k], pts[k + 1], pts[k + 2], pts[k + 3], '!' + c, 2); }
+ic('e_spark', function () { star(8, 8, 4, 7, 1.5, F1); star(8, 8, 4, 4, 1, '!#fff1a8'); star(3, 3, 4, 2.5, 0.8, '!' + F2, 0); star(13, 12, 4, 2.5, 0.8, '!' + F2, 0); D('!' + F3, 13, 3, 2, 13); G('#ffd27a66', 8, 0, 0, 8, 15, 8, 8, 15) });
+ic('e_shield', function () { shield(S2, S3); R(7, 4, 2, 8, '!' + A2); R(4, 6, 8, 2, '!' + A2); D(S1, 3, 2, 4, 2, 5, 2); D('!' + A1, 7, 4); });
+ic('e_die', function () { dice(2, 2, 12, [3, 3, 8, 3, 3, 8, 8, 8, 4, 3, 9, 3, 3, 9, 8, 9, 5, 5, 6, 6], B1, RD); X(2, 2); X(13, 2); X(2, 13); X(13, 13); });
+ic('e_skullx', function () { L(2, 10, 14, 15, B2, 2); L(14, 10, 2, 15, B2, 2); skull(8, 6, B1); });
+ic('e_skull', function () { skull(8, 7, B1); D('!' + B2, 4, 9, 12, 9); });
+ic('e_boom', function () { star(8, 8, 8, 7.5, 3.5, F2); star(8, 8, 8, 5, 2.5, F1, 0.2); E(8, 8, 1.8, 1.8, '!#ffffff'); G('#ff8a2a66', 8, 0, 0, 8, 15, 8, 8, 15); });
+ic('e_target', function () { E(8, 8, 6.5, 6.5, W1); O(8, 8, 4.5, 4.5, '!' + W3); E(8, 8, 2.5, 2.5, '!' + RD); L(8, 8, 15, 1, '!' + W2); D('!' + S1, 8, 8); D('!' + B1, 14, 0, 15, 2, 13, 1); D('!' + S2, 2, 8, 14, 8) });
+ic('e_warn', function () { P(F2, [5, 1, 11, 1, 10, 10, 6, 10]); P(F1, [7, 2, 9, 2, 8, 9]); E(8, 13, 2, 2, F2); D('!#fff1a8', 8, 13); G('#ff8a2a66', 4, 0, 12, 0, 8, 11) });
+ic('e_ess', function () { P('#62d0e6', [7, 1, 10, 6, 8, 15, 5, 8]); P('#2a8aa8', [8, 1, 10, 6, 8, 15]); P('#9fe8f8', [3, 7, 5, 9, 4, 14, 2, 10]); P('#9fe8f8', [12, 5, 14, 9, 12, 13, 11, 9]); D('!#ffffff', 7, 4, 3, 9); G('#62d0e666', 7, 0, 1, 6, 15, 4) });
+ic('e_star', function () { O(8, 8, 7, 7, A2); star(8, 8, 8, 6, 2.5, A1); star(8, 8, 4, 3, 1, '!#fff1a8', 0); D('!' + RD, 8, 8) });
+ic('e_scale', function () { L(8, 2, 8, 13, A2, 1); L(2, 4, 14, 4, A2, 1); R(5, 13, 6, 2, A3); D('!' + A1, 8, 1); P(A1, [0, 9, 5, 9, 4, 11, 1, 11]); P(A1, [11, 9, 16, 9, 15, 11, 12, 11]); L(2, 4, 1, 9, '!' + A3); L(2, 4, 4, 9, '!' + A3); L(14, 4, 12, 9, '!' + A3); L(14, 4, 15, 9, '!' + A3); });
+ic('e_orb', function () { E(8, 7, 5.5, 5.5, V2); E(7, 6, 3, 3, V1); D('!#ffffff', 6, 4, 5, 5); P(A2, [3, 15, 4, 12, 12, 12, 13, 15]); G('#a04cff66', 8, 0, 1, 7, 15, 7); });
+ic('e_hammers', function () { P(S3, [1, 9, 14, 9, 12, 11, 4, 11]); R(1, 8, 14, 2, S2); R(5, 11, 6, 2, S3); R(3, 13, 10, 2, S4); L(4, 7, 12, 1, W1, 1); R(10, 0, 5, 3, S1); D('!' + F2, 3, 7, 6, 6) });
+ic('e_check', function () { L(2, 8, 6, 12, '!' + A2, 3); L(6, 12, 14, 3, '!' + A2, 3); L(2, 8, 6, 12, '!' + A1, 1); L(6, 12, 14, 3, '!' + A1, 1); D('!#fff1a8', 13, 3) });
+ic('e_dagger', function () { P(S1, [12, 1, 14, 3, 7, 10, 5, 8]); L(13, 2, 7, 8, '!' + BL); L(4, 7, 8, 11, A2, 2); L(2, 13, 5, 10, W2, 2); D('!' + A1, 1, 14); });
+ic('e_down', function () { P(RD, [5, 1, 11, 1, 11, 7, 14, 7, 8, 14, 2, 7, 5, 7]); D('!#ff8a96', 6, 2, 6, 6); });
+ic('e_mirror', function () { E(8, 7, 5, 6.5, A2); E(8, 7, 3.5, 5, '#8fa8c8'); L(6, 4, 9, 9, '!#dfe6f5'); L(6, 7, 7, 8, '!#ffffff'); R(7, 13, 2, 3, A2); });
+ic('e_medal', function () { O(8, 8, 7, 7, '#5a4a2a'); for (var k = 0; k < 10; k++) { var a = k * Math.PI / 5; D('!' + B2, 8 + Math.round(Math.cos(a) * 7.5), 8 + Math.round(Math.sin(a) * 7.5)); } E(8, 8, 4.5, 4.5, A2); E(8, 8, 3.5, 3.5, A1); skull(8, 7.5, '!' + A2) });
+ic('e_trophy', function () { E(8, 5, 5.5, 4.5, A1); R(3, 1, 11, 2, A2); D('!' + OUT, 6, 5, 7, 5, 9, 5, 10, 5, 8, 7); D('!' + A3, 5, 6, 11, 6); R(7, 9, 2, 3, A2); R(4, 12, 8, 3, W2); R(5, 12, 6, 1, A2); D('!#fff1a8', 5, 3, 4, 4) });
+ic('e_scroll', function () { R(3, 2, 10, 12, '#e6dfc8'); R(2, 1, 12, 2, B2); R(2, 13, 12, 2, B2); D('!' + B3, 5, 5, 6, 5, 7, 5, 9, 5, 10, 5, 5, 7, 6, 7, 8, 7, 9, 7, 11, 7, 5, 9, 7, 9, 8, 9, 10, 9); E(11, 12, 1.5, 1.5, '!' + RD); });
+ic('e_hammer', function () { L(4, 14, 10, 6, W1, 2); P(S2, [7, 1, 14, 1, 15, 6, 11, 8, 8, 6]); R(8, 1, 6, 1, S1); D('!' + S3, 12, 6, 13, 5); });
+ic('e_hole', function () { E(8, 10, 7, 4, '#4a3e38'); E(8, 10, 5.5, 3, '!' + OUT); E(8, 11, 3, 1.5, '!#1a1020'); D('!#6a5a52', 2, 8, 13, 8); D('!' + V2, 7, 10); });
+ic('e_chest', function () { R(1, 6, 14, 9, W2); R(1, 6, 14, 2, W1); P(W1, [1, 6, 3, 2, 13, 2, 15, 6]); R(1, 9, 14, 1, S3); R(3, 2, 1, 13, S3); R(12, 2, 1, 13, S3); R(7, 8, 2, 3, A1); D('!' + OUT, 7, 10); });
+ic('e_wheel', function () { O(8, 8, 7, 7, W1); O(8, 8, 6, 6, W2); for (var k = 0; k < 8; k++) { var a = k * Math.PI / 4; L(8, 8, 8 + Math.cos(a) * 6, 8 + Math.sin(a) * 6, k % 2 ? RD : A1); } E(8, 8, 1.5, 1.5, A2); P('!' + A1, [6, 0, 10, 0, 8, 3]); });
+ic('e_recycle', function () { O(8, 8, 5.5, 5.5, '!' + N2); X(2, 6, 3, 3); X(11, 8, 3, 3); P('!' + N2, [0, 7, 5, 7, 2, 10]); P('!' + N2, [11, 9, 16, 9, 13, 6]); D('!' + N1, 6, 3, 10, 13); E(8, 8, 1.5, 1.5, '!#62d0e6'); });
+ic('e_grid', function () { R(1, 1, 14, 14, W2); for (var y = 0; y < 3; y++) for (var x = 0; x < 3; x++) R(2 + x * 4.5, 2 + y * 4.5, 3, 3, '#2a2030'); dice(6, 6, 4, [1, 1, 2, 2], B1, RD); R(1, 1, 14, 1, A2); });
+ic('e_web', function () { for (var k = 0; k < 4; k++) { var a = k * Math.PI / 4; L(8 - Math.cos(a) * 7, 8 - Math.sin(a) * 7, 8 + Math.cos(a) * 7, 8 + Math.sin(a) * 7, '!#cfd6e6'); } O(8, 8, 3, 3, '!#9aa0ae'); O(8, 8, 6, 6, '!#9aa0ae'); E(11, 11, 1.5, 1.5, '!' + BLK); D('!' + RD, 11, 11); });
+ic('e_beads', function () { for (var k = 0; k < 10; k++) { var a = k * Math.PI / 5; E(8 + Math.cos(a) * 5, 6 + Math.sin(a) * 4, 1, 1, B1); } L(8, 10, 8, 13, B2); R(7, 13, 3, 3, B1); D('!' + RD, 8, 14); });
+ic('e_fstar', function () { star(8, 8, 8, 7, 3, S1); star(8, 8, 8, 4, 2, S2, 0.4); E(8, 8, 1.5, 1.5, '!' + F1); G('#ffe27a55', 8, 0, 0, 8); });
+ic('e_zzz', function () { E(8, 10, 7, 4.5, '#d8b088'); E(8, 10, 5.5, 3, '#c8a078'); L(2, 10, 14, 10, '!' + OUT); D('!' + OUT, 4, 11, 4, 12, 7, 11, 7, 13, 10, 11, 10, 13, 13, 11, 13, 12); for (var y = 0; y < 7; y++) for (var x = 8; x < 16; x++) { var a = (x - 12) * (x - 12) + (y - 3) * (y - 3), b = (x - 13.5) * (x - 13.5) + (y - 2) * (y - 2); if (a <= 10 && b > 7) set(x, y, '!#c8d0ff'); } });
+ic('e_rage', function () { E(8, 7, 5, 4.5, '#c84a3a'); R(5, 10, 7, 3, '#c84a3a'); R(5, 6, 2, 2, '!' + F1); R(10, 6, 2, 2, '!' + F1); D('!' + OUT, 8, 9, 6, 12, 8, 12, 10, 12); L(4, 3, 7, 5, '!' + OUT); L(12, 3, 9, 5, '!' + OUT); D('!#e8e0d0', 3, 1, 13, 1, 2, 0, 14, 0); G('#ff5a1f66', 5, 5, 11, 5) });
+ic('e_vase', function () { E(8, 10, 5, 4.5, '#a0603c'); R(6, 2, 4, 4, '#a0603c'); R(5, 1, 6, 2, '#c8803c'); R(3, 9, 10, 1, '!' + OUT); D('!#e8a060', 5, 7, 4, 11); D('!' + OUT, 6, 11, 8, 12, 10, 11); });
+ic('e_compass', function () { E(8, 8, 6.5, 6.5, A2); E(8, 8, 5, 5, '#e6dfc8'); P('!' + RD, [8, 3, 10, 8, 6, 8]); P('!' + S3, [8, 13, 10, 8, 6, 8]); D('!' + A1, 8, 8); R(7, 0, 2, 2, A1); });
+ic('e_pawn', function () { E(8, 4, 2.5, 2.5, ST1); P(ST2, [6, 7, 10, 7, 11, 12, 5, 12]); R(3, 12, 10, 3, ST2); R(3, 12, 10, 1, ST1); D('!#b0aab8', 7, 3); });
+ic('e_eagle', function () { P('#e6dfc8', [13, 1, 15, 3, 9, 10, 4, 14, 3, 13, 6, 8]); P('#3a3046', [13, 1, 15, 3, 12, 6, 10, 8, 9, 6]); L(14, 2, 3, 14, '!' + B3); D('!' + V2, 11, 4, 12, 5) });
+ic('e_wave', function () { P('#3a8ad8', [0, 15, 0, 9, 3, 5, 7, 3, 11, 4, 13, 7, 10, 7, 9, 10, 12, 12, 15, 11, 15, 15]); P('#7ac0f0', [3, 6, 7, 4, 11, 5, 12, 6, 9, 6]); D('!#ffffff', 11, 5, 12, 6, 13, 7, 4, 13, 9, 13); });
+ic('e_castle', function () { R(2, 6, 12, 9, ST2); R(1, 3, 4, 4, ST2); R(11, 3, 4, 4, ST2); R(6, 1, 4, 5, ST1); D('!' + ST3, 1, 3, 3, 3, 11, 3, 13, 3, 6, 1, 8, 1); R(6, 10, 4, 5, '!' + OUT); D('!' + RD, 8, 0, 9, 0); R(3, 8, 1, 2, '!' + OUT); R(12, 8, 1, 2, '!' + OUT); });
+ic('e_newmoon', function () { E(8, 8, 6.5, 6.5, '#2a2234'); O(8, 8, 6.5, 6.5, '!#6a5a7a'); D('!#4a3e58', 6, 5, 10, 9, 7, 11); G('#a04cff44', 8, 0, 0, 8, 15, 8); });
+ic('e_stopwatch', function () { R(5, 5, 6, 10, '#e6dfc8'); for (var k = 6; k < 15; k += 2) L(5, k, 6, k, '!' + RD); R(5, 5, 6, 1, B2); L(8, 3, 8, 4, '!' + OUT); E(8, 1.5, 1.2, 2, F2); D('!' + F1, 8, 2); R(3, 14, 10, 2, A2) });
+ic('e_door', function () { P(W2, [2, 15, 2, 5, 5, 1, 11, 1, 14, 5, 14, 15]); P(W1, [4, 15, 4, 5, 6, 3, 10, 3, 12, 5, 12, 15]); L(8, 3, 8, 15, '!' + W3); R(2, 7, 12, 1, S3); R(2, 12, 12, 1, S3); D('!' + A1, 10, 10); });
+ic('e_helm', function () { E(8, 8, 6, 6, S2); R(2, 8, 12, 6, S2); R(2, 7, 12, 2, '!' + OUT); D('!' + F1, 4, 7, 5, 7, 10, 7, 11, 7); R(7, 9, 2, 5, S3); R(7, 1, 2, 4, RD); D(S1, 4, 4, 5, 3); });
+ic('e_boot', function () { P(W1, [4, 1, 10, 1, 10, 9, 15, 11, 15, 14, 2, 14, 3, 9]); R(2, 14, 14, 1, W3); R(4, 1, 6, 2, W2); D('!' + A2, 6, 5, 8, 5, 6, 7, 8, 7); });
+ic('e_ring', function () { O(8, 10, 5, 4.5, A1); O(8, 10, 4, 3.5, A2); P(RD, [8, 1, 11, 4, 8, 7, 5, 4]); D('!#ff8a96', 7, 3); G('#ff5b6b66', 8, 0, 12, 4); });
+ic('e_purse', function () { P('#7a3a5a', [3, 6, 13, 6, 14, 13, 12, 15, 4, 15, 2, 13]); R(3, 4, 10, 3, '#5a2a42'); L(3, 4, 13, 4, '!' + A2); E(8, 9, 1.5, 1.5, '!' + A1); D('!#9a5a7a', 4, 8, 4, 12); });
+ic('e_drop', function () { P(RD, [8, 1, 12, 7, 13, 10, 12, 13, 10, 15, 6, 15, 4, 13, 3, 10, 4, 7]); P('#8a1424', [8, 4, 11, 9, 11, 12, 8, 14, 9, 10]); D('!' + '#ff8a96', 6, 8, 6, 9, 7, 6) });
+ic('e_water', function () { P('#4a9bff', [8, 1, 12, 7, 13, 10, 12, 13, 10, 15, 6, 15, 4, 13, 3, 10, 4, 7]); P('#2a6ac8', [8, 4, 11, 9, 11, 12, 8, 14, 9, 10]); D('!' + '#bfe3ff', 6, 8, 6, 9, 7, 6) });
+ic('e_bandage', function () { P('#e6dfc8', [1, 11, 11, 1, 15, 5, 5, 15]); P('#c8b098', [5, 7, 7, 5, 11, 9, 9, 11]); D('!' + RD, 7, 8, 8, 7, 8, 9, 9, 8); D('!' + B2, 3, 11, 12, 4); });
+ic('e_hands', function () { P(S2, [0, 6, 5, 6, 9, 8, 9, 11, 5, 12, 0, 11]); R(0, 6, 2, 6, S3); P(S1, [16, 6, 11, 6, 7, 9, 7, 11, 11, 12, 16, 11]); R(14, 6, 2, 6, S2); D('!' + S4, 6, 9, 10, 9, 8, 10); D('!' + A1, 3, 7, 13, 7); drop(8, 4, RD, '#ff8a96') });
+ic('e_fountain', function () { R(1, 11, 14, 4, ST2); R(1, 11, 14, 1, ST1); R(7, 4, 2, 7, ST1); E(8, 4, 3, 1, ST1); D('!#7ac0f0', 4, 2, 3, 4, 2, 7, 12, 2, 13, 4, 14, 7, 8, 1); R(2, 12, 12, 1, '!#4a9bff'); });
+ic('e_person', function () { P('#4a4058', [2, 15, 4, 7, 5, 3, 8, 1, 11, 3, 12, 7, 14, 15]); E(8, 6, 2.5, 3, '!' + OUT); D('!' + F1, 7, 6, 9, 6); D('!#6a5a7a', 5, 4, 4, 9) });
+ic('e_unlock', function () { O(5, 6, 3, 3.5, S1); X(2, 7, 4, 3); R(3, 7, 10, 8, A2); R(3, 7, 10, 1, A1); R(7, 9, 2, 4, '!' + OUT); X(2, 4, 1, 3); });
+ic('e_bulb', function () { E(8, 9, 3.5, 4, N2); P(N2, [5, 8, 6, 3, 8, 6, 9, 1, 11, 5, 12, 9]); E(8, 10, 2, 2.5, N1); D('!#ffffff', 8, 10); D('!' + N2, 3, 3, 13, 13, 2, 12); GE(8, 9, 7, 7, '#4fe07a22') });
+ic('e_square', function () { R(5, 5, 6, 6, '#e6dfc8'); R(5, 10, 6, 1, B2); });
+ic('e_note', function () { L(4, 2, 4, 13, B1, 1); L(12, 2, 12, 13, B1, 1); E(4, 2, 1.5, 1.5, B1); E(12, 2, 1.5, 1.5, B1); P(B2, [3, 13, 13, 13, 11, 15, 5, 15]); L(4, 4, 12, 4, B2); for (var k = 6; k < 12; k += 2) L(k, 5, k, 12, '!' + A1); D('!' + RD, 8, 14) });
+ic('e_vib', function () { E(5, 9, 2.5, 2, B1); E(11, 7, 2.5, 2, B1); R(4, 8, 2, 2, '!' + B2); R(10, 6, 2, 2, '!' + B2); D('!' + OUT, 5, 9, 11, 7); L(1, 3, 2, 5, '!#e6dfc8'); L(1, 12, 2, 14, '!#e6dfc8'); L(15, 1, 14, 3, '!#e6dfc8'); L(15, 11, 14, 13, '!#e6dfc8') });
+ic('e_snow', function () { L(8, 1, 8, 15, '!' + ICE, 1); L(2, 4, 14, 12, '!' + ICE, 1); L(2, 12, 14, 4, '!' + ICE, 1); D('!#ffffff', 8, 8, 7, 2, 9, 2, 7, 14, 9, 14); G('#bfe3ff66', 8, 0, 1, 4, 15, 4); });
+ic('e_skip', function () { P(S1, [1, 3, 7, 8, 1, 13, 3, 8]); P(S1, [7, 3, 13, 8, 7, 13, 9, 8]); R(13, 2, 2, 12, A2); D('!' + BL, 2, 4, 8, 4) });
+ic('e_play', function () { P(S1, [3, 2, 13, 8, 3, 14, 6, 8]); L(3, 2, 13, 8, '!' + BL); D('!' + S3, 5, 11, 7, 10) });
+ic('e_robot', function () { L(2, 0, 4, 6, '!#cfd6e6'); L(14, 0, 12, 6, '!#cfd6e6'); L(8, 0, 8, 2, '!#cfd6e6'); R(1, 0, 14, 1, W2); E(8, 4, 2, 2, W1); R(6, 6, 4, 5, W1); L(5, 7, 3, 6, W1, 1); L(10, 7, 12, 6, W1, 1); L(7, 11, 6, 15, W1, 1); L(9, 11, 10, 15, W1, 1); D('!' + OUT, 7, 4, 9, 4); D('!' + W3, 8, 8, 8, 9) });
+ic('e_greenheart', function () { heart(8, 7, N3, N2); P(N2, [6, 4, 8, 1, 10, 4]); D('!' + N1, 6, 7, 7, 8, 9, 8, 8, 10); D('!' + N1, 3, 2, 13, 2); GE(8, 8, 7, 7, '#4fe07a22') });
+ic('e_blackheart', function () { heart(8, 6, '#2a2234', '#6a5a7a'); L(7, 3, 9, 6, '!' + V2); L(9, 6, 7, 8, '!' + V2); L(7, 8, 8, 10, '!' + V2); G('#a04cff77', 8, 1, 1, 5, 15, 5, 8, 12) });
+ic('e_pinkheart', function () { E(7, 9, 5, 5, '#a01c3a'); P('#a01c3a', [3, 11, 8, 15, 12, 10]); R(6, 1, 2, 5, '#c84a6a'); R(9, 2, 2, 4, '#5a6ac8'); L(3, 4, 5, 6, '#c84a6a', 1); D('!#ff8aa0', 5, 7, 4, 9); L(10, 8, 7, 12, '!#6a0c24'); L(0, 9, 1, 9, '!#ffb0c8'); L(14, 9, 15, 9, '!#ffb0c8') });
+ic('e_horn', function () { P(A2, [1, 6, 9, 3, 15, 1, 15, 9, 9, 8, 1, 9]); R(1, 6, 2, 4, A1); E(15, 5, 1, 4, A1); D('!' + A1, 5, 5, 9, 4); L(5, 9, 8, 13, W2); });
+ic('e_megaphone', function () { L(8, 0, 8, 3, W2, 1); P(S1, [5, 4, 11, 4, 12, 10, 14, 12, 2, 12, 4, 10]); R(5, 4, 6, 2, S2); E(8, 14, 1.4, 1.4, S3); D('!#ffffff', 6, 6, 6, 8); L(0, 5, 1, 8, '!#e6dfc8'); L(16, 5, 15, 8, '!#e6dfc8') });
+ic('e_palette', function () { R(2, 10, 8, 5, '#2a2234'); R(3, 9, 6, 2, '#3a3046'); R(4, 10, 4, 1, '!' + RD); P('#e6dfc8', [15, 0, 12, 1, 7, 9, 6, 11, 8, 10, 13, 4]); L(15, 0, 7, 10, '!' + B2); D('!' + RD, 6, 11) });
+ic('e_tools', function () { L(2, 14, 9, 7, S2, 1); L(5, 14, 11, 8, S2, 1); D('!' + S1, 9, 6, 12, 8); L(12, 14, 6, 6, W1, 1); R(3, 2, 6, 4, S2); R(3, 2, 6, 1, S1) });
+ic('e_land', function () { R(0, 0, 16, 9, '#3a5a7a'); E(12, 3, 2, 2, '#fff1a8'); P('#5a5a6a', [0, 10, 4, 4, 8, 9, 11, 5, 16, 10, 16, 16, 0, 16]); P(GR2, [0, 12, 16, 11, 16, 16, 0, 16]); D('!#ffffff', 4, 4, 11, 5); });
+ic('e_loop', function () { O(8, 8, 5.5, 4.5, '!#9fd0ff'); X(11, 2, 3, 3); X(2, 11, 3, 3); P('!#9fd0ff', [10, 1, 14, 4, 10, 6]); P('!#9fd0ff', [6, 10, 2, 12, 6, 15]); });
+ic('e_church', function () { R(3, 7, 10, 8, ST2); P(RD, [2, 7, 8, 2, 14, 7]); R(7, 0, 2, 3, A1); R(6, 1, 4, 1, A1); E(8, 11, 2, 2, '!' + OUT); R(6, 11, 4, 4, '!' + OUT); D('!' + F1, 4, 9, 11, 9); });
+ic('e_fullmoon', function () { E(8, 8, 6.5, 6.5, '#e6dfc8'); D('!' + B2, 5, 5, 6, 5, 10, 9, 11, 10, 6, 11); E(10, 6, 1.2, 1.2, B2); G('#fff1c855', 8, 0, 0, 8, 15, 8, 8, 15); });
+ic('e_fog', function () { for (var k = 0; k < 4; k++) L(1 + (k % 2) * 2, 3 + k * 3, 13 + (k % 2) * 2, 3 + k * 3, k % 2 ? '#c8c0b8' : '#9a9aa3', 2); D('!' + A1, 4, 3, 11, 9); });
+ic('e_shoot', function () { star(12, 4, 5, 3.5, 1.5, '#fff1a8'); L(1, 14, 9, 6, '!#a07ac8', 1); L(2, 15, 10, 7, '!' + V1, 1); D('!#ffffff', 12, 4); });
+ic('e_comet', function () { E(11, 5, 3.5, 3.5, F2); E(11, 5, 2, 2, F1); P(F3, [9, 3, 0, 14, 13, 7]); P(F2, [9, 5, 2, 13, 11, 7]); D('!#ffffff', 11, 5); });
+ic('e_volcano', function () { P('#5a4048', [0, 15, 5, 5, 11, 5, 16, 15]); P(F2, [5, 5, 11, 5, 9, 8, 7, 8]); L(8, 8, 6, 13, '!' + F2); E(8, 2, 2, 2, F1); D('!' + F3, 5, 1, 11, 1, 12, 3); });
+ic('e_bow', function () { O(4, 8, 6, 7, W1); X(0, 0, 5, 16); L(5, 1, 5, 15, '!#e6dfc8'); L(5, 8, 14, 8, W2, 1); P(S1, [14, 6, 16, 8, 14, 10]); D('!' + B1, 6, 7, 6, 9); });
+ic('e_rain', function () { E(8, 5, 6, 3.5, '#6a6a7a'); E(5, 4, 3, 3, '#7a7a8a'); E(11, 4, 3, 2.5, '#8a8a9a'); for (var k = 0; k < 4; k++) L(3 + k * 3, 10, 2 + k * 3, 13, '!#7ac0f0'); });
+ic('e_fist', function () { R(4, 4, 9, 8, S2); R(4, 4, 9, 1, S1); D('!' + S4, 6, 4, 6, 5, 9, 4, 9, 5); R(2, 7, 3, 4, S2); R(5, 12, 7, 3, W2); D('!' + A1, 6, 13, 10, 13); L(14, 3, 15, 1, '!#ffffff'); L(14, 8, 16, 8, '!#ffffff'); L(14, 12, 15, 14, '!#ffffff') });
+ic('e_anger', function () { P(ST2, [1, 4, 6, 1, 12, 2, 15, 7, 13, 14, 5, 15, 1, 11]); L(8, 1, 7, 6, '!' + F3); L(7, 6, 10, 9, '!' + F2); L(10, 9, 8, 15, '!' + F3); L(7, 6, 2, 8, '!' + F3); L(10, 9, 15, 8, '!' + F2); D('!' + F1, 7, 6, 10, 9); G('#ff5a1f66', 8, 0, 9, 15) });
+ic('e_yinyang', function () { for (var k = 0; k < 12; k++) { var a = k * Math.PI / 6; L(8 + Math.cos(a) * 5, 8 + Math.sin(a) * 5, 8 + Math.cos(a) * 7, 8 + Math.sin(a) * 7, '!' + A1); } P('#e6dfc8', [3, 8, 6, 5, 10, 5, 13, 8, 10, 11, 6, 11]); E(8, 8, 2, 2, A2); D('!' + OUT, 8, 8) });
+ic('e_pray', function () { O(8, 3, 4, 1.3, '!' + A1); P('#2a2234', [3, 15, 4, 8, 6, 5, 10, 5, 12, 8, 13, 15]); E(8, 8, 2.5, 3, '#e6d0b8'); P('#2a2234', [5, 6, 8, 4, 11, 6, 11, 9, 10, 7, 6, 7, 5, 9]); D('!' + OUT, 7, 9, 9, 9); R(7, 12, 2, 3, '!#e6dfc8'); G('#ffe08a66', 8, 1, 4, 2, 12, 2) });
+ic('e_bio', function () { P('#2a2234', [2, 2, 8, 1, 10, 3, 10, 9, 6, 11, 2, 9]); P('#e6dfc8', [9, 5, 15, 13, 14, 15, 8, 10]); E(5, 5, 2, 2, '!#9fd0c0'); D('!' + OUT, 5, 5); R(2, 1, 8, 2, '#1a1424'); D('!' + B2, 11, 9, 13, 12); D('!' + N2, 1, 13, 4, 14) });
+ic('e_silence', function () { E(8, 8, 6.5, 4.5, '#d8b088'); P('#a04a50', [3, 8, 6, 6, 10, 6, 13, 8, 10, 10, 6, 10]); L(3, 8, 13, 8, '!' + OUT); for (var k = 4; k < 13; k += 2) L(k, 6, k + 1, 10, '!#e6dfc8') });
+ic('e_hand', function () { P('#d8b088', [3, 15, 3, 7, 4, 3, 5, 7, 6, 2, 7, 7, 8, 1, 9, 7, 10, 2, 11, 7, 13, 5, 14, 8, 12, 15]); D('!#a07850', 6, 10, 9, 10); });
+ic('e_axe', function () { L(11, 2, 3, 15, W1, 2); P(S2, [6, 0, 11, 1, 14, 4, 12, 9, 9, 6, 7, 4]); P(S1, [7, 1, 10, 1, 13, 4, 10, 4]); D('!' + BL, 13, 5, 13, 6); });
+ic('e_staff', function () { L(8, 3, 8, 15, W1, 1); L(7, 3, 7, 15, W2, 1); E(8, 2, 2.5, 2, A1); for (var k = 4; k < 13; k += 3) { D('!' + N2, 5, k, 6, k + 1, 9, k + 1, 10, k); } G('#ffe08a66', 8, -1, 5, 1, 11, 1); });
+ic('e_mask', function () { P('#e6dfc8', [1, 3, 15, 3, 14, 10, 8, 14, 2, 10]); R(4, 6, 3, 2, '!' + OUT); R(9, 6, 3, 2, '!' + OUT); L(5, 11, 11, 11, '!' + RD); D('!' + B2, 2, 9, 14, 9); R(1, 1, 14, 2, V3); });
+ic('e_gi', function () { P('#e6dfc8', [3, 1, 13, 1, 14, 15, 2, 15]); P('#c8c0b0', [5, 1, 8, 7, 11, 1]); R(2, 9, 12, 2, OUT); D('!' + B3, 4, 4, 12, 4); });
+ic('e_vest', function () { P('#8a6440', [2, 2, 6, 1, 8, 4, 10, 1, 14, 2, 14, 15, 2, 15]); L(8, 4, 8, 15, '!#5a3a20'); D('!' + S1, 5, 6, 11, 6, 5, 10, 11, 10); R(2, 12, 12, 1, '!#5a3a20'); });
+ic('e_highboot', function () { P('#5a3a2c', [4, 0, 10, 0, 10, 9, 15, 11, 15, 14, 2, 14, 3, 9]); R(4, 0, 6, 2, '#7a5a3c'); R(2, 14, 14, 1, W3); D('!' + S1, 5, 4, 9, 4); });
+ic('e_circle', function () { O(8, 8, 6.5, 6.5, '!' + RD); O(8, 8, 5.5, 5.5, '!' + RD); });
+ic('e_nazar', function () { L(2, 0, 7, 5, '!#b9a070'); L(14, 0, 9, 5, '!#b9a070'); E(8, 10, 5, 5, B2); E(8, 10, 3.5, 3.5, '#2a6ac8'); E(8, 10, 2, 2, '#9fd0ff'); D('!' + OUT, 8, 10); D('!#ffffff', 7, 8) });
+ic('e_lantern', function () { R(6, 0, 4, 2, S3); R(4, 2, 8, 2, S2); R(4, 12, 8, 2, S2); R(5, 4, 6, 8, '#e84a2a'); E(8, 8, 1.5, 2.5, '!' + F1); L(5, 4, 5, 11, '!#a02a1a'); L(10, 4, 10, 11, '!#a02a1a'); GE(8, 8, 6, 6, '#ff8a2a33'); });
+ic('e_hourglass', function () { glass(F1); });
+ic('e_tooth', function () { P(B1, [3, 1, 11, 1, 12, 5, 10, 10, 6, 15, 7, 9, 4, 5]); D('!' + B2, 9, 2, 10, 5, 8, 9); R(3, 0, 9, 2, '#a04a50'); D('!' + RD, 4, 2, 10, 2); D('!#ffffff', 5, 3) });
+ic('e_wine', function () { P('#cfd6e6', [3, 1, 13, 1, 12, 6, 8, 8, 4, 6]); P('#a01c3a', [4, 3, 12, 3, 11, 6, 8, 7, 5, 6]); R(7, 8, 2, 5, '#cfd6e6'); R(4, 13, 8, 2, '#cfd6e6'); D('!#ffffff', 4, 2); });
+ic('e_pin', function () { R(5, 1, 7, 2, '#8a5a3a'); R(7, 3, 3, 9, '#8a5a3a'); P('#8a5a3a', [7, 12, 10, 12, 8, 15]); D('!#b07a4a', 7, 4, 7, 7); D('!#5a3020', 9, 6, 9, 10); O(10, 9, 3, 2.5, '!#b9a070'); L(10, 11, 13, 15, '!#b9a070') });
+ic('e_trident', function () { L(8, 4, 8, 15, A2, 1); L(3, 6, 13, 6, A2, 1); L(3, 1, 3, 6, A1, 1); L(13, 1, 13, 6, A1, 1); L(8, 0, 8, 4, A1, 1); D('!#fff1a8', 3, 1, 8, 0, 13, 1); });
+ic('e_glove', function () { P('#8a6440', [3, 15, 3, 7, 4, 3, 5, 7, 6, 2, 7, 7, 8, 1, 9, 7, 10, 2, 11, 7, 13, 5, 14, 8, 12, 15]); R(3, 12, 10, 3, S2); D('!#5a3a20', 6, 9, 9, 9); });
+ic('e_curl', function () { O(8, 8, 4, 4, '!' + A1); L(1, 13, 5, 11, '!' + A1, 1); L(11, 5, 15, 3, '!' + A1, 1); });
+ic('e_fleur', function () { P(A1, [8, 0, 10, 4, 9, 9, 7, 9, 6, 4]); P(A1, [2, 3, 6, 6, 7, 10, 3, 9]); P(A1, [14, 3, 10, 6, 9, 10, 13, 9]); R(4, 10, 8, 2, A2); P(A1, [6, 12, 10, 12, 8, 15]); });
+ic('e_hook', function () { L(8, 0, 8, 9, S1, 1); O(6, 10, 3, 3, S1); X(3, 7, 3, 4); P(S1, [3, 9, 5, 7, 4, 10]); R(6, 0, 4, 2, S2); });
+ic('e_score', function () { P(W2, [5, 1, 11, 1, 14, 15, 2, 15]); P(W1, [6, 2, 10, 2, 12, 13, 4, 13]); L(8, 13, 11, 3, '!' + S1); E(10, 6, 1.2, 1.2, '!' + A1); L(6, 4, 8, 8, '!' + OUT); L(8, 8, 7, 11, '!' + OUT) });
+ic('e_clock', function () { R(4, 0, 8, 16, W2); R(5, 1, 6, 14, W1); E(8, 5, 3, 3, '#e6dfc8'); L(8, 5, 8, 3, '!' + OUT); L(8, 5, 10, 5, '!' + OUT); L(8, 9, 8, 13, '!' + A2); E(8, 13, 1.5, 1.5, '!' + A1); });
+ic('e_quest', function () { P(V3, [3, 15, 2, 4, 6, 1, 11, 1, 14, 5, 13, 15]); P(V4, [4, 14, 4, 5, 6, 2, 10, 2, 12, 5, 12, 14]); L(6, 5, 8, 4, '!' + V1); L(8, 4, 10, 6, '!' + V1); L(10, 6, 8, 9, '!' + V1); L(8, 9, 8, 10, '!' + V1); D('!' + V1, 8, 12); G('#a04cff66', 8, 0, 1, 8, 15, 8) });
+ic('e_flag', function () { L(3, 0, 3, 15, W1, 1); P(RD, [4, 1, 14, 1, 14, 8, 12, 6, 10, 9, 8, 7, 6, 9, 4, 8]); skull(9, 4, '!' + B1); D('!' + A1, 3, 0) });
+ic('e_gear', function () { O(8, 8, 6.5, 6.5, A2); O(8, 8, 4.5, 2, A1); O(8, 8, 2, 4.5, A1); L(2, 13, 14, 3, '!' + S1); E(8, 8, 1.2, 1.2, '!' + RD); D(A1, 8, 0, 0, 8, 15, 8, 8, 15) });
+ic('e_paw', function () { E(8, 11, 3.5, 3, B2); E(3, 7, 1.6, 2, B2); E(6, 3, 1.6, 2, B2); E(10, 3, 1.6, 2, B2); E(13, 7, 1.6, 2, B2); });
+ic('e_soundon', function () { P(A2, [5, 3, 10, 3, 11, 9, 13, 11, 2, 11, 4, 9]); R(5, 3, 5, 2, A1); E(7.5, 13, 1.3, 1.3, A3); L(7, 0, 8, 2, W2); L(0, 5, 1, 8, '!#e6dfc8'); L(15, 5, 14, 8, '!#e6dfc8'); L(15, 1, 14, 3, '!#e6dfc8') });
+ic('e_soundoff', function () { P(S3, [5, 3, 10, 3, 11, 9, 13, 11, 2, 11, 4, 9]); R(5, 3, 5, 2, S2); L(1, 13, 14, 4, '!' + S1, 1); L(1, 4, 14, 13, '!' + S1, 1); D('!' + S2, 3, 5, 12, 11) });
+ic('e_save', function () { R(2, 1, 12, 14, '#5a2a2a'); R(3, 1, 10, 12, '#e6dfc8'); R(2, 13, 12, 2, '#3a1a1a'); R(2, 1, 2, 14, '#3a1a1a'); D('!' + B3, 6, 4, 7, 4, 9, 4, 10, 4, 6, 6, 8, 6, 9, 6, 11, 6); L(8, 8, 8, 15, '!' + RD, 1); E(8, 10, 2.5, 2.5, '!' + RD); D('!#ff8a96', 7, 9); D('!#7a0c18', 8, 10) });
+ic('e_out', function () { R(1, 9, 12, 6, '#e6dfc8'); R(1, 14, 12, 1, B2); D('!' + B3, 3, 11, 4, 11, 5, 11, 7, 11, 3, 13, 4, 13); P('#f4ead4', [15, 0, 13, 1, 9, 6, 8, 9, 10, 8, 14, 4]); L(15, 0, 8, 9, '!' + B2); D('!' + OUT, 8, 10, 7, 11); D('!#a0a0b0', 13, 2, 11, 5) });
+ic('e_in', function () { R(4, 1, 8, 7, '#e6dfc8'); R(3, 1, 10, 1, B2); R(3, 7, 10, 1, B2); E(8, 7, 1.5, 1.5, '!' + RD); P(S2, [1, 11, 4, 9, 13, 9, 15, 11, 14, 15, 2, 15]); R(1, 10, 3, 2, S1); D('!' + S3, 5, 12, 8, 12, 11, 12) });
+ic('e_wflag', function () { L(3, 2, 3, 15, W1, 1); P(S1, [2, 0, 4, 0, 3, 2]); P('#c8c0b0', [4, 3, 12, 3, 13, 6, 10, 7, 12, 9, 7, 8, 4, 9]); D('!' + B3, 6, 5, 9, 6) });
+ic('e_run', function () { [[3, 12], [7, 9], [10, 5], [14, 2]].forEach(function (q, k) { E(q[0], q[1], 1.2, 2, k % 2 ? '#6a4a2c' : '#8a6440'); D('!#5a3a20', q[0] - 1, q[1] - 3, q[0], q[1] - 3, q[0] + 1, q[1] - 3); }); D('!#6a6476', 1, 15, 2, 14) });
+ic('e_camp', function () { P(W1, [1, 14, 8, 3, 15, 14]); P(W2, [5, 14, 8, 8, 11, 14]); L(8, 1, 8, 3, '!' + W3); P('!' + OUT, [6, 14, 8, 10, 10, 14]); E(13, 13, 1.5, 1.5, F2); D('!' + F1, 13, 12); });
+ic('e_la', function () { P(ST2, [3, 15, 2, 5, 5, 1, 11, 1, 14, 5, 13, 15]); P(ST1, [4, 14, 4, 5, 6, 2, 10, 2, 12, 5, 12, 14]); L(6, 4, 6, 13, '!#62d0e6', 1); L(6, 4, 10, 7, '!#62d0e6', 1); L(6, 7, 10, 10, '!#62d0e6', 1); G('#62d0e655', 6, 3, 11, 7) });
+ic('e_lb', function () { P(ST2, [3, 15, 2, 5, 5, 1, 11, 1, 14, 5, 13, 15]); P(ST1, [4, 14, 4, 5, 6, 2, 10, 2, 12, 5, 12, 14]); L(6, 3, 6, 13, '!' + F2, 1); L(6, 3, 10, 6, '!' + F2, 1); L(10, 6, 6, 8, '!' + F2, 1); L(6, 8, 10, 11, '!' + F2, 1); L(10, 11, 6, 13, '!' + F2, 1); G('#ff8a2a55', 6, 2, 11, 6) });
+ic('e_chart', function () { P(B1, [1, 6, 15, 6, 15, 10, 1, 10]); E(1, 6, 1.5, 1.5, B1); E(1, 10, 1.5, 1.5, B1); E(15, 6, 1.5, 1.5, B1); E(15, 10, 1.5, 1.5, B1); for (var k = 0; k < 4; k++) L(4 + k * 2, 6, 4 + k * 2, 10, '!' + OUT); L(3, 10, 12, 6, '!' + RD); D('!' + B2, 2, 9, 14, 9) });
+ic('e_moon', function () { for (var y = 1; y < 15; y++) for (var x = 1; x < 15; x++) { var a = (x - 7) * (x - 7) + (y - 8) * (y - 8), b = (x - 10) * (x - 10) + (y - 6) * (y - 6); if (a <= 36 && b > 25) set(x, y, '#e6dfc8'); } D('!#ffffff', 3, 7, 4, 5); });
+ic('e_sun', function () { E(8, 8, 3.5, 3.5, F1); for (var k = 0; k < 8; k++) { var a = k * Math.PI / 4; L(8 + Math.cos(a) * 5, 8 + Math.sin(a) * 5, 8 + Math.cos(a) * 7, 8 + Math.sin(a) * 7, '!' + F2); } });
+ic('e_brain', function () { R(3, 3, 10, 12, '#9fd0c0'); R(3, 1, 10, 2, S2); R(3, 14, 10, 1, '#6aa090'); E(8, 9, 3.5, 3, '#e88aa0'); L(8, 6, 8, 12, '!#a04a60'); D('!#a04a60', 6, 8, 10, 10, 6, 10); D('!#ffffff', 4, 5, 4, 6); D('!' + N1, 11, 5, 5, 13) });
+ic('e_ques', function () { P(ST3, [3, 15, 2, 4, 6, 1, 11, 1, 14, 5, 13, 15]); P(ST2, [4, 14, 4, 5, 6, 2, 10, 2, 12, 5, 12, 14]); L(6, 5, 8, 4, '!' + ST1); L(8, 4, 10, 6, '!' + ST1); L(10, 6, 8, 9, '!' + ST1); L(8, 9, 8, 10, '!' + ST1); D('!' + ST1, 8, 12) });
+ic('e_okbox', function () { E(8, 8, 6.5, 6.5, RD); for (var k = 0; k < 8; k++) { var a = k * Math.PI / 4; D(RD, 8 + Math.round(Math.cos(a) * 7), 8 + Math.round(Math.sin(a) * 7)); } E(8, 8, 4.5, 4.5, '#a01828'); L(5, 8, 7, 10, '!#ff8a96', 1); L(7, 10, 11, 5, '!#ff8a96', 1) });
+ic('e_spark2', function () { star(8, 8, 4, 7, 1.5, '#fff1a8'); star(8, 8, 4, 4, 1.2, '#fff1a8', -Math.PI / 4); D('!#ffffff', 8, 8); });
+ic('e_book2', function () { R(2, 2, 12, 12, '#8a1e24'); R(3, 2, 10, 10, '#a8323a'); R(2, 12, 12, 2, '#e6dfc8'); R(2, 2, 2, 12, '#5a0c14'); D('!' + A1, 7, 5, 8, 5, 9, 5, 7, 7, 9, 7); });
+
+
+/* emoji -> icone pixel : le jeu remplace chaque emoji par son icone a l'affichage */
+ic('e_heart', function () { heart(8, 6, RD, '#ff8a96'); D('!#7a0c18', 8, 10, 7, 9, 9, 9); });
+ic('e_crown', function () { crown(A1, A2, RD); D('!#fff1a8', 3, 6, 8, 4); G('#ffe08a66', 8, 1, 2, 3, 14, 3); });
+var EMO = {'🔥': 'bn_flamme', '✨': 'e_spark', '🛡': 'e_shield', '🎲': 'e_die', '💰': 'bn_or', '⚡': 'bn_foudre', '⚔': 'bn_duelliste', '❤': 'e_heart', '🩸': 'e_drop', '☠': 'e_skullx', '💥': 'e_boom', '🎯': 'e_target', '🔒': 'i_lock', '⚠': 'e_warn', '📖': 'bn_arcane', '💠': 'e_ess', '🌟': 'e_star', '⭐': 'e_star', '🧪': 'bn_fiole', '🎒': 'i_bag', '⚖': 'e_scale', '👑': 'e_crown', '🔮': 'e_orb', '⚒': 'e_hammers', '✔': 'e_check', '🤺': 'bn_riposte', '🗝': 'pc_voleur', '🧛': 'bn_sang', '💨': 'bn_ombre', '👁': 'pc_presage', '⏳': 'bn_tempo', '🌒': 'bn_tout', '🗡': 'e_dagger', '🕯': 'bn_rituel', '🎁': 'pc_relique', '💀': 'e_skull', '💫': 'bn_opportuniste', '👹': 'bn_avatar', '👺': 'bn_avatar', '⚱': 'pc_fossoyeur', '⚗': 'pc_alchimie', '⬇': 'e_down', '🪞': 'e_mirror', '🍀': 'bn_chance', '💪': 'bn_force', '🏅': 'e_medal', '🏆': 'e_trophy', '📜': 'e_scroll', '🔪': 'bn_ecorcheur', '🥁': 'bn_frenesie', '🌿': 'bn_regen', '🔨': 'e_hammer', '🕳': 'e_hole', '🏟': 'pc_arene', '🧰': 'e_chest', '🎡': 'e_wheel', '♻': 'e_recycle', '🌵': 'bn_epines', '🔲': 'e_grid', '🕸': 'e_web', '🧱': 'bn_rempart', '⚰': 'bn_bourreau', '🦴': 'bn_egide', '🖐': 'bn_hate', '🗿': 'bn_colosse', '🔔': 'bn_resonance', '📿': 'e_beads', '👥': 'bn_echo', '✴': 'e_fstar', '💤': 'e_zzz', '😡': 'e_rage', '⛰': 'bn_fer', '🏺': 'e_vase', '🧭': 'e_compass', '🎓': 'bn_maitrise', '♟': 'e_pawn', '🦅': 'e_eagle', '🌊': 'e_wave', '🏰': 'e_castle', '🐍': 'bn_venin', '🍖': 'bn_festin', '🌑': 'e_newmoon', '⏱': 'e_stopwatch', '🚪': 'e_door', '⛑': 'e_helm', '🥾': 'e_boot', '💍': 'e_ring', '♨': 'bn_brasier', '🧫': 'bn_pestilence', '🕊': 'bn_phenix', '👛': 'e_purse', '⛓': 'pc_fer', '💧': 'e_water', '🩹': 'e_bandage', '🤝': 'e_hands', '⛲': 'e_fountain', '👤': 'e_person', '🔓': 'e_unlock', '💡': 'e_bulb', '▫': 'e_square', '🎵': 'e_note', '📳': 'e_vib', '❄': 'e_snow', '⏭': 'e_skip', '🤖': 'e_robot', '💚': 'e_greenheart', '📣': 'e_megaphone', '🎨': 'e_palette', '🛠': 'e_tools', '🏞': 'e_land', '🔁': 'e_loop', '⛪': 'e_church', '🌕': 'e_fullmoon', '🌫': 'e_fog', '🌠': 'e_shoot', '☄': 'e_comet', '🌋': 'e_volcano', '🏹': 'e_bow', '🌧': 'e_rain', '👊': 'e_fist', '💢': 'e_anger', '☯': 'e_yinyang', '🙏': 'e_pray', '☣': 'e_bio', '🤐': 'e_silence', '✋': 'e_hand', '🪓': 'e_axe', '⚕': 'e_staff', '🎭': 'e_mask', '🥋': 'e_gi', '🦺': 'e_vest', '👢': 'e_highboot', '⭕': 'e_circle', '🧿': 'e_nazar', '🎰': 'bn_des2', '🦈': 'bn_saigne', '🗯': 'bn_embuscade', '💎': 'bn_verre', '🧊': 'bn_sangfroid', '🌞': 'bn_zenith', '🦔': 'bn_titan', '💉': 'bn_adrenaline', '🏯': 'bn_bastion', '🧵': 'bn_destin', '🌀': 'bn_tempete', '🐺': 'bn_predateur', '💗': 'e_pinkheart', '🏮': 'e_lantern', '⌛': 'e_hourglass', '🦷': 'e_tooth', '🖤': 'e_blackheart', '🍷': 'e_wine', '📌': 'e_pin', '📯': 'e_horn', '📕': 'e_book2', '🔱': 'e_trident', '🧤': 'e_glove', '➰': 'e_curl', '⚜': 'e_fleur', '🪝': 'e_hook', '🎼': 'e_score', '🕰': 'e_clock', '❓': 'e_quest', '🚩': 'e_flag', '✅': 'e_okbox', '⚙': 'e_gear', '🐾': 'e_paw', '❔': 'e_ques', '🔊': 'e_soundon', '🔇': 'e_soundoff', '💾': 'e_save', '📤': 'e_out', '📥': 'e_in', '🏳': 'e_wflag', '🏃': 'e_run', '🏕': 'e_camp', '🅰': 'e_la', '🅱': 'e_lb', '📊': 'e_chart', '▶': 'e_play', '🌙': 'e_moon', '☀': 'e_sun', '🧠': 'e_brain'};
+
 /* ---------- API ---------- */
 function has(id) { return Object.prototype.hasOwnProperty.call(defs, id) && String(id).charAt(0) !== '_'; }
 function key(id) { return has(id) ? id : '_fallback'; }
@@ -5062,7 +5316,7 @@ function url(id) {
     return urlCache[id];
   } catch (e) { return EMPTY; }
 }
-return { url: url, has: has, size: size, pixels: pixels, ids: ids };
+return { url: url, has: has, size: size, pixels: pixels, ids: ids, emo: EMO };
 })();
 if (typeof module !== 'undefined') module.exports = Sprites;
 
@@ -5951,10 +6205,23 @@ var SND = (function () {
       cur = { s: s, g: g }; curName = name;
     });
   }
+  // Bip de dialogue, synthétisé (pas de fichier) : un petit son de machine à écrire, plus ou moins aigu selon qui parle
+  var blipN = 0;
+  function blip(freq, vol, wave) {
+    if (!on.sfx || !ctx || !unlocked) return false;
+    try {
+      var now = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      o.type = wave || 'square'; o.frequency.value = (freq || 180) * (0.92 + Math.random() * 0.16);
+      f.type = 'lowpass'; f.frequency.value = 2200;
+      g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.09 * (vol == null ? 1 : vol), now + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+      o.connect(f); f.connect(g); g.connect(sfxGain); o.start(now); o.stop(now + 0.06);
+      blipN++; return true;
+    } catch (e) { return false; }
+  }
   function set(kind, v) { on[kind] = !!v; if (kind === 'music') { if (!v) stopCur(0.3); else if (wanted) music(wanted); } }
   function pause(p) { if (!ctx) return; try { if (p) ctx.suspend(); else if (unlocked) ctx.resume(); } catch (e) { } }
   ['pointerdown', 'touchend', 'keydown'].forEach(function (evn) { window.addEventListener(evn, unlock, { passive: true }); });
-  return { play: play, music: music, set: set, pause: pause, unlock: unlock };
+  return { play: play, music: music, set: set, pause: pause, unlock: unlock, blip: blip, blips: function () { return blipN; } };
 })();
 
 ;
@@ -6247,6 +6514,41 @@ var UI = (function () {
     if (typeof Sprites === 'undefined') return '<span class="emo">👤</span>';
     return '<img class="px ' + (cls || '') + '" src="' + Sprites.url(id) + '" alt="" draggable="false">';
   }
+  // Emojis -> icônes pixel : chaque emoji écrit dans la page est remplacé à l'affichage par son icône (Sprites.emo)
+  var emoRe = null;
+  function emoNode(t) {
+    var v = t.nodeValue; if (!v || v.length > 4000) return;
+    if (!emoRe) emoRe = new RegExp('(' + Object.keys(Sprites.emo).join('|') + ')\uFE0F?', 'g');
+    emoRe.lastIndex = 0; if (!emoRe.test(v)) return;
+    var f = document.createDocumentFragment(), last = 0, m; emoRe.lastIndex = 0;
+    while ((m = emoRe.exec(v))) {
+      if (m.index > last) f.appendChild(document.createTextNode(v.slice(last, m.index)));
+      var im = document.createElement('img'); im.className = 'emo px'; im.alt = ''; im.draggable = false; im.src = Sprites.url(Sprites.emo[m[1]]);
+      f.appendChild(im); last = m.index + m[0].length;
+    }
+    if (last < v.length) f.appendChild(document.createTextNode(v.slice(last)));
+    if (t.parentNode) t.parentNode.replaceChild(f, t);
+  }
+  function emoScan(n) {
+    if (n.nodeType === 3) return emoNode(n);
+    if (n.nodeType !== 1 || /^(SCRIPT|STYLE|TEXTAREA|INPUT|CANVAS)$/.test(n.tagName)) return;
+    var w = document.createTreeWalker(n, NodeFilter.SHOW_TEXT), list = [], t;
+    while ((t = w.nextNode())) list.push(t);
+    list.forEach(emoNode);
+  }
+  function emoWatch(root) {
+    if (typeof Sprites === 'undefined' || !Sprites.emo || !root || typeof MutationObserver === 'undefined') return;
+    emoScan(root);
+    new MutationObserver(function (ms) {
+      for (var i = 0; i < ms.length; i++) {
+        var m = ms[i];
+        if (m.type === 'characterData') emoNode(m.target);
+        else for (var j = 0; j < m.addedNodes.length; j++) emoScan(m.addedNodes[j]);
+      }
+    }).observe(root, { childList: true, subtree: true, characterData: true });
+  }
+  // écrit un texte seulement s'il a changé (le texte affiché ne contient plus les emojis, devenus des images)
+  function setTxt(el, s) { if (el && el._raw !== s) { el._raw = s; el.textContent = s; } }
   function fmtMod(k, v) {
     var m = D.MODS[k]; if (!m || !v) return null;
     var a = Math.abs(v), num;
@@ -6635,7 +6937,7 @@ var UI = (function () {
     var h = '<div class="card small"><b>' + hero.name + '</b> porte <b class="gold">' + hs.pacts.length + '/' + slots + '</b> pacte' + (slots > 1 ? 's' : '') + '. <span class="dim">Un emplacement de plus à Maîtrise 4 et 8. Les pactes se gagnent avec les Hauts faits.</span></div>';
     D.PACTS.forEach(function (p) {
       var own = S().pacts.indexOf(p.id) >= 0, on = hs.pacts.indexOf(p.id) >= 0;
-      h += '<button class="li' + (on ? ' on' : '') + (own ? '' : ' locked') + '" style="width:100%;text-align:left" data-act="pact" data-id="' + p.id + '"><div class="ic">' + (own ? p.icon : '🔒') + '</div><div class="grow"><b>' + p.name + '</b><div class="small dim">' + p.desc + '</div>' + (own ? '' : '<div class="tiny gold">' + p.how + '</div>') + '</div>' + (on ? '<span class="gold">✔</span>' : '') + '</button>';
+      h += '<button class="li' + (on ? ' on' : '') + (own ? '' : ' locked') + '" style="width:100%;text-align:left" data-act="pact" data-id="' + p.id + '"><div class="ic">' + (own ? p.icon : spr('i_lock', 'ski')) + '</div><div class="grow"><b>' + p.name + '</b><div class="small dim">' + p.desc + '</div>' + (own ? '' : '<div class="tiny gold">' + p.how + '</div>') + '</div>' + (on ? '<span class="gold">✔</span>' : '') + '</button>';
     });
     h += '<h3 style="margin:14px 0 4px">🐾 Familiers</h3><div class="small dim" style="margin-bottom:8px">Tue assez de monstres d’une espèce pour en apprivoiser un. Un seul t’accompagne à la fois, pour tous tes héros.</div>';
     D.FAMILIARS.forEach(function (f) {
@@ -6729,7 +7031,7 @@ var UI = (function () {
   function boot() { E.load(); applySettings(); st.view = S().hero; splash(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else setTimeout(boot, 0);
 
-  return { ACT: ACT, $: $, S: S, spr: spr, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, famHtml: famHtml, vib: vib, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod, skillSheet: skillSheet, foeSheet: foeSheet, tagsHtml: tagsHtml, abIcons: abIcons };
+  return { ACT: ACT, $: $, S: S, spr: spr, emoWatch: emoWatch, setTxt: setTxt, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, famHtml: famHtml, vib: vib, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod, skillSheet: skillSheet, foeSheet: foeSheet, tagsHtml: tagsHtml, abIcons: abIcons };
 })();
 
 ;
@@ -6739,8 +7041,8 @@ UI.run = (function () {
   var E = ENGINE, D = DATA, $ = UI.$, S = UI.S, ACT = UI.ACT;
   var running = false, paused = false, last = 0, shownPhase = null, phaseTimer = null, els = {}, posOf = {}, floats = 0, built = null, fxL = null, lootShown = 0, combo = 0, comboT = null;
   // v2.0 : lumière, orbes, projectiles, primes
-  var vfx = null, orbEls = {}, shotEls = {}, stopT = 0, primeKey = '', wiping = false, stepT = 0, lastTurn = '', moving = false, diceKey = '', selDie = 0, trayKey = '', lastPlaced = -1, figLine = null, handRoll = false, diceMode = null;
-  var DSHORT = { lame: 'frappe', garde: 'protège', seve: 'soigne', echo: 'renforce ses voisins', miroir: 'copie un voisin', braise: 'frappe et brûle', venin: 'empoisonne', foudre: 'frappe tous', astre: 'charge l’ultime' };
+  var vfx = null, orbEls = {}, shotEls = {}, stopT = 0, primeKey = '', wiping = false, stepT = 0, lastTurn = '', moving = false, diceKey = '', selDie = -1, trayKey = '', lastPlaced = -1, figLine = null, handRoll = false, diceMode = null;
+  var DSHORT = { lame: 'frappe', garde: 'protège', seve: 'soigne', echo: 'renforce le reste de ta main', miroir: 'copie le dernier dé joué', braise: 'frappe et brûle', venin: 'empoisonne', foudre: 'frappe tous', astre: 'charge l’ultime' };
   var RANGED = { pyro: 'fire', necro: 'dark', chasseuse: 'blade', pretresse: 'holy' };
   var ORB = { gold: '💰', heal: '❤️', ult: '🌟', fury: '🔥' };
   var FXMAP = { burn: 'fire', bleed: 'blood', thorns: 'hit', chain: 'ice', skel: 'death', ally: 'hit', star: 'crit' };
@@ -6766,7 +7068,7 @@ UI.run = (function () {
       '<button class="dtool dre" id="dre" data-act="dreroll">' + UI.spr('i_reroll', 'ic') + '<span>Relance</span><b></b></button>' +
       '<button class="dtool dre dfl" id="dfl" data-act="dflip">' + UI.spr('i_flip', 'ic') + '<span>Retourne</span><b></b></button></div>' +
       '<div class="dhand-w"><span class="dlab">Ta main</span><div class="dhand" id="dhand"></div></div>' +
-      '<div class="dgrid-w"><span class="dlab">La table</span><div class="dgrid" id="dgrid"></div></div></div></div>' +
+      '<button class="dfig-w" id="dfigw" data-act="figs"><span class="dlab">Ce tour</span><span class="dslots" id="dslots"></span><span class="dfig" id="dfig"></span></button></div></div>' +
       '<div class="hud">' +
       '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><span></span></div></div></div>' +
       '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + UI.spr('ul_' + h.id, 'ic') + h.ult.name + '</span></button>' +
@@ -6775,7 +7077,7 @@ UI.run = (function () {
       '<button class="bigact parry" id="bparry" data-act="parry" data-info="parry">' + UI.spr('i_shield', 'ic') + '<b>Parer</b><span class="cd"></span></button></div>' +
       '<div class="skills">' + h.skills.map(function (k, i) { return '<button class="skb" id="sk' + i + '" data-act="skill" data-i="' + i + '" data-info="skill:' + i + '"><span class="e">' + k.icon + '</span><span class="cd"></span><span class="ev"></span><span class="nm">' + k.name + '</span><span class="need">' + D.NEEDS[k.need].label + '</span><span class="n"></span></button>'; }).join('') +
       '<button class="skb potion" id="pot" data-act="potion" data-info="potion">' + UI.spr('i_potion', 'ic') + '<span class="cnt"></span></button></div></div>';
-    built = null; shownPhase = null; updateHud.key = null; lastTurn = ''; diceKey = ''; trayKey = ''; selDie = 0; lastPlaced = -1;
+    built = null; shownPhase = null; updateHud.key = null; lastTurn = ''; diceKey = ''; trayKey = ''; selDie = -1; lastPlaced = -1;
     if (run.phase !== 'combat') SND.music(zoneMusic(run));
     if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); }
     syncPhase(true);
@@ -6795,7 +7097,7 @@ UI.run = (function () {
     vfx = typeof VFX !== 'undefined' ? VFX.attach(a) : null;
     fxL = typeof FX !== 'undefined' ? FX.attach(a, { ambient: ['dust', 'leaves', 'fireflies', 'gold', 'embers', 'void'][z.id - 1], warm: 2 }) : null;
     if (c && c.dfx && c.dfx.id) showFig(c.dfx, true);
-    trayKey = ''; selDie = 0; lastPlaced = -1; figLine = null;
+    trayKey = ''; selDie = -1; lastPlaced = -1; figLine = null;
     if (c) { c.enemies.forEach(function (e, i) { if (!e.dead) { addEnemy(e, i, false); els[e.id].style.animationDelay = (0.15 + i * 0.09) + 's'; } }); built = c; }
     else built = 'empty';
   }
@@ -6882,72 +7184,76 @@ UI.run = (function () {
     el.style.setProperty('--dx', Math.round((b.x - a.x) * 0.42) + 'px'); el.style.setProperty('--dy', Math.round((b.y - a.y) * 0.42) + 'px');
     anim(el, 'atk', 280);
   }
-  // --- dés de combat (v3.2) : la main, la table de 9 cases, les figures ---
+  // --- dés de combat (v4.0) : la main, et la figure formée par les 3 premiers dés joués du tour ---
   function tdie(t, v, cls) { return '<span class="tdie t-' + t + (cls || '') + '"><i>' + UI.spr('dt_' + t, 'dg') + '</i><b>' + v + '</b></span>'; }
   function facesTxt(f) { return f[0] + '-' + f[5]; }
   function showFig(e, still) {
     var el = $('#cdice'); if (!el) return;
-    el.className = 'cdice k-' + e.id + (still ? '' : ' roll'); el.innerHTML = '<b>' + e.icon + ' ' + e.name + '</b>';
+    if (e.id === 'rien') { if (!still) { el.className = 'cdice k-rien'; el.innerHTML = '<b>' + e.vals.slice().sort(function (a, b) { return a - b; }).join(' · ') + ' : pas de figure</b>'; } return; }
+    el.className = 'cdice k-' + e.id + (still ? '' : ' roll'); el.innerHTML = '<b>' + e.icon + ' ' + e.name + (e.vals ? ' ' + e.vals.slice().sort(function (a, b) { return a - b; }).join('-') : '') + '</b>';
     if (still) return;
-    var hero = $('#uhero'), big = e.id === 'jackpot' || e.id === 'sept';
+    var hero = $('#uhero'), big = e.id === 'jackpot' || e.id === 'suite';
     floatAt(hero, e.name + ' !', big ? 'crit' : 'txt'); SND.play(e.id === 'jackpot' ? 'loot_legend' : big ? 'upgrade' : 'equip', 0.7);
     var h = center(hero); if (vfx && h) { VFX.ring(vfx, h.x, h.y, big ? 'gold' : 'ice', big ? 120 : 70, 0.4, 5); if (big) VFX.sparks(vfx, h.x, h.y, 'gold', e.id === 'jackpot' ? 50 : 20, { speed: 300, g: -160, life: 1 }); }
     if (e.id === 'jackpot') { UI.flash('#f2bd5e88'); UI.vib([30, 30, 80]); }
-    figLine = e.line || null; trayKey = ''; setTimeout(function () { figLine = null; trayKey = ''; }, 1100);
-    tuto('figure', '🎲 <b>Figure : ' + e.name + '.</b> ' + e.desc + '<br><span class="dim">Trois dés alignés forment une figure selon leurs valeurs. Touche 🎒 pour les voir toutes.</span>');
+    figLine = 1; trayKey = ''; setTimeout(function () { figLine = null; trayKey = ''; }, 1100);
+    tuto('fig4', '🎲 <b>' + e.name + ' !</b> ' + e.desc + '<br><span class="dim">Les 3 premiers dés que tu joues dans un tour forment une figure : Paire, Suite ou Brelan.</span>');
   }
-  ACT.cdice = function () { var run = S().run, c = run && run.combat; if (c && c.dfx && c.dfx.id) UI.toast(c.dfx.icon + ' <b>' + c.dfx.name + '</b><br>' + c.dfx.desc, true); };
+  ACT.cdice = function () { var run = S().run, c = run && run.combat; if (c && c.dfx && c.dfx.id) UI.toast(c.dfx.icon + ' <b>' + c.dfx.name + '</b><br>' + c.dfx.desc, true); else figsHelp(); };
+  function figsHelp() { UI.toast('🎲 <b>Figures</b> · les 3 premiers dés joués dans le tour (sur un ennemi ou dans un pouvoir)<br>🎲 <b>Paire</b> deux valeurs identiques : +30 % de dégâts ce tour<br>✨ <b>Suite</b> trois valeurs qui se suivent (2-3-4) : +1 action ⚡ et prochain coup critique<br>👑 <b>Brelan</b> trois valeurs identiques : +1 action ⚡ et coups critiques ce tour', true); }
+  ACT.figs = function () { SND.play('click', 0.6); figsHelp(); };
+  // Meilleure figure encore possible avec les dés déjà joués et ceux de la main
+  function figChance(c) {
+    var pl = c.played || [], need = 3 - pl.length, hv = c.hand.map(function (d) { return d.v; }), best = null, rank = { paire: 1, suite: 2, jackpot: 3 };
+    if (need <= 0 || hv.length < need) return null;
+    function go(start, acc) {
+      if (acc.length === need) { var k = E.figKind(pl.concat(acc)); if (k && (!best || rank[k.id] > rank[best.id])) best = k; return; }
+      for (var j = start; j < hv.length; j++) go(j + 1, acc.concat([hv[j]]));
+    }
+    go(0, []); return best;
+  }
   function updateTray(run) {
     var tr = $('#dtray'); if (!tr) return;
     var c = run.phase === 'combat' && run.combat && !run.combat.over ? run.combat : null, mine = !!c && c.turn === 'hero', auto = !!S().settings.auto, i;
-    if (c && selDie >= c.hand.length) selDie = Math.max(0, c.hand.length - 1);
-    var key = !c ? 'x' + run.bag.length : [mine ? 1 : 0, selDie, c.rerolls, c.flips, auto ? 1 : 0, lastPlaced, figLine ? figLine.join('') : '', c.hand.map(function (d) { return d.t + d.v + (d.fire ? 'f' : '') + (d.ice ? 'i' : ''); }).join(','), c.hero.ap, c.grid.map(function (g) { return (g.r || '') + (g.d ? g.d.t + g.d.v : ''); }).join(',')].join('|');
+    if (c && selDie >= c.hand.length) selDie = -1;
+    var key = !c ? 'x' + run.bag.length : [mine ? 1 : 0, selDie, c.rerolls, c.flips, auto ? 1 : 0, figLine ? 1 : 0, (c.played || []).join(''), c.dfx && c.dfx.id, c.lastT, c.hand.map(function (d) { return d.t + d.v + (d.fire ? 'f' : '') + (d.ice ? 'i' : '') + (d.up ? 'u' : ''); }).join(','), c.hero.ap].join('|');
     if (key === trayKey) return; trayKey = key;
     tr.className = 'dtray' + (!c ? ' idle' : mine ? '' : ' wait');
     $('#dbag').lastChild.textContent = run.bag.length;
     var re = $('#dre'), canRe = mine && c.hand.length > 0 && c.rerolls > 0; re.lastChild.textContent = c ? c.rerolls : ''; re.classList.toggle('off', !canRe);
     var fl = $('#dfl'); fl.lastChild.textContent = c ? (c.flips || 0) : ''; fl.classList.toggle('off', !(mine && c.hand.length > 0 && c.flips > 0));
     var hh = '';
-    if (c && c.hand.length) c.hand.forEach(function (d, k) { hh += '<button class="hd' + (k === selDie && mine && !auto ? ' sel' : '') + (handRoll ? ' roll' : '') + '" style="animation-delay:' + (k * 0.06) + 's" data-act="hdie" data-i="' + k + '">' + tdie(d.t, d.v, (d.fire ? ' fire' : '') + (d.ice ? ' ice' : '')) + '</button>'; });
-    else hh = '<span class="dnone">' + (c ? (mine ? 'Tous tes dés sont posés' : 'Les ennemis jouent...') : '🎲 Ton sac : ' + run.bag.length + ' dés') + '</span>';
+    if (c && c.hand.length) c.hand.forEach(function (d, k) { hh += '<button class="hd' + (k === selDie && mine && !auto ? ' sel' : '') + (handRoll ? ' roll' : '') + '" style="animation-delay:' + (k * 0.06) + 's" data-act="hdie" data-i="' + k + '">' + tdie(d.t, d.v, (d.fire ? ' fire' : '') + (d.ice ? ' ice' : '') + (d.up ? ' up' : '')) + '</button>'; });
+    else hh = '<span class="dnone">' + (c ? (mine ? 'Tous tes dés sont joués' : 'Les ennemis jouent...') : '🎲 Ton sac : ' + run.bag.length + ' dés') + '</span>';
     $('#dhand').innerHTML = hh; handRoll = false;
+    // la figure du tour : 3 cases qui se remplissent avec la valeur de chaque dé joué
+    var pl = c ? (c.played || []) : [], sh = '', fig = '', fc = c && mine ? figChance(c) : null;
+    for (i = 0; i < 3; i++) sh += '<i class="' + (i < pl.length ? 'on' : '') + '">' + (i < pl.length ? pl[i] : '') + '</i>';
+    if (c && c.dfx && c.dfx.id) fig = '<b class="k-' + c.dfx.id + '">' + c.dfx.name + '</b>';
+    else if (pl.length >= 3) fig = '<span>aucune</span>';
+    else if (fc) fig = '<span class="maybe">' + fc.name.charAt(0) + fc.name.slice(1).toLowerCase() + ' ?</span>';
+    else fig = '<span>figure</span>';
+    $('#dslots').innerHTML = sh; var dfg = $('#dfig'); dfg.innerHTML = fig;
+    $('#dfigw').classList.toggle('lit', !!figLine);
     var hint = '', sd = mine && !auto && c && c.hand[selDie];
     if (!c) hint = ''; else if (auto) hint = 'Jeu automatique'; else if (!mine) hint = 'Les ennemis jouent…';
-    else if (sd) hint = '<b class="t-' + sd.t + '">' + D.DICE[sd.t].name + ' ' + sd.v + '</b> ' + DSHORT[sd.t] + ' <i>›</i> touche une <u>case</u> ou un <u>pouvoir</u>';
-    else hint = c.hero.ap > 0 ? 'Dés posés · frappe, pare, ou termine ton tour' : 'Il ne te reste plus qu’à <u>terminer ton tour</u>';
-    var dh = $('#dhint'); if (dh) dh.innerHTML = hint;
-    var gh = '', sel = mine && !auto && c.hand[selDie] ? c.hand[selDie] : null;
-    for (i = 0; i < 9; i++) {
-      var g = c ? c.grid[i] : { r: null, d: null }, cls = 'dc' + (g.r ? ' r-' + g.r : '') + (g.d ? ' full' : '') + (sel && !g.d && g.r !== 'seal' ? ' can' : '') + (i === lastPlaced && g.d ? ' pop' : '') + (figLine && figLine.indexOf(i) >= 0 ? ' lit' : ''), inner = '';
-      if (g.d) inner = tdie(g.d.t, g.d.v, g.d.mir ? ' mir' : '');
-      else {
-        inner = g.r === 'x2' ? '<em>×2</em>' : g.r === 'p2' ? '<em>+2</em>' : g.r === 'seal' ? UI.spr('i_lock', 'ic') : '';
-        if (sel && g.r !== 'seal') {
-          var pv = E.dieCalc(selDie, i), fg = E.figAt(selDie, i);
-          if (pv && (pv.v !== sel.v || pv.t !== sel.t)) inner += '<s class="' + (pv.v > sel.v ? 'up' : 'dn') + '">' + (pv.t !== sel.t && pv.v ? D.DICE[pv.t].icon : '') + pv.v + '</s>';
-          if (fg.length) { cls += ' fig'; inner += '<u>' + fg[0].icon + '</u>'; }
-          if (sel.t === 'echo' || sel.t === 'miroir') cls += ' aim';
-        }
-      }
-      gh += '<button class="' + cls + '" data-act="cell" data-i="' + i + '">' + inner + '</button>';
+    else if (sd) {
+      var pv = E.dieCalc(selDie), what = sd.t === 'echo' ? (c.hand.length > 1 ? 'donne +' + Math.ceil(sd.v / 2) + ' aux autres dés' : 'charge ton ultime') : sd.t === 'miroir' ? 'copie ' + D.DICE[pv.t].name : DSHORT[sd.t];
+      hint = '<b class="t-' + sd.t + '">' + D.DICE[sd.t].name + ' ' + (pv && pv.v !== sd.v ? pv.v : sd.v) + '</b> ' + what + (sd.fire ? ' · <b class="t-braise">en feu : -3 % PV</b>' : sd.ice ? ' · <b class="t-garde">gelé</b> (⇅ le dégèle)' : '') + ' <i>›</i> <u>retouche pour jouer</u>';
     }
-    $('#dgrid').innerHTML = gh;
+    else if (c.hand.length) hint = 'Touche un <u>dé</u> pour le choisir' + (c.hero.ap > 0 ? ' · joue tes dés avant de frapper' : ' · ou termine ton tour');
+    else hint = c.hero.ap > 0 ? 'Dés joués · frappe, pare, ou termine ton tour' : 'Il ne te reste plus qu’à <u>terminer ton tour</u>';
+    var dh = $('#dhint'); if (dh) dh.innerHTML = hint;
   }
+  var lastPlay = 0;
   function dieInfo(t, v, extra) { var d = D.DICE[t]; UI.toast(d.icon + ' <b>' + d.name + (v != null ? ' ' + v : '') + '</b><br>' + d.desc + (extra || ''), true); }
   ACT.hdie = function (d) {
     var run = S().run, c = run && run.combat, i = +d.i; if (!c || !c.hand[i]) return;
-    if (i === selDie || c.turn !== 'hero') dieInfo(c.hand[i].t, c.hand[i].v, (c.hand[i].fire ? '<br>🔥 <b>Dé enflammé</b> : le jouer te coûte 3 % de tes PV.' : '') + (c.hand[i].ice ? '<br>❄️ <b>Dé gelé</b> : tu es entravé, ton meilleur dé est tombé à 1. ⇅ Retourner le dégèle.' : '') + '<br><span class="dim">Pose-le sur une case libre de la table, ou glisse-le dans un pouvoir dont il respecte la condition.</span>');
+    if (c.turn !== 'hero' || S().settings.auto) { dieInfo(c.hand[i].t, c.hand[i].v, (c.hand[i].fire ? '<br>🔥 <b>Dé enflammé</b> : le jouer te coûte 3 % de tes PV.' : '') + (c.hand[i].ice ? '<br>❄️ <b>Dé gelé</b> : tu es entravé, ton meilleur dé est tombé à 1. ⇅ Retourner le dégèle.' : '')); trayKey = ''; return; }
+    if (performance.now() - lastPlay < 280) return;
+    if (i === selDie) { lastPlay = performance.now(); selDie = -1; if (!E.playDie(i)) SND.play('error'); }
     else { selDie = i; SND.play('click', 0.6); }
     trayKey = '';
-  };
-  ACT.cell = function (d) {
-    var run = S().run, c = run && run.combat && !run.combat.over ? run.combat : null, i = +d.i;
-    if (!c) { UI.toast('🔲 <b>Table de dés.</b> En combat, pose ici les dés de ta main.'); return; }
-    var g = c.grid[i];
-    if (g.d) { if (g.d.t === 'miroir') UI.toast('🪞 <b>Miroir vide.</b> Il n’avait aucun voisin à copier.'); else dieInfo(g.d.t, g.d.v, g.d.mir ? '<br><span class="dim">Copié par un Miroir.</span>' : ''); return; }
-    if (g.r === 'seal') { UI.toast('🔒 <b>Case scellée.</b> Le gardien de la zone la tient fermée : aucun dé ne peut y être posé.'); return; }
-    if (c.turn !== 'hero' || !c.hand.length) { UI.toast(g.r === 'x2' ? '<b>Case ×2.</b> Le dé posé ici compte double.' : g.r === 'p2' ? '<b>Case +2.</b> Le dé posé ici gagne 2 points.' : 'Case libre.'); return; }
-    if (E.placeDie(selDie, i)) { lastPlaced = i; trayKey = ''; setTimeout(function () { if (lastPlaced === i) { lastPlaced = -1; trayKey = ''; } }, 350); } else SND.play('error');
   };
   ACT.dreroll = function () {
     var run = S().run, c = run && run.combat;
@@ -6956,16 +7262,17 @@ UI.run = (function () {
   };
   ACT.dflip = function () {
     var run = S().run, c = run && run.combat;
+    if (c && c.turn === 'hero' && c.hand.length && !c.hand[selDie]) { UI.toast('⇅ Choisis d’abord le dé à retourner.'); return; }
     if (c && myTurn() && E.flipDie(selDie)) { SND.play('equip', 0.7); handRoll = false; trayKey = ''; return; }
-    UI.toast('⇅ <b>Retourner.</b> Retourne le dé choisi sur sa face opposée : 1↔6, 2↔5, 3↔4. Un petit dé devient grand, un pair devient impair. ' + (c ? (c.flips > 0 ? 'Une fois par tour.' : 'Déjà utilisé ce tour.') : 'Une fois par tour.'), true);
+    UI.toast('⇅ <b>Retourner.</b> Retourne le dé choisi sur sa face opposée : 1↔6, 2↔5, 3↔4. Pratique pour compléter une figure ou la condition d’un pouvoir. ' + (c ? (c.flips > 0 ? 'Une fois par tour.' : 'Déjà utilisé ce tour.') : 'Une fois par tour.'), true);
   };
   function bagSheet() {
     var run = S().run; if (!run) return; var groups = {}, order = [], h;
     run.bag.forEach(function (d) { var k = d.t + '|' + d.f.join(''); if (!groups[k]) { groups[k] = { d: d, n: 0 }; order.push(k); } groups[k].n++; });
     h = '<h2>🎒 Ton sac de dés</h2><div class="tiny dim center" style="margin:-6px 0 10px">' + run.bag.length + ' dés · tu en pioches ' + (3 + (run.stats.diceHand || 0)) + ' par tour · le sac se remélange quand il est vide</div>';
     order.forEach(function (k) { var g = groups[k], d = g.d; h += '<div class="li"><div class="ic">' + tdie(d.t, facesTxt(d.f)) + '</div><div class="grow"><b>' + E.dieName(d) + (g.n > 1 ? ' ×' + g.n : '') + '</b> <span class="tiny dim">faces ' + d.f[0] + ' à ' + d.f[5] + '</span><div class="small dim">' + D.DICE[d.t].desc + '</div></div></div>'; });
-    h += '<h3 class="gold" style="margin:10px 0 6px">La table</h3><div class="small dim" style="line-height:1.6">Pose tes dés sur les 9 cases : ils agissent tout de suite et ne coûtent <b>aucune action</b>. Tu peux aussi glisser un dé dans un <b>pouvoir</b> s’il respecte sa condition. Les dés posés restent sur la table ; quand elle est pleine, elle est purgée au tour suivant (+10 % d’ultime).<br><b style="color:#ffd87a">×2</b> le dé compte double · <b style="color:#a9cbff">+2</b> le dé gagne 2 points · 🔒 case scellée par un boss.<br>✨ <b>Écho</b> : pose-le d’abord, puis colle-lui tes meilleurs dés.</div>';
-    h += '<h3 class="gold" style="margin:10px 0 6px">Les figures</h3><div class="tiny dim" style="margin-bottom:6px">Trois dés alignés (ligne, colonne ou diagonale), selon la valeur tirée de chaque dé.</div>';
+    h += '<h3 class="gold" style="margin:10px 0 6px">Jouer un dé</h3><div class="small dim" style="line-height:1.6">Touche un dé de ta main pour le choisir, retouche-le pour le <b>jouer</b> : il agit tout de suite et ne coûte <b>aucune action</b>. Tu peux aussi le glisser dans un <b>pouvoir</b> s’il respecte sa condition (≤3, PAIR, ≥4...).</div>';
+    h += '<h3 class="gold" style="margin:10px 0 6px">Les figures</h3><div class="tiny dim" style="margin-bottom:6px">Les <b>3 premiers dés</b> que tu joues dans un tour forment une figure, selon le chiffre affiché sur chacun. L’ordre ne compte pas.</div>';
     D.FIGS.forEach(function (f) { h += '<div class="li"><div class="ic">' + f[0] + '</div><div class="grow"><b>' + f[1] + '</b> <span class="tiny dim">' + f[2] + '</span><div class="small dim">' + f[3] + '</div></div></div>'; });
     h += '<div class="btns"><button class="btn primary big" data-act="close">FERMER</button></div>';
     UI.modal(h);
@@ -7097,16 +7404,17 @@ UI.run = (function () {
         case 'potion': SND.play('potion'); break;
         case 'die': if (el) { var dp = center(el); if (vfx && dp) VFX.death(vfx, dp.x, dp.y, e.boss); souls(el, e.boss ? 12 : 3, e.boss ? 10 : 3); dropGems(c, el); el.classList.add('dead'); el.classList.remove('charging'); } SND.play(e.boss ? 'boss_die' : 'die'); if (e.boss) { UI.flash('#ffffffaa'); anim($('#arena'), 'shake', 250); hitstop(160); UI.vib([40, 40, 120]); } break;
         case 'pturn': var fgp = $('#cdice'); if (fgp) fgp.innerHTML = ''; if (e.n === 2) tuto('intent', '👁️ <b>Intentions.</b> Sous le nom de chaque ennemi : ce qu’il fera à son tour. ⚔️ 12 = il frappera pour 12 · ⚠️ = il charge un gros coup · 💤 = il ne fera rien.'); anim($('#aps'), 'bump', 300); if (e.n > 1) { floatAt(hero, 'À toi', 'txt'); } document.querySelectorAll('.unit.en.acting').forEach(function (x) { x.classList.remove('acting'); }); break;
-        case 'draw': handRoll = true; trayKey = ''; selDie = 0; SND.play('click', 0.8); setTimeout(function () { SND.play('click', 0.6); }, 90); tuto('dice2', '🎲 <b>Tes dés.</b> À chaque tour tu pioches 3 dés de ton sac 🎒. Touche une case de la table pour poser le dé choisi : il agit tout de suite et ne coûte <b>aucune action</b>. Ou glisse-le dans un <b>pouvoir</b> : chaque pouvoir affiche le dé qu’il demande (≤3, PAIR, ≥4...).<br>⚔️ frappe · 🛡️ protège · ❤️ soigne · ✨ renforce ses voisins.'); break;
+        case 'draw': handRoll = true; trayKey = ''; if (!e.again) selDie = -1; SND.play('click', 0.8); setTimeout(function () { SND.play('click', 0.6); }, 90); tuto('dice4', '🎲 <b>Tes dés.</b> À chaque tour tu pioches 3 dés. Touche un dé pour le choisir, <b>retouche-le pour le jouer</b> : il agit tout de suite, sans coûter d’action. Ou glisse-le dans un <b>pouvoir</b>.<br>Les 3 dés joués forment peut-être une <b>figure</b> : Paire, Suite (2-3-4) ou Brelan.'); break;
         case 'slot': anim($('#sk' + e.i), 'fire', 300); SND.play('equip', 0.6); trayKey = ''; tuto('slot2', '🎲 <b>Dé glissé dans un pouvoir.</b> Plus le dé est fort, plus le pouvoir frappe : un 5 vaut 100 %, un 6 vaut 110 %, un 1 vaut 60 %. Les pouvoirs d’appui, eux, se contentent d’un petit dé.'); break;
         case 'flip': trayKey = ''; break;
-        case 'place': SND.play(e.t === 'garde' ? 'block' : e.t === 'echo' || e.t === 'miroir' ? 'equip' : 'click', 0.7); if (e.t === 'echo') floatAt(hero, '✨ Écho', 'txt'); else if (e.t === 'miroir') floatAt(hero, 'Miroir vide', 'txt'); break;
+        case 'place': SND.play(e.t === 'garde' ? 'block' : e.t === 'echo' || e.mir ? 'equip' : 'click', 0.7); if (e.t === 'echo') floatAt(hero, '✨ Écho', 'txt'); else if (e.mir) floatAt(hero, '🪞 Miroir', 'txt'); break;
+        case 'echoUp': trayKey = ''; tuto('echo4', '✨ <b>Écho.</b> Les autres dés de ta main viennent de gagner +' + e.v + '. Joue l’Écho en premier, puis tes meilleurs dés.'); break;
         case 'dshield': floatAt(hero, '+' + E.fmt(Math.ceil(e.v)) + ' 🛡️', 'txt'); break;
         case 'dult': floatAt(hero, '+' + e.v + ' % 🌟', 'txt'); break;
         case 'dpoison': floatAt(el, '☠️ Poison', 'txt'); break;
         case 'figure': showFig(e, false); break;
-        case 'gclear': floatAt(hero, 'Table purgée', 'txt'); SND.play('salvage', 0.6); break;
-        case 'handleft': tuto('handleft', '🎲 Tu n’as plus d’action, mais il te reste <b>des dés</b>. Pose-les sur la table, glisse-les dans un pouvoir, ou touche <b>Fin du tour ⏭</b>.'); break;
+
+        case 'handleft': tuto('handleft4', '🎲 Tu n’as plus d’action, mais il te reste <b>des dés</b>. Joue-les, glisse-les dans un pouvoir, ou touche <b>Fin du tour ⏭</b>.'); break;
         case 'eturn': document.querySelectorAll('.unit.en.acting').forEach(function (x) { x.classList.remove('acting'); }); if (el) el.classList.add('acting'); break;
         case 'stunned': floatAt(el, 'Étourdi', 'txt'); break;
         case 'slowed': floatAt(hero, 'Entravé...', 'hurt'); break;
@@ -7168,7 +7476,7 @@ UI.run = (function () {
     hb.lastChild.textContent = E.fmt(Math.ceil(run.hp)) + ' / ' + E.fmt(stt.hp) + (sh >= 1 ? '  (+' + E.fmt(sh) + ')' : '');
     hb.classList.toggle('low', frac < 0.3);
     $('#rlvl').style.setProperty('--xp', Math.min(100, run.xp / E.xpNeed(run.lvl) * 100) + '%');
-    $('#hsts').textContent = c ? stIcons(c.hero.st) + (c.hero.elan ? ' ⚡x' + c.hero.elan : '') : '';
+    UI.setTxt($('#hsts'), c ? stIcons(c.hero.st) + (c.hero.elan ? ' ⚡x' + c.hero.elan : '') : '');
     var charging = !!c && !c.over && c.enemies.some(function (x) { return !x.dead && x.charge; }), hsk = E.hero(run.hero).skills;
     var mine = !!c && !c.over && c.turn === 'hero' && run.phase === 'combat', ap = mine ? c.hero.ap : 0;
     var hud = document.querySelector('.hud'); if (hud) hud.classList.toggle('wait', !!c && !c.over && run.phase === 'combat' && !mine);
@@ -7178,7 +7486,7 @@ UI.run = (function () {
     bst.classList.toggle('ready', mine && ap > 0 && !S().settings.auto); bst.classList.toggle('weakmode', wkOn); bst.classList.toggle('off', !!c && run.phase === 'combat' && (!mine || ap <= 0));
     if (bst.dataset.w !== (wkOn ? '1' : '0')) { bst.dataset.w = wkOn ? '1' : '0'; bst.firstChild.src = Sprites.url(wkOn ? 'i_burst' : 'i_sword'); bst.children[1].textContent = wkOn ? 'Critique !' : 'Frapper'; }
     $('#tpass').classList.toggle('off', !mine);
-    var left = mine && ap <= 0 && c.hand.length > 0, tlb = $('#tlabel'), tlt = !c || run.phase !== 'combat' ? '' : left ? 'Pose tes dés' : 'Tour ' + c.round;
+    var left = mine && ap <= 0 && c.hand.length > 0, tlb = $('#tlabel'), tlt = !c || run.phase !== 'combat' ? '' : left ? 'Joue tes dés' : 'Tour ' + c.round;
     if (tlb && tlb.textContent !== tlt) tlb.textContent = tlt; $('#tpass').classList.toggle('ready', left && !S().settings.auto);
     updateTray(run);
     for (i = 0; i < 3; i++) {
@@ -7212,7 +7520,7 @@ UI.run = (function () {
       if (e.charge) el.children[2].firstChild.style.width = ((1 - e.charge.t / e.charge.total) * 100) + '%';
       el.classList.toggle('tg', c.target === i && c.enemies.filter(function (x) { return !x.dead; }).length > 1);
       el.classList.toggle('enraged', e.enraged); el.classList.toggle('hidden', e.hidden > 0);
-      var s = stIcons(e.st), se = el.children[5]; if (se.textContent !== s) se.textContent = s;
+      UI.setTxt(el.children[5], stIcons(e.st));
       el.classList.toggle('weak', !!c.weak && c.weak.id === e.id);
     });
     var ctm = $('#condt'); if (ctm && c.cond === 'defi') { var left = Math.max(0, Math.ceil((20 - c.t) / E.ROUND)); ctm.textContent = ' ' + left + ' tour' + (left > 1 ? 's' : ''); ctm.parentNode.classList.toggle('late', left <= 0); }
@@ -7221,7 +7529,7 @@ UI.run = (function () {
     var its = !c.over && c.turn === 'hero' ? E.intents() : null;
     c.enemies.forEach(function (e, i) {
       var el = els[e.id]; if (!el) return; var ie = el._it || (el._it = el.querySelector('.intent')), ih = its && !e.dead ? intentHtml(its[i]) : '';
-      if (ie && ie.textContent !== ih) { ie.textContent = ih; ie.className = 'intent' + (its && !e.dead ? ' k-' + its[i].k : ''); }
+      if (ie && ie._raw !== ih) { UI.setTxt(ie, ih); ie.className = 'intent' + (its && !e.dead ? ' k-' + its[i].k : ''); }
     });
     for (var oi = 0; oi < c.orbs.length; oi++) { var ob = orbEls[c.orbs[oi].oid]; if (ob) ob.classList.toggle('last', c.orbs[oi].t <= E.ROUND); }
     var m = $('#minions'), n = c.hero.skel || 0;
@@ -7314,7 +7622,7 @@ UI.run = (function () {
   ACT.cont = function () { SND.play('click'); E.continueRun(); syncPhase(true); };
   function sheetBoon(run) {
     if (!run.offer) E.makeOffer(run);
-    var h = '<h2>🌒 Choisis une aubaine</h2><div class="tiny dim center" style="margin:-6px 0 8px">Niveau ' + run.lvl + ' · elle dure jusqu’à la fin de cette descente' + (run.pendingBoons > 1 ? ' · encore ' + run.pendingBoons : '') + '</div>';
+    var h = '<h2>' + UI.spr('bn_tout', 'ski') + ' Choisis une aubaine</h2><div class="tiny dim center" style="margin:-6px 0 8px">Niveau ' + run.lvl + ' · elle dure jusqu’à la fin de cette descente' + (run.pendingBoons > 1 ? ' · encore ' + run.pendingBoons : '') + '</div>';
     run.offer.forEach(function (id, i) {
       var b = E.boonById(id), n = run.boons[id] || 0;
       h += '<button class="choice b' + b.rar + '" style="animation-delay:' + (i * 0.07) + 's" data-act="boon" data-i="' + i + '"><div class="ic">' + b.icon + '</div><div class="grow"><span class="tag">' + BRAR[b.rar] + (b.cls ? ' · ' + E.hero(run.hero).name : '') + (n ? ' · déjà x' + n : '') + '</span><b>' + b.name + '</b><div class="d">' + b.desc + '</div></div></button>';
@@ -7444,7 +7752,7 @@ UI.run = (function () {
       r.stock.forEach(function (s, i) {
         var no = s.sold || run.gold < s.price || (s.kind === 'potion' && run.potions >= run.potionsMax) || (s.kind === 'heal' && run.hp >= run.stats.hp);
         var rc = s.kind === 'item' ? ' c' + s.item.rar : '';
-        h += '<div class="li"><div class="ic">' + s.icon + '</div><div class="grow"><b class="' + rc + '">' + s.name + '</b><div class="small dim">' + s.desc + '</div></div><button class="btn sm ' + (no ? 'off' : 'goldb') + '" data-act="room" data-a="buy" data-arg="' + i + '">' + (s.sold ? 'Vendu' : '💰 ' + s.price) + '</button></div>';
+        h += '<div class="li"><div class="ic">' + (s.kind === 'boon' ? UI.spr('bn_tout', 'ski') : s.icon) + '</div><div class="grow"><b class="' + rc + '">' + s.name + '</b><div class="small dim">' + s.desc + '</div></div><button class="btn sm ' + (no ? 'off' : 'goldb') + '" data-act="room" data-a="buy" data-arg="' + i + '">' + (s.sold ? 'Vendu' : '💰 ' + s.price) + '</button></div>';
       });
       h += '<div class="btns"><button class="btn primary" data-act="room" data-a="leave">Repartir</button></div>';
     } else if (t === 'repos') {
@@ -7456,12 +7764,28 @@ UI.run = (function () {
       h = '<h2>🩸 Autel maudit</h2><p class="center dim small" style="margin-top:-6px">Il offre. Il prend. Pour toute la descente.</p>';
       r.altars.forEach(function (ai, i) { var a = D.ALTARS[ai]; h += '<button class="choice b2" data-act="room" data-a="take" data-arg="' + i + '"><div class="ic">🩸</div><div><b>' + a.name + '</b><div class="d">' + a.desc + '</div></div></button>'; });
       h += '<div class="btns"><button class="btn" data-act="room" data-a="skip">Refuser et partir</button></div>';
-    } else if (t === 'event') {
-      var ev = E.byId(D.EVENTS, r.event);
-      h = '<h2>' + ev.title + '</h2><p class="center" style="font-style:italic">' + ev.text + '</p>';
-      ev.opts.forEach(function (o, i) { var no = o.need && o.need.gold && run.gold < o.need.gold; h += '<button class="choice b' + (i === ev.opts.length - 1 ? 0 : 1) + (no ? ' off' : '') + '"' + (no ? ' style="opacity:.4"' : '') + ' data-act="room" data-a="opt" data-arg="' + i + '"><div class="ic">' + (i === 0 ? '🅰️' : i === 1 ? '🅱️' : '🚪') + '</div><div><b>' + o.t + '</b></div></button>'; });
-    }
+    } else if (t === 'event') { eventTalk(run); return; }
     UI.overlay(h);
+  }
+  // Salle Mystère : une vraie scène de dialogue, avec le personnage rencontré, sa voix, et les choix dans la bulle
+  function eventTalk(run) {
+    if (UI.story.talking()) return;
+    if (UI.story.open()) { setTimeout(function () { if (S().run === run && run.phase === 'room' && run.room.type === 'event') eventTalk(run); }, 400); return; }
+    var r = run.room, ev = E.byId(D.EVENTS, r.event), z = E.zoneOf(run.floor), npc = ev.npc || {}, pages = [[null, ev.text]];
+    if (ev.narr) pages.push([null, ev.narr]);
+    if (ev.say) pages.push(['N', ev.say]);
+    UI.overlay(null);
+    UI.story.talk({
+      npc: npc, bg: z.id, color: z.color, title: 'Mystère · ' + ev.title, pages: pages, skipIntro: !!r.talked,
+      choices: ev.opts.map(function (o) { var g = o.need && o.need.gold; return { t: o.t, off: !!g && run.gold < g, sub: g ? (run.gold < g ? 'Il te faut ' + g + ' or' : 'Tu as ' + run.gold + ' or') : '' }; }),
+      onReady: function () { if (!r.talked) { r.talked = 1; E.save(); } },
+      onChoice: function (i) {
+        var res = E.roomAction('opt', i); if (res === false) return false;
+        updateHud.key = null;
+        return { pages: [[null, typeof res === 'string' && res ? res : '…']] };
+      },
+      done: function () { if (run.phase === 'combat') { UI.overlay(null); built = null; } updateHud.key = null; shownPhase = null; syncPhase(true); }
+    });
   }
   ACT.room = function (d) {
     var run = S().run, t = run.room.type, res = E.roomAction(d.a, d.arg != null ? +d.arg : undefined);
@@ -7488,6 +7812,7 @@ UI.run = (function () {
     var c = run.combat, k = E.hero(run.hero).skills[i], nd = D.NEEDS[k.need];
     if (c.hero.cds[i] > 0) { SND.play('error'); UI.toast(k.icon + ' <b>' + k.name + '</b> se recharge : encore ' + E.turns(c.hero.cds[i]) + ' tour' + (E.turns(c.hero.cds[i]) > 1 ? 's' : '') + '.'); return; }
     if (!c.hand.length) { SND.play('error'); UI.toast('🎲 Plus de dé en main. Un pouvoir se lance en y glissant <b>' + nd.txt + '</b> : garde-en un au prochain tour.', true); return; }
+    if (!c.hand[selDie]) { var bd = E.bestDie(i); if (bd >= 0) { E.useSkill(i, bd); return; } }
     if (!E.dieFits(i, selDie)) { SND.play('error'); var alt = E.bestDie(i); UI.toast(k.icon + ' <b>' + k.name + '</b> demande <b>' + nd.txt + '</b>.' + (alt >= 0 ? ' Choisis d’abord ce dé dans ta main.' : c.flips > 0 ? ' Essaie de ⇅ retourner un dé.' : ' Aucun dé ne convient ce tour.'), true); if (alt >= 0) { selDie = alt; trayKey = ''; } return; }
     E.useSkill(i, selDie);
   };
@@ -7537,7 +7862,7 @@ UI.run = (function () {
     }
     h += '<div class="li on"><div class="ic">✨</div><div class="grow"><b>Éveils de pouvoir</b><div class="small dim">Tous les 4 niveaux d’une descente (4, 8, 12...), tu fais évoluer un de tes pouvoirs. Un ✦ sur le bouton montre qu’il est éveillé.</div></div></div>';
     h += '<div class="li on"><div class="ic">🎲</div><div class="grow"><b>Tour par tour</b><div class="small dim">À ton tour tu as <b>2 actions ⚡</b>. Frapper, parer, toucher un point faible ou renvoyer un crâne coûtent 1 action. Les pouvoirs, eux, se paient avec un dé. L’ultime, la fiole, la posture et les orbes sont gratuits. Ensuite chaque ennemi joue, l’un après l’autre.</div></div></div>';
-    h += '<div class="li on"><div class="ic">🎒</div><div class="grow"><b>Dés de combat</b><div class="small dim">À chaque tour tu pioches <b>3 dés</b> de ton sac. Choisis-en un, touche une case de la table : il agit tout de suite, <b>sans coûter d’action</b>. Ou glisse-le dans un <b>pouvoir</b> : chacun affiche le dé qu’il demande (≤3, PAIR, ≥4...), et plus le dé est fort, plus le pouvoir l’est. <b>⇅ Retourner</b> change un dé en sa face opposée, une fois par tour.<br>⚔️ Lame frappe · 🛡️ Garde protège · ❤️ Sève soigne<br>✨ <b>Écho</b> renforce les dés posés à côté de lui · 🪞 <b>Miroir</b> copie son voisin<br>Cases <b>×2</b> et <b>+2</b> : le dé posé là vaut plus.<br>Trois dés alignés forment une <b>figure</b> (Brelan, Suite, Sept chanceux...).<br>↻ relance ta main : 1 fois par combat.</div><div class="btns" style="margin-top:6px"><button class="btn sm" data-act="bag">🎒 Mon sac et les figures</button></div></div></div>';
+    h += '<div class="li on"><div class="ic">🎒</div><div class="grow"><b>Dés de combat</b><div class="small dim">À chaque tour tu pioches <b>3 dés</b>. Touche un dé pour le choisir, <b>retouche-le pour le jouer</b> : il agit tout de suite, <b>sans coûter d’action</b>. Ou glisse-le dans un <b>pouvoir</b> : chacun affiche le dé qu’il demande (≤3, PAIR, ≥4...), et plus le dé est fort, plus le pouvoir l’est.<br>⚔️ Lame frappe · 🛡️ Garde protège · ❤️ Sève soigne · ✨ Écho renforce le reste de ta main · 🪞 Miroir copie le dernier dé joué<br><b>Figures</b> : les 3 premiers dés joués du tour. 🎲 Paire (+30 % dégâts) · ✨ Suite 2-3-4 (+1 action, prochain coup critique) · 👑 Brelan (+1 action, coups critiques).<br>⇅ <b>Retourner</b> change un dé en sa face opposée, une fois par tour. ↻ relance ta main : 1 fois par combat.</div><div class="btns" style="margin-top:6px"><button class="btn sm" data-act="bag">🎒 Mon sac et les figures</button></div></div></div>';
     h += '<div class="li on"><div class="ic">👁️</div><div class="grow"><b>Intentions</b><div class="small dim">Sous le nom de chaque ennemi, ce qu’il fera à son tour : ⚔️ 12 il frappe pour 12 · 💥 gros coup · ⚠️ il charge (étourdis-le ou pare) · 💤 rien · ✚ soin · 👥 renfort.</div></div></div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les autres boutons</h3>' +
       '<div class="li"><div class="ic">⚔️</div><div class="grow"><b>Frapper</b><div class="small dim">Attaque l’ennemi visé (▼). Plus ta vitesse d’attaque est haute, plus tu donnes de coups par action. Toucher un ennemi le vise ; le toucher encore le frappe.</div></div></div>' +
@@ -7973,20 +8298,32 @@ UI.story = (function () {
   // ---------- lecture d'une scène ----------
   var root = null, queue = [], cur = null, typeT = null, isOpen = false, fxL = null;
   function heroId() { var s = S(); return (s.run && s.run.hero) || s.hero || 'chevalier'; }
-  function sprOf(v, zone) { if (v === 'H') return heroId(); if (v === 'B') return zone ? D.ZONES[zone - 1].boss : null; return v || null; }
-  function whoName(w, zone) { return w === 'V' ? 'La Veilleuse' : w === 'H' ? E.hero(heroId()).name : w === 'B' && zone ? D.ENEMIES[D.ZONES[zone - 1].boss].name : ''; }
+  function sprOf(v, zone) { if (v === 'H') return heroId(); if (v === 'N') return cur && cur.npc ? (cur.npc.spr === 'H' ? heroId() : cur.npc.spr) : null; if (v === 'B') return zone ? D.ZONES[zone - 1].boss : null; return v || null; }
+  function whoName(w, zone) { if (w === 'N') return cur && cur.npc ? cur.npc.name : ''; return w === 'V' ? 'La Veilleuse' : w === 'H' ? E.hero(heroId()).name : w === 'B' && zone ? D.ENEMIES[D.ZONES[zone - 1].boss].name : ''; }
   function txtOf(t, zone) { if (t === '@hero') return HERO_LINE[heroId()] || HERO_LINE.chevalier; if (t === '@taunt') return D.ZONES[zone - 1].taunt; return t; }
+  // Voix : chaque personnage a sa hauteur de bip pendant que son texte s'écrit
+  var HV = { chevalier: 150, pyro: 190, assassin: 170, necro: 120, berserker: 100, pretresse: 260, chasseuse: 230, moine: 140 };
+  function voiceOf(w) {
+    if (w === 'V') return [300, 0.8, 'triangle'];
+    if (w === 'H') return [HV[heroId()] || 160, 0.8, 'square'];
+    if (w === 'B') return [85, 0.9, 'sawtooth'];
+    if (w === 'N') return [(cur && cur.npc && cur.npc.voice) || 160, 0.85, (cur && cur.npc && cur.npc.wave) || 'square'];
+    return [560, 0.35, 'triangle'];
+  }
   function ensure() {
     if (root) return;
     root = document.createElement('div'); root.id = 'story';
     root.innerHTML = '<div class="st-scene"><div class="st-bg a"></div><div class="st-bg b"></div><div class="st-ch st-l"></div><div class="st-ch st-r"></div><div class="st-vig"></div></div>' +
       '<div class="st-top"><span class="st-chap"></span><button class="st-skip" data-st="skip">Passer ⏭</button></div>' +
-      '<div class="st-box"><div class="st-who"></div><p class="st-txt"></p><div class="st-foot"><span class="st-dots"></span><span class="st-next">▼</span></div></div>' +
+      '<div class="st-box"><div class="st-who"></div><p class="st-txt"></p><div class="st-opts"></div><div class="st-foot"><span class="st-dots"></span><span class="st-next">▼</span></div></div>' +
       '<div class="st-card"><div class="st-orn">✦</div><div class="st-num"></div><h1></h1><div class="st-rule"></div><div class="st-sub"></div><div class="st-tap">Touche pour continuer</div></div>';
     document.getElementById('app').appendChild(root);
     root.addEventListener('click', function (e) {
       e.stopPropagation();
-      if (e.target.closest && e.target.closest('[data-st=skip]')) { SND.play('click'); finish(); return; }
+      var opt = e.target.closest && e.target.closest('[data-st=opt]');
+      if (opt) { pickOpt(+opt.getAttribute('data-i')); return; }
+      if (e.target.closest && e.target.closest('[data-st=skip]')) { SND.play('click'); if (cur && cur.talk && cur.talk.phase === 'intro') { endType(); showOpts(); } else if (!(cur && cur.talk && cur.talk.phase === 'choose')) finish(); return; }
+      if (cur && cur.talk && cur.talk.phase === 'choose') return;
       advance();
     });
   }
@@ -8008,19 +8345,21 @@ UI.story = (function () {
     el.innerHTML = UI.spr(id); void el.offsetWidth; el.classList.add('on');
   }
   function showPage() {
-    var b = cur.beat, c = CHOF[b.key], p = b.pages[cur.i], o = p[2] || {};
+    var b = cur.beat, c = cur.ch, p = b.pages[cur.i], o = p[2] || {};
     if (o.bg !== undefined) cur.wantBg = o.bg; if (o.l !== undefined) cur.wantL = o.l; if (o.r !== undefined) cur.wantR = o.r;
     setBg(cur.wantBg); setCh('l', sprOf(cur.wantL, c.zone)); setCh('r', sprOf(cur.wantR, c.zone));
     var who = p[0], name = whoName(who, c.zone), box = q('.st-box');
-    box.className = 'st-box' + (who ? ' say' : ' narr') + (who === 'B' ? ' foe' : '');
+    box.className = 'st-box' + (who ? ' say' : ' narr') + (who === 'B' || (who === 'N' && cur.npc && cur.npc.foe) ? ' foe' : '');
+    q('.st-opts').innerHTML = '';
     q('.st-who').textContent = name;
-    q('.st-l').classList.toggle('dim', who === 'V' || who === 'B'); q('.st-r').classList.toggle('dim', who === 'H');
+    q('.st-l').classList.toggle('dim', who === 'V' || who === 'B' || who === 'N'); q('.st-r').classList.toggle('dim', who === 'H');
     q('.st-dots').innerHTML = b.pages.map(function (x, k) { return '<i' + (k === cur.i ? ' class="on"' : '') + '></i>'; }).join('');
-    var full = txtOf(p[1], c.zone), el = q('.st-txt'), n = 0;
+    var full = txtOf(p[1], c.zone), el = q('.st-txt'), n = 0, tick = 0, vo = voiceOf(who);
     cur.full = full; cur.typing = true; el.textContent = ''; box.classList.remove('done');
     clearInterval(typeT);
     typeT = setInterval(function () {
-      n += 2; el.textContent = full.slice(0, n);
+      var chunk = full.slice(n, n + 2); n += 2; el.textContent = full.slice(0, n);
+      if (tick++ % 2 === 0 && /[A-Za-zÀ-ÿ0-9]/.test(chunk)) SND.blip(vo[0], vo[1], vo[2]);
       if (n >= full.length) endType();
     }, 24);
   }
@@ -8030,14 +8369,46 @@ UI.story = (function () {
     if (cur.card) { cur.card = false; root.classList.remove('card'); SND.play('click', 0.6); showPage(); return; }
     if (cur.typing) { endType(); return; }
     SND.play('click', 0.5);
-    if (++cur.i >= cur.beat.pages.length) { finish(); return; }
+    if (++cur.i >= cur.beat.pages.length) { if (cur.talk && cur.talk.phase === 'intro') { cur.i--; showOpts(); return; } finish(); return; }
     showPage();
+  }
+  // ---------- dialogue avec choix (salles Mystère) ----------
+  function showOpts() {
+    var t = cur.talk; t.phase = 'choose'; if (t.onReady) t.onReady();
+    var box = q('.st-box'); box.classList.remove('done'); box.classList.add('choose');
+    q('.st-opts').innerHTML = t.choices.map(function (o, i) { return '<button class="st-opt' + (o.off ? ' off' : '') + '" data-st="opt" data-i="' + i + '"><span>' + (i + 1) + '</span><b>' + o.t + '</b>' + (o.sub ? '<em>' + o.sub + '</em>' : '') + '</button>'; }).join('');
+    q('.st-dots').innerHTML = '';
+  }
+  function pickOpt(i) {
+    var t = cur && cur.talk; if (!t || t.phase !== 'choose' || !t.choices[i]) return;
+    if (t.choices[i].off) { SND.play('error'); return; }
+    var res = t.onChoice(i);
+    if (res === false) { SND.play('error'); return; }
+    SND.play('click', 0.7); q('.st-box').classList.remove('choose');
+    t.phase = 'after';
+    if (!res || !res.pages || !res.pages.length) { finish(); return; }
+    cur.beat = { key: 'talk', pages: res.pages }; cur.i = 0; showPage();
+  }
+  // Ouvre un dialogue : o = { npc: { spr, name, voice, wave, foe }, bg, color, title, pages, choices: [{ t, sub, off }], onChoice(i) -> { pages } | false | null, skipIntro, done }
+  function talk(o) {
+    ensure();
+    if (isOpen && cur && cur.talk) return false;
+    cur = { beat: { key: 'talk', pages: o.pages && o.pages.length && !o.skipIntro ? o.pages : [o.pages[o.pages.length - 1]] }, ch: { zone: 0, num: '', title: '' }, i: 0, done: o.done, bg: null, flip: false, lId: undefined, rId: undefined,
+      wantBg: o.bg || 'camp', wantL: 'H', wantR: 'N', npc: o.npc || null, talk: { phase: 'intro', choices: o.choices || [], onChoice: o.onChoice, onReady: o.onReady } };
+    isOpen = true;
+    root.style.setProperty('--sc', o.color || '#ffb347');
+    q('.st-chap').textContent = o.title || '';
+    q('.st-l').className = 'st-ch st-l'; q('.st-r').className = 'st-ch st-r';
+    root.className = 'on talk';
+    showPage();
+    if (o.skipIntro) { endType(); showOpts(); }
+    return true;
   }
   function start(item) {
     ensure();
     var b = BEAT[item.key], c = CHOF[b.key];
     if (!item.replay) { seen()[b.key] = 1; E.save(); }
-    cur = { beat: b, i: 0, done: item.done, bg: null, flip: false, lId: undefined, rId: undefined, wantBg: b.bg || c.zone || 'camp', wantL: b.l !== undefined ? b.l : null, wantR: b.r !== undefined ? b.r : null, card: !!item.card };
+    cur = { beat: b, ch: c, i: 0, done: item.done, bg: null, flip: false, lId: undefined, rId: undefined, wantBg: b.bg || c.zone || 'camp', wantL: b.l !== undefined ? b.l : null, wantR: b.r !== undefined ? b.r : null, card: !!item.card };
     isOpen = true;
     root.style.setProperty('--sc', c.color || (c.zone ? D.ZONES[c.zone - 1].color : '#ffb347'));
     q('.st-chap').textContent = c.num + ' · ' + c.title;
@@ -8104,7 +8475,7 @@ UI.story = (function () {
     return '<button class="chroncard" data-act="chron" style="--sc:' + (c.color || (z ? z.color : '#ffb347')) + '"><div class="cthumb" style="background-image:url(' + bgUrl(c.zone || (c.id === 'epi' ? 'camp' : 'title')) + ')"></div>' +
       '<div class="grow"><span class="cnum">📖 Chronique · ' + c.num + '</span><b>' + c.title + '</b><div class="bar"><i style="width:' + (n / TOTAL * 100) + '%"></i></div><div class="tiny dim">' + n + ' / ' + TOTAL + ' scènes · relis l’histoire de Morvane</div></div>' + (fresh() ? '<i class="dot"></i>' : '') + '<span class="cgo">›</span></button>';
   }
-  return { play: play, enterZone: enterZone, inZone: inZone, open: function () { return isOpen; }, chron: chron, hubCard: hubCard, fresh: fresh, seen: seen, CH: CH };
+  return { play: play, talk: talk, talking: function () { return isOpen && !!(cur && cur.talk); }, enterZone: enterZone, inZone: inZone, open: function () { return isOpen; }, chron: chron, hubCard: hubCard, fresh: fresh, seen: seen, CH: CH };
 })();
 
 ;
@@ -8121,11 +8492,12 @@ UI.guide = (function () {
     { s: '#aps', t: 'Tes actions', x: 'Ces deux losanges d’or sont tes <b>actions</b>. Frapper ou parer en coûte une.' },
     { s: '#bstrike', t: 'Frapper', x: 'Ta lame contre l’ennemi visé.<br>Quand un ennemi baisse sa garde, ce bouton se couvre d’<b class="g-y">or</b> et devient <b class="g-y">Critique</b>. Ne laisse pas passer ta chance.' },
     { s: '#bparry', t: 'Parer', x: 'Quand un ennemi rassemble ses forces pour un grand coup, ce bouton s’embrase de <b class="g-c">bleu</b>.<br>Pare à cet instant : le coup est brisé, et tu ripostes.' },
-    { s: '#dtray', t: 'Tes dés', x: 'À chaque tour, tu tires <b>trois dés</b> de ton sac. Touche un dé de ta main, puis une case de la table : il agit aussitôt, et ne coûte rien. La ligne du haut te dit toujours quoi faire.' },
+    { s: '#dhand', t: 'Tes dés', x: 'À chaque tour, tu tires <b>trois dés</b> de ton sac. Touche un dé pour le choisir, <b>retouche-le pour le jouer</b> : il agit aussitôt, et ne coûte rien. La ligne du haut te dit toujours ce qu’il fera.' },
+    { s: '#dfigw', t: 'Les figures', x: 'Les <b>trois premiers dés</b> que tu joues dans un tour s’inscrivent ici. Deux pareils font une <b>Paire</b>, trois qui se suivent une <b>Suite</b>, trois pareils un <b>Brelan</b>. Plus la figure est rare, plus elle paie.' },
     { s: '.skills', t: 'Tes pouvoirs', x: 'Tes pouvoirs se nourrissent d’un dé, pas d’une action. L’étiquette dit lequel ils réclament. Quand ton dé convient, le cadre <b class="g-g">s’illumine</b>.' },
     { s: '#tpass', t: 'Fin du tour', x: 'Quand tu as tout joué, rends la main. Les ennemis agiront.' },
     { s: '[data-act=runMenu]', t: 'Le menu', x: 'L’aide, la vitesse, le jeu automatique et la posture dorment ici. Tu pourras m’y rappeler.' },
-    { t: 'Va, maintenant', x: 'Frappe juste, pose tes dés… et <b class="g-c">guette la lueur bleue</b>.', btn: 'Au combat' }
+    { t: 'Va, maintenant', x: 'Frappe juste, joue tes dés… et <b class="g-c">guette la lueur bleue</b>.', btn: 'Au combat' }
   ];
   // Rappels qui apparaissent une seule fois, au bon moment
   var ONCE = {
@@ -8147,6 +8519,13 @@ UI.guide = (function () {
     // icônes pixel des pouvoirs et des ultimes de chaque héros
     DATA.HEROES.forEach(function (h) { h.skills.forEach(function (k) { k.icon = UI.spr('sk_' + k.id, 'ski'); }); h.ult.icon = UI.spr('ul_' + h.id, 'ski'); h.passive.icon = UI.spr('pa_' + h.id, 'ski'); });
     Object.keys(DATA.DICE).forEach(function (t) { DATA.DICE[t].icon = UI.spr('dt_' + t, 'dgl'); });
+    // icônes pixel des passifs : aubaines, aubaines propres à chaque héros (celles qui renforcent un pouvoir reprennent son icône) et pactes
+    DATA.BOONS.forEach(function (b) { b.icon = UI.spr('bn_' + b.id.slice(2), 'ski'); });
+    DATA.HEROES.forEach(function (h) { h.boons.forEach(function (b) { var m = b.mods, k = m.s1P ? 0 : m.s2P ? 1 : m.s3P ? 2 : -1; b.icon = UI.spr(k >= 0 ? 'up_' + h.skills[k].id : 'cb_' + b.id.slice(2), 'ski'); }); });
+    DATA.PACTS.forEach(function (p) { p.icon = UI.spr('pc_' + p.id.slice(3), 'ski'); });
+    // icônes utilisées par la feuille de style, puis remplacement de tous les emojis du jeu par leurs icônes pixel
+    [['bolt', 'bn_foudre'], ['fire', 'bn_flamme'], ['ice', 'e_snow'], ['glass', 'bn_tempo']].forEach(function (k) { r.setProperty('--e-' + k[0], 'url(' + Sprites.url(k[1]) + ')'); });
+    UI.emoWatch(document.getElementById('app'));
   })();
 
   function build() {
@@ -8165,6 +8544,8 @@ UI.guide = (function () {
   function place() {
     var st = steps[idx], el = target(st), app = document.getElementById('app').getBoundingClientRect(), hole = root.firstChild, bub = root.lastChild;
     bub.querySelector('.g-t').innerHTML = st.t; bub.querySelector('.g-x').innerHTML = st.x;
+    // la Veilleuse parle : quelques bips de sa voix
+    if (typeof SND !== 'undefined' && SND.blip) for (var bi = 0; bi < 7; bi++) setTimeout(function () { SND.blip(300, 0.7, 'triangle'); }, 60 + bi * 55);
     var many = steps.length > 1, d = ''; if (many) for (var i = 0; i < steps.length; i++) d += '<i class="' + (i === idx ? 'on' : '') + '"></i>';
     bub.querySelector('.g-dots').innerHTML = d;
     bub.querySelector('.g-next').textContent = st.btn || (idx < steps.length - 1 ? 'Suivant' : 'Compris');
