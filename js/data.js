@@ -387,8 +387,9 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '3.11';
+  var VERSION = '3.12';
   var NEWS = [
+    ['🗝️', 'Des icônes propres à Morvane', 'Les icônes qui imitaient encore des objets modernes sont réinventées : la sauvegarde devient un registre scellé de cire, le combat automatique un pantin à fils, les réglages un astrolabe, les choix d’événement deux pierres runiques, les stats des encoches sur un os, la peste un masque de médecin...'],
     ['🎨', 'Plus aucun emoji', 'Toute l’interface passe au pixel art : monnaies, onglets, salles, objets, artefacts, autel, états, réglages, aide... chaque ancien emoji est remplacé par une icône dessinée dans le style du jeu.'],
     ['🎨', 'Des passifs en pixel art', 'Les 78 aubaines et les 15 pactes ont chacun leur icône dessinée dans le style du jeu. Les aubaines qui renforcent un pouvoir reprennent son icône, marquée d’une flèche dorée.'],
     ['🎲', 'Un plateau de dés repensé', 'Dés taillés en pixel art avec l’icône de leur type, table sertie de fer, outils Sac / Relance / Retourne lisibles, et une ligne d’aide qui te dit à chaque instant quoi faire avec le dé choisi.'],
