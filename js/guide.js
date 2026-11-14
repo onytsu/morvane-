@@ -6,7 +6,7 @@ UI.guide = (function () {
   // Tutoriel du premier combat, raconté par la Veilleuse
   var FIGHT = [
     { t: 'Ton premier combat', x: 'Écoute-moi bien, voyageur. Ici, chacun frappe à son tour : <b>toi d’abord</b>, puis tes ennemis. Laisse-moi te montrer.' },
-    { s: '.unit.en', t: 'L’ennemi', x: 'Au-dessus de sa tête, il trahit <b>ce qu’il va faire</b>. Un glaive et un 12 : il frappera pour 12.<br>Touche-le pour le viser.' },
+    { s: '.unit.en', t: 'L’ennemi', x: 'Au-dessus de sa tête, il trahit <b>ce qu’il va faire</b>. Un glaive et un nombre : il frappera pour autant.<br>S’ils sont plusieurs, touche celui que tu veux viser.' },
     { s: '.hprow', t: 'Ta vie', x: 'Cette barre rouge, c’est ce qu’il te reste de vie. Le petit blason à côté porte ton niveau.' },
     { s: '#aps', t: 'Tes actions', x: 'Ces deux losanges d’or sont tes <b>actions</b>. Frapper ou parer en coûte une.' },
     { s: '#bstrike', t: 'Frapper', x: 'Ta lame contre l’ennemi visé.<br>Quand un ennemi baisse sa garde, ce bouton se couvre d’<b class="g-y">or</b> et devient <b class="g-y">Critique</b>. Ne laisse pas passer ta chance.' },
@@ -26,7 +26,7 @@ UI.guide = (function () {
   // Premier passage au camp
   var CAMP = [
     { t: 'Le camp', x: 'Te voilà revenu. Entre deux descentes, on se repose ici, près de la dernière flamme.' },
-    { s: '.camp-hero', t: 'Ton héros', x: 'Touche-le pour voir ses pouvoirs, son équipement et sa force. Les flèches changent de héros.' },
+    { s: '.camp-hero', t: 'Ton héros', x: 'Touche-le : il te répond. Touche-le encore pour voir ses pouvoirs, son équipement et sa force. Les flèches changent de héros.' },
     { s: '[data-act=descend]', t: 'Descendre', x: 'Quand tu es prêt, retourne dans les profondeurs. Ce que tu trouves, <b>tu le gardes</b>, même dans la mort.' },
     { s: '.camp-quick', t: 'Autour du feu', x: 'Tes talents, les quêtes du jour, la chronique de Morvane et ta gloire. Une braise rouge signale ce qui t’attend.' },
     { s: '.tabs', t: 'Le reste', x: 'Ton sac, l’autel des bonus permanents, les pactes et tes hauts faits.', btn: 'Compris' }

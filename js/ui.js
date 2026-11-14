@@ -48,8 +48,8 @@ var UI = (function () {
   function fmtMod(k, v) {
     var m = D.MODS[k]; if (!m || !v) return null;
     var a = Math.abs(v), num;
-    if (m.fmt === 'flat') num = (a < 20 && Math.round(a * 10) % 10 ? a.toFixed(1) : E.fmt(a));
-    else num = (Math.round(a * 10) % 10 ? a.toFixed(1) : Math.round(a)) + ' %';
+    if (m.fmt === 'flat') num = (a < 20 && Math.round(a * 10) % 10 ? a.toFixed(1).replace('.', ',') : E.fmt(a));
+    else num = (Math.round(a * 10) % 10 ? a.toFixed(1).replace('.', ',') : Math.round(a)) + ' %';
     return [k === 'cdr' ? 'Vitesse de recharge' : m.n, (v >= 0 ? '+' : '−') + num];
   }
   function modLines(mods, cls) {
@@ -89,7 +89,7 @@ var UI = (function () {
     var h = E.hero(heroId), k = h.skills[i], own = E.heroUnlocked(heroId), run = S().run && S().run.hero === heroId ? S().run : null;
     var ok = own && E.skillUnlocked(heroId, i), cd = run ? E.skillCd(run, i) : k.cd * (1 - (own ? E.heroStats(heroId, null).cdr : 0) / 100);
     var nums = own ? E.skillNumbers(heroId, i, run) : [];
-    var html = '<div class="skhead"><div class="ic">' + k.icon + '</div><div class="grow"><b>' + k.name + '</b><div class="tiny dim">Pouvoir ' + (i + 1) + ' de ' + h.name + ' · 🎲 ' + D.NEEDS[k.need].txt + ' · recharge ' + E.turns(cd) + ' tours</div>' + tagsHtml(k) + '</div></div>';
+    var html = '<div class="skhead"><div class="ic">' + k.icon + '</div><div class="grow"><b>' + k.name + '</b><div class="tiny dim">Pouvoir ' + (i + 1) + ' ' + E.de(h.name) + ' · 🎲 ' + D.NEEDS[k.need].txt + ' · recharge ' + E.turns(cd) + ' tours</div>' + tagsHtml(k) + '</div></div>';
     if (!ok) html += '<div class="card small gold">🔒 Se débloque à Maîtrise ' + (i + 1) + ' : joue ' + h.name + ' pour la monter.</div>';
     html += '<p style="margin:10px 2px">' + k.desc + '</p>';
     html += '<div class="li on"><div class="ic"><span class="needb">' + D.NEEDS[k.need].label + '</span></div><div class="grow"><b>Emplacement de dé</b><div class="small dim">Se lance en y glissant <b>' + D.NEEDS[k.need].txt + '</b>, sans coûter d’action. ' + (k.flat ? 'La valeur du dé ne change rien : sers-toi d’un petit dé.' : 'La valeur du dé règle sa puissance : 5 = 100 %, 6 = 110 %, 1 = 60 %.') + '</div></div></div>';
@@ -210,7 +210,7 @@ var UI = (function () {
       if (S().stats.best > 0 && idle.amount > 0) gifts += '<button class="gift" data-act="idle">' + spr('i_urn', 'ic') + '<span>+' + E.fmt(idle.amount) + '</span></button>';
       if (gifts) html += '<div class="camp-gifts">' + gifts + '</div>';
     } else {
-      var how = h.unlock.cost ? '<button class="btn goldb' + (S().cendres >= h.unlock.cost ? '' : ' off') + '" data-act="unlock" data-id="' + h.id + '">Recruter — 🔥 ' + E.fmt(h.unlock.cost) + '</button>' : '<div class="gold small">Vaincs ' + D.ENEMIES[D.ZONES[h.unlock.boss - 1].boss].name + '<br><span class="dim">(boss de la zone ' + h.unlock.boss + ')</span></div>';
+      var how = h.unlock.cost ? '<button class="btn goldb' + (S().cendres >= h.unlock.cost ? '' : ' off') + '" data-act="unlock" data-id="' + h.id + '">Recruter — 🔥 ' + E.fmt(h.unlock.cost) + '</button>' : '<div class="gold small">Vaincs ' + D.ENEMIES[D.ZONES[h.unlock.boss - 1].boss].name.replace(/^(Le|La|Les) /, function (m) { return m.toLowerCase(); }) + '<br><span class="dim">(boss de la zone ' + h.unlock.boss + ')</span></div>';
       html += '<div class="lock"><div style="font-size:26px">🔒</div><b>' + h.role + '</b>' + how + '</div>';
     }
     html += '</div>';
@@ -301,10 +301,10 @@ var UI = (function () {
   // ---------- talents ----------
   function renderTalents() {
     var id = S().hero, hero = E.hero(id), hs = S().heroes[id], pts = E.talentPoints(id), tal = hs.tal || {};
-    var h = '<h2>🌟 Talents de ' + hero.name + '</h2><div class="center small" style="margin:-6px 0 10px">' + (pts ? '<b class="gold">' + pts + ' point' + (pts > 1 ? 's' : '') + ' à placer</b>' : '<span class="dim">Aucun point. Chaque niveau de Maîtrise en donne un.</span>') + '</div>';
+    var h = '<h2>🌟 Talents ' + E.de(hero.name) + '</h2><div class="center small" style="margin:-6px 0 10px">' + (pts ? '<b class="gold">' + pts + ' point' + (pts > 1 ? 's' : '') + ' à placer</b>' : '<span class="dim">Aucun point. Chaque niveau de Maîtrise en donne un.</span>') + '</div>';
     D.TALENTS[id].forEach(function (t) {
       var r = tal[t.id] || 0, parts = [], tot = [];
-      for (var k in t.mods) { var f = fmtMod(k, t.mods[k]); if (f && /^s[123]P$/.test(k)) f[0] = 'dégâts de ' + hero.skills[+k.charAt(1) - 1].name; if (f) parts.push(f[1] + ' ' + f[0]); var g = fmtMod(k, t.mods[k] * r); if (g && r) tot.push(g[1]); }
+      for (var k in t.mods) { var f = fmtMod(k, t.mods[k]); if (f && /^s[123]P$/.test(k)) f[0] = 'dégâts ' + E.de(hero.skills[+k.charAt(1) - 1].name); if (f) parts.push(f[1] + ' ' + f[0]); var g = fmtMod(k, t.mods[k] * r); if (g && r) tot.push(g[1]); }
       var pips = ''; for (var i = 0; i < t.max; i++) pips += '<i class="' + (i < r ? 'on' : '') + '"></i>';
       h += '<div class="li' + (r ? ' on' : '') + '"><div class="ic">' + t.icon + '</div><div class="grow"><b>' + t.name + '</b> <span class="tiny gold">' + (r ? 'total ' + tot.join(' ') : '') + '</span><div class="small dim">' + parts.join(' · ') + ' par rang</div><div class="pips" style="margin-top:4px">' + pips + '</div></div>' +
         (r >= t.max ? '<span class="gold small">MAX</span>' : '<button class="btn sm ' + (pts ? 'goldb' : 'off') + '" data-act="talentAdd" data-id="' + t.id + '">＋</button>') + '</div>';
@@ -371,7 +371,7 @@ var UI = (function () {
   function renderFuse() {
     var sel = st.fuse || (st.fuse = []), first = sel.length ? E.findItem(sel[0]) : null, pv = sel.length === 3 ? E.fusePreview(sel) : null;
     var pool = S().inv.filter(E.canFuse).sort(function (a, b) { return (a.rar - b.rar) || (a.ilvl - b.ilvl); });
-    var h = '<h2>⚗️ Fusion</h2><p class="small dim center" style="margin-top:-4px">Choisis <b style="color:var(--text)">3 objets de la même couleur</b>. Ils fondent en <b style="color:var(--text)">1 objet de la couleur au-dessus</b>, du type du premier choisi et au niveau du meilleur des trois. Deux pièces d’un même set donnent une pièce de ce set.</p>';
+    var h = '<h2>⚗️ Fusion</h2><p class="small dim center" style="margin-top:-4px">Choisis <b style="color:var(--text)">3 objets de la même couleur</b>. Ils fondent en <b style="color:var(--text)">1 objet de la couleur au-dessus</b>, du type du premier choisi et au niveau du meilleur des trois.</p>';
     h += '<div class="fslots">' + [0, 1, 2].map(function (i) { var it = sel[i] != null ? E.findItem(sel[i]) : null; return it ? '<button class="item r' + it.rar + '" data-act="fusePick" data-uid="' + it.uid + '">' + E.itemBase(it).icon + '<span class="lv">' + it.ilvl + '</span></button>' : '<div class="slot empty">＋</div>'; }).join('') +
       '<div class="farrow">➜</div>' + (pv ? '<div class="item r' + pv.rar + '">' + E.byId(D.SLOTS, pv.slot).icon + '<span class="lv">' + pv.ilvl + '</span></div>' : '<div class="slot empty">?</div>') + '</div>';
     h += '<div class="center small" style="min-height:20px;margin-bottom:8px">' + (pv ? 'Résultat : <b class="c' + pv.rar + '">' + D.RARITIES[pv.rar].name + '</b> · ' + E.byId(D.SLOTS, pv.slot).name + ' niveau ' + pv.ilvl + (pv.set ? ' · <span style="color:#6dffb0">◆ ' + E.byId(D.SETS, pv.set).name + '</span>' : '') : first ? 'Encore ' + (3 - sel.length) + ' objet' + (3 - sel.length > 1 ? 's' : '') + ' <b class="c' + first.rar + '">' + D.RARITIES[first.rar].name + '</b>' : '<span class="dim">Les objets équipés, verrouillés, de set, légendaires et uniques ne se fusionnent pas.</span>') + '</div>';
@@ -408,7 +408,13 @@ var UI = (function () {
     h += '<h3 style="margin-top:10px">Recyclage automatique du butin</h3><div class="filters" style="margin-top:6px">' + [-1, 0, 1, 2].map(function (r) { return '<button class="chip' + (a === r ? ' on' : '') + '" data-act="autoSalv" data-r="' + r + '">' + (r < 0 ? 'Jamais' : '≤ ' + D.RARITIES[r].name) + '</button>'; }).join('') + '</div><div class="btns"><button class="btn" data-act="close">Fermer</button></div>';
     modal(h);
   };
-  ACT.salvageBelow = function (d) { var r = E.salvageBelow(+d.r); if (r.n) { SND.play('salvage'); toast('♻️ ' + r.n + ' objets → +' + E.fmt(r.essence) + ' 💠'); } E.save(); closeModal(); refresh(); };
+  ACT.salvageBelow = function (d) {
+    var n = S().inv.filter(function (i) { return i.rar <= +d.r && !i.lock && !i.set && !E.equippedBy(i.uid); }).length;
+    if (!d.ok && n && (+d.r >= 2 || n >= 15)) { // demander confirmation avant de détruire beaucoup, ou du Rare et plus
+      modal('<h2>Recycler ' + n + ' objet' + (n > 1 ? 's' : '') + ' ?</h2><p class="center small">Tous les objets jusqu’à <b class="c' + d.r + '">' + D.RARITIES[+d.r].name + '</b> seront détruits, sauf ceux équipés, verrouillés 🔒 ou de set. <span class="bad">C’est définitif.</span></p><div class="btns"><button class="btn" data-act="salvageMenu">Annuler</button><button class="btn primary" data-act="salvageBelow" data-r="' + d.r + '" data-ok="1">♻️ Recycler</button></div>');
+      return;
+    }
+    var r = E.salvageBelow(+d.r); if (r.n) { SND.play('salvage'); toast('♻️ ' + r.n + ' objets → +' + E.fmt(r.essence) + ' 💠'); } E.save(); closeModal(); refresh(); };
   ACT.autoSalv = function (d) { S().settings.autoSalvage = +d.r; E.save(); ACT.salvageMenu(); };
 
   function itemSheet(it, ctx) {

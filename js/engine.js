@@ -129,6 +129,8 @@
   E.setColor = function (id) { var s = id && byId(D.SETS, id); return s ? s.color : '#6dffb0'; };
   // classe + couleur du set pour une tuile d'objet (double contour)
   E.setAttr = function (it) { return it.set ? ' set" style="--sc:' + E.setColor(it.set) : ''; };
+  // « de » élidé devant une voyelle : « d’Aldric », « d’Écu du Parjure », mais « de Hrolf »
+  E.de = function (n) { return (/^[AEIOUYÀÂÉÈÊËÎÏÔÛÜaeiouyàâéèêëîïôûü]/.test(n) ? 'd’' : 'de ') + n; };
   E.itemBase = function (it) { return byId(D.BASES, it.base); };
   E.itemName = function (it) {
     if (it.uq) return byId(D.UNIQUES, it.uq).name;
@@ -239,8 +241,10 @@
     S.inv.push(it);
     if (S.inv.length > INV_MAX) {
       var worst = null, ws = 1e99;
-      S.inv.forEach(function (o) { if (o === it || o.lock || o.set || E.equippedBy(o.uid)) return; var sc = o.rar * 1e6 + o.ilvl; if (sc < ws) { ws = sc; worst = o; } });
-      if (worst) E.salvage(worst.uid);
+      // le nouvel objet entre dans la comparaison : on ne jette jamais mieux que ce qu'on ramasse
+      S.inv.forEach(function (o) { if (o.lock || o.set || E.equippedBy(o.uid)) return; var sc = o.rar * 1e6 + o.ilvl; if (sc < ws || (sc === ws && o === it)) { ws = sc; worst = o; } });
+      if (worst === it) { var vn = E.salvageValue(it); S.inv.pop(); S.essence += vn; return { item: it, salvaged: true, essence: vn, full: true }; }
+      if (worst) { var nm = E.itemName(worst), vw = E.salvage(worst.uid); return { item: it, salvaged: false, bumped: nm, essence: vw }; }
     }
     return { item: it, salvaged: false };
   }
@@ -403,7 +407,7 @@
     var run = {
       hero: heroId, floor: (startZone - 1) * 10 + 1, startFloor: (startZone - 1) * 10 + 1, lvl: 1, xp: 0, gold: 0, hp: 1,
       potions: 0, potionsMax: 2, mods: {}, boons: {}, artifacts: [], rerolls: 0, revived: 0, rooms: 0, kills: 0, loot: [],
-      cendres: 0, bosses: 0, ult: 0, stance: 'n', phase: 'room', doors: [], room: null, pendingBoons: 0, offer: null, evos: [], pendingEvos: 0, evoOffer: null, result: null, combat: null, t: 0, log: [], cnt: {}, primes: [], primeLog: []
+      cendres: 0, bosses: 0, ult: 0, bestBefore: S.stats.best, rt: 0, stance: 'n', phase: 'room', doors: [], room: null, pendingBoons: 0, offer: null, evos: [], pendingEvos: 0, evoOffer: null, result: null, combat: null, t: 0, log: [], cnt: {}, primes: [], primeLog: []
     };
     run.bag = startBag(heroId); run.pendingDice = 0; run.diceOffer = null; run.dieTick = 0;
     S.run = run; S.hero = heroId; S.stats.runs++;
@@ -1539,7 +1543,7 @@
     var gUps = addGlory(score);
     var bonus = Math.ceil(run.cendres * 0.25 + 5 * (run.rooms));
     S.cendres += bonus;
-    var sum = { hero: run.hero, floor: reached, rooms: run.rooms, kills: run.kills, cendres: run.cendres + bonus, bonus: bonus, loot: run.loot, lvl: run.lvl, mxp: mxp, heroLvl: hs.lvl, heroUps: ups, abandon: !!abandon, time: run.t, bosses: run.bosses, dmg: run.dmg || 0, maxHit: run.maxHit || 0, score: score, scoreRec: scoreRec, gloryUps: gUps, record: reached >= S.stats.best && reached > (S.stats.prevBest || 0) };
+    var sum = { hero: run.hero, floor: reached, rooms: run.rooms, kills: run.kills, cendres: run.cendres + bonus, bonus: bonus, loot: run.loot, lvl: run.lvl, mxp: mxp, heroLvl: hs.lvl, heroUps: ups, abandon: !!abandon, time: run.rt || run.t, bosses: run.bosses, dmg: run.dmg || 0, maxHit: run.maxHit || 0, score: score, scoreRec: scoreRec, gloryUps: gUps, record: S.stats.best > (bestBefore != null ? bestBefore : (S.stats.prevBest || 0)) }; // même règle que « Record : étage N » au camp
     S.stats.prevBest = Math.max(S.stats.prevBest || 0, S.stats.best);
     S.run = null; E.checkAch(); E.save();
     return sum;

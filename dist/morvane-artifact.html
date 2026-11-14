@@ -1181,6 +1181,8 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 @media (prefers-reduced-motion: reduce) { .camp-hero .spr[class*="g-"], .unit.en.boss[class*="bin-"] { animation: none !important; } }
 /* v4.4.1 : sur un héros verrouillé, le voile ne doit pas couvrir les flèches ni le nom (sinon on reste coincé) */
 .camp-scene .nav, .camp-name { z-index: 6; }
+/* v4.5 : un bouton doré désactivé doit avoir l'air désactivé */
+.btn.goldb.off { opacity: .5; filter: grayscale(.9) brightness(.75); box-shadow: none; } .btn.goldb.off::after { display: none; }
 
 :root { color-scheme: dark; --sat: 0px; --sab: 0px; } html, body { height: 100%; } #app { height: 100%; }</style>
 <div id="app"><div id="screen"></div><div id="overlay"></div><div id="modal"></div><div id="toasts"></div><div id="flash"></div></div>
@@ -2342,6 +2344,8 @@ if (typeof module !== 'undefined') module.exports = DATA;
   E.setColor = function (id) { var s = id && byId(D.SETS, id); return s ? s.color : '#6dffb0'; };
   // classe + couleur du set pour une tuile d'objet (double contour)
   E.setAttr = function (it) { return it.set ? ' set" style="--sc:' + E.setColor(it.set) : ''; };
+  // « de » élidé devant une voyelle : « d’Aldric », « d’Écu du Parjure », mais « de Hrolf »
+  E.de = function (n) { return (/^[AEIOUYÀÂÉÈÊËÎÏÔÛÜaeiouyàâéèêëîïôûü]/.test(n) ? 'd’' : 'de ') + n; };
   E.itemBase = function (it) { return byId(D.BASES, it.base); };
   E.itemName = function (it) {
     if (it.uq) return byId(D.UNIQUES, it.uq).name;
@@ -2452,8 +2456,10 @@ if (typeof module !== 'undefined') module.exports = DATA;
     S.inv.push(it);
     if (S.inv.length > INV_MAX) {
       var worst = null, ws = 1e99;
-      S.inv.forEach(function (o) { if (o === it || o.lock || o.set || E.equippedBy(o.uid)) return; var sc = o.rar * 1e6 + o.ilvl; if (sc < ws) { ws = sc; worst = o; } });
-      if (worst) E.salvage(worst.uid);
+      // le nouvel objet entre dans la comparaison : on ne jette jamais mieux que ce qu'on ramasse
+      S.inv.forEach(function (o) { if (o.lock || o.set || E.equippedBy(o.uid)) return; var sc = o.rar * 1e6 + o.ilvl; if (sc < ws || (sc === ws && o === it)) { ws = sc; worst = o; } });
+      if (worst === it) { var vn = E.salvageValue(it); S.inv.pop(); S.essence += vn; return { item: it, salvaged: true, essence: vn, full: true }; }
+      if (worst) { var nm = E.itemName(worst), vw = E.salvage(worst.uid); return { item: it, salvaged: false, bumped: nm, essence: vw }; }
     }
     return { item: it, salvaged: false };
   }
@@ -2616,7 +2622,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     var run = {
       hero: heroId, floor: (startZone - 1) * 10 + 1, startFloor: (startZone - 1) * 10 + 1, lvl: 1, xp: 0, gold: 0, hp: 1,
       potions: 0, potionsMax: 2, mods: {}, boons: {}, artifacts: [], rerolls: 0, revived: 0, rooms: 0, kills: 0, loot: [],
-      cendres: 0, bosses: 0, ult: 0, stance: 'n', phase: 'room', doors: [], room: null, pendingBoons: 0, offer: null, evos: [], pendingEvos: 0, evoOffer: null, result: null, combat: null, t: 0, log: [], cnt: {}, primes: [], primeLog: []
+      cendres: 0, bosses: 0, ult: 0, bestBefore: S.stats.best, rt: 0, stance: 'n', phase: 'room', doors: [], room: null, pendingBoons: 0, offer: null, evos: [], pendingEvos: 0, evoOffer: null, result: null, combat: null, t: 0, log: [], cnt: {}, primes: [], primeLog: []
     };
     run.bag = startBag(heroId); run.pendingDice = 0; run.diceOffer = null; run.dieTick = 0;
     S.run = run; S.hero = heroId; S.stats.runs++;
@@ -3752,7 +3758,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     var gUps = addGlory(score);
     var bonus = Math.ceil(run.cendres * 0.25 + 5 * (run.rooms));
     S.cendres += bonus;
-    var sum = { hero: run.hero, floor: reached, rooms: run.rooms, kills: run.kills, cendres: run.cendres + bonus, bonus: bonus, loot: run.loot, lvl: run.lvl, mxp: mxp, heroLvl: hs.lvl, heroUps: ups, abandon: !!abandon, time: run.t, bosses: run.bosses, dmg: run.dmg || 0, maxHit: run.maxHit || 0, score: score, scoreRec: scoreRec, gloryUps: gUps, record: reached >= S.stats.best && reached > (S.stats.prevBest || 0) };
+    var sum = { hero: run.hero, floor: reached, rooms: run.rooms, kills: run.kills, cendres: run.cendres + bonus, bonus: bonus, loot: run.loot, lvl: run.lvl, mxp: mxp, heroLvl: hs.lvl, heroUps: ups, abandon: !!abandon, time: run.rt || run.t, bosses: run.bosses, dmg: run.dmg || 0, maxHit: run.maxHit || 0, score: score, scoreRec: scoreRec, gloryUps: gUps, record: S.stats.best > (bestBefore != null ? bestBefore : (S.stats.prevBest || 0)) }; // même règle que « Record : étage N » au camp
     S.stats.prevBest = Math.max(S.stats.prevBest || 0, S.stats.best);
     S.run = null; E.checkAch(); E.save();
     return sum;
@@ -6640,8 +6646,8 @@ var UI = (function () {
   function fmtMod(k, v) {
     var m = D.MODS[k]; if (!m || !v) return null;
     var a = Math.abs(v), num;
-    if (m.fmt === 'flat') num = (a < 20 && Math.round(a * 10) % 10 ? a.toFixed(1) : E.fmt(a));
-    else num = (Math.round(a * 10) % 10 ? a.toFixed(1) : Math.round(a)) + ' %';
+    if (m.fmt === 'flat') num = (a < 20 && Math.round(a * 10) % 10 ? a.toFixed(1).replace('.', ',') : E.fmt(a));
+    else num = (Math.round(a * 10) % 10 ? a.toFixed(1).replace('.', ',') : Math.round(a)) + ' %';
     return [k === 'cdr' ? 'Vitesse de recharge' : m.n, (v >= 0 ? '+' : '−') + num];
   }
   function modLines(mods, cls) {
@@ -6681,7 +6687,7 @@ var UI = (function () {
     var h = E.hero(heroId), k = h.skills[i], own = E.heroUnlocked(heroId), run = S().run && S().run.hero === heroId ? S().run : null;
     var ok = own && E.skillUnlocked(heroId, i), cd = run ? E.skillCd(run, i) : k.cd * (1 - (own ? E.heroStats(heroId, null).cdr : 0) / 100);
     var nums = own ? E.skillNumbers(heroId, i, run) : [];
-    var html = '<div class="skhead"><div class="ic">' + k.icon + '</div><div class="grow"><b>' + k.name + '</b><div class="tiny dim">Pouvoir ' + (i + 1) + ' de ' + h.name + ' · 🎲 ' + D.NEEDS[k.need].txt + ' · recharge ' + E.turns(cd) + ' tours</div>' + tagsHtml(k) + '</div></div>';
+    var html = '<div class="skhead"><div class="ic">' + k.icon + '</div><div class="grow"><b>' + k.name + '</b><div class="tiny dim">Pouvoir ' + (i + 1) + ' ' + E.de(h.name) + ' · 🎲 ' + D.NEEDS[k.need].txt + ' · recharge ' + E.turns(cd) + ' tours</div>' + tagsHtml(k) + '</div></div>';
     if (!ok) html += '<div class="card small gold">🔒 Se débloque à Maîtrise ' + (i + 1) + ' : joue ' + h.name + ' pour la monter.</div>';
     html += '<p style="margin:10px 2px">' + k.desc + '</p>';
     html += '<div class="li on"><div class="ic"><span class="needb">' + D.NEEDS[k.need].label + '</span></div><div class="grow"><b>Emplacement de dé</b><div class="small dim">Se lance en y glissant <b>' + D.NEEDS[k.need].txt + '</b>, sans coûter d’action. ' + (k.flat ? 'La valeur du dé ne change rien : sers-toi d’un petit dé.' : 'La valeur du dé règle sa puissance : 5 = 100 %, 6 = 110 %, 1 = 60 %.') + '</div></div></div>';
@@ -6802,7 +6808,7 @@ var UI = (function () {
       if (S().stats.best > 0 && idle.amount > 0) gifts += '<button class="gift" data-act="idle">' + spr('i_urn', 'ic') + '<span>+' + E.fmt(idle.amount) + '</span></button>';
       if (gifts) html += '<div class="camp-gifts">' + gifts + '</div>';
     } else {
-      var how = h.unlock.cost ? '<button class="btn goldb' + (S().cendres >= h.unlock.cost ? '' : ' off') + '" data-act="unlock" data-id="' + h.id + '">Recruter — 🔥 ' + E.fmt(h.unlock.cost) + '</button>' : '<div class="gold small">Vaincs ' + D.ENEMIES[D.ZONES[h.unlock.boss - 1].boss].name + '<br><span class="dim">(boss de la zone ' + h.unlock.boss + ')</span></div>';
+      var how = h.unlock.cost ? '<button class="btn goldb' + (S().cendres >= h.unlock.cost ? '' : ' off') + '" data-act="unlock" data-id="' + h.id + '">Recruter — 🔥 ' + E.fmt(h.unlock.cost) + '</button>' : '<div class="gold small">Vaincs ' + D.ENEMIES[D.ZONES[h.unlock.boss - 1].boss].name.replace(/^(Le|La|Les) /, function (m) { return m.toLowerCase(); }) + '<br><span class="dim">(boss de la zone ' + h.unlock.boss + ')</span></div>';
       html += '<div class="lock"><div style="font-size:26px">🔒</div><b>' + h.role + '</b>' + how + '</div>';
     }
     html += '</div>';
@@ -6893,10 +6899,10 @@ var UI = (function () {
   // ---------- talents ----------
   function renderTalents() {
     var id = S().hero, hero = E.hero(id), hs = S().heroes[id], pts = E.talentPoints(id), tal = hs.tal || {};
-    var h = '<h2>🌟 Talents de ' + hero.name + '</h2><div class="center small" style="margin:-6px 0 10px">' + (pts ? '<b class="gold">' + pts + ' point' + (pts > 1 ? 's' : '') + ' à placer</b>' : '<span class="dim">Aucun point. Chaque niveau de Maîtrise en donne un.</span>') + '</div>';
+    var h = '<h2>🌟 Talents ' + E.de(hero.name) + '</h2><div class="center small" style="margin:-6px 0 10px">' + (pts ? '<b class="gold">' + pts + ' point' + (pts > 1 ? 's' : '') + ' à placer</b>' : '<span class="dim">Aucun point. Chaque niveau de Maîtrise en donne un.</span>') + '</div>';
     D.TALENTS[id].forEach(function (t) {
       var r = tal[t.id] || 0, parts = [], tot = [];
-      for (var k in t.mods) { var f = fmtMod(k, t.mods[k]); if (f && /^s[123]P$/.test(k)) f[0] = 'dégâts de ' + hero.skills[+k.charAt(1) - 1].name; if (f) parts.push(f[1] + ' ' + f[0]); var g = fmtMod(k, t.mods[k] * r); if (g && r) tot.push(g[1]); }
+      for (var k in t.mods) { var f = fmtMod(k, t.mods[k]); if (f && /^s[123]P$/.test(k)) f[0] = 'dégâts ' + E.de(hero.skills[+k.charAt(1) - 1].name); if (f) parts.push(f[1] + ' ' + f[0]); var g = fmtMod(k, t.mods[k] * r); if (g && r) tot.push(g[1]); }
       var pips = ''; for (var i = 0; i < t.max; i++) pips += '<i class="' + (i < r ? 'on' : '') + '"></i>';
       h += '<div class="li' + (r ? ' on' : '') + '"><div class="ic">' + t.icon + '</div><div class="grow"><b>' + t.name + '</b> <span class="tiny gold">' + (r ? 'total ' + tot.join(' ') : '') + '</span><div class="small dim">' + parts.join(' · ') + ' par rang</div><div class="pips" style="margin-top:4px">' + pips + '</div></div>' +
         (r >= t.max ? '<span class="gold small">MAX</span>' : '<button class="btn sm ' + (pts ? 'goldb' : 'off') + '" data-act="talentAdd" data-id="' + t.id + '">＋</button>') + '</div>';
@@ -6963,7 +6969,7 @@ var UI = (function () {
   function renderFuse() {
     var sel = st.fuse || (st.fuse = []), first = sel.length ? E.findItem(sel[0]) : null, pv = sel.length === 3 ? E.fusePreview(sel) : null;
     var pool = S().inv.filter(E.canFuse).sort(function (a, b) { return (a.rar - b.rar) || (a.ilvl - b.ilvl); });
-    var h = '<h2>⚗️ Fusion</h2><p class="small dim center" style="margin-top:-4px">Choisis <b style="color:var(--text)">3 objets de la même couleur</b>. Ils fondent en <b style="color:var(--text)">1 objet de la couleur au-dessus</b>, du type du premier choisi et au niveau du meilleur des trois. Deux pièces d’un même set donnent une pièce de ce set.</p>';
+    var h = '<h2>⚗️ Fusion</h2><p class="small dim center" style="margin-top:-4px">Choisis <b style="color:var(--text)">3 objets de la même couleur</b>. Ils fondent en <b style="color:var(--text)">1 objet de la couleur au-dessus</b>, du type du premier choisi et au niveau du meilleur des trois.</p>';
     h += '<div class="fslots">' + [0, 1, 2].map(function (i) { var it = sel[i] != null ? E.findItem(sel[i]) : null; return it ? '<button class="item r' + it.rar + '" data-act="fusePick" data-uid="' + it.uid + '">' + E.itemBase(it).icon + '<span class="lv">' + it.ilvl + '</span></button>' : '<div class="slot empty">＋</div>'; }).join('') +
       '<div class="farrow">➜</div>' + (pv ? '<div class="item r' + pv.rar + '">' + E.byId(D.SLOTS, pv.slot).icon + '<span class="lv">' + pv.ilvl + '</span></div>' : '<div class="slot empty">?</div>') + '</div>';
     h += '<div class="center small" style="min-height:20px;margin-bottom:8px">' + (pv ? 'Résultat : <b class="c' + pv.rar + '">' + D.RARITIES[pv.rar].name + '</b> · ' + E.byId(D.SLOTS, pv.slot).name + ' niveau ' + pv.ilvl + (pv.set ? ' · <span style="color:#6dffb0">◆ ' + E.byId(D.SETS, pv.set).name + '</span>' : '') : first ? 'Encore ' + (3 - sel.length) + ' objet' + (3 - sel.length > 1 ? 's' : '') + ' <b class="c' + first.rar + '">' + D.RARITIES[first.rar].name + '</b>' : '<span class="dim">Les objets équipés, verrouillés, de set, légendaires et uniques ne se fusionnent pas.</span>') + '</div>';
@@ -7000,7 +7006,13 @@ var UI = (function () {
     h += '<h3 style="margin-top:10px">Recyclage automatique du butin</h3><div class="filters" style="margin-top:6px">' + [-1, 0, 1, 2].map(function (r) { return '<button class="chip' + (a === r ? ' on' : '') + '" data-act="autoSalv" data-r="' + r + '">' + (r < 0 ? 'Jamais' : '≤ ' + D.RARITIES[r].name) + '</button>'; }).join('') + '</div><div class="btns"><button class="btn" data-act="close">Fermer</button></div>';
     modal(h);
   };
-  ACT.salvageBelow = function (d) { var r = E.salvageBelow(+d.r); if (r.n) { SND.play('salvage'); toast('♻️ ' + r.n + ' objets → +' + E.fmt(r.essence) + ' 💠'); } E.save(); closeModal(); refresh(); };
+  ACT.salvageBelow = function (d) {
+    var n = S().inv.filter(function (i) { return i.rar <= +d.r && !i.lock && !i.set && !E.equippedBy(i.uid); }).length;
+    if (!d.ok && n && (+d.r >= 2 || n >= 15)) { // demander confirmation avant de détruire beaucoup, ou du Rare et plus
+      modal('<h2>Recycler ' + n + ' objet' + (n > 1 ? 's' : '') + ' ?</h2><p class="center small">Tous les objets jusqu’à <b class="c' + d.r + '">' + D.RARITIES[+d.r].name + '</b> seront détruits, sauf ceux équipés, verrouillés 🔒 ou de set. <span class="bad">C’est définitif.</span></p><div class="btns"><button class="btn" data-act="salvageMenu">Annuler</button><button class="btn primary" data-act="salvageBelow" data-r="' + d.r + '" data-ok="1">♻️ Recycler</button></div>');
+      return;
+    }
+    var r = E.salvageBelow(+d.r); if (r.n) { SND.play('salvage'); toast('♻️ ' + r.n + ' objets → +' + E.fmt(r.essence) + ' 💠'); } E.save(); closeModal(); refresh(); };
   ACT.autoSalv = function (d) { S().settings.autoSalvage = +d.r; E.save(); ACT.salvageMenu(); };
 
   function itemSheet(it, ctx) {
@@ -7675,6 +7687,7 @@ UI.run = (function () {
     var dt = Math.min(0.1, (ts - last) / 1000); last = ts;
     var run = S().run;
     if (run && UI.st.screen === 'run') {
+      run.rt = (run.rt || 0) + dt; // durée réelle de jeu (dt plafonné : une appli en pause ne compte pas)
       var c = run.combat;
       if (run.phase === 'combat' && c) {
         if (built !== c) buildArena();
@@ -7742,6 +7755,8 @@ UI.run = (function () {
     if (r.die) h += '<div class="center small gold" style="margin-bottom:6px">🎲 Un nouveau dé t’attend pour ton sac.</div>';
     if (r.allyLeft) h += '<div class="center small dim" style="margin-bottom:6px">' + E.hero(r.allyLeft).name + ' te salue et repart : son contrat est rempli.</div>';
     if (r.artifact) h += '<div class="choice b3" style="pointer-events:none"><div class="ic">' + r.artifact.icon + '</div><div><span class="tag">Artefact</span><b>' + r.artifact.name + '</b><div class="d">' + r.artifact.desc + '</div></div></div>';
+    var bumped = r.items.filter(function (g) { return g.bumped || g.full; });
+    if (bumped.length) h += '<div class="center small bad" style="margin-bottom:6px">🎒 Sac plein : ' + bumped.map(function (g) { return g.full ? E.itemName(g.item) + ' (trop faible)' : g.bumped; }).join(', ') + ' recyclé' + (bumped.length > 1 ? 's' : '') + '. Fais de la place au camp.</div>';
     if (r.items.length) h += '<div class="loot">' + lootCards(r.items) + '</div><div class="tiny dim center">Touche un objet pour le voir ou l’équiper</div>';
     else if (!r.artifact) h += '<div class="center dim small" style="margin:8px 0">Pas d’objet cette fois.</div>';
     h += '<div class="btns"><button class="btn primary big" data-act="cont">CONTINUER</button></div>';
@@ -8049,7 +8064,7 @@ UI.run = (function () {
     var hero = E.hero(run.hero);
     if (type === 'skill') UI.modal(UI.skillSheet(run.hero, +arg));
     else if (type === 'foe') ACT.foeLive({ i: arg });
-    else if (type === 'ult') miniSheet(hero.ult.icon, hero.ult.name, 'Ultime de ' + hero.name + ' · chargé à ' + Math.floor(run.ult || 0) + ' %', hero.ult.desc + '<br><br><span class="dim">La barre dorée se remplit quand tu frappes, tues, encaisses, lances un pouvoir ou touches un point faible 🎯. Elle garde sa charge d’une salle à l’autre.</span>');
+    else if (type === 'ult') miniSheet(hero.ult.icon, hero.ult.name, 'Ultime ' + E.de(hero.name) + ' · chargé à ' + Math.floor(run.ult || 0) + ' %', hero.ult.desc + '<br><br><span class="dim">La barre dorée se remplit quand tu frappes, tues, encaisses, lances un pouvoir ou touches un point faible 🎯. Elle garde sa charge d’une salle à l’autre.</span>');
     else if (type === 'parry') miniSheet('🛡️', 'Parer', '1 action · utilisable un tour sur deux', 'Jusqu’à ton prochain tour, tu subis 70 % de dégâts en moins et tu ripostes.<br><br>Quand le bouton devient <b style="color:#3ff0ff">bleu vif : PARE !</b>, un ennemi charge un gros coup. Pare à ce moment : le coup est <b>annulé</b>, l’ennemi est étourdi et ta riposte fait 300 % dégâts.');
     else if (type === 'strike') miniSheet('⚔️', 'Frapper', '1 action', 'Attaque l’ennemi visé (▼). Tu donnes autant de coups que ta vitesse d’attaque le permet : 1 coup à vitesse 1, parfois 2 au-dessus.<br><br>Quand un ennemi montre un <b>point faible</b>, ce bouton devient <b>💥 COUP CRITIQUE</b> : il frappe ce point faible tout seul.<br><br><span class="dim">Touche un ennemi pour le viser.</span>');
     else if (type === 'stance') miniSheet('⚖️', 'Posture', 'change quand tu veux, sans recharge', '🗡️ <b>Assaut</b> : +25 % dégâts infligés, mais +20 % dégâts subis.<br>🛡️ <b>Garde</b> : -25 % dégâts subis, mais -20 % dégâts infligés.<br>⚖️ <b>Équilibre</b> : rien ne change.<br><br><span class="dim">Assaut quand tout va bien, Garde quand tes PV fondent ou qu’un boss s’enrage.</span>');
@@ -8087,9 +8102,9 @@ UI.run = (function () {
       '<h1>' + (abandon ? 'RETOUR' : 'TU ES MORT') + '</h1><div class="center" style="margin:6px 0">' + UI.spr('tombe', '') .replace('<img', '<img style="width:64px;height:64px"') + '</div>' +
       '<div class="center dim small">' + h.name + (abandon ? ' est rentré de l’étage ' : ' est tombé à l’étage ') + '<b style="color:var(--text)">' + sum.floor + '</b> — ' + E.zoneOf(sum.floor).name + '</div>' +
       (sum.record ? '<div class="center gold" style="margin-top:6px;font-family:var(--serif);letter-spacing:.1em">★ NOUVEAU RECORD ★</div>' : '') +
-      '<div class="sumgrid"><div class="stat"><b>' + sum.kills + '</b><span>Ennemis tués</span></div><div class="stat"><b class="ash">+' + E.fmt(sum.cendres) + '</b><span>Cendres 🔥</span></div><div class="stat"><b>' + sum.loot.length + '</b><span>Objets trouvés</span></div><div class="stat"><b>' + E.fmt(sum.dmg) + '</b><span>Dégâts infligés</span></div><div class="stat"><b>' + E.fmt(sum.maxHit) + '</b><span>Plus gros coup</span></div><div class="stat"><b>' + Math.floor(sum.time / 60) + ' min ' + ('0' + Math.floor(sum.time % 60)).slice(-2) + '</b><span>Durée</span></div></div>' +
+      '<div class="sumgrid"><div class="stat"><b>' + sum.kills + '</b><span>Ennemis tués</span></div><div class="stat"><b class="ash">+' + E.fmt(sum.cendres) + '</b><span>Cendres 🔥</span></div><div class="stat"><b>' + sum.loot.length + '</b><span>' + (sum.loot.length > 1 ? 'Objets trouvés' : 'Objet trouvé') + '</span></div><div class="stat"><b>' + E.fmt(sum.dmg) + '</b><span>Dégâts infligés</span></div><div class="stat"><b>' + E.fmt(sum.maxHit) + '</b><span>Plus gros coup</span></div><div class="stat"><b>' + Math.floor(sum.time / 60) + ' min ' + ('0' + Math.floor(sum.time % 60)).slice(-2) + '</b><span>Durée</span></div></div>' +
       (function () { var g = E.gloryInfo(); return '<div class="card glory"><div class="row"><b>🏅 Gloire</b><span class="grow"></span><b class="gold" style="font-size:19px">+' + sum.score + '</b></div><div class="tiny ' + (sum.scoreRec ? 'gold' : 'dim') + '">' + (sum.scoreRec ? '★ Meilleur score ★' : 'Score de la descente · record ' + S().stats.bestScore) + '</div><div class="bar" style="margin:6px 0 4px"><i style="width:' + Math.min(100, g.pts / g.need * 100) + '%"></i></div><div class="tiny dim">Palier ' + g.lvl + ' · ' + g.pts + ' / ' + g.need + ' · prochaine récompense : <span style="color:var(--text)">' + g.next + '</span></div>' + sum.gloryUps.map(function (u) { return '<div class="gup">▲ Palier ' + u.lvl + ' : <b>' + u.txt + '</b></div>'; }).join('') + '</div>'; })() +
-      '<div class="card"><div class="row"><b>Maîtrise de ' + h.name + '</b><span class="grow"></span><b class="gold">niv. ' + hs.lvl + '</b></div><div class="bar" style="margin-top:5px"><i style="width:' + Math.min(100, hs.xp / E.masteryNeed(hs.lvl) * 100) + '%"></i></div>' +
+      '<div class="card"><div class="row"><b>Maîtrise ' + E.de(h.name) + '</b><span class="grow"></span><b class="gold">niv. ' + hs.lvl + '</b></div><div class="bar" style="margin-top:5px"><i style="width:' + Math.min(100, hs.xp / E.masteryNeed(hs.lvl) * 100) + '%"></i></div>' +
       (sum.heroUps ? '<div class="small good" style="margin-top:5px">▲ Maîtrise +' + sum.heroUps + ' : +' + (3 * sum.heroUps) + ' % attaque et PV · <b>+' + sum.heroUps + ' point' + (sum.heroUps > 1 ? 's' : '') + ' de talent</b>' + ((lvlBefore < 2 && hs.lvl >= 2) || (lvlBefore < 3 && hs.lvl >= 3) ? ' · <b>nouveau pouvoir débloqué !</b>' : '') + ((lvlBefore < 4 && hs.lvl >= 4) || (lvlBefore < 8 && hs.lvl >= 8) ? ' · <b>+1 emplacement de pacte</b>' : '') + '</div>' : '<div class="tiny dim" style="margin-top:4px">+' + sum.mxp + ' expérience</div>') + '</div>';
     if (items.length) html += '<div class="card"><b>Butin gardé</b> <span class="tiny dim">(il est à toi pour toujours)</span><div class="inv-grid" style="margin-top:8px">' + items.slice(0, 18).map(function (it) { return UI.itemTile(it); }).join('') + '</div></div>';
     html += '<div class="card small dim">💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)] + '</div>' +
@@ -8652,7 +8667,7 @@ UI.guide = (function () {
   // Tutoriel du premier combat, raconté par la Veilleuse
   var FIGHT = [
     { t: 'Ton premier combat', x: 'Écoute-moi bien, voyageur. Ici, chacun frappe à son tour : <b>toi d’abord</b>, puis tes ennemis. Laisse-moi te montrer.' },
-    { s: '.unit.en', t: 'L’ennemi', x: 'Au-dessus de sa tête, il trahit <b>ce qu’il va faire</b>. Un glaive et un 12 : il frappera pour 12.<br>Touche-le pour le viser.' },
+    { s: '.unit.en', t: 'L’ennemi', x: 'Au-dessus de sa tête, il trahit <b>ce qu’il va faire</b>. Un glaive et un nombre : il frappera pour autant.<br>S’ils sont plusieurs, touche celui que tu veux viser.' },
     { s: '.hprow', t: 'Ta vie', x: 'Cette barre rouge, c’est ce qu’il te reste de vie. Le petit blason à côté porte ton niveau.' },
     { s: '#aps', t: 'Tes actions', x: 'Ces deux losanges d’or sont tes <b>actions</b>. Frapper ou parer en coûte une.' },
     { s: '#bstrike', t: 'Frapper', x: 'Ta lame contre l’ennemi visé.<br>Quand un ennemi baisse sa garde, ce bouton se couvre d’<b class="g-y">or</b> et devient <b class="g-y">Critique</b>. Ne laisse pas passer ta chance.' },
@@ -8672,7 +8687,7 @@ UI.guide = (function () {
   // Premier passage au camp
   var CAMP = [
     { t: 'Le camp', x: 'Te voilà revenu. Entre deux descentes, on se repose ici, près de la dernière flamme.' },
-    { s: '.camp-hero', t: 'Ton héros', x: 'Touche-le pour voir ses pouvoirs, son équipement et sa force. Les flèches changent de héros.' },
+    { s: '.camp-hero', t: 'Ton héros', x: 'Touche-le : il te répond. Touche-le encore pour voir ses pouvoirs, son équipement et sa force. Les flèches changent de héros.' },
     { s: '[data-act=descend]', t: 'Descendre', x: 'Quand tu es prêt, retourne dans les profondeurs. Ce que tu trouves, <b>tu le gardes</b>, même dans la mort.' },
     { s: '.camp-quick', t: 'Autour du feu', x: 'Tes talents, les quêtes du jour, la chronique de Morvane et ta gloire. Une braise rouge signale ce qui t’attend.' },
     { s: '.tabs', t: 'Le reste', x: 'Ton sac, l’autel des bonus permanents, les pactes et tes hauts faits.', btn: 'Compris' }

@@ -1180,3 +1180,5 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 @media (prefers-reduced-motion: reduce) { .camp-hero .spr[class*="g-"], .unit.en.boss[class*="bin-"] { animation: none !important; } }
 /* v4.4.1 : sur un héros verrouillé, le voile ne doit pas couvrir les flèches ni le nom (sinon on reste coincé) */
 .camp-scene .nav, .camp-name { z-index: 6; }
+/* v4.5 : un bouton doré désactivé doit avoir l'air désactivé */
+.btn.goldb.off { opacity: .5; filter: grayscale(.9) brightness(.75); box-shadow: none; } .btn.goldb.off::after { display: none; }
