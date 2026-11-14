@@ -1109,6 +1109,9 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 #gainpop .gl.up b { color: #ffe08a; text-shadow: 0 0 10px #f2bd5e88, 2px 2px 0 #000; } #gainpop .gl.dn b { color: #ff8a8a; text-shadow: 0 0 10px #c2283a88, 2px 2px 0 #000; }
 #gainpop .gi { width: 32px; height: 32px; image-rendering: pixelated; }
 #gainpop .gtap { margin-top: 6px; font-size: 11px; color: #8e869c; }
+/* Pièces de set : double contour, couleur de rareté à l'extérieur, vert du set à l'intérieur */
+.item.set::after { content: ''; position: absolute; inset: 2px; border-radius: 10px; border: 2px solid #3fe08f; box-shadow: 0 0 6px #2bd67b99, inset 0 0 6px #2bd67b55; pointer-events: none; }
+.item-head .item.set::after, .lootc .item.set::after { inset: 3px; border-width: 2.5px; }
 
 :root { color-scheme: dark; --sat: 0px; --sab: 0px; } html, body { height: 100%; } #app { height: 100%; }</style>
 <div id="app"><div id="screen"></div><div id="overlay"></div><div id="modal"></div><div id="toasts"></div><div id="flash"></div></div>
@@ -2335,15 +2338,15 @@ if (typeof module !== 'undefined') module.exports = DATA;
     return Math.ceil((it.rar + 1) * (it.rar + 1) * (1 + it.ilvl / 15) * (it.rar === 5 ? 3 : 1) + 0.6 * (it.spent || 0));
   };
   E.salvage = function (uid) {
-    var it = E.findItem(uid); if (!it || it.lock || E.equippedBy(uid)) return 0;
+    var it = E.findItem(uid); if (!it || it.lock || it.set || E.equippedBy(uid)) return 0;
     var v = E.salvageValue(it); S.essence += v; S.inv.splice(S.inv.indexOf(it), 1); return v;
   };
   E.salvageBelow = function (maxRar) {
     var tot = 0, n = 0;
-    S.inv.slice().forEach(function (it) { if (it.rar <= maxRar && !it.lock && !E.equippedBy(it.uid)) { tot += E.salvage(it.uid); n++; } });
+    S.inv.slice().forEach(function (it) { if (it.rar <= maxRar && !it.lock && !it.set && !E.equippedBy(it.uid)) { tot += E.salvage(it.uid); n++; } });
     return { n: n, essence: tot };
   };
-  E.canFuse = function (it) { return !!it && it.rar <= 3 && !it.uq && !it.lock && !E.equippedBy(it.uid); };
+  E.canFuse = function (it) { return !!it && it.rar <= 3 && !it.uq && !it.set && !it.lock && !E.equippedBy(it.uid); };
   E.fusePreview = function (uids) {
     var its = uids.map(E.findItem);
     if (its.length !== 3 || its.some(function (i) { return !E.canFuse(i); })) return null;
@@ -2373,11 +2376,11 @@ if (typeof module !== 'undefined') module.exports = DATA;
   function giveItem(it) {
     S.stats.items++;
     if (it.rar === 3) S.stats.epic++; if (it.rar === 4) S.stats.leg++; if (it.rar === 5) S.stats.uni++;
-    if (it.rar <= S.settings.autoSalvage) { var v = E.salvageValue(it); S.essence += v; return { item: it, salvaged: true, essence: v }; }
+    if (it.rar <= S.settings.autoSalvage && !it.set) { var v = E.salvageValue(it); S.essence += v; return { item: it, salvaged: true, essence: v }; }
     S.inv.push(it);
     if (S.inv.length > INV_MAX) {
       var worst = null, ws = 1e99;
-      S.inv.forEach(function (o) { if (o === it || o.lock || E.equippedBy(o.uid)) return; var sc = o.rar * 1e6 + o.ilvl; if (sc < ws) { ws = sc; worst = o; } });
+      S.inv.forEach(function (o) { if (o === it || o.lock || o.set || E.equippedBy(o.uid)) return; var sc = o.rar * 1e6 + o.ilvl; if (sc < ws) { ws = sc; worst = o; } });
       if (worst) E.salvage(worst.uid);
     }
     return { item: it, salvaged: false };
@@ -6660,7 +6663,7 @@ var UI = (function () {
   ACT.omen = function (d) { closeModal(); SND.play('door'); S().hero = d.h; E.startRun(d.h, +d.z || 1, d.id || null); UI.run.show(); };
   function itemTile(it, extra) {
     var b = E.itemBase(it), eq = E.equippedBy(it.uid);
-    return '<button class="item r' + it.rar + '" data-act="item" data-uid="' + it.uid + '">' + b.icon +
+    return '<button class="item r' + it.rar + (it.set ? ' set' : '') + '" data-act="item" data-uid="' + it.uid + '">' + b.icon +
       '<span class="lv">' + it.ilvl + '</span>' + (it.up ? '<span class="up">+' + it.up + '</span>' : '') +
       (eq ? '<span class="eq">' + (eq === S().hero ? '✅' : '👤') + '</span>' : '') + (it.isNew ? '<span class="nw"></span>' : '') + (it.set ? '<span class="sm">◆</span>' : '') + (it.lock ? '<span class="eq" style="right:auto;left:2px;bottom:auto;top:1px">🔒</span>' : '') + (extra || '') + '</button>';
   }
@@ -6853,7 +6856,7 @@ var UI = (function () {
       var better = cur !== it.uid && !E.equippedBy(it.uid) && (!curIt || E.itemScore(it) > E.itemScore(curIt) * 1.02);
       return itemTile(it, better ? '<span class="arrow" style="left:auto;right:3px;top:' + (it.up ? '11' : '0') + 'px">▲</span>' : '');
     }).join('') + '</div>';
-    h += '<div class="tiny dim center" style="margin-top:12px">Couleurs : <span class="c0">Normal</span> · <span class="c1">Commun</span> · <span class="c2">Rare</span> · <span class="c3">Épique</span> · <span class="c4">Légendaire</span> · <span class="c5">Unique</span></div>';
+    h += '<div class="tiny dim center" style="margin-top:12px">Couleurs : <span class="c0">Normal</span> · <span class="c1">Commun</span> · <span class="c2">Rare</span> · <span class="c3">Épique</span> · <span class="c4">Légendaire</span> · <span class="c5">Unique</span> · <span style="color:#6dffb0">◆ Set (double contour)</span></div>';
     return h;
   }
   // ---------- fusion : 3 objets de même rareté -> 1 objet de la rareté au-dessus ----------
@@ -6863,7 +6866,7 @@ var UI = (function () {
     var h = '<h2>⚗️ Fusion</h2><p class="small dim center" style="margin-top:-4px">Choisis <b style="color:var(--text)">3 objets de la même couleur</b>. Ils fondent en <b style="color:var(--text)">1 objet de la couleur au-dessus</b>, du type du premier choisi et au niveau du meilleur des trois. Deux pièces d’un même set donnent une pièce de ce set.</p>';
     h += '<div class="fslots">' + [0, 1, 2].map(function (i) { var it = sel[i] != null ? E.findItem(sel[i]) : null; return it ? '<button class="item r' + it.rar + '" data-act="fusePick" data-uid="' + it.uid + '">' + E.itemBase(it).icon + '<span class="lv">' + it.ilvl + '</span></button>' : '<div class="slot empty">＋</div>'; }).join('') +
       '<div class="farrow">➜</div>' + (pv ? '<div class="item r' + pv.rar + '">' + E.byId(D.SLOTS, pv.slot).icon + '<span class="lv">' + pv.ilvl + '</span></div>' : '<div class="slot empty">?</div>') + '</div>';
-    h += '<div class="center small" style="min-height:20px;margin-bottom:8px">' + (pv ? 'Résultat : <b class="c' + pv.rar + '">' + D.RARITIES[pv.rar].name + '</b> · ' + E.byId(D.SLOTS, pv.slot).name + ' niveau ' + pv.ilvl + (pv.set ? ' · <span style="color:#6dffb0">◆ ' + E.byId(D.SETS, pv.set).name + '</span>' : '') : first ? 'Encore ' + (3 - sel.length) + ' objet' + (3 - sel.length > 1 ? 's' : '') + ' <b class="c' + first.rar + '">' + D.RARITIES[first.rar].name + '</b>' : '<span class="dim">Les objets équipés, verrouillés, légendaires et uniques ne se fusionnent pas.</span>') + '</div>';
+    h += '<div class="center small" style="min-height:20px;margin-bottom:8px">' + (pv ? 'Résultat : <b class="c' + pv.rar + '">' + D.RARITIES[pv.rar].name + '</b> · ' + E.byId(D.SLOTS, pv.slot).name + ' niveau ' + pv.ilvl + (pv.set ? ' · <span style="color:#6dffb0">◆ ' + E.byId(D.SETS, pv.set).name + '</span>' : '') : first ? 'Encore ' + (3 - sel.length) + ' objet' + (3 - sel.length > 1 ? 's' : '') + ' <b class="c' + first.rar + '">' + D.RARITIES[first.rar].name + '</b>' : '<span class="dim">Les objets équipés, verrouillés, de set, légendaires et uniques ne se fusionnent pas.</span>') + '</div>';
     if (!pool.length) h += '<div class="center dim" style="padding:16px">Aucun objet à fusionner pour l’instant.</div>';
     h += '<div class="inv-grid">' + pool.map(function (it) {
       var on = sel.indexOf(it.uid) >= 0, no = !on && (sel.length >= 3 || (first && first.rar !== it.rar));
@@ -6889,9 +6892,9 @@ var UI = (function () {
   ACT.filter = function (d) { st.filter = d.f; SND.play('click'); hub(); };
   ACT.equipBest = function () { var n = E.equipBest(S().hero); S().inv.forEach(function (i) { i.isNew = false; }); if (n) { SND.play('equip'); toast('⚡ ' + n + ' objet' + (n > 1 ? 's' : '') + ' équipé' + (n > 1 ? 's' : '')); } else toast('Tu portes déjà le meilleur.'); E.save(); keepScroll(hub); };
   ACT.salvageMenu = function () {
-    var a = S().settings.autoSalvage, h = '<h2>Recycler</h2><p class="small dim center">Recycler détruit des objets et donne de l’<span class="ess">💠 Essence</span> pour améliorer les autres. Les objets équipés ou verrouillés 🔒 sont protégés.</p>';
+    var a = S().settings.autoSalvage, h = '<h2>Recycler</h2><p class="small dim center">Recycler détruit des objets et donne de l’<span class="ess">💠 Essence</span> pour améliorer les autres. Les objets équipés, verrouillés 🔒 ou de <span style="color:#6dffb0">◆ set</span> sont protégés.</p>';
     [0, 1, 2, 3].forEach(function (r) {
-      var n = S().inv.filter(function (i) { return i.rar <= r && !i.lock && !E.equippedBy(i.uid); }).length;
+      var n = S().inv.filter(function (i) { return i.rar <= r && !i.lock && !i.set && !E.equippedBy(i.uid); }).length;
       h += '<button class="btn wide" style="margin-bottom:6px" data-act="salvageBelow" data-r="' + r + '">Tout jusqu’à <b class="c' + r + '">&nbsp;' + D.RARITIES[r].name + '</b>&nbsp;(' + n + ')</button>';
     });
     h += '<h3 style="margin-top:10px">Recyclage automatique du butin</h3><div class="filters" style="margin-top:6px">' + [-1, 0, 1, 2].map(function (r) { return '<button class="chip' + (a === r ? ' on' : '') + '" data-act="autoSalv" data-r="' + r + '">' + (r < 0 ? 'Jamais' : '≤ ' + D.RARITIES[r].name) + '</button>'; }).join('') + '</div><div class="btns"><button class="btn" data-act="close">Fermer</button></div>';
@@ -6903,7 +6906,7 @@ var UI = (function () {
   function itemSheet(it, ctx) {
     var b = E.itemBase(it), p = E.itemParts(it), rar = D.RARITIES[it.rar], uq = it.uq ? E.byId(D.UNIQUES, it.uq) : null;
     var slot = E.byId(D.SLOTS, b.slot), eqBy = E.equippedBy(it.uid), hs = S().heroes[S().hero];
-    var h = '<div class="item-head"><div class="item r' + it.rar + '">' + b.icon + '</div><div class="grow"><h3 class="c' + it.rar + '" style="font-size:17px">' + E.itemName(it) + '</h3><div class="small"><b class="c' + it.rar + '">' + rar.name + '</b> · ' + slot.name + ' · niveau ' + it.ilvl + (it.up ? ' · <span class="gold">+' + it.up + '</span>' : '') + '</div>' + (eqBy ? '<div class="tiny good">Équipé par ' + E.hero(eqBy).name + '</div>' : '') + '</div></div>';
+    var h = '<div class="item-head"><div class="item r' + it.rar + (it.set ? ' set' : '') + '">' + b.icon + '</div><div class="grow"><h3 class="c' + it.rar + '" style="font-size:17px">' + E.itemName(it) + '</h3><div class="small"><b class="c' + it.rar + '">' + rar.name + '</b> · ' + slot.name + ' · niveau ' + it.ilvl + (it.up ? ' · <span class="gold">+' + it.up + '</span>' : '') + '</div>' + (eqBy ? '<div class="tiny good">Équipé par ' + E.hero(eqBy).name + '</div>' : '') + '</div></div>';
     h += '<div class="' + (uq ? 'uq' : '') + '">' + modLines(p.base) + (Object.keys(p.aff).length ? '<div style="border-top:1px solid #ffffff12;margin:4px 0"></div>' + modLines(p.aff) : '') + modLines(p.pw, 'pw') + '</div>';
     if (uq) h += '<div class="lore">« ' + uq.lore + ' »</div>';
     if (it.set) h += setHtml(it.set, E.setCounts(S().hero)[it.set] || 0);
@@ -6918,7 +6921,8 @@ var UI = (function () {
     else h += '<button class="btn off">Amélioration max</button>';
     if (tc) h += '<button class="btn' + (S().essence >= tc.essence ? '' : ' off') + '" data-act="temper" data-uid="' + it.uid + '">🔥 Retremper niv. ' + tc.target + '<br><span class="tiny">💠 ' + E.fmt(tc.essence) + '</span></button>';
     h += '</div><div class="btns">';
-    if (!eqBy && !it.lock) h += '<button class="btn" data-act="salvage" data-uid="' + it.uid + '">♻️ Recycler (+' + E.fmt(E.salvageValue(it)) + ' 💠)</button>';
+    if (it.set) h += '<div class="tiny center" style="width:100%;color:#6dffb0">◆ Pièce de set : ni recyclable, ni fusionnable.</div>';
+    else if (!eqBy && !it.lock) h += '<button class="btn" data-act="salvage" data-uid="' + it.uid + '">♻️ Recycler (+' + E.fmt(E.salvageValue(it)) + ' 💠)</button>';
     h += '<button class="btn" data-act="close">Fermer</button></div>';
     return h;
   }
@@ -7598,7 +7602,7 @@ UI.run = (function () {
   function lootCards(items) {
     return items.map(function (g, i) {
       var it = g.item, b = E.itemBase(it);
-      return '<div class="lootc" style="animation-delay:' + (0.15 + i * 0.22) + 's"><button class="item r' + it.rar + '"' + (g.salvaged ? ' style="opacity:.45"' : ' data-act="item" data-uid="' + it.uid + '"') + '>' + b.icon + '<span class="lv">' + it.ilvl + '</span></button><b class="c' + it.rar + '">' + D.RARITIES[it.rar].name + '</b><div class="dim">' + (g.salvaged ? '♻️ +' + g.essence + ' 💠' : b.name) + '</div></div>';
+      return '<div class="lootc" style="animation-delay:' + (0.15 + i * 0.22) + 's"><button class="item r' + it.rar + (it.set ? ' set' : '') + '"' + (g.salvaged ? ' style="opacity:.45"' : ' data-act="item" data-uid="' + it.uid + '"') + '>' + b.icon + '<span class="lv">' + it.ilvl + '</span></button><b class="c' + it.rar + '">' + D.RARITIES[it.rar].name + '</b><div class="dim">' + (g.salvaged ? '♻️ +' + g.essence + ' 💠' : b.name) + '</div></div>';
     }).join('');
   }
   function lootFx(items) {

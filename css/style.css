@@ -1108,3 +1108,6 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 #gainpop .gl.up b { color: #ffe08a; text-shadow: 0 0 10px #f2bd5e88, 2px 2px 0 #000; } #gainpop .gl.dn b { color: #ff8a8a; text-shadow: 0 0 10px #c2283a88, 2px 2px 0 #000; }
 #gainpop .gi { width: 32px; height: 32px; image-rendering: pixelated; }
 #gainpop .gtap { margin-top: 6px; font-size: 11px; color: #8e869c; }
+/* Pièces de set : double contour, couleur de rareté à l'extérieur, vert du set à l'intérieur */
+.item.set::after { content: ''; position: absolute; inset: 2px; border-radius: 10px; border: 2px solid #3fe08f; box-shadow: 0 0 6px #2bd67b99, inset 0 0 6px #2bd67b55; pointer-events: none; }
+.item-head .item.set::after, .lootc .item.set::after { inset: 3px; border-width: 2.5px; }

@@ -194,15 +194,15 @@
     return Math.ceil((it.rar + 1) * (it.rar + 1) * (1 + it.ilvl / 15) * (it.rar === 5 ? 3 : 1) + 0.6 * (it.spent || 0));
   };
   E.salvage = function (uid) {
-    var it = E.findItem(uid); if (!it || it.lock || E.equippedBy(uid)) return 0;
+    var it = E.findItem(uid); if (!it || it.lock || it.set || E.equippedBy(uid)) return 0;
     var v = E.salvageValue(it); S.essence += v; S.inv.splice(S.inv.indexOf(it), 1); return v;
   };
   E.salvageBelow = function (maxRar) {
     var tot = 0, n = 0;
-    S.inv.slice().forEach(function (it) { if (it.rar <= maxRar && !it.lock && !E.equippedBy(it.uid)) { tot += E.salvage(it.uid); n++; } });
+    S.inv.slice().forEach(function (it) { if (it.rar <= maxRar && !it.lock && !it.set && !E.equippedBy(it.uid)) { tot += E.salvage(it.uid); n++; } });
     return { n: n, essence: tot };
   };
-  E.canFuse = function (it) { return !!it && it.rar <= 3 && !it.uq && !it.lock && !E.equippedBy(it.uid); };
+  E.canFuse = function (it) { return !!it && it.rar <= 3 && !it.uq && !it.set && !it.lock && !E.equippedBy(it.uid); };
   E.fusePreview = function (uids) {
     var its = uids.map(E.findItem);
     if (its.length !== 3 || its.some(function (i) { return !E.canFuse(i); })) return null;
@@ -232,11 +232,11 @@
   function giveItem(it) {
     S.stats.items++;
     if (it.rar === 3) S.stats.epic++; if (it.rar === 4) S.stats.leg++; if (it.rar === 5) S.stats.uni++;
-    if (it.rar <= S.settings.autoSalvage) { var v = E.salvageValue(it); S.essence += v; return { item: it, salvaged: true, essence: v }; }
+    if (it.rar <= S.settings.autoSalvage && !it.set) { var v = E.salvageValue(it); S.essence += v; return { item: it, salvaged: true, essence: v }; }
     S.inv.push(it);
     if (S.inv.length > INV_MAX) {
       var worst = null, ws = 1e99;
-      S.inv.forEach(function (o) { if (o === it || o.lock || E.equippedBy(o.uid)) return; var sc = o.rar * 1e6 + o.ilvl; if (sc < ws) { ws = sc; worst = o; } });
+      S.inv.forEach(function (o) { if (o === it || o.lock || o.set || E.equippedBy(o.uid)) return; var sc = o.rar * 1e6 + o.ilvl; if (sc < ws) { ws = sc; worst = o; } });
       if (worst) E.salvage(worst.uid);
     }
     return { item: it, salvaged: false };

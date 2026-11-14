@@ -143,7 +143,7 @@ var UI = (function () {
   ACT.omen = function (d) { closeModal(); SND.play('door'); S().hero = d.h; E.startRun(d.h, +d.z || 1, d.id || null); UI.run.show(); };
   function itemTile(it, extra) {
     var b = E.itemBase(it), eq = E.equippedBy(it.uid);
-    return '<button class="item r' + it.rar + '" data-act="item" data-uid="' + it.uid + '">' + b.icon +
+    return '<button class="item r' + it.rar + (it.set ? ' set' : '') + '" data-act="item" data-uid="' + it.uid + '">' + b.icon +
       '<span class="lv">' + it.ilvl + '</span>' + (it.up ? '<span class="up">+' + it.up + '</span>' : '') +
       (eq ? '<span class="eq">' + (eq === S().hero ? '✅' : '👤') + '</span>' : '') + (it.isNew ? '<span class="nw"></span>' : '') + (it.set ? '<span class="sm">◆</span>' : '') + (it.lock ? '<span class="eq" style="right:auto;left:2px;bottom:auto;top:1px">🔒</span>' : '') + (extra || '') + '</button>';
   }
@@ -336,7 +336,7 @@ var UI = (function () {
       var better = cur !== it.uid && !E.equippedBy(it.uid) && (!curIt || E.itemScore(it) > E.itemScore(curIt) * 1.02);
       return itemTile(it, better ? '<span class="arrow" style="left:auto;right:3px;top:' + (it.up ? '11' : '0') + 'px">▲</span>' : '');
     }).join('') + '</div>';
-    h += '<div class="tiny dim center" style="margin-top:12px">Couleurs : <span class="c0">Normal</span> · <span class="c1">Commun</span> · <span class="c2">Rare</span> · <span class="c3">Épique</span> · <span class="c4">Légendaire</span> · <span class="c5">Unique</span></div>';
+    h += '<div class="tiny dim center" style="margin-top:12px">Couleurs : <span class="c0">Normal</span> · <span class="c1">Commun</span> · <span class="c2">Rare</span> · <span class="c3">Épique</span> · <span class="c4">Légendaire</span> · <span class="c5">Unique</span> · <span style="color:#6dffb0">◆ Set (double contour)</span></div>';
     return h;
   }
   // ---------- fusion : 3 objets de même rareté -> 1 objet de la rareté au-dessus ----------
@@ -346,7 +346,7 @@ var UI = (function () {
     var h = '<h2>⚗️ Fusion</h2><p class="small dim center" style="margin-top:-4px">Choisis <b style="color:var(--text)">3 objets de la même couleur</b>. Ils fondent en <b style="color:var(--text)">1 objet de la couleur au-dessus</b>, du type du premier choisi et au niveau du meilleur des trois. Deux pièces d’un même set donnent une pièce de ce set.</p>';
     h += '<div class="fslots">' + [0, 1, 2].map(function (i) { var it = sel[i] != null ? E.findItem(sel[i]) : null; return it ? '<button class="item r' + it.rar + '" data-act="fusePick" data-uid="' + it.uid + '">' + E.itemBase(it).icon + '<span class="lv">' + it.ilvl + '</span></button>' : '<div class="slot empty">＋</div>'; }).join('') +
       '<div class="farrow">➜</div>' + (pv ? '<div class="item r' + pv.rar + '">' + E.byId(D.SLOTS, pv.slot).icon + '<span class="lv">' + pv.ilvl + '</span></div>' : '<div class="slot empty">?</div>') + '</div>';
-    h += '<div class="center small" style="min-height:20px;margin-bottom:8px">' + (pv ? 'Résultat : <b class="c' + pv.rar + '">' + D.RARITIES[pv.rar].name + '</b> · ' + E.byId(D.SLOTS, pv.slot).name + ' niveau ' + pv.ilvl + (pv.set ? ' · <span style="color:#6dffb0">◆ ' + E.byId(D.SETS, pv.set).name + '</span>' : '') : first ? 'Encore ' + (3 - sel.length) + ' objet' + (3 - sel.length > 1 ? 's' : '') + ' <b class="c' + first.rar + '">' + D.RARITIES[first.rar].name + '</b>' : '<span class="dim">Les objets équipés, verrouillés, légendaires et uniques ne se fusionnent pas.</span>') + '</div>';
+    h += '<div class="center small" style="min-height:20px;margin-bottom:8px">' + (pv ? 'Résultat : <b class="c' + pv.rar + '">' + D.RARITIES[pv.rar].name + '</b> · ' + E.byId(D.SLOTS, pv.slot).name + ' niveau ' + pv.ilvl + (pv.set ? ' · <span style="color:#6dffb0">◆ ' + E.byId(D.SETS, pv.set).name + '</span>' : '') : first ? 'Encore ' + (3 - sel.length) + ' objet' + (3 - sel.length > 1 ? 's' : '') + ' <b class="c' + first.rar + '">' + D.RARITIES[first.rar].name + '</b>' : '<span class="dim">Les objets équipés, verrouillés, de set, légendaires et uniques ne se fusionnent pas.</span>') + '</div>';
     if (!pool.length) h += '<div class="center dim" style="padding:16px">Aucun objet à fusionner pour l’instant.</div>';
     h += '<div class="inv-grid">' + pool.map(function (it) {
       var on = sel.indexOf(it.uid) >= 0, no = !on && (sel.length >= 3 || (first && first.rar !== it.rar));
@@ -372,9 +372,9 @@ var UI = (function () {
   ACT.filter = function (d) { st.filter = d.f; SND.play('click'); hub(); };
   ACT.equipBest = function () { var n = E.equipBest(S().hero); S().inv.forEach(function (i) { i.isNew = false; }); if (n) { SND.play('equip'); toast('⚡ ' + n + ' objet' + (n > 1 ? 's' : '') + ' équipé' + (n > 1 ? 's' : '')); } else toast('Tu portes déjà le meilleur.'); E.save(); keepScroll(hub); };
   ACT.salvageMenu = function () {
-    var a = S().settings.autoSalvage, h = '<h2>Recycler</h2><p class="small dim center">Recycler détruit des objets et donne de l’<span class="ess">💠 Essence</span> pour améliorer les autres. Les objets équipés ou verrouillés 🔒 sont protégés.</p>';
+    var a = S().settings.autoSalvage, h = '<h2>Recycler</h2><p class="small dim center">Recycler détruit des objets et donne de l’<span class="ess">💠 Essence</span> pour améliorer les autres. Les objets équipés, verrouillés 🔒 ou de <span style="color:#6dffb0">◆ set</span> sont protégés.</p>';
     [0, 1, 2, 3].forEach(function (r) {
-      var n = S().inv.filter(function (i) { return i.rar <= r && !i.lock && !E.equippedBy(i.uid); }).length;
+      var n = S().inv.filter(function (i) { return i.rar <= r && !i.lock && !i.set && !E.equippedBy(i.uid); }).length;
       h += '<button class="btn wide" style="margin-bottom:6px" data-act="salvageBelow" data-r="' + r + '">Tout jusqu’à <b class="c' + r + '">&nbsp;' + D.RARITIES[r].name + '</b>&nbsp;(' + n + ')</button>';
     });
     h += '<h3 style="margin-top:10px">Recyclage automatique du butin</h3><div class="filters" style="margin-top:6px">' + [-1, 0, 1, 2].map(function (r) { return '<button class="chip' + (a === r ? ' on' : '') + '" data-act="autoSalv" data-r="' + r + '">' + (r < 0 ? 'Jamais' : '≤ ' + D.RARITIES[r].name) + '</button>'; }).join('') + '</div><div class="btns"><button class="btn" data-act="close">Fermer</button></div>';
@@ -386,7 +386,7 @@ var UI = (function () {
   function itemSheet(it, ctx) {
     var b = E.itemBase(it), p = E.itemParts(it), rar = D.RARITIES[it.rar], uq = it.uq ? E.byId(D.UNIQUES, it.uq) : null;
     var slot = E.byId(D.SLOTS, b.slot), eqBy = E.equippedBy(it.uid), hs = S().heroes[S().hero];
-    var h = '<div class="item-head"><div class="item r' + it.rar + '">' + b.icon + '</div><div class="grow"><h3 class="c' + it.rar + '" style="font-size:17px">' + E.itemName(it) + '</h3><div class="small"><b class="c' + it.rar + '">' + rar.name + '</b> · ' + slot.name + ' · niveau ' + it.ilvl + (it.up ? ' · <span class="gold">+' + it.up + '</span>' : '') + '</div>' + (eqBy ? '<div class="tiny good">Équipé par ' + E.hero(eqBy).name + '</div>' : '') + '</div></div>';
+    var h = '<div class="item-head"><div class="item r' + it.rar + (it.set ? ' set' : '') + '">' + b.icon + '</div><div class="grow"><h3 class="c' + it.rar + '" style="font-size:17px">' + E.itemName(it) + '</h3><div class="small"><b class="c' + it.rar + '">' + rar.name + '</b> · ' + slot.name + ' · niveau ' + it.ilvl + (it.up ? ' · <span class="gold">+' + it.up + '</span>' : '') + '</div>' + (eqBy ? '<div class="tiny good">Équipé par ' + E.hero(eqBy).name + '</div>' : '') + '</div></div>';
     h += '<div class="' + (uq ? 'uq' : '') + '">' + modLines(p.base) + (Object.keys(p.aff).length ? '<div style="border-top:1px solid #ffffff12;margin:4px 0"></div>' + modLines(p.aff) : '') + modLines(p.pw, 'pw') + '</div>';
     if (uq) h += '<div class="lore">« ' + uq.lore + ' »</div>';
     if (it.set) h += setHtml(it.set, E.setCounts(S().hero)[it.set] || 0);
@@ -401,7 +401,8 @@ var UI = (function () {
     else h += '<button class="btn off">Amélioration max</button>';
     if (tc) h += '<button class="btn' + (S().essence >= tc.essence ? '' : ' off') + '" data-act="temper" data-uid="' + it.uid + '">🔥 Retremper niv. ' + tc.target + '<br><span class="tiny">💠 ' + E.fmt(tc.essence) + '</span></button>';
     h += '</div><div class="btns">';
-    if (!eqBy && !it.lock) h += '<button class="btn" data-act="salvage" data-uid="' + it.uid + '">♻️ Recycler (+' + E.fmt(E.salvageValue(it)) + ' 💠)</button>';
+    if (it.set) h += '<div class="tiny center" style="width:100%;color:#6dffb0">◆ Pièce de set : ni recyclable, ni fusionnable.</div>';
+    else if (!eqBy && !it.lock) h += '<button class="btn" data-act="salvage" data-uid="' + it.uid + '">♻️ Recycler (+' + E.fmt(E.salvageValue(it)) + ' 💠)</button>';
     h += '<button class="btn" data-act="close">Fermer</button></div>';
     return h;
   }
