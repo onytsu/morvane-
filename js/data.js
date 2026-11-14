@@ -284,8 +284,28 @@ var DATA = (function () {
     m3: [{ name: 'Poings ardents', desc: 'Embrase la cible et la fait saigner.', fx: { burn: 1, bleed: 1 } },
       { name: 'Frappe finale', desc: 'Termine par un dernier coup à 200 % dégâts.', fx: { again: 2.0 } }]
   };
+  // ---------- Emplacements de dé des pouvoirs (v3.4) : chaque pouvoir s'active en y glissant un dé qui respecte sa condition ----------
+  var NEEDS = {
+    any: { label: '★', txt: 'n’importe quel dé', ok: function () { return true; } },
+    max3: { label: '≤3', txt: 'un dé de 3 ou moins', ok: function (v) { return v <= 3; } },
+    max4: { label: '≤4', txt: 'un dé de 4 ou moins', ok: function (v) { return v <= 4; } },
+    min3: { label: '≥3', txt: 'un dé de 3 ou plus', ok: function (v) { return v >= 3; } },
+    min4: { label: '≥4', txt: 'un dé de 4 ou plus', ok: function (v) { return v >= 4; } },
+    min5: { label: '≥5', txt: 'un dé de 5 ou plus', ok: function (v) { return v >= 5; } },
+    pair: { label: 'PAIR', txt: 'un dé pair (2, 4, 6...)', ok: function (v) { return v % 2 === 0; } },
+    impair: { label: 'IMPAIR', txt: 'un dé impair (1, 3, 5...)', ok: function (v) { return v % 2 === 1; } }
+  };
+  // need : la condition. flat : la valeur du dé ne change rien (pouvoirs d'appui), sinon elle règle la puissance.
+  var SKILL_NEED = {
+    k1: ['max4'], k2: ['min4'], k3: ['pair'], p1: ['impair'], p2: ['pair'], p3: ['min5'],
+    a1: ['max3'], a2: ['impair', 1], a3: ['min4'], n1: ['min3'], n2: ['pair'], n3: ['max3', 1],
+    b1: ['impair'], b2: ['max3', 1], b3: ['min4'], h1: ['min4'], h2: ['max3'], h3: ['pair'],
+    m1: ['impair'], m2: ['pair'], m3: ['min4'], s1: ['min3'], s2: ['pair'], s3: ['min4']
+  };
   HEROES.forEach(function (h) {
     h.skills.forEach(function (k) {
+      var nd = SKILL_NEED[k.id] || ['any']; k.need = nd[0]; k.flat = !!nd[1];
+      k.cd = Math.max(2, Math.round(k.cd * 0.6)); // v3.4 : les pouvoirs se paient en dés, ils reviennent donc plus vite
       var inf = SKILL_INFO[k.id]; k.tags = inf[0]; k.tip = inf[1]; k.calc = inf[2];
       k.evos = EVOS[k.id]; k.evos.forEach(function (v, j) { v.id = k.id + (j ? 'b' : 'a'); v.skill = k.id; });
     });
@@ -361,14 +381,24 @@ var DATA = (function () {
   var FIGS = [
     ['👑', 'Brelan', 'trois valeurs identiques', '+1 action et tous tes coups sont critiques ce tour.'],
     ['✨', 'Suite', 'trois valeurs qui se suivent', 'Ton prochain coup est critique.'],
-    ['🍀', 'Sept chanceux', 'total de 7', 'Tes pouvoirs ne coûtent aucune action ce tour.'],
+    ['🍀', 'Sept chanceux', 'total de 7', 'Ce tour, tes pouvoirs acceptent n’importe quel dé.'],
     ['💥', 'Coup fort', 'total de 15 ou plus', '+40 % dégâts ce tour.'],
     ['🛡️', 'Prudence', 'total de 6 ou moins', '-40 % dégâts subis jusqu’à ton prochain tour.']
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '3.2';
+  var VERSION = '3.4';
   var NEWS = [
+    ['🎲', 'Des pouvoirs à dés', 'Tes pouvoirs ne coûtent plus d’action : ils se lancent en y glissant un dé. Chacun demande un dé précis (≤3, ≥4, PAIR, IMPAIR...), affiché sur son bouton.'],
+    ['💪', 'La valeur compte', 'Plus le dé glissé est fort, plus le pouvoir frappe : 5 = 100 %, 6 = 110 %, 1 = 60 %. Les pouvoirs d’appui se contentent d’un petit dé.'],
+    ['⇅', 'Retourner un dé', 'Une fois par tour, retourne un dé sur sa face opposée : 1↔6, 2↔5, 3↔4. De quoi remplir la condition qui te manque.'],
+    ['🔥', 'Dés enflammés et gelés', 'Embrasé, un de tes dés prend feu : le jouer coûte 3 % de tes PV. Entravé, ton meilleur dé gèle et tombe à 1.'],
+    ['⚔️', 'Deux actions pour frapper', 'Tes 2 actions ⚡ servent à Frapper, Parer, viser un point faible ou renvoyer un crâne. À toi de choisir : un dé sur la table, ou dans un pouvoir ?'],
+    ['📖', 'Une histoire en chapitres', 'Un prologue, six chapitres et un épilogue : découvre ce qui est arrivé à Morvane, à son roi, et qui est la Veilleuse. Les scènes se jouent pendant ta descente.'],
+    ['🕯️', 'La Chronique', 'Au sanctuaire, la carte 📖 Chronique garde toutes les scènes découvertes. Touche un chapitre pour le relire.'],
+    ['🏞️', 'Des décors enfin visibles', 'L’arène montre maintenant les voûtes, les vitraux, la forêt et les forges, avec des accessoires propres à chaque zone.'],
+    ['🔥', 'Sanctuaire et écran-titre', 'La chapelle en ruine, la dernière flamme, la Veilleuse au coin du feu, et la lune rouge sur Morvane.'],
+    ['♟️', 'Plateau illustré', 'Chaque plateau porte le décor de sa zone, et le gardien t’attend sur la dernière case.'],
     ['🎒', 'Sac de dés', 'Chaque héros a son sac de dés : ⚔️ Lame, 🛡️ Garde, ❤️ Sève, ✨ Écho... Tu en pioches 3 par tour et tu les poses sur la table.'],
     ['🔲', 'Table de dés', 'Neuf cases. Un dé posé agit tout de suite. ✨ Écho renforce ses voisins, 🪞 Miroir copie son voisin. Les cases ×2 et +2 changent tout.'],
     ['🎲', 'Figures', 'Trois dés alignés forment une figure : Brelan (+1 action, coups critiques), Suite, Sept chanceux, Coup fort, Prudence.'],
@@ -969,7 +999,7 @@ var DATA = (function () {
     RARITIES: RARITIES, MODS: MODS, HEROES: HEROES, ENEMIES: ENEMIES, ZONES: ZONES, SLOTS: SLOTS, BASES: BASES,
     SETS: SETS, OMENS: OMENS, TALENTS: TALENTS, FAMILIARS: FAMILIARS, MOBFIX: MOBFIX, CONDS: CONDS, ALLIES: ALLIES, CONTRACTS: CONTRACTS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
     PACTS: PACTS, ACHIEVEMENTS: ACHIEVEMENTS, EVENTS: EVENTS, ROOMS: ROOMS, PRIMES: PRIMES, WHEEL: WHEEL, ALTARS: ALTARS,
-    AB_INFO: AB_INFO, GLOSS: GLOSS, DICE: DICE, BAGS: BAGS, FIGS: FIGS, VERSION: VERSION, NEWS: NEWS
+    AB_INFO: AB_INFO, GLOSS: GLOSS, NEEDS: NEEDS, DICE: DICE, BAGS: BAGS, FIGS: FIGS, VERSION: VERSION, NEWS: NEWS
   }
   conv(OUT, 0);
   return OUT;

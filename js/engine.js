@@ -44,7 +44,7 @@
       v: 1, cendres: 0, essence: 0, hero: 'chevalier', heroes: {}, inv: [], nextUid: 1, meta: {}, pacts: [], ach: {},
       stats: { kills: 0, deaths: 0, chests: 0, maxLvl: 0, leg: 0, uni: 0, best: 0, elites: 0, upgrades: 0, epic: 0, runs: 0, heroes: 1, evos: 0, weak: 0, parry: 0, ult: 0, arenes: 0, fusions: 0, maxHit: 0, maxCombo: 0, bossMax: 0, boss1: 0, boss2: 0, boss3: 0, boss4: 0, boss5: 0, boss6: 0, bosses: 0, items: 0, orbs: 0, deflect: 0, minis: 0, primes: 0, bestScore: 0, doubles: 0, glory: 0 },
       settings: { sfx: true, music: true, speed: 1, auto: false, autoSalvage: -1 },
-      idleAt: Date.now(), run: null, tuto: {}, codex: {}, uniq: {}, fam: null, daily: null, pityU: 0, glory: { lvl: 0, pts: 0 }, created: Date.now()
+      idleAt: Date.now(), run: null, tuto: {}, story: {}, codex: {}, uniq: {}, fam: null, daily: null, pityU: 0, glory: { lvl: 0, pts: 0 }, created: Date.now()
     };
     s.heroes.chevalier = { xp: 0, lvl: 1, equip: {}, pacts: [] };
     return s;
@@ -792,6 +792,12 @@
       if (!c.pile.length) break;
       c.hand.push(rollDie(run, c.pile.pop()));
     }
+    c.flips = 1 + (run.stats.diceFlips || 0);
+    // altérations : embrasé, un dé prend feu (le jouer coûte des PV) ; entravé, ton meilleur dé gèle et tombe à 1
+    if (c.hand.length) {
+      if (h.st.burn) pick(c.hand).fire = true;
+      if (h.st.slow > 0) { var top = c.hand.reduce(function (a, b) { return b.v > a.v ? b : a; }); if (top.v > 1) { top.v = 1; top.ice = true; } }
+    }
     ev(c, { k: 'draw', n: c.hand.length });
   }
   // Ce que vaudrait le dé `die` posé sur la case ci (sans rien changer). Le Miroir prend le type et la valeur du plus fort voisin.
@@ -823,7 +829,7 @@
     var a = vals.slice().sort(function (x, y) { return x - y; }), s = a[0] + a[1] + a[2], p = 1 + (st.diceP || 0) / 100, n;
     if (a[0] === a[2]) return { id: 'jackpot', name: 'BRELAN', icon: '👑', ap: 1, crit: 1, desc: '+1 action et tous tes coups sont critiques ce tour.' };
     if (a[1] === a[0] + 1 && a[2] === a[1] + 1) return { id: 'suite', name: 'SUITE', icon: '✨', nextCrit: 1, desc: 'Ton prochain coup est critique.' };
-    if (s === 7) return { id: 'sept', name: 'SEPT CHANCEUX', icon: '🍀', freeSkill: 1, desc: 'Tes pouvoirs ne coûtent aucune action ce tour.' };
+    if (s === 7) return { id: 'sept', name: 'SEPT CHANCEUX', icon: '🍀', freeSkill: 1, desc: 'Ce tour, tes pouvoirs acceptent n’importe quel dé.' };
     if (s >= 15) { n = Math.round(40 * p); return { id: 'fort', name: 'COUP FORT', icon: '💥', dmg: n, desc: '+' + n + ' % dégâts ce tour.' }; }
     if (s <= 6) { n = Math.min(80, Math.round(40 * p)); return { id: 'garde', name: 'PRUDENCE', icon: '🛡️', guard: n, desc: '-' + n + ' % dégâts subis jusqu’à ton prochain tour.' }; }
     return null;
@@ -852,6 +858,7 @@
     var run = S.run, c = run && run.combat;
     if (!c || c.over || c.turn !== 'hero' || !c.hand[hi] || !c.grid[ci] || c.grid[ci].d || c.grid[ci].r === 'seal') return false;
     var die = c.hand.splice(hi, 1)[0], r = dieCalc(c, die, ci);
+    dieBurn(run, c, die);
     c.grid[ci].d = { t: r.t, v: r.v, base: r.base, mir: r.mir }; c.disc.push(die.bi); c.acted = true;
     S.stats.dice = (S.stats.dice || 0) + 1;
     ev(c, { k: 'place', ci: ci, t: r.t, v: r.v, mir: r.mir });
@@ -860,6 +867,30 @@
     if (c.over) finish(run, c); else endIfDone(run, c);
     return true;
   };
+  // Un dé en feu brûle les doigts : le jouer coûte 3 % des PV max (sans jamais tuer)
+  function dieBurn(run, c, die) { if (!die.fire) return; var d = Math.min(run.hp - 1, run.stats.hp * 0.03); if (d >= 1) { run.hp -= d; ev(c, { k: 'hurt', v: d, dot: 'burn' }); } }
+  // Retourne le dé n° hi sur sa face opposée (1↔6, 2↔5, 3↔4) : une fois par tour, sans action
+  E.flipDie = function (hi) {
+    var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || !c.hand[hi] || !(c.flips > 0)) return false;
+    var d = c.hand[hi], f = run.bag[d.bi].f, b = run.stats.diceV || 0, nv = Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b)) + b;
+    if (nv === d.v) return false;
+    c.flips--; d.v = nv; d.ice = false; ev(c, { k: 'flip', hi: hi, v: nv }); return true;
+  };
+  // Le dé n° hi peut-il activer le pouvoir i ? (Sept chanceux : tout dé convient)
+  function fits(run, c, i, hi) {
+    var d = c.hand[hi]; if (!d) return false;
+    return !!(c.dfx && c.dfx.freeSkill) || D.NEEDS[E.hero(run.hero).skills[i].need].ok(d.v);
+  }
+  E.dieFits = function (i, hi) { var run = S.run, c = run && run.combat; return !!c && fits(run, c, i, hi); };
+  // Puissance d'un pouvoir selon la valeur du dé glissé dedans : 5 = 100 %, 6 = 110 %, 1 = 60 %
+  E.diePower = function (v) { return 0.5 + 0.1 * Math.min(9, v); };
+  // Meilleur dé de la main pour le pouvoir i : le plus fort s'il règle la puissance, le plus faible sinon (-1 : aucun)
+  function bestDie(run, c, i) {
+    var flat = E.hero(run.hero).skills[i].flat, best = -1;
+    c.hand.forEach(function (d, hi) { if (!fits(run, c, i, hi)) return; if (best < 0 || (flat ? d.v < c.hand[best].v : d.v > c.hand[best].v) || (d.v === c.hand[best].v && c.hand[best].fire && !d.fire)) best = hi; });
+    return best;
+  }
+  E.bestDie = function (i) { var run = S.run, c = run && run.combat; return c ? bestDie(run, c, i) : -1; };
   // Relance les dés encore en main : un nombre limité de fois par combat
   E.rerollDice = function () {
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || !c.hand.length || c.rerolls <= 0) return false;
@@ -868,7 +899,7 @@
   // Le tour du héros s'arrête quand il n'a plus d'action ET plus de dé à poser
   function endIfDone(run, c) {
     if (c.over || c.turn !== 'hero' || c.hero.ap > 0) return;
-    if (c.hand.length && freeCells(c).length && alive(c).length && !c.nextWave) { ev(c, { k: 'handleft' }); return; }
+    if (c.hand.length && alive(c).length && !c.nextWave && (freeCells(c).length || [0, 1, 2].some(function (i) { return c.hero.cds[i] <= 0 && E.skillUnlocked(run.hero, i) && bestDie(run, c, i) >= 0; }))) { ev(c, { k: 'handleft' }); return; }
     beginFoes(run, c);
   }
   // Ce que l'ennemi e fera à son prochain tour : { k: atk|big|prep|stun|hidden|wait|flee, n, dmg, heal, shield, summon }
@@ -998,7 +1029,7 @@
     var edg = (e.ab.dodge || 0) + (c.cond === 'tenebres' ? 20 : 0);
     if (o.auto && edg && !e.st.stun && rnd() * 100 < edg) { ev(c, { k: 'miss', id: e.id }); return 0; }
     var dmg = o.flat != null ? o.flat : st.atk * mult, crit = false;
-    if (o.skill) dmg *= (1 + st.pow / 100) * (1 + (st['s' + o.skill + 'P'] || 0) / 100);
+    if (o.skill) dmg *= (1 + st.pow / 100) * (1 + (st['s' + o.skill + 'P'] || 0) / 100) * (c.pw || 1);
     if (!o.dot) {
       if (o.crit || (!o.noCrit && (rnd() * 100 < st.crit || (c.dfx && c.dfx.crit && c.turn === 'hero')))) { crit = true; dmg *= st.critd / 100; }
       if (c.dfx && c.dfx.dmg && c.turn === 'hero') dmg *= 1 + c.dfx.dmg / 100;
@@ -1235,17 +1266,22 @@
     });
     return out;
   };
-  E.useSkill = function (i) {
-    var run = S.run, c = run && run.combat; if (!c || c.over) return false;
-    var h = c.hero, st = run.stats; if (!canAct(c) || h.cds[i] > 0 || !E.skillUnlocked(run.hero, i)) return false;
+  // Un pouvoir s'active en y glissant le dé n° hi de la main (sans hi : le meilleur dé qui convient). Il ne coûte aucune action.
+  E.useSkill = function (i, hi) {
+    var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero') return false;
+    var h = c.hero, st = run.stats; if (h.cds[i] > 0 || !E.skillUnlocked(run.hero, i)) return false;
     var sk = E.hero(run.hero).skills[i], e = target(c); if (!e) return false;
+    if (hi == null) hi = bestDie(run, c, i);
+    if (!fits(run, c, i, hi)) return false;
+    var die = c.hand.splice(hi, 1)[0], pw = sk.flat ? 1 : E.diePower(die.v); c.disc.push(die.bi); c.pw = pw;
+    S.stats.dice = (S.stats.dice || 0) + 1; ev(c, { k: 'slot', i: i, t: die.t, v: die.v, pw: pw }); dieBurn(run, c, die);
     var others = alive(c).filter(function (x) { return x !== e; }), all = alive(c);
     h.cds[i] = E.skillCd(run, i); ug(run, 5); bump(run, 'skills');
     ev(c, { k: 'skill', i: i, id: sk.id, sfx: sk.sfx, name: sk.name });
     switch (sk.id) {
       case 'k1': hit(run, c, e, 1.8, { skill: 1 }); stun(c, e, 1.5); break;
       case 'k2': hit(run, c, e, 3.5, { skill: 2 }); heroHeal(run, c, st.hp * 0.10); break;
-      case 'k3': h.shield = Math.max(h.shield, st.hp * 0.30 * (1 + st.pow / 200)); h.shieldT = 6; h.buffs.thorns = { t: 6, v: 1 }; break;
+      case 'k3': h.shield = Math.max(h.shield, st.hp * 0.30 * pw * (1 + st.pow / 200)); h.shieldT = 6; h.buffs.thorns = { t: 6, v: 1 }; break;
       case 'p1': hit(run, c, e, 2.2, { skill: 1 }); applyDot(run, e, 'burn'); others.forEach(function (x) { hit(run, c, x, 0.9, { skill: 1 }); applyDot(run, x, 'burn'); }); break;
       case 'p2': all.forEach(function (x) { hit(run, c, x, 1.7, { skill: 2 }); applyDot(run, x, 'burn'); }); break;
       case 'p3': hit(run, c, e, e.st.burn ? 6.4 : 4.0, { skill: 3 }); h.buffs.spd = { t: 5, v: 50 }; break;
@@ -1262,17 +1298,18 @@
       case 'h2': hit(run, c, e, 1.5, { skill: 2 }); stun(c, e, 2); if (!e.dead) applyDot(run, e, 'bleed'); break;
       case 'h3': for (var hn = 0; hn < 5; hn++) { var hal = alive(c); if (!hal.length) break; hit(run, c, pick(hal), 0.75, { skill: 3 }); } break;
       case 'm1': hit(run, c, e, 1.7, { skill: 1 }); stun(c, e, 0.8); break;
-      case 'm2': heroHeal(run, c, st.hp * 0.15 * (1 + st.pow / 200)); delete h.st.poison; delete h.st.burn; delete h.st.bleed; h.elan = 10; break;
+      case 'm2': heroHeal(run, c, st.hp * 0.15 * pw * (1 + st.pow / 200)); delete h.st.poison; delete h.st.burn; delete h.st.bleed; h.elan = 10; break;
       case 'm3': for (var mn = 0; mn < 6; mn++) { var mt = target(c); if (!mt) break; hit(run, c, mt, 0.6, { skill: 3 }); h.elan = Math.min(10, (h.elan || 0) + 1); } break;
       case 's1': hit(run, c, e, 1.9, { skill: 1 }); if (!e.dead) e.st.weak = 4; break;
-      case 's2': heroHeal(run, c, st.hp * 0.25 * (1 + st.pow / 200)); delete h.st.poison; delete h.st.burn; delete h.st.bleed; delete h.st.weak; break;
+      case 's2': heroHeal(run, c, st.hp * 0.25 * pw * (1 + st.pow / 200)); delete h.st.poison; delete h.st.burn; delete h.st.bleed; delete h.st.weak; break;
       case 's3': all.forEach(function (x) { hit(run, c, x, 0, { skill: 3, flat: st.hp * 0.30, noCrit: true }); stun(c, x, 1); }); break;
     }
     evoFx(run, c, i, e);
     if (st.skillHeal) heroHeal(run, c, st.hp * st.skillHeal / 100);
     if (st.skillEcho && h.cds[i] > 0.5 && rnd() * 100 < st.skillEcho) { h.cds[i] = 0.5; ev(c, { k: 'free', i: i }); }
+    c.pw = 1;
     if (c.over) finish(run, c);
-    if (c.dfx && c.dfx.freeSkill) { c.acted = true; endIfDone(run, c); } else spend(run, c);
+    c.acted = true; endIfDone(run, c);
     return true;
   };
   function ug(run, n) { run.ult = Math.min(100, (run.ult || 0) + n * (1 + (run.stats.ultP || 0) / 100) * (run.combat && run.combat.cond === 'silence' ? 2 : 1)); }
@@ -1321,9 +1358,6 @@
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero') return false;
     var h = c.hero, hero = E.hero(run.hero), frac = run.hp / run.stats.hp;
     var charging = c.enemies.some(function (e) { return !e.dead && e.charge; });
-    autoPlace(run, c); if (c.over || c.turn !== 'hero') return true;
-    if (h.ap <= 0) return E.pass();
-    frac = run.hp / run.stats.hp;
     if (frac < 0.35 && run.potions > 0) E.usePotion();
     if ((run.ult || 0) >= 100 && (frac < 0.6 || alive(c).length > 1 || c.boss || c.round > 2)) { E.useUlt(); if (c.over || c.turn !== 'hero') return true; }
     for (var i = 0; i < 3; i++) {
@@ -1334,8 +1368,12 @@
       if ((id === 's2' || id === 'k3') && frac > 0.7) continue;
       if (id === 'b2' && frac < 0.25) continue;
       if (id === 'a3') { var t = target(c); if (t && t.hp / t.maxhp > 0.35 && !t.boss && alive(c).length > 1) continue; }
-      if (E.useSkill(i)) return true;
+      var hi = bestDie(run, c, i);
+      if (hi < 0 && c.flips > 0) { for (var fj = 0; fj < c.hand.length && hi < 0; fj++) { var fd = c.hand[fj], ff = run.bag[fd.bi].f, fb = run.stats.diceV || 0; if (!fd.ice && D.NEEDS[hero.skills[i].need].ok(Math.max(1, ff[0] + ff[5] - (fd.v - fb)) + fb) && E.flipDie(fj)) hi = fj; } }
+      if (hi >= 0 && E.useSkill(i, hi)) return true;
     }
+    autoPlace(run, c); if (c.over || c.turn !== 'hero') return true;
+    if (h.ap <= 0) return E.pass();
     if (h.parryCd <= 0 && c.enemies.some(function (e) { return !e.dead && e.charge; })) { if (E.parry()) return true; }
     return E.strike();
   };

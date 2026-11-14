@@ -616,10 +616,153 @@ function z6() {
 }
 
 /* ---------- finition : vignette, plafond de luminosite du sol, tramage ---------- */
+/* ================= SANCTUAIRE : chapelle en ruine ou brule la derniere flamme ================= */
+function zCamp() {
+  srand(4242);
+  var x, y, k, c, i;
+  function wallTop(x) { return Math.round(9 + 9 * vn(x / 9, 0.5, 31) + (x > 30 && x < 66 ? -5 : 0) + (x < 12 ? 10 * (1 - x / 12) : 0)); }
+  function inWin(x, y) { var dx = x - 48; if (y > 70 || y < 28) return false; if (y >= 46) return Math.abs(dx) <= 11; var dy = y - 46; return dx * dx + dy * dy * 0.42 <= 124; }
+  for (y = 0; y < GY; y++) for (x = 0; x < W; x++) {
+    var sky = mix([7, 8, 22], [30, 24, 52], y / 70), n = fbm(x / 18, y / 9, 41);
+    sky = mix(sky, [52, 40, 78], cl((n - 0.55) * 1.6, 0, 0.5));
+    if (y >= wallTop(x) && !inWin(x, y)) {
+      var row = Math.floor(y / 5), off = (row & 1) * 5, bx = Math.floor((x + off) / 10);
+      var l = 0.8 + hash(bx, row, 3) * 0.34 + (fbm(x / 5, y / 5, 8) - 0.5) * 0.4;
+      if ((y % 5) === 0 || ((x + off) % 10) === 0) l *= 0.66;
+      c = [47 * l, 40 * l, 50 * l];
+      if (y - wallTop(x) < 2) c = sc(c, 1.35);
+      if (inWin(x, y + 2) || inWin(x - 2, y) || inWin(x + 2, y)) c = sc([78, 68, 84], 0.85 + hash(Math.floor(y / 3), x < 48 ? 0 : 1, 6) * 0.3);
+      c = sc(c, 0.55 + 0.45 * y / GY);
+    } else c = sky;
+    px(x, y, c);
+  }
+  clipB = GY;
+  /* etoiles et lune dans la breche et le vitrail brise */
+  for (k = 0; k < 70; k++) { x = ri(0, 95); y = ri(0, 66); if (y < wallTop(x) || inWin(x, y)) px(x, y, [200, 205, 240], rr(0.25, 0.9)); }
+  glow(54, 39, 12, 12, [60, 66, 110], 0.8); ell(54, 39, 4, 4, [214, 220, 240]); ell(52.6, 37.6, 1, 1, [170, 178, 205]); px(56, 41, [170, 178, 205]);
+  /* remplage brise du vitrail */
+  var st = [70, 62, 78], sd = [30, 26, 36];
+  for (y = 30; y <= 70; y++) { if (y < 52 || y > 58) { px(48, y, st); px(49, y, sd); } }
+  bez(48, 46, 42, 38, 38, 46, st, 1); bez(48, 46, 54, 38, 59, 46, st, 1); line(37, 58, 44, 58, st); line(53, 60, 59, 60, st);
+  var gl = [[40, 49, [120, 40, 50]], [42, 52, [50, 70, 130]], [56, 50, [140, 110, 40]], [57, 64, [50, 70, 130]], [39, 66, [120, 40, 50]], [44, 62, [60, 110, 80]]];
+  for (k = 0; k < gl.length; k++) rect(gl[k][0], gl[k][1], 3, 3, gl[k][2], 0.75);
+  rect(35, 71, 27, 1, [86, 76, 92]); rect(34, 72, 29, 2, [52, 45, 58]);
+  /* piliers */
+  for (k = 0; k < 2; k++) {
+    var cx = k ? 73 : 22, tp = wallTop(cx) + 3;
+    for (y = tp; y < GY; y++) for (i = -3; i <= 3; i++) { var sh = 0.72 + 0.28 * (k ? (i + 3) / 6 : (3 - i) / 6) + (fbm((cx + i) / 3, y / 6, 12) - 0.5) * 0.2; px(cx + i, y, sc([70, 61, 74], sh * (0.6 + 0.4 * y / GY))); }
+    rect(cx - 5, 30, 11, 1, [96, 85, 100]); rect(cx - 4, 31, 9, 2, [62, 54, 66]); rect(cx - 5, 76, 11, 1, [90, 80, 94]); rect(cx - 6, 77, 13, 3, [58, 50, 62]);
+    line(cx - 1, tp + 4, cx - 2, tp + 14, [28, 24, 32], 0.7);
+  }
+  /* bannieres dechirees */
+  function banner(bx, c1, c2) {
+    rect(bx - 1, 33, 9, 1, [96, 80, 50]);
+    for (y = 34; y < 60; y++) for (i = 0; i < 7; i++) { if (y > 54 && hash(bx + i, y, 77) < (y - 54) / 7) continue; px(bx + i, y, sc(c1, 0.75 + 0.25 * Math.sin(i * 0.9 + y * 0.25) + (i === 0 || i === 6 ? -0.2 : 0))); }
+    ring(bx + 3, 42, 2, 2, c2); px(bx + 3, 42, c2); line(bx + 3, 46, bx + 3, 50, c2); px(bx + 2, 48, c2); px(bx + 4, 48, c2);
+  }
+  banner(6, [110, 28, 38], [200, 160, 80]); banner(83, [110, 28, 38], [200, 160, 80]);
+  /* lierre */
+  for (k = 0; k < 5; k++) { x = [14, 30, 64, 79, 90][k]; y = wallTop(x); var len = ri(8, 20); for (i = 0; i < len; i++) { px(x, y + i, [34, 62, 40], 0.9); if (rnd() < 0.5) px(x + (rnd() < 0.5 ? -1 : 1), y + i, [50, 86, 52], 0.9); if (rnd() < 0.3) x += rnd() < 0.5 ? -1 : 1; } }
+  /* etagere a bougies, a gauche */
+  rect(4, 66, 13, 1, [96, 84, 70]); rect(5, 67, 11, 1, [50, 42, 40]);
+  var cd = [[6, 62], [9, 60], [13, 63]];
+  for (k = 0; k < 3; k++) { rect(cd[k][0], cd[k][1], 1, 66 - cd[k][1], [226, 218, 196]); px(cd[k][0], cd[k][1] - 1, [255, 214, 120]); px(cd[k][0], cd[k][1] - 2, [255, 150, 60], 0.8); glow(cd[k][0], cd[k][1] - 1, 7, 7, [120, 70, 24], 0.6); }
+  light(10, 62, 20, 18, 0.7); light(80, 84, 44, 40, 0.9);
+  clipB = H;
+  /* dalles rechauffees par le feu */
+  ground(60, function (x, y, u, v, t) {
+    var q = tile(u, v, 3.0, 190, true), l = 0.74 + hash(q.ix, q.iz, 19) * 0.4 + (fbm(q.wx * 3, q.z * 3, 23) - 0.5) * 0.4;
+    var c = [40 * l, 34 * l, 40 * l];
+    if (q.fx < q.ex * 1.05 || q.fz < q.ez * 1.05) c = sc(c, 0.5); else if (q.fz > 1 - q.ez * 1.2) c = sc(c, 1.2);
+    return mix(c, [58, 46, 52], 0.5 * Math.pow(1 - t, 3));
+  });
+  clipT = GY;
+  /* rayon de lune tombe du vitrail */
+  poly([40, 80, 57, 80, 66, 124, 26, 124], [70, 84, 140], 0.13); poly([44, 80, 53, 80, 56, 108, 38, 108], [110, 124, 180], 0.1);
+  /* herbes, gravats */
+  for (k = 0; k < 16; k++) { x = ri(2, 93); y = ri(82, 140); if (Math.abs(x - 79) < 12 && Math.abs(y - 90) < 8) continue; px(x, y, [44, 70, 44], 0.9); px(x, y - 1, [60, 96, 56], 0.8); if (rnd() < 0.5) px(x + 1, y - 2, [60, 96, 56], 0.7); }
+  for (k = 0; k < 9; k++) { x = ri(2, 93); y = ri(82, 136); if (Math.abs(x - 79) < 12 && Math.abs(y - 90) < 8) continue; rect(x, y, ri(2, 3), 1, [74, 66, 78]); px(x, y - 1, [96, 86, 100]); px(x + 1, y + 1, [14, 12, 16], 0.6); }
+  /* paillasse et paquetage, a gauche */
+  rect(8, 99, 16, 3, [86, 60, 44]); rect(8, 99, 16, 1, [120, 86, 60]); rect(7, 98, 4, 4, [140, 128, 106]); rect(9, 102, 15, 1, [20, 14, 14], 0.7);
+  /* foyer : cercle de pierres, buches, braises */
+  glow(79, 90, 40, 20, [120, 54, 14], 0.9); glow(79, 89, 16, 9, [150, 80, 20], 0.8);
+  for (k = 0; k < 10; k++) { var an = k / 10 * Math.PI * 2, sx = 79 + Math.cos(an) * 8, sy = 91 + Math.sin(an) * 3.2; rect(Math.round(sx) - 1, Math.round(sy), 2, 2, sc([96, 86, 92], 0.8 + hash(k, 1, 5) * 0.4)); px(Math.round(sx) - 1, Math.round(sy), [150, 120, 100]); }
+  line(74, 91, 83, 89, [70, 44, 28], 1, 2); line(75, 89, 84, 92, [58, 36, 24], 1, 2); line(77, 92, 81, 88, [84, 54, 32]);
+  rect(77, 89, 5, 2, [255, 150, 50]); rect(78, 89, 3, 1, [255, 226, 130]); px(76, 91, [220, 80, 30]); px(82, 91, [220, 80, 30]);
+  clipT = 0;
+  mist(81, 10, [80, 66, 96], 0.22, 27);
+}
+
+/* ================= TITRE : la chapelle de Morvane sous la lune rouge ================= */
+function zTitle() {
+  srand(777);
+  var x, y, k, c, i;
+  function far(x) { return 72 - 10 * fbm(x / 16, 2, 51) - 4 * vn(x / 5, 1, 53); }
+  function hill(x) { var a = (x - 22) / 26; return 81 - 15 * Math.exp(-a * a) - 2 * vn(x / 7, 3, 57); }
+  for (y = 0; y < GY + 4; y++) for (x = 0; x < W; x++) {
+    c = mix([6, 5, 14], [34, 10, 24], Math.pow(y / 84, 1.6)); c = mix(c, [84, 24, 34], Math.pow(cl((y - 40) / 44, 0, 1), 2.4) * 0.8);
+    var n = fbm(x / 20 + 5, y / 5, 61); c = mix(c, [54, 18, 34], cl((n - 0.5) * 2.2, 0, 0.55) * cl(y / 30, 0.3, 1));
+    px(x, y, c);
+  }
+  clipB = GY + 4;
+  for (k = 0; k < 46; k++) px(ri(0, 95), ri(0, 40), [220, 200, 210], rr(0.2, 0.8));
+  /* lune de sang */
+  glow(48, 42, 44, 44, [90, 16, 22], 0.9); glow(48, 42, 28, 28, [110, 24, 26], 0.7);
+  for (y = 20; y <= 64; y++) for (x = 26; x <= 70; x++) if (inE(x, y, 48, 42, 21, 21)) {
+    var dx = (x - 48) / 21, dy = (y - 42) / 21, d = Math.sqrt(dx * dx + dy * dy), m = fbm(x / 6, y / 6, 71);
+    c = mix([214, 86, 64], [150, 34, 40], cl(d * d * 0.9 + (dx - dy) * 0.25, 0, 1)); c = sc(c, 0.82 + m * 0.36);
+    if (m > 0.62) c = sc(c, 0.78);
+    px(x, y, c);
+  }
+  ell(40, 36, 3, 2, [150, 44, 44], 0.6); ell(55, 49, 4, 3, [140, 38, 42], 0.55); ell(52, 31, 2, 1, [150, 44, 44], 0.5); ell(41, 50, 2, 2, [140, 38, 42], 0.5);
+  /* nuages devant la lune */
+  for (y = 44; y < 60; y++) for (x = 14; x < 86; x++) { var q = fbm(x / 14, y / 3, 81); if (q > 0.56) px(x, y, [30, 9, 20], cl((q - 0.56) * 5, 0, 0.75)); }
+  /* cretes lointaines */
+  for (x = 0; x < W; x++) for (y = Math.round(far(x)); y < GY + 4; y++) px(x, y, mix([44, 14, 28], [26, 10, 22], (y - far(x)) / 14));
+  /* colline et chapelle */
+  var dk = [11, 7, 14], rim = [86, 30, 38];
+  for (x = 0; x < W; x++) { var hy = Math.round(hill(x)); for (y = hy; y < GY + 4; y++) px(x, y, dk); px(x, hy, rim, 0.35); }
+  var by = Math.round(hill(24));
+  rect(15, by - 11, 17, 12, dk); poly([13, by - 11, 23, by - 19, 33, by - 11], dk);                       /* nef */
+  rect(27, by - 27, 7, 28, dk); poly([26, by - 27, 30, by - 37, 35, by - 27], dk);                        /* clocher */
+  line(30, by - 43, 30, by - 37, dk); line(28, by - 41, 32, by - 41, dk);                                 /* croix */
+  rect(29, by - 24, 3, 4, [70, 22, 30]); px(30, by - 25, [70, 22, 30]);                                   /* abat-son : la lune au travers */
+  rect(13, by - 12, 3, 2, [11, 7, 14]); px(14, by - 14, dk); px(16, by - 13, dk);                         /* pignon effondre */
+  line(33, by - 27, 33, by - 2, rim, 0.4); line(31, by - 11, 31, by - 2, rim, 0.22);
+  rect(20, by - 7, 2, 4, [255, 190, 90]); px(20, by - 8, [255, 190, 90]); px(21, by - 8, [255, 150, 60]); /* la derniere flamme */
+  glow(21, by - 5, 9, 9, [150, 80, 20], 0.9); glow(21, by - 5, 4, 4, [200, 130, 40], 0.7);
+  rect(23, by - 4, 3, 5, [5, 3, 7]);
+  /* arbres morts */
+  tree(80, 86, -Math.PI / 2 - 0.12, 30, 3, 3, dk, 1); tree(66, 84, -Math.PI / 2 + 0.2, 15, 2, 2, [16, 9, 18], 1); tree(4, 84, -Math.PI / 2 + 0.25, 20, 2, 3, dk, 1);
+  for (k = 0; k < 4; k++) { x = [74, 86, 70, 90][k]; y = [66, 62, 70, 72][k]; line(x, y, x, y + 5 + k, [10, 6, 12]); ring(x, y + 7 + k, 1, 2, [10, 6, 12]); }
+  clipB = H;
+  /* lande et chemin qui descend */
+  ground(64, function (x, y, u, v, t) {
+    var l = 0.7 + fbm(x / 7, y / 3, 91) * 0.6, c = [20 * l, 12 * l, 20 * l];
+    var pc = 48 - 20 * Math.pow(1 - t, 2.2) + 9 * Math.sin(t * 5), pw = 2 + 13 * t, dxp = Math.abs(x - pc);
+    if (dxp < pw) c = mix(c, [58 * l, 34 * l, 40 * l], cl(1 - dxp / pw, 0, 1) * 0.8);
+    return mix(c, [64, 22, 34], 0.45 * Math.pow(1 - t, 4));
+  });
+  clipT = GY;
+  /* tombes et croix */
+  function tomb(tx, ty, s) {
+    var hh = 4 * s, ww = 3 * s;
+    rect(tx, ty - hh, ww, hh, [16, 10, 18]); rect(tx + 1, ty - hh - 1, ww - 2, 1, [16, 10, 18]); line(tx + ww - 1, ty - hh, tx + ww - 1, ty - 1, rim, 0.4); rect(tx - 1, ty, ww + 2, 1, [6, 4, 8], 0.8);
+    if (s > 1) { line(tx + 2, ty - hh + 2, tx + ww - 3, ty - hh + 2, [40, 22, 34]); line(tx + 2, ty - hh + 4, tx + ww - 4, ty - hh + 4, [40, 22, 34]); }
+  }
+  function cross(tx, ty, s) { rect(tx, ty - 6 * s, s, 6 * s, [16, 10, 18]); rect(tx - 2 * s, ty - 4 * s, 5 * s, s, [16, 10, 18]); px(tx + s - 1, ty - 6 * s, rim, 0.5); rect(tx - 1, ty, s + 2, 1, [6, 4, 8], 0.8); }
+  tomb(10, 92, 1); cross(22, 90, 1); tomb(70, 94, 1); cross(84, 97, 1); tomb(60, 88, 1);
+  tomb(6, 112, 2); cross(88, 118, 2); tomb(72, 126, 2); cross(14, 132, 2); tomb(30, 100, 1);
+  for (k = 0; k < 26; k++) { x = ri(0, 95); y = ri(84, 142); px(x, y, [30, 16, 26]); px(x, y - 1, [46, 22, 34], 0.8); }
+  clipT = 0;
+  mist(84, 12, [110, 40, 54], 0.34, 97); mist(120, 14, [40, 16, 30], 0.3, 99, 30);
+}
+
 var BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 var ZONES = [null,
   { fn: z1, gain: 1, cap: 60 }, { fn: z2, gain: 1, cap: 58 }, { fn: z3, gain: 1, cap: 60 },
   { fn: z4, gain: 1, cap: 64 }, { fn: z5, gain: 1.22, cap: 60 }, { fn: z6, gain: 1.18, cap: 62 }];
+ZONES.camp = { fn: zCamp, gain: 1.12, cap: 96 }; ZONES.title = { fn: zTitle, gain: 1.1, cap: 90 };
 function render(id) {
   var z = ZONES[id], x, y, i, k;
   buf = new Float32Array(W * H * 3); clipT = 0; clipB = H;
@@ -646,7 +789,7 @@ function render(id) {
 /* ---------- API ---------- */
 var pxCache = {}, urlCache = {};
 var EMPTY = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-function norm(id) { id = +id; return (id >= 1 && id <= 6 && Math.floor(id) === id) ? id : 1; }
+function norm(id) { if (id === 'camp' || id === 'title') return id; id = +id; return (id >= 1 && id <= 6 && Math.floor(id) === id) ? id : 1; }
 function pixels(id) { id = norm(id); if (!pxCache[id]) pxCache[id] = render(id); return pxCache[id]; }
 function url(id) {
   id = norm(id);
