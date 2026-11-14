@@ -1070,3 +1070,17 @@ img.dgl { display: inline-block; width: 20px; height: 20px; image-rendering: pix
 
 /* --- v3.11 : plus aucun emoji, chaque emoji devient une icône pixel --- */
 img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.24em; image-rendering: pixelated; image-rendering: crisp-edges; pointer-events: none; }
+/* v4.0 : la main de dés et le compteur de figure du tour */
+.dhand .tdie { width: 50px; height: 50px; } .dhand .tdie i .dg { width: 22px; height: 22px; } .dhand .tdie b { font-size: 20px; }
+.tdie.up b { color: #b6ffc4; text-shadow: 2px 2px 0 #0a070d, 0 0 8px #5dff88; }
+.dfig-w { flex: none; width: 92px; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 4px 5px; border: 8px solid transparent; border-image: var(--fr-iron) 4 / 8px / 0 stretch; image-rendering: pixelated; border-radius: 0; background: #07050a; background-clip: padding-box; color: inherit; font: inherit; }
+.dfig-w .dlab { margin-bottom: 0; }
+.dslots { display: flex; gap: 3px; }
+.dslots i { width: 22px; height: 24px; display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 800; font-size: 14px; color: #fff; background: #15101d; box-shadow: inset 2px 2px 0 #000, inset -1px -1px 0 #ffffff14; }
+.dslots i.on { background: #3a2c4e; box-shadow: inset 2px 2px 0 #ffffff33, inset -2px -2px 0 #0006; text-shadow: 1px 1px 0 #000; animation: pop .25s backwards; }
+.dfig { height: 14px; font-size: 10px; line-height: 14px; white-space: nowrap; color: #7d7090; font-family: var(--serif); letter-spacing: .06em; }
+.dfig b { color: #ffe2a0; font-size: 11px; } .dfig b.k-jackpot { color: #ffd87a; text-shadow: 0 0 6px #f2bd5e; } .dfig b.k-suite { color: #ffe08a; } .dfig b.k-paire { color: #c9b8ff; }
+.dfig .maybe { color: #b7aac6; }
+.dfig-w.lit { box-shadow: 0 0 0 2px #ffe08a, 0 0 16px #f2bd5e; }
+.cdice.k-paire { border-color: #c9b8ff99; }
+@media (max-width: 360px) { .dfig-w { width: 80px; } .dslots i { width: 19px; } .dhand .tdie { width: 44px; height: 44px; } }

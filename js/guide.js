@@ -11,11 +11,12 @@ UI.guide = (function () {
     { s: '#aps', t: 'Tes actions', x: 'Ces deux losanges d’or sont tes <b>actions</b>. Frapper ou parer en coûte une.' },
     { s: '#bstrike', t: 'Frapper', x: 'Ta lame contre l’ennemi visé.<br>Quand un ennemi baisse sa garde, ce bouton se couvre d’<b class="g-y">or</b> et devient <b class="g-y">Critique</b>. Ne laisse pas passer ta chance.' },
     { s: '#bparry', t: 'Parer', x: 'Quand un ennemi rassemble ses forces pour un grand coup, ce bouton s’embrase de <b class="g-c">bleu</b>.<br>Pare à cet instant : le coup est brisé, et tu ripostes.' },
-    { s: '#dtray', t: 'Tes dés', x: 'À chaque tour, tu tires <b>trois dés</b> de ton sac. Touche un dé de ta main, puis une case de la table : il agit aussitôt, et ne coûte rien. La ligne du haut te dit toujours quoi faire.' },
+    { s: '#dhand', t: 'Tes dés', x: 'À chaque tour, tu tires <b>trois dés</b> de ton sac. Touche un dé pour le choisir, <b>retouche-le pour le jouer</b> : il agit aussitôt, et ne coûte rien. La ligne du haut te dit toujours ce qu’il fera.' },
+    { s: '#dfigw', t: 'Les figures', x: 'Les <b>trois premiers dés</b> que tu joues dans un tour s’inscrivent ici. Deux pareils font une <b>Paire</b>, trois qui se suivent une <b>Suite</b>, trois pareils un <b>Brelan</b>. Plus la figure est rare, plus elle paie.' },
     { s: '.skills', t: 'Tes pouvoirs', x: 'Tes pouvoirs se nourrissent d’un dé, pas d’une action. L’étiquette dit lequel ils réclament. Quand ton dé convient, le cadre <b class="g-g">s’illumine</b>.' },
     { s: '#tpass', t: 'Fin du tour', x: 'Quand tu as tout joué, rends la main. Les ennemis agiront.' },
     { s: '[data-act=runMenu]', t: 'Le menu', x: 'L’aide, la vitesse, le jeu automatique et la posture dorment ici. Tu pourras m’y rappeler.' },
-    { t: 'Va, maintenant', x: 'Frappe juste, pose tes dés… et <b class="g-c">guette la lueur bleue</b>.', btn: 'Au combat' }
+    { t: 'Va, maintenant', x: 'Frappe juste, joue tes dés… et <b class="g-c">guette la lueur bleue</b>.', btn: 'Au combat' }
   ];
   // Rappels qui apparaissent une seule fois, au bon moment
   var ONCE = {

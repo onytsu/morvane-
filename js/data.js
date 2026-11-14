@@ -110,7 +110,7 @@ var DATA = (function () {
       skills: [
         { id: 'n1', name: "Première Pelletée", icon: '', cd: 6, sfx: 'skill_dark', desc: "200 % dégâts et relève un serviteur. Si ton armée est déjà pleine, tu pioches un dé." },
         { id: 'n2', name: "Dîme des Morts", icon: '', cd: 10, sfx: 'skill_dark', desc: "190 % dégâts, +30 % par serviteur. Te soigne d’autant." },
-        { id: 'n3', name: "Exhumation", icon: '', cd: 20, sfx: 'skill_dark', desc: "Ton armée se relève au complet et frappe 3 fois plus vite pendant 3 tours. Les dés de la table sont enterrés : +5 % d’ultime chacun." }
+        { id: 'n3', name: "Exhumation", icon: '', cd: 20, sfx: 'skill_dark', desc: "Ton armée se relève au complet et frappe 3 fois plus vite pendant 3 tours. Tu pioches un dé de plus et ton ultime se charge de 10 %." }
       ],
       boons: [
         { id: 'c_n1', name: 'Fosse commune', rar: 2, desc: '+1 serviteur maximum.', mods: { skel: 1 } },
@@ -139,7 +139,7 @@ var DATA = (function () {
       id: 'pretresse', name: 'Séraphine', title: 'Sainte Hérétique', role: 'Soutien — immortelle',
       desc: 'Se soigne sans cesse. Ses PV sont son arme.',
       base: { hp: 125, atk: 9, def: 5, spd: 1.0, crit: 5 },
-      passive: { name: "Grâce Impie", desc: "Régénère 1 % PV par seconde, et les soins en trop deviennent un bouclier. Chaque dé pair posé sur la table te soigne de 2 % PV.", mods: { regen: 1 } },
+      passive: { name: "Grâce Impie", desc: "Régénère 1 % PV par seconde, et les soins en trop deviennent un bouclier. Chaque dé pair joué te soigne de 2 % PV.", mods: { regen: 1 } },
       unlock: { boss: 4 }, start: {},
       skills: [
         { id: 's1', name: "Stigmate", icon: '', cd: 6, sfx: 'skill_holy', desc: "190 % dégâts, affaiblit la cible 2 tours (-25 % attaque) et te soigne de 5 % PV." },
@@ -215,7 +215,7 @@ var DATA = (function () {
     a3: [['Très gros dégâts', 'Achève', '+1 action'], "Attends que la cible passe sous 35 % PV : s’il la tue, tu rejoues.", [['dmg', 3.0, 1], ['dmg', 7.5, 1, 'sous 35 % PV']]],
     n1: [['Dégâts', 'Serviteur', 'Dés'], "Chaque lancer ajoute un squelette. Armée pleine : il te donne un dé.", [['dmg', 2.0]]],
     n2: [['Dégâts', 'Soin'], "Plus ton armée est grande, plus il frappe et soigne.", [['dmg', 1.9, 1, 'sans serviteur']]],
-    n3: [['Serviteurs', 'Rafale', 'Ultime'], "Remplis d’abord la table de dés : chacun enterré charge ton ultime.", []],
+    n3: [['Serviteurs', 'Rafale', 'Ultime'], "Lance-le tôt dans le tour : le dé pioché peut compléter ta figure.", []],
     b1: [['Dégâts', 'Saignement'], "Sous la moitié de tes PV, il frappe deux fois.", [['dmg', 2.0]]],
     b2: [['Vitesse', 'Vol de vie', '+1 action', 'Coûte des PV'], "Te rend une action : lance-le en début de tour, puis frappe.", []],
     b3: [['Zone', 'Soin', 'Saignement'], "Fais d’abord saigner tout le monde : les loups mordent 50 % plus fort.", [['dmg', 2.2, 1, 'à chaque ennemi'], ['dmg', 3.3, 1, 'sur ceux qui saignent'], ['heal', 5, 'par ennemi touché']]],
@@ -331,8 +331,8 @@ var DATA = (function () {
   // ---------- Lexique : tous les mots du jeu, expliqués ----------
   var GLOSS = [
     ['🎒', 'Sac de dés', 'Les dés de ton héros pour cette descente. Tu en pioches 3 par tour ; quand le sac est vide, il est remélangé. Élites, boss et un combat sur trois t’offrent un dé.'],
-    ['🔲', 'Table de dés', 'Les 9 cases où tu poses tes dés. Un dé posé agit tout de suite et ne coûte aucune action. La table est purgée quand elle est pleine.'],
-    ['🎲', 'Figure', 'Trois dés alignés sur la table : Brelan, Suite, Sept chanceux, Coup fort ou Prudence, selon leurs valeurs.'],
+    ['🔲', 'Jouer un dé', 'Touche un dé de ta main, puis retouche-le : il agit tout de suite et ne coûte aucune action.'],
+    ['🎲', 'Figure', 'Les 3 premiers dés joués dans un tour : Paire (deux identiques), Suite (2-3-4) ou Brelan (trois identiques).'],
     ['👁️', 'Intention', 'Ce qu’un ennemi fera à son prochain tour, affiché sous son nom, avec les dégâts attendus.'],
     ['🔥', 'Brûlure', '25 % de ton attaque par seconde pendant 3 s. Relancer une brûlure la remet à 3 s.'],
     ['☠️', 'Poison', '8 % de ton attaque par seconde et par dose, pendant 5 s. Jusqu’à 8 doses cumulées : c’est le plus fort sur les combats longs.'],
@@ -358,17 +358,17 @@ var DATA = (function () {
     ['⚖️', 'Posture', '🗡️ Assaut : +25 % dégâts, +20 % dégâts subis. 🛡️ Garde : -25 % dégâts subis, -20 % dégâts.']
   ];
 
-  // ---------- Dés de combat (v3.2) : chaque héros a un sac de dés, posés sur une table de 9 cases ----------
+  // ---------- Dés de combat (v4.0) : chaque héros a un sac de dés, joués depuis sa main ----------
   // w : poids dans les offres de dés. Les effets sont écrits « par point » de la valeur du dé.
   var DICE = {
-    lame: { name: 'Lame', icon: '⚔️', w: 20, desc: 'Frappe l’ennemi visé : 18 % de ton attaque par point.' },
-    garde: { name: 'Garde', icon: '🛡️', w: 16, desc: 'Bouclier de 1,5 % de tes PV max par point. Il tient jusqu’à ton prochain tour.' },
-    seve: { name: 'Sève', icon: '❤️', w: 10, desc: 'Te soigne de 0,6 % de tes PV max par point.' },
-    echo: { name: 'Écho', icon: '✨', w: 13, desc: 'Ne fait rien seul : chaque dé posé à côté de lui gagne la moitié de sa valeur. Il reste actif tant que la table n’est pas purgée.' },
-    miroir: { name: 'Miroir', icon: '🪞', w: 8, desc: 'Devient une copie du plus fort dé voisin, puis agit comme lui. Sans voisin, il ne reflète rien.' },
-    braise: { name: 'Braise', icon: '🔥', w: 9, desc: '12 % de ton attaque par point, et enflamme l’ennemi visé.' },
+    lame: { name: 'Lame', icon: '⚔️', w: 20, desc: 'Frappe l’ennemi visé : 22 % de ton attaque par point.' },
+    garde: { name: 'Garde', icon: '🛡️', w: 16, desc: 'Bouclier de 2,1 % de tes PV max par point. Il tient jusqu’à ton prochain tour.' },
+    seve: { name: 'Sève', icon: '❤️', w: 10, desc: 'Te soigne de 0,7 % de tes PV max par point.' },
+    echo: { name: 'Écho', icon: '✨', w: 13, desc: 'Les autres dés de ta main gagnent la moitié de sa valeur (arrondie au-dessus). Joué seul, il charge ton ultime de 2 % par point.' },
+    miroir: { name: 'Miroir', icon: '🪞', w: 8, desc: 'Copie le dernier dé joué ce tour et agit comme lui, avec sa propre valeur. Joué en premier, il frappe comme une Lame.' },
+    braise: { name: 'Braise', icon: '🔥', w: 9, desc: '15 % de ton attaque par point, et enflamme l’ennemi visé.' },
     venin: { name: 'Venin', icon: '☠️', w: 9, desc: 'Empoisonne l’ennemi visé : une dose de poison tous les 2 points.' },
-    foudre: { name: 'Foudre', icon: '⚡', w: 8, desc: '9 % de ton attaque par point à tous les ennemis.' },
+    foudre: { name: 'Foudre', icon: '⚡', w: 8, desc: '10 % de ton attaque par point à tous les ennemis.' },
     astre: { name: 'Astre', icon: '🌟', w: 8, desc: 'Charge ton ultime de 2 % par point.' }
   };
   var BAGS = {
@@ -377,13 +377,11 @@ var DATA = (function () {
     berserker: ['lame', 'lame', 'lame', 'lame', 'seve', 'echo'], chasseuse: ['lame', 'lame', 'lame', 'garde', 'astre', 'echo'],
     moine: ['lame', 'lame', 'garde', 'seve', 'echo', 'echo'], pretresse: ['lame', 'garde', 'garde', 'seve', 'seve', 'echo']
   };
-  // Figures : trois dés alignés (ligne, colonne ou diagonale), d'après leur valeur tirée
+  // Figures : les 3 premiers dés joués dans un tour, d'après le chiffre affiché sur chacun (l'ordre ne compte pas)
   var FIGS = [
-    ['👑', 'Brelan', 'trois valeurs identiques', '+1 action et tous tes coups sont critiques ce tour.'],
-    ['✨', 'Suite', 'trois valeurs qui se suivent', 'Ton prochain coup est critique.'],
-    ['🍀', 'Sept chanceux', 'total de 7', 'Ce tour, tes pouvoirs acceptent n’importe quel dé.'],
-    ['💥', 'Coup fort', 'total de 15 ou plus', '+40 % dégâts ce tour.'],
-    ['🛡️', 'Prudence', 'total de 6 ou moins', '-40 % dégâts subis jusqu’à ton prochain tour.']
+    ['🎲', 'Paire', 'deux valeurs identiques', '+30 % de dégâts ce tour.'],
+    ['✨', 'Suite', 'trois valeurs qui se suivent (2-3-4)', '+1 action ⚡ et ton prochain coup est critique.'],
+    ['👑', 'Brelan', 'trois valeurs identiques', '+1 action ⚡ et tous tes coups sont critiques ce tour.']
   ];
 
   // ---------- Version et nouveautés ----------
@@ -522,7 +520,7 @@ var DATA = (function () {
     ['kills', 40, 'Tue 40 ennemis'], ['kills', 90, 'Tue 90 ennemis'], ['elites', 3, 'Vaincs 3 élites'], ['bosses', 1, 'Vaincs un boss'],
     ['chests', 2, 'Ouvre 2 coffres'], ['items', 8, 'Trouve 8 objets'], ['runs', 3, 'Lance 3 descentes'], ['upgrades', 3, 'Améliore 3 fois un objet'],
     ['weak', 10, 'Touche 10 points faibles'], ['parry', 3, 'Réussis 3 parades parfaites'], ['ult', 5, 'Lance 5 ultimes'], ['fusions', 2, 'Fusionne des objets 2 fois'], ['arenes', 1, 'Gagne une arène'], ['evos', 2, 'Choisis 2 éveils de pouvoir'],
-    ['doubles', 4, 'Forme 4 figures sur la table de dés'], ['orbs', 15, 'Ramasse 15 orbes'], ['deflect', 6, 'Renvoie 6 projectiles'], ['minis', 2, 'Réussis 2 épreuves (forge, runes, crochetage)'], ['primes', 3, 'Remplis 3 primes']
+    ['doubles', 4, 'Forme 4 figures avec tes dés'], ['orbs', 15, 'Ramasse 15 orbes'], ['deflect', 6, 'Renvoie 6 projectiles'], ['minis', 2, 'Réussis 2 épreuves (forge, runes, crochetage)'], ['primes', 3, 'Remplis 3 primes']
   ];
 
   // ---------- Zones et ennemis ----------
@@ -727,7 +725,7 @@ var DATA = (function () {
     { id: 'b_or', name: 'Doigts crochus', icon: '💰', rar: 0, max: 5, desc: "+30 % d'or et de Cendres.", mods: { gf: 30 } },
     { id: 'b_arcane', name: 'Savoir interdit', icon: '📖', rar: 0, max: 8, desc: '+18 % puissance des pouvoirs.', mods: { pow: 18 } },
     { id: 'b_des1', name: 'Dé pipé', icon: '🎲', rar: 1, max: 2, desc: '+1 relance de ta main de dés par combat.', mods: { diceRerolls: 1 } },
-    { id: 'b_des2', name: 'Main lourde', icon: '🎰', rar: 2, max: 2, desc: 'Les figures Coup fort et Prudence sont 50 % plus puissantes.', mods: { diceP: 50 } },
+    { id: 'b_des2', name: 'Main lourde', icon: '🎰', rar: 2, max: 2, desc: 'La Paire donne 50 % de dégâts en plus.', mods: { diceP: 50 } },
     { id: 'b_des3', name: 'Grande main', icon: '🖐️', rar: 3, max: 1, desc: 'Tu pioches 1 dé de plus à chaque tour.', mods: { diceHand: 1 } },
     { id: 'b_des4', name: 'Dés lestés', icon: '⚖️', rar: 2, max: 2, desc: 'Tous tes dés valent 1 point de plus.', mods: { diceV: 1 } },
     { id: 'b_regen', name: 'Chair tenace', icon: '🌿', rar: 0, max: 5, desc: 'Régénère +0,5 % PV par seconde.', mods: { regen: 0.5 } },
@@ -892,7 +890,7 @@ var DATA = (function () {
     { id: 'h_orbs', name: 'Glaneur', desc: 'Ramasser 100 orbes', c: ['orbs', 100], cendres: 400 },
     { id: 'h_deflect', name: 'Retour à l’envoyeur', desc: 'Renvoyer 50 projectiles', c: ['deflect', 50], cendres: 600 },
     { id: 'h_minis', name: 'Doigts d’or', desc: 'Réussir 15 épreuves (forge, runes, crochetage)', c: ['minis', 15], cendres: 800 },
-    { id: 'h_dbl', name: 'Veinard', desc: 'Former 50 figures sur la table de dés', c: ['doubles', 50], cendres: 500 },
+    { id: 'h_dbl', name: 'Veinard', desc: 'Former 50 figures avec tes dés', c: ['doubles', 50], cendres: 500 },
     { id: 'h_score', name: 'Légende', desc: 'Atteindre 300 de score en une descente', c: ['bestScore', 300], cendres: 1500 },
     { id: 'h_primes', name: 'Chasseur de primes', desc: 'Remplir 30 primes', c: ['primes', 30], cendres: 1000 }
   ];
