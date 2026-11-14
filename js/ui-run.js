@@ -26,14 +26,14 @@ UI.run = (function () {
       '<div class="runbar"><div class="grow"><div class="zone" id="rzone"></div><div class="pips" id="rpips"></div></div><span class="cur gold" id="rgold"></span><span class="cur ash" id="rcend"></span><button class="icon-btn" data-act="runMenu">☰</button></div>' +
       '<div class="arena" id="arena"></div>' +
       '<div class="dtray" id="dtray"><div class="dside"><button class="dbag" id="dbag" data-act="bag">🎒<b></b></button><button class="dre" id="dre" data-act="dreroll">↻<b></b></button><button class="dre dfl" id="dfl" data-act="dflip">⇅<b></b></button></div><div class="dhand" id="dhand"></div><div class="dgrid" id="dgrid"></div></div>' +
-      '<div class="hud"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><span></span></div><div class="xprow"><b id="rlvl"></b><div class="bar"><i id="xpbar"></i></div><span class="hsts" id="hsts"></span></div>' +
-      '<div class="turnrow"><span class="aps" id="aps"></span><b id="tlabel"></b><span class="grow"></span><button class="tog" id="tauto" data-act="auto">AUTO</button><button class="tog" id="tspd" data-act="speed"></button><button class="tog help" data-act="help">?</button><button class="tog pass" id="tpass" data-act="pass">Passer ⏭</button></div>' +
-      '<div class="skills"><button class="skb strike" id="bstrike" data-act="strike" data-info="strike"><span class="e">⚔️</span><span class="nm">Frapper</span></button>' + h.skills.map(function (k, i) { return '<button class="skb" id="sk' + i + '" data-act="skill" data-i="' + i + '" data-info="skill:' + i + '"><span class="e">' + k.icon + '</span><span class="cd"></span><span class="ev"></span><span class="nm">' + k.name + '</span><span class="need">' + D.NEEDS[k.need].label + '</span><span class="n"></span></button>'; }).join('') +
-      '<button class="skb potion" id="pot" data-act="potion" data-info="potion">🧪<span class="cnt"></span></button></div>' +
-      '<div class="row2"><button class="act" id="bparry" data-act="parry" data-info="parry"><span class="ai">🤺</span><b>Parer</b><span class="cd"></span></button>' +
-      '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + h.ult.icon + ' ' + h.ult.name + '</span></button>' +
-      '<button class="act" id="bstance" data-act="stance" data-info="stance"><span class="ai"></span><b></b></button></div>' +
-      '<button class="relics" id="relics" data-act="relics" style="width:100%"></button></div>';
+      '<div class="hud">' +
+      '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><span></span></div></div>' +
+      '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + h.ult.icon + ' ' + h.ult.name + '</span><em>PRÊT · touche !</em></button>' +
+      '<div class="turnrow"><span class="aps" id="aps"></span><b id="tlabel"></b><span class="hsts" id="hsts"></span><span class="grow"></span><button class="tog pass" id="tpass" data-act="pass">Fin du tour ⏭</button></div>' +
+      '<div class="mainacts"><button class="bigact strike" id="bstrike" data-act="strike" data-info="strike"><span class="e">⚔️</span><span class="t"><b>Frapper</b><small>1 ⚡</small></span></button>' +
+      '<button class="bigact parry" id="bparry" data-act="parry" data-info="parry"><span class="e">🛡️</span><span class="t"><b>Parer</b><small>1 ⚡</small></span><span class="cd"></span></button></div>' +
+      '<div class="skills">' + h.skills.map(function (k, i) { return '<button class="skb" id="sk' + i + '" data-act="skill" data-i="' + i + '" data-info="skill:' + i + '"><span class="e">' + k.icon + '</span><span class="cd"></span><span class="ev"></span><span class="nm">' + k.name + '</span><span class="need">' + D.NEEDS[k.need].label + '</span><span class="n"></span></button>'; }).join('') +
+      '<button class="skb potion" id="pot" data-act="potion" data-info="potion">🧪<span class="cnt"></span></button></div></div>';
     built = null; shownPhase = null; updateHud.key = null; lastTurn = ''; diceKey = ''; trayKey = ''; selDie = 0; lastPlaced = -1;
     if (run.phase !== 'combat') SND.music(zoneMusic(run));
     if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); }
@@ -322,7 +322,7 @@ UI.run = (function () {
     for (i = 0; i < evs.length; i++) {
       e = evs[i]; el = e.id ? els[e.id] : null;
       switch (e.k) {
-        case 'start': SND.music(zoneMusic(run)); UI.story.enterZone(run, function () { intro(run); if (!S().tuto['help_' + run.hero]) { S().tuto['help_' + run.hero] = 1; helpSheet(true); } else zoneIntro(run); tuto('skill3', '🎲 <b>Tour par tour.</b> À chaque tour tu as <b>2 actions ⚡</b> pour ⚔️ Frapper ou 🤺 Parer, et <b>3 dés</b>. Tes pouvoirs ne coûtent pas d’action : ils se lancent en y glissant un dé. Ensuite, chaque ennemi joue.'); tuto('aim', '👆 Touche un ennemi pour le <b>viser</b>. Touche-le encore (ou ⚔️ Frapper) pour le <b>frapper</b>.'); tuto('press', '🔎 <b>Appui long</b> sur un pouvoir ou sur un ennemi : sa fiche s’ouvre et le combat se met en pause.'); }); break;
+        case 'start': SND.music(zoneMusic(run)); UI.story.enterZone(run, function () { intro(run); if (!S().tuto.guide && UI.guide) { S().tuto['help_' + run.hero] = 1; setTimeout(function () { UI.guide.start(); }, 700); } else if (!S().tuto['help_' + run.hero]) { S().tuto['help_' + run.hero] = 1; helpSheet(true); } else zoneIntro(run); }); break;
         case 'boss': SND.music(E.zoneOf(run.floor).id === 6 ? 'final' : 'boss'); SND.play('boss_intro'); banner(c.enemies[0].name.toUpperCase(), 'BOSS'); UI.flash('#c2283a66'); UI.vib(80); if (!UI.story.inZone(run, 'boss') && E.zoneOf(run.floor).taunt.length > 4) UI.toast('<i>« ' + E.zoneOf(run.floor).taunt + ' »</i>', true); break;
         case 'dmg':
           if (e.sh) { floatAt(el, 'Bouclier', 'txt'); break; }
@@ -360,7 +360,7 @@ UI.run = (function () {
         case 'dpoison': floatAt(el, '☠️ Poison', 'txt'); break;
         case 'figure': showFig(e, false); break;
         case 'gclear': floatAt(hero, 'Table purgée', 'txt'); SND.play('salvage', 0.6); break;
-        case 'handleft': tuto('handleft', '🎲 Tu n’as plus d’action, mais il te reste <b>des dés</b>. Pose-les sur la table, glisse-les dans un pouvoir, ou touche <b>Passer ⏭</b>.'); break;
+        case 'handleft': tuto('handleft', '🎲 Tu n’as plus d’action, mais il te reste <b>des dés</b>. Pose-les sur la table, glisse-les dans un pouvoir, ou touche <b>Fin du tour ⏭</b>.'); break;
         case 'eturn': document.querySelectorAll('.unit.en.acting').forEach(function (x) { x.classList.remove('acting'); }); if (el) el.classList.add('acting'); break;
         case 'stunned': floatAt(el, 'Étourdi', 'txt'); break;
         case 'slowed': floatAt(hero, 'Entravé...', 'hurt'); break;
@@ -374,7 +374,7 @@ UI.run = (function () {
         case 'deflect': var sd = endShot(e.sid), dt0 = center(el);
           if (sd && vfx) { VFX.ring(vfx, sd.x, sd.y, 'curse', 70, 0.3, 6); VFX.flash(vfx, sd.x, sd.y, 'curse', 80, 0.18); if (dt0) VFX.proj(vfx, sd.x, sd.y, dt0.x, dt0.y, 'curse', 0.16, function () { VFX.ring(vfx, dt0.x, dt0.y, 'curse', 90, 0.35, 6); VFX.sparks(vfx, dt0.x, dt0.y, 'curse', 20, { speed: 340 }); }); }
           floatAt(el || hero, 'RENVOYÉ !', 'crit'); SND.play('block'); UI.vib(20); hitstop(45); punch(); break;
-        case 'charge': tuto('charge', '⚠️ <b>Attaque chargée !</b> Il frappera très fort à son prochain tour. Dépense une action pour <b>🤺 Parer</b> : le coup est annulé et tu ripostes. L’étourdir marche aussi.'); break;
+        case 'charge': if (el) floatAt(el, '⚠️ Il charge !', 'txt'); break;
         case 'interrupt': floatAt(el, 'Interrompu !', 'txt'); break;
         case 'enrage': floatAt(el, 'ENRAGÉ', 'big'); var ep = center(el); if (vfx && ep) { VFX.ring(vfx, ep.x, ep.y, 'fury', 120, 0.45, 8); VFX.sparks(vfx, ep.x, ep.y, 'fury', 20, { speed: 280, g: -160 }); } break;
         case 'summon': var idx = -1; c.enemies.forEach(function (x, j) { if (x.id === e.id) idx = j; }); if (idx >= 0) { addEnemy(c.enemies[idx], idx, true); if (!e.quiet) floatAt(els[e.id], 'Invoqué', 'txt'); var sp0 = center(els[e.id]); if (vfx && sp0) { VFX.flash(vfx, sp0.x, sp0.y, 'dark', 80, 0.3); VFX.ring(vfx, sp0.x, sp0.y + 20, 'dark', 70, 0.4, 4); } } break;
@@ -388,7 +388,7 @@ UI.run = (function () {
         case 'parry': if (e.perfect) { UI.vib(30); fxAt(hero, 'ice', 24); var pc = center(hero); if (vfx && pc) { VFX.ring(vfx, pc.x + 20, pc.y, 'ice', 130, 0.4, 8); VFX.flash(vfx, pc.x + 20, pc.y, 'ice', 110, 0.2); } hitstop(90); floatAt(hero, 'PARADE PARFAITE !', 'crit'); UI.flash('#ffe9b888'); SND.play('block'); anim($('#arena'), 'shake', 250); } else { floatAt(hero, 'Paré', 'txt'); SND.play('block', 0.6); } break;
         case 'ult': var uc = center(hero), upts = []; c.enemies.forEach(function (x) { if (els[x.id] && !els[x.id].classList.contains('dead')) upts.push(center(els[x.id])); });
           if (vfx && uc) { VFX.pillar(vfx, uc.x, uc.y, 'ult', 120, 0.9); VFX.cast(vfx, sfxKind(e.sfx), uc.x, uc.y, upts, true); VFX.sparks(vfx, uc.x, uc.y, 'ult', 50, { speed: 420, g: -80, life: 1.2 }); } hitstop(140); banner(e.name.toUpperCase(), 'ULTIME'); UI.flash('#d9a441aa'); SND.play(e.sfx); SND.play('levelup', 0.6); anim($('#arena'), 'shake', 250); break;
-        case 'weak': tuto('weak', '🎯 <b>Point faible !</b> Ce tour-ci, frappe l’ennemi marqué d’une cible : coup critique énorme pour une seule action.'); break;
+        case 'weak': if (el) floatAt(el, 'POINT FAIBLE', 'crit'); break;
         case 'weakhit': fxAt(el, 'star', 22); var wp = center(el); if (vfx && wp) { VFX.ring(vfx, wp.x, wp.y, 'crit', 110, 0.35, 7); VFX.flash(vfx, wp.x, wp.y, 'crit', 120, 0.2); } hitstop(80); floatAt(el, 'POINT FAIBLE !', 'crit'); anim($('#arena'), 'shake', 250); break;
         case 'flee': if (el) { floatAt(el, 'Il s’enfuit !', 'txt'); el.classList.add('dead'); } SND.play('error'); break;
         case 'wave': banner('VAGUE ' + e.n + '/' + e.of, 'ARÈNE'); SND.play('door'); var wn = $('#waven'); if (wn) wn.textContent = e.n; break;
@@ -411,12 +411,8 @@ UI.run = (function () {
       $('#rzone').innerHTML = '<b style="color:' + z.color + '">' + z.name + '</b> · étage ' + run.floor + (E.cycleOf(run.floor) ? ' · <span class="bad">Abîme ' + E.cycleOf(run.floor) + '</span>' : '');
       var p = ''; for (i = 1; i <= 10; i++) p += '<i class="' + (i <= pos ? 'on' : '') + (i === 10 ? ' boss' : '') + '"></i>';
       $('#rpips').innerHTML = p; $('#rgold').textContent = '💰 ' + run.gold; $('#rcend').textContent = '🔥 ' + E.fmt(run.cendres);
-      $('#rlvl').textContent = 'Niv. ' + run.lvl;
-      var rel = ''; run.artifacts.forEach(function (id) { rel += E.byId(D.ARTIFACTS, id).icon; });
-      for (var b in run.boons) { var bo = E.boonById(b); rel += bo.icon; }
-      if (run.evos.length) rel = '✨' + run.evos.length + ' ' + rel;
+      $('#rlvl').textContent = run.lvl;
       E.hero(run.hero).skills.forEach(function (k, si) { var n = k.evos.filter(function (v) { return run.evos.indexOf(v.id) >= 0; }).length, se = $('#sk' + si); if (se) se.children[2].textContent = n === 2 ? '✦✦' : n ? '✦' : ''; });
-      $('#relics').innerHTML = rel ? rel + '<span class="more"> ›</span>' : '<span class="more">Aucune aubaine pour l’instant</span>';
     }
     var hb = $('#hpbar'), frac = Math.max(0, run.hp / stt.hp), sh = c ? c.hero.shield : 0;
     hb.firstChild.style.width = (frac * 100) + '%'; hb.children[1].style.width = Math.min(100, sh / stt.hp * 100) + '%'; hb.children[2].style.width = (frac * 100) + '%';
@@ -424,14 +420,17 @@ UI.run = (function () {
     updatePrimes(run); drainPrimes(run);
     hb.lastChild.textContent = E.fmt(Math.ceil(run.hp)) + ' / ' + E.fmt(stt.hp) + (sh >= 1 ? '  (+' + E.fmt(sh) + ')' : '');
     hb.classList.toggle('low', frac < 0.3);
-    $('#xpbar').style.width = Math.min(100, run.xp / E.xpNeed(run.lvl) * 100) + '%';
+    $('#rlvl').style.setProperty('--xp', Math.min(100, run.xp / E.xpNeed(run.lvl) * 100) + '%');
     $('#hsts').textContent = c ? stIcons(c.hero.st) + (c.hero.elan ? ' ⚡x' + c.hero.elan : '') : '';
     var charging = !!c && !c.over && c.enemies.some(function (x) { return !x.dead && x.charge; }), hsk = E.hero(run.hero).skills;
     var mine = !!c && !c.over && c.turn === 'hero' && run.phase === 'combat', ap = mine ? c.hero.ap : 0;
     var hud = document.querySelector('.hud'); if (hud) hud.classList.toggle('wait', !!c && !c.over && run.phase === 'combat' && !mine);
     var apk = (c && run.phase === 'combat' ? ap : -1) + ''; var apsEl = $('#aps');
     if (apsEl && apsEl.dataset.k !== apk) { apsEl.dataset.k = apk; var ah = ''; for (i = 0; i < Math.max(E.AP, ap); i++) ah += '<i class="' + (i < ap ? 'on' : '') + '"></i>'; apsEl.innerHTML = ah; }
-    $('#bstrike').classList.toggle('ready', mine && ap > 0 && !S().settings.auto); $('#tpass').classList.toggle('off', !mine);
+    var bst = $('#bstrike'), wkOn = mine && ap > 0 && !!c.weak && c.enemies.some(function (x) { return !x.dead && x.id === c.weak.id; });
+    bst.classList.toggle('ready', mine && ap > 0 && !S().settings.auto); bst.classList.toggle('weakmode', wkOn); bst.classList.toggle('off', !!c && run.phase === 'combat' && (!mine || ap <= 0));
+    if (bst.dataset.w !== (wkOn ? '1' : '0')) { bst.dataset.w = wkOn ? '1' : '0'; bst.firstChild.textContent = wkOn ? '💥' : '⚔️'; bst.children[1].innerHTML = wkOn ? '<b>COUP CRITIQUE</b><small>point faible ouvert !</small>' : '<b>Frapper</b><small>1 ⚡</small>'; }
+    $('#tpass').classList.toggle('off', !mine);
     var left = mine && ap <= 0 && c.hand.length > 0, tlb = $('#tlabel'), tlt = !c || run.phase !== 'combat' ? '' : left ? 'Pose tes dés' : 'Tour ' + c.round;
     if (tlb && tlb.textContent !== tlt) tlb.textContent = tlt; $('#tpass').classList.toggle('ready', left && !S().settings.auto);
     updateTray(run);
@@ -448,13 +447,14 @@ UI.run = (function () {
     }
     var ult = Math.min(100, run.ult || 0), bu = $('#bult'), inC = c && !c.over && run.phase === 'combat';
     bu.firstChild.style.width = ult + '%'; bu.classList.toggle('ready', ult >= 100);
-    if (ult >= 100 && inC) { var hu0 = E.hero(run.hero).ult; tuto('ult_' + run.hero, '🌟 <b>Ultime prêt : ' + hu0.name + '</b><br>' + hu0.desc + '<br><span class="dim">Touche la grande barre dorée. Elle se recharge en combattant.</span>'); }
-    var bp = $('#bparry'), pcd = c ? Math.max(0, c.hero.parryCd) : 0;
-    bp.classList.toggle('cool', pcd > 0); bp.lastChild.textContent = pcd > 0 ? E.turns(pcd) : ''; bp.classList.toggle('alert', !!inC && pcd <= 0 && c.enemies.some(function (x) { return !x.dead && x.charge; }));
-    var bs = $('#bstance'), stn = run.stance || 'n';
-    if (bs.dataset.s !== stn) { bs.dataset.s = stn; bs.firstChild.textContent = stn === 'a' ? '🗡️' : stn === 'd' ? '🛡️' : '⚖️'; bs.children[1].textContent = stn === 'a' ? 'Assaut' : stn === 'd' ? 'Garde' : 'Équilibre'; }
+    if (ult >= 100 && inC) { var hu0 = E.hero(run.hero).ult; tuto('ult_' + run.hero, '🌟 <b>Ultime prêt : ' + hu0.name + '</b><br>' + hu0.desc + '<br><span class="dim">Touche la barre dorée qui brille au-dessus de tes actions. Elle se recharge en combattant.</span>'); }
+    var bp = $('#bparry'), pcd = c ? Math.max(0, c.hero.parryCd) : 0, palert = !!inC && pcd <= 0 && charging;
+    bp.classList.toggle('cool', pcd > 0); bp.lastChild.textContent = pcd > 0 ? E.turns(pcd) + ' tour' + (E.turns(pcd) > 1 ? 's' : '') : ''; bp.classList.toggle('alert', palert); bp.classList.toggle('off', !!inC && !palert && (!mine || ap <= 0));
+    if (bp.dataset.a !== (palert ? '1' : '0')) { bp.dataset.a = palert ? '1' : '0'; bp.children[1].innerHTML = palert ? '<b>PARE !</b><small>gros coup en approche</small>' : '<b>Parer</b><small>1 ⚡</small>'; }
+    var ar1 = $('#arena'); if (ar1) ar1.classList.toggle('parrycue', palert);
+    if (palert && mine && UI.guide) UI.guide.once('parry');
+    if (wkOn && UI.guide) UI.guide.once('weak');
     var pt = $('#pot'); pt.lastChild.textContent = run.potions; pt.classList.toggle('cool', run.potions <= 0);
-    $('#tauto').classList.toggle('on', !!S().settings.auto); $('#tspd').textContent = 'x' + S().settings.speed; $('#tspd').classList.toggle('on', S().settings.speed > 1);
   }
   function updateArena() {
     var run = S().run, c = run && run.combat; if (!c) return;
@@ -490,7 +490,7 @@ UI.run = (function () {
         if (built !== c) buildArena();
         if (c.turn !== lastTurn) { lastTurn = c.turn; stepT = c.turn === 'foes' ? 0.55 : 0.6; }
         if (stopT > 0) stopT -= dt;
-        else if (!paused && !wiping && !c.over && !UI.story.open() && !$('#modal').classList.contains('on')) {
+        else if (!paused && !wiping && !c.over && !UI.story.open() && !$('#modal').classList.contains('on') && !(UI.guide && UI.guide.open())) {
           stepT -= dt * (S().settings.speed || 1);
           if (stepT <= 0) {
             if (c.turn === 'foes') stepT = E.foeStep() ? 0.6 : 0.3;
@@ -729,7 +729,11 @@ UI.run = (function () {
 
   // ---------- actions de combat ----------
   function myTurn() { var run = S().run, c = run && run.combat; if (!c || run.phase !== 'combat' || c.over) return false; if (c.turn !== 'hero') { SND.play('error'); return false; } return true; }
-  ACT.strike = function () { if (myTurn() && !E.strike()) SND.play('error'); };
+  ACT.strike = function () {
+    if (!myTurn()) return; var c = S().run.combat, wi = -1;
+    if (c.weak) c.enemies.forEach(function (x, j) { if (!x.dead && x.id === c.weak.id) wi = j; });
+    if (wi >= 0 ? !E.hitWeak(wi) : !E.strike()) SND.play('error');
+  };
   ACT.pass = function () { if (myTurn()) { SND.play('click'); E.pass(); } };
   ACT.skill = function (d) {
     var run = S().run, i = +d.i; if (!myTurn()) return;
@@ -753,7 +757,7 @@ UI.run = (function () {
     var s = E.setStance(); SND.play('click');
     UI.toast(s === 'a' ? '🗡️ <b>Assaut</b> : +25 % dégâts infligés, +20 % dégâts subis.' : s === 'd' ? '🛡️ <b>Garde</b> : -25 % dégâts subis, -20 % dégâts infligés.' : '⚖️ <b>Équilibre</b> : aucun bonus, aucun malus.');
   };
-  ACT.auto = function () { var s = S().settings; s.auto = !s.auto; SND.play('click'); if (s.auto) tuto('auto', '🤖 AUTO : ton héros joue ses tours tout seul. Pratique, mais il ne ramasse pas les orbes et ne renvoie pas les crânes.'); E.save(); };
+  ACT.auto = function (d) { var s = S().settings; s.auto = !s.auto; SND.play('click'); E.save(); if (d && d.m) ACT.runMenu(); if (s.auto) tuto('auto', '🤖 AUTO : ton héros joue ses tours tout seul. Pratique, mais il ne ramasse pas les orbes et ne renvoie pas les crânes. Désactive-le dans le menu ☰.'); };
   ACT.speed = function () { var s = S().settings; s.speed = s.speed >= 3 ? 1 : s.speed + 1; SND.play('click'); E.save(); };
   ACT.relics = function () {
     var run = S().run, h = '<h2>Ta descente</h2>', om = run.omen ? E.byId(D.OMENS, run.omen) : null;
@@ -790,11 +794,11 @@ UI.run = (function () {
     h += '<div class="li on"><div class="ic">👁️</div><div class="grow"><b>Intentions</b><div class="small dim">Sous le nom de chaque ennemi, ce qu’il fera à son tour : ⚔️ 12 il frappe pour 12 · 💥 gros coup · ⚠️ il charge (étourdis-le ou pare) · 💤 rien · ✚ soin · 👥 renfort.</div></div></div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les autres boutons</h3>' +
       '<div class="li"><div class="ic">⚔️</div><div class="grow"><b>Frapper</b><div class="small dim">Attaque l’ennemi visé (▼). Plus ta vitesse d’attaque est haute, plus tu donnes de coups par action. Toucher un ennemi le vise ; le toucher encore le frappe.</div></div></div>' +
-      '<div class="li"><div class="ic">🤺</div><div class="grow"><b>Parer</b><div class="small dim">Jusqu’à ton prochain tour, tu subis 70 % de dégâts en moins et tu ripostes. Si tu pares une <b>attaque chargée ⚠️</b> (ennemi qui brille en jaune), elle est annulée et l’ennemi est étourdi.</div></div></div>' +
-      '<div class="li"><div class="ic">⚖️</div><div class="grow"><b>Posture</b><div class="small dim">🗡️ Assaut : +25 % dégâts, mais +20 % dégâts subis. 🛡️ Garde : -25 % dégâts subis, mais -20 % dégâts. Change quand tu veux.</div></div></div>' +
-      '<div class="li"><div class="ic">🎯</div><div class="grow"><b>Point faible</b><div class="small dim">Quand une cible apparaît sur un ennemi, elle reste un tour : touche-le pour un énorme coup critique (1 action).</div></div></div>' +
+      '<div class="li"><div class="ic">🛡️</div><div class="grow"><b>Parer</b><div class="small dim">Jusqu’à ton prochain tour, tu subis 70 % de dégâts en moins et tu ripostes. Quand un ennemi charge un gros coup ⚠️, le bouton devient <b style="color:#3ff0ff">bleu vif : PARE !</b> Pare à ce moment : le coup est annulé et l’ennemi est étourdi.</div></div></div>' +
+      '<div class="li"><div class="ic">⚖️</div><div class="grow"><b>Posture</b> <span class="tiny dim">menu ☰</span><div class="small dim">🗡️ Assaut : +25 % dégâts, mais +20 % dégâts subis. 🛡️ Garde : -25 % dégâts subis, mais -20 % dégâts. Change quand tu veux.</div></div></div>' +
+      '<div class="li"><div class="ic">🎯</div><div class="grow"><b>Point faible</b><div class="small dim">Parfois un ennemi se découvre : le bouton Frapper devient <b style="color:#ffd84a">💥 COUP CRITIQUE</b> pendant un tour. Appuie dessus : énorme coup critique (1 action).</div></div></div>' +
       '<div class="li"><div class="ic">🧪</div><div class="grow"><b>Fiole</b><div class="small dim">Rend 35 % de tes PV. Tu en regagnes une à chaque boss vaincu.</div></div></div>' +
-      '<div class="li"><div class="ic">🤖</div><div class="grow"><b>AUTO et vitesse</b><div class="small dim">AUTO joue tes tours tout seul (sans points faibles, orbes ni crânes). x1 / x2 / x3 accélère les animations.</div></div></div>' +
+      '<div class="li"><div class="ic">🤖</div><div class="grow"><b>AUTO et vitesse</b> <span class="tiny dim">menu ☰</span><div class="small dim">AUTO joue tes tours tout seul (sans points faibles, orbes ni crânes). x1 / x2 / x3 accélère les animations.</div></div></div>' +
       '<h3 class="gold" style="margin:10px 0 6px">Les symboles</h3><div class="small dim" style="line-height:1.7">🔥 brûlure · ☠️ poison · 🩸 saignement : dégâts à chaque tour<br>💫 étourdi : ne peut pas agir · ⬇️ affaibli : frappe moins fort<br>🎯 vulnérable : subit +25 % dégâts · ⚠️ prépare un gros coup<br>🕸️ entravé : une frappe sur deux ne part pas</div>' +
       '<div class="btns"><button class="btn sm" data-act="lexique">📖 Lexique : tous les mots expliqués</button></div>' +
       '<div class="btns"><button class="btn primary big" data-act="close">' + (first ? 'COMPRIS, AU COMBAT' : 'REPRENDRE') + '</button></div>';
@@ -809,13 +813,30 @@ UI.run = (function () {
     if (type === 'skill') UI.modal(UI.skillSheet(run.hero, +arg));
     else if (type === 'foe') ACT.foeLive({ i: arg });
     else if (type === 'ult') miniSheet(hero.ult.icon, hero.ult.name, 'Ultime de ' + hero.name + ' · chargé à ' + Math.floor(run.ult || 0) + ' %', hero.ult.desc + '<br><br><span class="dim">La barre dorée se remplit quand tu frappes, tues, encaisses, lances un pouvoir ou touches un point faible 🎯. Elle garde sa charge d’une salle à l’autre.</span>');
-    else if (type === 'parry') miniSheet('🤺', 'Parer', '1 action · utilisable un tour sur deux', 'Jusqu’à ton prochain tour, tu subis 70 % de dégâts en moins et tu ripostes.<br><br>Si tu pares une <b>attaque chargée ⚠️</b> (l’ennemi brille en jaune), le coup est <b>annulé</b>, l’ennemi est étourdi et ta riposte fait 300 % dégâts.');
-    else if (type === 'strike') miniSheet('⚔️', 'Frapper', '1 action', 'Attaque l’ennemi visé (▼). Tu donnes autant de coups que ta vitesse d’attaque le permet : 1 coup à vitesse 1, parfois 2 au-dessus.<br><br><span class="dim">Touche un ennemi pour le viser, touche-le encore pour le frapper.</span>');
+    else if (type === 'parry') miniSheet('🛡️', 'Parer', '1 action · utilisable un tour sur deux', 'Jusqu’à ton prochain tour, tu subis 70 % de dégâts en moins et tu ripostes.<br><br>Quand le bouton devient <b style="color:#3ff0ff">bleu vif : PARE !</b>, un ennemi charge un gros coup. Pare à ce moment : le coup est <b>annulé</b>, l’ennemi est étourdi et ta riposte fait 300 % dégâts.');
+    else if (type === 'strike') miniSheet('⚔️', 'Frapper', '1 action', 'Attaque l’ennemi visé (▼). Tu donnes autant de coups que ta vitesse d’attaque le permet : 1 coup à vitesse 1, parfois 2 au-dessus.<br><br>Quand un ennemi montre un <b>point faible</b>, ce bouton devient <b>💥 COUP CRITIQUE</b> : il frappe ce point faible tout seul.<br><br><span class="dim">Touche un ennemi pour le viser.</span>');
     else if (type === 'stance') miniSheet('⚖️', 'Posture', 'change quand tu veux, sans recharge', '🗡️ <b>Assaut</b> : +25 % dégâts infligés, mais +20 % dégâts subis.<br>🛡️ <b>Garde</b> : -25 % dégâts subis, mais -20 % dégâts infligés.<br>⚖️ <b>Équilibre</b> : rien ne change.<br><br><span class="dim">Assaut quand tout va bien, Garde quand tes PV fondent ou qu’un boss s’enrage.</span>');
     else if (type === 'potion') miniSheet('🧪', 'Fiole de soin', run.potions + ' / ' + run.potionsMax + ' en réserve', 'Rend 35 % de tes PV, tout de suite. Tu en regagnes une à chaque boss vaincu, et tu peux en acheter au Colporteur ou en distiller au feu de camp.');
   };
   ACT.help = function () { SND.play('click'); helpSheet(false); };
-  ACT.runMenu = function () { ACT.settings(); };
+  // Menu de combat : tout ce qui n'est pas une action de tour est rangé ici
+  ACT.runMenu = function () {
+    var run = S().run; if (!run) { ACT.settings(); return; } SND.play('click');
+    var s = S().settings, stn = run.stance || 'n', inC = run.phase === 'combat';
+    var h = '<h2>Menu</h2><div class="tiny dim center" style="margin:-6px 0 12px">Le combat est en pause</div>';
+    h += '<div class="mgrid"><button class="mbtn" data-act="help"><span>❓</span>Aide</button><button class="mbtn" data-act="guideReplay"><span>🎓</span>Tutoriel</button><button class="mbtn" data-act="relics"><span>🎁</span>Ma descente</button><button class="mbtn" data-act="bag"><span>🎒</span>Mes dés</button></div>';
+    if (inC) {
+      h += '<div class="mrow"><span class="grow"><b>Jeu automatique</b><div class="tiny dim">Ton héros joue seul</div></span><button class="seg' + (s.auto ? ' on' : '') + '" data-act="auto" data-m="1">' + (s.auto ? 'Activé' : 'Désactivé') + '</button></div>';
+      h += '<div class="mrow"><span class="grow"><b>Vitesse</b></span>' + [1, 2, 3].map(function (v) { return '<button class="seg' + (s.speed === v ? ' on' : '') + '" data-act="speedSet" data-v="' + v + '">x' + v + '</button>'; }).join('') + '</div>';
+      h += '<div class="mrow"><span class="grow"><b>Posture</b><div class="tiny dim">' + (stn === 'a' ? '+25 % dégâts, +20 % subis' : stn === 'd' ? '-25 % subis, -20 % dégâts' : 'aucun bonus ni malus') + '</div></span>' + [['a', '🗡️'], ['n', '⚖️'], ['d', '🛡️']].map(function (p) { return '<button class="seg' + (stn === p[0] ? ' on' : '') + '" data-act="stanceSet" data-s="' + p[0] + '">' + p[1] + '</button>'; }).join('') + '</div>';
+    }
+    h += '<div class="btns"><button class="btn sm" data-act="settings">⚙️ Réglages</button><button class="btn sm" data-act="abandonAsk">🏳️ Abandonner</button></div>';
+    h += '<div class="btns"><button class="btn primary big" data-act="close">REPRENDRE</button></div>';
+    UI.modal(h);
+  };
+  ACT.speedSet = function (d) { S().settings.speed = +d.v; E.save(); ACT.runMenu(); };
+  ACT.stanceSet = function (d) { E.setStance(d.s); E.save(); ACT.runMenu(); };
+  ACT.guideReplay = function () { UI.closeModal(); if (UI.guide) setTimeout(function () { UI.guide.start(true); }, 150); };
 
   // ---------- fin de descente ----------
   function end(abandon) {

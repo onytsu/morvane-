@@ -387,8 +387,13 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '3.4';
+  var VERSION = '3.5';
   var NEWS = [
+    ['🧭', 'Des boutons plus simples', 'En combat, deux grands boutons : ⚔️ Frapper et 🛡️ Parer, avec tes pouvoirs juste en dessous. Vitesse, jeu automatique, posture et aide sont rangés dans le menu ☰.'],
+    ['🛡️', 'Une parade qui se voit', 'Quand un ennemi charge un gros coup, le bouton Parer devient bleu vif : PARE ! L’écran s’entoure de bleu et l’ennemi brille de la même couleur.'],
+    ['💥', 'Coup critique en un geste', 'Plus besoin de toucher la cible : quand un point faible s’ouvre, ton bouton Frapper devient COUP CRITIQUE, en jaune.'],
+    ['🎓', 'Un tutoriel', 'Au premier combat, un guide te montre chaque élément, pas à pas. Tu peux le revoir depuis le menu ☰.'],
+    ['🔥', 'Le camp', 'Le sanctuaire devient un camp épuré : ton héros se repose au coin du feu. Touche-le pour sa fiche, et retrouve talents, quêtes, histoire et gloire en raccourcis.'],
     ['🎲', 'Des pouvoirs à dés', 'Tes pouvoirs ne coûtent plus d’action : ils se lancent en y glissant un dé. Chacun demande un dé précis (≤3, ≥4, PAIR, IMPAIR...), affiché sur son bouton.'],
     ['💪', 'La valeur compte', 'Plus le dé glissé est fort, plus le pouvoir frappe : 5 = 100 %, 6 = 110 %, 1 = 60 %. Les pouvoirs d’appui se contentent d’un petit dé.'],
     ['⇅', 'Retourner un dé', 'Une fois par tour, retourne un dé sur sa face opposée : 1↔6, 2↔5, 3↔4. De quoi remplir la condition qui te manque.'],

@@ -42,8 +42,8 @@ var FX = (function () {
     var i, p, w = L.w, h = L.h; L.t += dt;
     if (L.amb) { L.acc += L.amb.rate * dt * (w * h / 22000 + 0.5); while (L.acc >= 1) { L.acc--; add(L, L.amb.make(w, h)); } }
     if (L.fire) {
-      L.facc += 55 * dt; var fx = L.fire.x * w, fy = L.fire.y * h;
-      while (L.facc >= 1) { L.facc--; add(L, { x: fx + R(-4, 4), y: fy + R(-1, 1), vx: R(-3, 3), vy: R(-26, -12), life: R(0.35, 0.8), s: pick([1, 2, 2]), a: 1, fire: 1 }); }
+      var fs = L.fire.s || 1; L.facc += 55 * fs * dt; var fx = L.fire.x * w, fy = L.fire.y * h;
+      while (L.facc >= 1) { L.facc--; add(L, { x: fx + R(-4, 4) * fs, y: fy + R(-1, 1), vx: R(-3, 3) * fs, vy: R(-26, -12) * Math.sqrt(fs), life: R(0.35, 0.8), s: pick([1, 2, 2]) * (fs > 1.5 ? 2 : 1), a: 1, fire: 1 }); }
     }
     for (i = L.p.length - 1; i >= 0; i--) {
       p = L.p[i]; p.life -= dt;
@@ -65,9 +65,10 @@ var FX = (function () {
     var ctx = L.ctx, i, p, k, a;
     ctx.clearRect(0, 0, L.w, L.h);
     if (L.fire) { // bûches
-      var fx = Math.round(L.fire.x * L.w), fy = Math.round(L.fire.y * L.h);
-      ctx.globalAlpha = 1; ctx.fillStyle = '#2a1a12'; ctx.fillRect(fx - 6, fy + 1, 12, 2); ctx.fillStyle = '#3d2618'; ctx.fillRect(fx - 5, fy, 4, 2); ctx.fillRect(fx + 1, fy, 5, 2);
-      ctx.fillStyle = '#ff8a3c'; ctx.fillRect(fx - 2, fy, 1, 1); ctx.fillRect(fx + 2, fy + 1, 1, 1);
+      var fx = Math.round(L.fire.x * L.w), fy = Math.round(L.fire.y * L.h), z = (L.fire.s || 1) > 1.5 ? 2 : 1;
+      ctx.globalAlpha = 1; ctx.fillStyle = '#2a1a12'; ctx.fillRect(fx - 6 * z, fy + z, 12 * z, 2 * z); ctx.fillStyle = '#3d2618'; ctx.fillRect(fx - 5 * z, fy, 4 * z, 2 * z); ctx.fillRect(fx + z, fy, 5 * z, 2 * z);
+      if (z > 1) { ctx.fillStyle = '#4a4048'; for (var st = -5; st <= 5; st++) ctx.fillRect(fx + st * 3 - 1, fy + 3 * z - (Math.abs(st) < 5 ? 0 : 1), 2, 2); }
+      ctx.fillStyle = '#ff8a3c'; ctx.fillRect(fx - 2 * z, fy, z, z); ctx.fillRect(fx + 2 * z, fy + z, z, z);
     }
     for (i = 0; i < L.p.length; i++) {
       p = L.p[i]; k = p.life / p.max;
