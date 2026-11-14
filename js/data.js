@@ -57,14 +57,14 @@ var DATA = (function () {
       passive: { name: 'Rempart', desc: '20 % de chance de bloquer un coup (dégâts divisés par 2).', mods: { block: 20 } },
       unlock: null, start: { artifact: null, potions: 0 },
       skills: [
-        { id: 'k1', name: 'Coup de bouclier', icon: '🛡️', cd: 7, sfx: 'block', desc: '180 % dégâts et étourdit 1,5 s. Interrompt les attaques chargées.' },
-        { id: 'k2', name: 'Jugement', icon: '⚔️', cd: 12, sfx: 'skill_holy', desc: '350 % dégâts et te soigne de 10 % PV.' },
-        { id: 'k3', name: "Serment d'acier", icon: '🏰', cd: 18, sfx: 'skill_war', desc: 'Bouclier de 30 % PV pendant 6 s, et renvoie les coups.' }
+        { id: 'k1', name: "Écu du Parjure", icon: '', cd: 7, sfx: 'block', desc: "180 % dégâts et étourdit 1 tour. Interrompt les attaques chargées. Te donne un bouclier de 4 % PV par point du dé." },
+        { id: 'k2', name: "Parole Reprise", icon: '', cd: 12, sfx: 'skill_holy', desc: "320 % dégâts et te soigne de 8 % PV. Ton plus petit dé en main devient un 6." },
+        { id: 'k3', name: "Veille de Fer", icon: '', cd: 18, sfx: 'skill_war', desc: "Bouclier de 30 % PV qui renvoie les coups pendant 3 tours. Te rend 1 action ⚡ tout de suite." }
       ],
       boons: [
-        { id: 'c_k1', name: 'Bouclier à pointes', rar: 1, desc: 'Coup de bouclier : +50 % dégâts.', mods: { s1P: 50 } },
+        { id: 'c_k1', name: 'Bouclier à pointes', rar: 1, desc: 'Écu du Parjure : +50 % dégâts.', mods: { s1P: 50 } },
         { id: 'c_k2', name: 'Garde parfaite', rar: 2, desc: '+12 % de chance de blocage.', mods: { block: 12 } },
-        { id: 'c_k3', name: 'Verdict', rar: 1, desc: 'Jugement : +50 % dégâts.', mods: { s2P: 50 } }
+        { id: 'c_k3', name: 'Verdict', rar: 1, desc: 'Parole Reprise : +50 % dégâts.', mods: { s2P: 50 } }
       ]
     },
     {
@@ -74,14 +74,14 @@ var DATA = (function () {
       passive: { name: 'Braise vive', desc: 'Chaque attaque embrase la cible (brûlure 3 s).', mods: { burnHit: 100 } },
       unlock: { boss: 1 }, start: {},
       skills: [
-        { id: 'p1', name: 'Boule de feu', icon: '🔥', cd: 6, sfx: 'skill_fire', desc: '220 % dégâts à la cible, 90 % aux autres, embrase.' },
-        { id: 'p2', name: 'Nova de cendres', icon: '☄️', cd: 11, sfx: 'skill_fire', desc: '170 % dégâts à tous les ennemis et les embrase.' },
-        { id: 'p3', name: 'Immolation', icon: '🌋', cd: 16, sfx: 'skill_fire', desc: '400 % dégâts (+60 % si la cible brûle), puis +50 % vitesse 5 s.' }
+        { id: 'p1', name: "Cendre Vive", icon: '', cd: 6, sfx: 'skill_fire', desc: "220 % dégâts et embrase la cible. Le feu se propage : les ennemis déjà en feu prennent 90 %, les autres s’embrasent." },
+        { id: 'p2', name: "Marée de Suie", icon: '', cd: 11, sfx: 'skill_fire', desc: "140 % dégâts à tous et les embrase. Tes dés Lame en main deviennent des dés Braise, avec +1." },
+        { id: 'p3', name: "Bûcher du Roi Creux", icon: '', cd: 16, sfx: 'skill_fire', desc: "400 % dégâts (640 % si la cible brûle). Puis chaque autre ennemi en feu explose : 150 % dégâts, et sa brûlure s’éteint." }
       ],
       boons: [
         { id: 'c_p1', name: 'Combustion', rar: 1, desc: 'Brûlures : +60 % dégâts.', mods: { burnP: 60 } },
-        { id: 'c_p2', name: 'Pyromanie', rar: 1, desc: 'Boule de feu : +50 % dégâts.', mods: { s1P: 50 } },
-        { id: 'c_p3', name: 'Cendres aux cendres', rar: 2, desc: 'Immolation : +60 % dégâts.', mods: { s3P: 60 } }
+        { id: 'c_p2', name: 'Pyromanie', rar: 1, desc: 'Cendre Vive : +50 % dégâts.', mods: { s1P: 50 } },
+        { id: 'c_p3', name: 'Cendres aux cendres', rar: 2, desc: 'Bûcher du Roi Creux : +60 % dégâts.', mods: { s3P: 60 } }
       ]
     },
     {
@@ -91,14 +91,14 @@ var DATA = (function () {
       passive: { name: 'Lames souillées', desc: 'Les coups critiques empoisonnent (cumulable).', mods: {} },
       unlock: { cost: 300 }, start: {},
       skills: [
-        { id: 'a1', name: 'Lacération', icon: '🗡️', cd: 5, sfx: 'skill_blade', desc: '3 coups rapides de 85 % dégâts.' },
-        { id: 'a2', name: "Voile d'ombre", icon: '🌑', cd: 12, sfx: 'skill_dark', desc: '+60 % esquive 3 s. Le prochain coup est un critique doublé.' },
-        { id: 'a3', name: 'Exécution', icon: '☠️', cd: 14, sfx: 'crit', desc: '300 % dégâts, x2,5 sous 35 % PV. Rechargée si elle tue.' }
+        { id: 'a1', name: "Minuit Moins Trois", icon: '', cd: 5, sfx: 'skill_blade', desc: "3 coups de 85 % dégâts, +1 coup pour chaque dé Lame encore dans ta main." },
+        { id: 'a2', name: "Pas de Corbeau", icon: '', cd: 12, sfx: 'skill_dark', desc: "+60 % esquive pendant 2 tours, ton prochain coup est un critique doublé, et tous tes dés en main se retournent." },
+        { id: 'a3', name: "Glas", icon: '', cd: 14, sfx: 'crit', desc: "300 % dégâts, 750 % si la cible a moins de 35 % PV. S’il la tue, tu regagnes 1 action ⚡." }
       ],
       boons: [
         { id: 'c_a1', name: 'Venin noir', rar: 1, desc: 'Poison : +60 % dégâts.', mods: { poisonP: 60 } },
-        { id: 'c_a2', name: 'Mille coupures', rar: 1, desc: 'Lacération : +50 % dégâts.', mods: { s1P: 50 } },
-        { id: 'c_a3', name: 'Sentence', rar: 2, desc: 'Exécution : +60 % dégâts.', mods: { s3P: 60 } }
+        { id: 'c_a2', name: 'Mille coupures', rar: 1, desc: 'Minuit Moins Trois : +50 % dégâts.', mods: { s1P: 50 } },
+        { id: 'c_a3', name: 'Sentence', rar: 2, desc: 'Glas : +60 % dégâts.', mods: { s3P: 60 } }
       ]
     },
     {
@@ -108,14 +108,14 @@ var DATA = (function () {
       passive: { name: 'Levée des morts', desc: 'Chaque ennemi tué relève un serviteur squelette (max 3) qui frappe pour toi.', mods: {} },
       unlock: { boss: 2 }, start: {},
       skills: [
-        { id: 'n1', name: "Trait d'os", icon: '🦴', cd: 6, sfx: 'skill_dark', desc: '200 % dégâts et relève un serviteur.' },
-        { id: 'n2', name: 'Drain de vie', icon: '🩸', cd: 10, sfx: 'skill_dark', desc: '190 % dégâts, te soigne du même montant.' },
-        { id: 'n3', name: 'Armée des morts', icon: '💀', cd: 20, sfx: 'skill_dark', desc: 'Serviteurs au maximum, ils frappent 3 fois plus vite 5 s.' }
+        { id: 'n1', name: "Première Pelletée", icon: '', cd: 6, sfx: 'skill_dark', desc: "200 % dégâts et relève un serviteur. Si ton armée est déjà pleine, tu pioches un dé." },
+        { id: 'n2', name: "Dîme des Morts", icon: '', cd: 10, sfx: 'skill_dark', desc: "190 % dégâts, +30 % par serviteur. Te soigne d’autant." },
+        { id: 'n3', name: "Exhumation", icon: '', cd: 20, sfx: 'skill_dark', desc: "Ton armée se relève au complet et frappe 3 fois plus vite pendant 3 tours. Les dés de la table sont enterrés : +5 % d’ultime chacun." }
       ],
       boons: [
         { id: 'c_n1', name: 'Fosse commune', rar: 2, desc: '+1 serviteur maximum.', mods: { skel: 1 } },
         { id: 'c_n2', name: 'Os trempés', rar: 1, desc: 'Serviteurs : +50 % dégâts.', mods: { skelP: 50 } },
-        { id: 'c_n3', name: 'Sangsue', rar: 1, desc: 'Drain de vie : +50 % dégâts.', mods: { s2P: 50 } }
+        { id: 'c_n3', name: 'Sangsue', rar: 1, desc: 'Dîme des Morts : +50 % dégâts.', mods: { s2P: 50 } }
       ]
     },
     {
@@ -125,14 +125,14 @@ var DATA = (function () {
       passive: { name: 'Fureur écarlate', desc: '+1 % dégâts par 1 % de PV manquant.', mods: {} },
       unlock: { cost: 2500 }, start: {},
       skills: [
-        { id: 'b1', name: 'Taillade', icon: '🪓', cd: 5, sfx: 'skill_war', desc: '200 % dégâts et fait saigner.' },
-        { id: 'b2', name: 'Rage sanglante', icon: '😡', cd: 14, sfx: 'skill_war', desc: 'Sacrifie 10 % PV : +60 % vitesse et 15 % vol de vie pendant 6 s.' },
-        { id: 'b3', name: 'Tourbillon', icon: '🌪️', cd: 12, sfx: 'skill_war', desc: '220 % dégâts à tous, soigne 5 % PV par ennemi touché.' }
+        { id: 'b1', name: "Entaille d’Écorché", icon: '', cd: 5, sfx: 'skill_war', desc: "200 % dégâts et fait saigner. Sous 50 % PV, tu frappes une seconde fois (100 %)." },
+        { id: 'b2', name: "Offrande de Peau", icon: '', cd: 14, sfx: 'skill_war', desc: "Sacrifie 10 % PV : +60 % vitesse et 15 % vol de vie pendant 3 tours, et 1 action ⚡ en plus." },
+        { id: 'b3', name: "Ronde des Loups", icon: '', cd: 12, sfx: 'skill_war', desc: "220 % dégâts à tous (330 % sur ceux qui saignent). Te soigne de 5 % PV par ennemi touché." }
       ],
       boons: [
         { id: 'c_b1', name: 'Plaies ouvertes', rar: 1, desc: 'Saignement : +60 % dégâts.', mods: { bleedP: 60 } },
-        { id: 'c_b2', name: 'Boucher', rar: 1, desc: 'Taillade : +50 % dégâts.', mods: { s1P: 50 } },
-        { id: 'c_b3', name: 'Ouragan', rar: 2, desc: 'Tourbillon : +60 % dégâts.', mods: { s3P: 60 } }
+        { id: 'c_b2', name: 'Boucher', rar: 1, desc: 'Entaille d’Écorché : +50 % dégâts.', mods: { s1P: 50 } },
+        { id: 'c_b3', name: 'Ouragan', rar: 2, desc: 'Ronde des Loups : +60 % dégâts.', mods: { s3P: 60 } }
       ]
     },
     {
@@ -142,14 +142,14 @@ var DATA = (function () {
       passive: { name: 'Grâce impie', desc: 'Régénère 1 % PV par seconde. Les soins en trop deviennent un bouclier.', mods: { regen: 1 } },
       unlock: { boss: 4 }, start: {},
       skills: [
-        { id: 's1', name: 'Châtiment', icon: '✨', cd: 6, sfx: 'skill_holy', desc: '190 % dégâts et affaiblit la cible (-25 % attaque, 4 s).' },
-        { id: 's2', name: 'Prière de sang', icon: '🙏', cd: 12, sfx: 'heal', desc: 'Soigne 25 % PV et retire poison et brûlure.' },
-        { id: 's3', name: 'Colère divine', icon: '⚡', cd: 18, sfx: 'skill_holy', desc: 'Inflige 30 % de tes PV max à tous les ennemis et les étourdit 1 s.' }
+        { id: 's1', name: "Stigmate", icon: '', cd: 6, sfx: 'skill_holy', desc: "190 % dégâts, affaiblit la cible 2 tours (-25 % attaque) et te soigne de 5 % PV." },
+        { id: 's2', name: "Psaume Inversé", icon: '', cd: 12, sfx: 'heal', desc: "Soigne 25 % PV et retire poison, brûlure et saignement. Tu pioches un dé et gagnes une relance." },
+        { id: 's3', name: "Cloche Hérétique", icon: '', cd: 18, sfx: 'skill_holy', desc: "Inflige 30 % de tes PV max à tous les ennemis et les étourdit 1 tour." }
       ],
       boons: [
         { id: 'c_s1', name: 'Ferveur', rar: 1, desc: 'Soins reçus : +35 %.', mods: { healP: 35 } },
-        { id: 'c_s2', name: 'Fouet sacré', rar: 1, desc: 'Châtiment : +50 % dégâts.', mods: { s1P: 50 } },
-        { id: 'c_s3', name: 'Jour du jugement', rar: 2, desc: 'Colère divine : +60 % dégâts.', mods: { s3P: 60 } }
+        { id: 'c_s2', name: 'Fouet sacré', rar: 1, desc: 'Stigmate : +50 % dégâts.', mods: { s1P: 50 } },
+        { id: 'c_s3', name: 'Jour du jugement', rar: 2, desc: 'Cloche Hérétique : +60 % dégâts.', mods: { s3P: 60 } }
       ]
     },
     {
@@ -159,14 +159,14 @@ var DATA = (function () {
       passive: { name: 'Œil de traqueuse', desc: 'Les points faibles apparaissent 2 fois plus souvent et font +50 % dégâts.', mods: { weakP: 50 } },
       unlock: { boss: 3 }, start: {},
       skills: [
-        { id: 'h1', name: 'Carreau perforant', icon: '🏹', cd: 5, sfx: 'skill_blade', desc: '230 % dégâts qui ignorent l’armure, et rend la cible vulnérable 3 s.' },
-        { id: 'h2', name: 'Piège à loup', icon: '⛓️', cd: 11, sfx: 'block', desc: '150 % dégâts, étourdit 2 s et fait saigner. Interrompt les attaques chargées.' },
-        { id: 'h3', name: 'Pluie de carreaux', icon: '🌧️', cd: 14, sfx: 'skill_blade', desc: '5 carreaux de 75 % dégâts sur des ennemis au hasard.' }
+        { id: 'h1', name: "Carreau de Gibet", icon: '', cd: 5, sfx: 'skill_blade', desc: "230 % dégâts qui ignorent l’armure, rend la cible vulnérable 2 tours et lui ouvre un point faible." },
+        { id: 'h2', name: "Nœud Coulant", icon: '', cd: 11, sfx: 'block', desc: "150 % dégâts, étourdit 1 tour et fait saigner. Interrompt les attaques chargées." },
+        { id: 'h3', name: "Volée des Pendus", icon: '', cd: 14, sfx: 'skill_blade', desc: "5 carreaux de 75 % dégâts au hasard. +50 % sur une cible vulnérable ou au point faible ouvert." }
       ],
       boons: [
-        { id: 'c_h1', name: 'Pointes barbelées', rar: 1, desc: 'Carreau perforant : +50 % dégâts.', mods: { s1P: 50 } },
+        { id: 'c_h1', name: 'Pointes barbelées', rar: 1, desc: 'Carreau de Gibet : +50 % dégâts.', mods: { s1P: 50 } },
         { id: 'c_h2', name: 'Instinct de chasse', rar: 2, desc: 'Points faibles : +80 % dégâts.', mods: { weakP: 80 } },
-        { id: 'c_h3', name: 'Carquois sans fond', rar: 1, desc: 'Pluie de carreaux : +60 % dégâts.', mods: { s3P: 60 } }
+        { id: 'c_h3', name: 'Carquois sans fond', rar: 1, desc: 'Volée des Pendus : +60 % dégâts.', mods: { s3P: 60 } }
       ]
     },
     {
@@ -176,58 +176,58 @@ var DATA = (function () {
       passive: { name: 'Élan', desc: 'Chaque coup donne +4 % dégâts (jusqu’à x10). L’élan retombe à zéro si tu encaisses une attaque chargée.', mods: {} },
       unlock: { cost: 8000 }, start: {},
       skills: [
-        { id: 'm1', name: 'Paume de fer', icon: '👊', cd: 4, sfx: 'hit', desc: '170 % dégâts et étourdit 0,8 s. Interrompt les attaques chargées.' },
-        { id: 'm2', name: 'Souffle intérieur', icon: '🌬️', cd: 12, sfx: 'heal', desc: 'Soigne 15 % PV, retire poison, brûlure et saignement, et met l’élan au maximum.' },
-        { id: 'm3', name: 'Mille poings', icon: '💢', cd: 13, sfx: 'skill_blade', desc: '6 coups rapides de 60 % dégâts.' }
+        { id: 'm1', name: "Paume de Braise", icon: '', cd: 4, sfx: 'hit', desc: "170 % dégâts, étourdit et embrase. Interrompt les attaques chargées. +2 élan." },
+        { id: 'm2', name: "Souffle du Foyer", icon: '', cd: 12, sfx: 'heal', desc: "Soigne 15 % PV, retire poison, brûlure et saignement, et met l’élan au maximum. Tu gagnes une relance." },
+        { id: 'm3', name: "Cent Cendres", icon: '', cd: 13, sfx: 'skill_blade', desc: "6 coups rapides de 60 % dégâts, +1 élan chacun. Si l’élan atteint le maximum, tu regagnes 1 action ⚡." }
       ],
       boons: [
-        { id: 'c_m1', name: 'Main de pierre', rar: 1, desc: 'Paume de fer : +50 % dégâts.', mods: { s1P: 50 } },
+        { id: 'c_m1', name: 'Main de pierre', rar: 1, desc: 'Paume de Braise : +50 % dégâts.', mods: { s1P: 50 } },
         { id: 'c_m2', name: 'Pas du vent', rar: 2, desc: '+12 % vitesse et +5 % esquive.', mods: { spdP: 12, dodge: 5 } },
-        { id: 'c_m3', name: 'Dix mille poings', rar: 1, desc: 'Mille poings : +60 % dégâts.', mods: { s3P: 60 } }
+        { id: 'c_m3', name: 'Mille cendres', rar: 1, desc: 'Cent Cendres : +60 % dégâts.', mods: { s3P: 60 } }
       ]
     }
   ];
 
   // ---------- Ultimes (jauge qui se remplit en combat) ----------
   var ULTS = {
-    chevalier: { name: 'Dernier Rempart', icon: '🏰', sfx: 'skill_holy', desc: 'Invulnérable 4 s et 400 % dégâts à tous les ennemis.' },
-    pyro: { name: 'Pluie de Cendres', icon: '☄️', sfx: 'skill_fire', desc: '6 météores de 160 % dégâts, embrase tous les ennemis.' },
-    assassin: { name: 'Danse des Lames', icon: '🌪️', sfx: 'skill_blade', desc: '8 coups critiques de 90 % dégâts sur des ennemis au hasard.' },
-    necro: { name: 'Moisson', icon: '💀', sfx: 'skill_dark', desc: '400 % dégâts à tous, te soigne de la moitié, +2 serviteurs.' },
-    berserker: { name: 'Carnage', icon: '🩸', sfx: 'skill_war', desc: '6 s : vitesse doublée et 20 % vol de vie. Impossible de mourir pendant 4 s.' },
-    pretresse: { name: 'Miracle', icon: '🌟', sfx: 'skill_holy', desc: 'Soigne tous tes PV, bouclier 30 % PV, étourdit tous les ennemis 2 s.' },
-    chasseuse: { name: 'Tir du destin', icon: '🎯', sfx: 'crit', desc: '900 % dégâts critiques sur la cible. Si elle meurt, l’ultime revient à moitié chargé.' },
-    moine: { name: 'Éveil', icon: '☯️', sfx: 'skill_holy', desc: '8 s : vitesse +80 %, esquive +40 %, et chaque coup te soigne de 2 % PV.' }
+    chevalier: { name: "Le Serment Tenu", icon: '', sfx: 'skill_holy', desc: "Invulnérable 2 tours, 400 % dégâts à tous les ennemis, et 1 action ⚡ en plus." },
+    pyro: { name: "La Dernière Flamme", icon: '', sfx: 'skill_fire', desc: "6 météores de 160 % dégâts, embrase tous les ennemis et recharge tous tes pouvoirs." },
+    assassin: { name: "Douze Coups de Minuit", icon: '', sfx: 'skill_blade', desc: "12 coups critiques de 60 % dégâts sur des ennemis au hasard." },
+    necro: { name: "Le Grand Ossuaire", icon: '', sfx: 'skill_dark', desc: "400 % dégâts à tous, te soigne de la moitié et relève 2 serviteurs." },
+    berserker: { name: "Hiver Rouge", icon: '', sfx: 'skill_war', desc: "3 tours : vitesse doublée et 20 % vol de vie. Impossible de mourir pendant 2 tours. Tous tes dés en main passent à 6." },
+    pretresse: { name: "Miracle Profane", icon: '', sfx: 'skill_holy', desc: "Soigne tous tes PV, bouclier de 30 % PV, étourdit tous les ennemis 1 tour." },
+    chasseuse: { name: "La Corde Tranchée", icon: '', sfx: 'crit', desc: "900 % dégâts critiques qui ignorent l’armure. Si la cible meurt, l’ultime revient à moitié chargé." },
+    moine: { name: "Le Foyer Intérieur", icon: '', sfx: 'skill_holy', desc: "4 tours : vitesse +80 %, esquive +40 %, chaque coup te soigne de 2 % PV. Tu pioches 2 dés." }
   };
   HEROES.forEach(function (h) { h.ult = ULTS[h.id]; });
 
   // ---------- Fiches de pouvoirs : étiquettes, conseil, et de quoi calculer les vrais chiffres ----------
   // calc : ['dmg', multiplicateur, nombre de coups, précision] | ['heal', % PV] | ['shield', % PV] | ['hpdmg', % PV]
   var SKILL_INFO = {
-    k1: [['Dégâts', 'Étourdit', 'Interrompt'], 'Garde-le pour un ennemi qui brille en jaune ⚠️ : il annule son gros coup.', [['dmg', 1.8]]],
-    k2: [['Gros dégâts', 'Soin'], 'Ton plus gros coup. Lance-le dès qu’il est prêt, ou quand il te manque des PV.', [['dmg', 3.5], ['heal', 10]]],
-    k3: [['Bouclier', 'Renvoi'], 'À lancer juste avant de prendre cher : boss enragé, plusieurs ennemis, PV bas.', [['shield', 30]]],
-    p1: [['Dégâts', 'Zone', 'Brûlure'], 'Vise l’ennemi le plus solide : les autres prennent quand même 90 %.', [['dmg', 2.2, 1, 'sur la cible'], ['dmg', 0.9, 1, 'sur les autres']]],
-    p2: [['Zone', 'Brûlure'], 'Parfait contre les groupes. Embrase tout le monde avant Immolation.', [['dmg', 1.7, 1, 'à chaque ennemi']]],
-    p3: [['Très gros dégâts', 'Vitesse'], 'Attends que la cible brûle 🔥 : le coup fait +60 %.', [['dmg', 4.0, 1], ['dmg', 6.4, 1, 'si la cible brûle']]],
-    a1: [['Dégâts', '3 coups'], 'Chaque coup peut être critique, donc empoisonner. À lancer dès que possible.', [['dmg', 0.85, 3]]],
-    a2: [['Esquive', 'Critique garanti'], 'Lance-le quand un ennemi va frapper fort, puis laisse le prochain coup faire mal.', []],
-    a3: [['Très gros dégâts', 'Achève'], 'Attends que la cible passe sous 35 % PV : x2,5, et rechargée si elle tue.', [['dmg', 3.0, 1], ['dmg', 7.5, 1, 'sous 35 % PV']]],
-    n1: [['Dégâts', 'Serviteur'], 'Chaque lancer ajoute un squelette. À utiliser sans attendre.', [['dmg', 2.0]]],
-    n2: [['Dégâts', 'Soin'], 'Ton soin : garde-le pour quand il te manque des PV.', [['dmg', 1.9, 1, 'et autant de PV rendus']]],
-    n3: [['Serviteurs', 'Rafale'], 'Remplit ton armée d’un coup. Idéal en début de combat de boss.', []],
-    b1: [['Dégâts', 'Saignement'], 'À lancer dès que possible : le saignement continue de faire mal.', [['dmg', 2.0]]],
-    b2: [['Vitesse', 'Vol de vie', 'Coûte des PV'], 'Tu perds 10 % PV, mais tu les regagnes vite en frappant. Évite-le si tu es presque mort.', []],
-    b3: [['Zone', 'Soin'], 'Plus il y a d’ennemis, plus il te soigne. Parfait contre les groupes.', [['dmg', 2.2, 1, 'à chaque ennemi'], ['heal', 5, 'par ennemi touché']]],
-    s1: [['Dégâts', 'Affaiblit'], 'Vise celui qui frappe le plus fort : il fera 25 % de dégâts en moins.', [['dmg', 1.9]]],
-    s2: [['Soin', 'Purifie'], 'Garde-le pour un moment difficile, ou pour enlever poison et brûlure.', [['heal', 25]]],
-    s3: [['Zone', 'Étourdit'], 'Ses dégâts dépendent de tes PV max, pas de ton attaque. Plus tu as de PV, plus ça tape.', [['hpdmg', 30, 'à chaque ennemi']]],
-    h1: [['Dégâts', 'Perce l’armure', 'Vulnérable'], 'Idéal contre les ennemis blindés. La cible subit ensuite +25 % dégâts pendant 3 s.', [['dmg', 2.3]]],
-    h2: [['Étourdit', 'Interrompt', 'Saignement'], 'Garde-le pour un ennemi qui brille en jaune ⚠️ : il annule son gros coup.', [['dmg', 1.5]]],
-    h3: [['Dégâts', '5 coups', 'Au hasard'], 'Contre un seul ennemi, les 5 carreaux sont pour lui.', [['dmg', 0.75, 5]]],
-    m1: [['Dégâts', 'Étourdit', 'Interrompt'], 'Recharge courte : sers-t’en pour casser les attaques chargées ⚠️ et protéger ton élan.', [['dmg', 1.7]]],
-    m2: [['Soin', 'Purifie', 'Élan max'], 'Te soigne et met ton élan à x10 d’un coup. Très fort en début de combat.', [['heal', 15]]],
-    m3: [['Dégâts', '6 coups', 'Élan'], 'Chaque coup fait monter l’élan. Encore plus fort quand l’élan est déjà haut.', [['dmg', 0.6, 6]]]
+    k1: [['Dégâts', 'Étourdit', 'Interrompt', 'Bouclier'], "Garde-le pour un ennemi qui charge ⚠️. Un gros dé (4) donne un plus gros bouclier.", [['dmg', 1.8]]],
+    k2: [['Gros dégâts', 'Soin', 'Dés'], "Ton plus gros coup. Lance-le quand ta main contient un petit dé : il deviendra un 6.", [['dmg', 3.2], ['heal', 8]]],
+    k3: [['Bouclier', 'Renvoi', '+1 action'], "Ne coûte pas ton tour : il te rend une action. À lancer avant de frapper.", [['shield', 30]]],
+    p1: [['Dégâts', 'Brûlure', 'Propagation'], "Lance-le après Marée de Suie : tous les ennemis en feu prennent des dégâts.", [['dmg', 2.2, 1, 'sur la cible'], ['dmg', 0.9, 1, 'sur chaque ennemi en feu']]],
+    p2: [['Zone', 'Brûlure', 'Dés'], "Garde des dés Lame en main avant de le lancer : ils deviennent des Braises.", [['dmg', 1.4, 1, 'à chaque ennemi']]],
+    p3: [['Très gros dégâts', 'Explosions'], "Embrase d’abord tout le monde : chaque ennemi en feu explosera.", [['dmg', 4.0, 1], ['dmg', 6.4, 1, 'si la cible brûle'], ['dmg', 1.5, 1, 'par explosion']]],
+    a1: [['Dégâts', 'Plusieurs coups'], "Garde tes dés Lame en main et utilise un autre dé : chaque Lame ajoute un coup.", [['dmg', 0.85, 3]]],
+    a2: [['Esquive', 'Critique garanti', 'Dés'], "Tes petits dés deviennent grands en se retournant. Lance-le avec une main de 1 et de 2.", []],
+    a3: [['Très gros dégâts', 'Achève', '+1 action'], "Attends que la cible passe sous 35 % PV : s’il la tue, tu rejoues.", [['dmg', 3.0, 1], ['dmg', 7.5, 1, 'sous 35 % PV']]],
+    n1: [['Dégâts', 'Serviteur', 'Dés'], "Chaque lancer ajoute un squelette. Armée pleine : il te donne un dé.", [['dmg', 2.0]]],
+    n2: [['Dégâts', 'Soin'], "Plus ton armée est grande, plus il frappe et soigne.", [['dmg', 1.9, 1, 'sans serviteur']]],
+    n3: [['Serviteurs', 'Rafale', 'Ultime'], "Remplis d’abord la table de dés : chacun enterré charge ton ultime.", []],
+    b1: [['Dégâts', 'Saignement'], "Sous la moitié de tes PV, il frappe deux fois.", [['dmg', 2.0]]],
+    b2: [['Vitesse', 'Vol de vie', '+1 action', 'Coûte des PV'], "Te rend une action : lance-le en début de tour, puis frappe.", []],
+    b3: [['Zone', 'Soin', 'Saignement'], "Fais d’abord saigner tout le monde : les loups mordent 50 % plus fort.", [['dmg', 2.2, 1, 'à chaque ennemi'], ['dmg', 3.3, 1, 'sur ceux qui saignent'], ['heal', 5, 'par ennemi touché']]],
+    s1: [['Dégâts', 'Affaiblit', 'Soin'], "Vise celui qui frappe le plus fort.", [['dmg', 1.9], ['heal', 5]]],
+    s2: [['Soin', 'Purifie', 'Dés'], "Te soigne et remplit ta main. Garde-le pour un moment difficile.", [['heal', 25]]],
+    s3: [['Zone', 'Étourdit'], "Ses dégâts dépendent de tes PV max, pas de ton attaque.", [['hpdmg', 30, 'à chaque ennemi']]],
+    h1: [['Dégâts', 'Perce l’armure', 'Point faible'], "Il ouvre un point faible : enchaîne avec ⚔️ Critique pour un énorme coup.", [['dmg', 2.3]]],
+    h2: [['Étourdit', 'Interrompt', 'Saignement'], "Garde-le pour un ennemi qui charge ⚠️.", [['dmg', 1.5]]],
+    h3: [['Dégâts', '5 coups', 'Au hasard'], "Lance-le après Carreau de Gibet : chaque carreau sur la cible ouverte fait +50 %.", [['dmg', 0.75, 5]]],
+    m1: [['Dégâts', 'Étourdit', 'Interrompt', 'Élan'], "Recharge courte : casse les attaques chargées ⚠️ et nourrit ton élan.", [['dmg', 1.7]]],
+    m2: [['Soin', 'Purifie', 'Élan max'], "Élan à fond d’un coup, plus une relance de dés.", [['heal', 15]]],
+    m3: [['Dégâts', '6 coups', '+1 action'], "Si l’élan atteint 10 pendant la rafale, tu rejoues.", [['dmg', 0.6, 6]]]
   };
 
   // ---------- Éveils de pouvoir : 2 par pouvoir. On en choisit un tous les 4 niveaux d'une descente. ----------
@@ -241,7 +241,7 @@ var DATA = (function () {
       { name: 'Marteau du juge', desc: 'Recharge 25 % plus courte et charge ton ultime.', cd: 0.75, fx: { ult: 10 } }],
     k3: [{ name: 'Serment éternel', desc: 'Ajoute un bouclier de 15 % PV et te soigne de 8 % PV.', fx: { shield: 15, heal: 8 } },
       { name: 'Représailles', desc: '+40 % vitesse d’attaque pendant 6 s.', fx: { spd: [40, 6] } }],
-    p1: [{ name: 'Boule jumelle', desc: 'Une seconde boule frappe la cible (110 % dégâts).', fx: { again: 1.1 } },
+    p1: [{ name: 'Cendre jumelle', desc: 'Une seconde gerbe frappe la cible (110 % dégâts).', fx: { again: 1.1 } },
       { name: 'Mèche courte', desc: 'Recharge 30 % plus courte.', cd: 0.7 }],
     p2: [{ name: 'Onde étourdissante', desc: 'Étourdit tous les ennemis 1 s.', fx: { stunAll: 1 } },
       { name: 'Cendres collantes', desc: 'Rend tous les ennemis vulnérables 4 s (+25 % dégâts subis).', fx: { vulnAll: 4 } }],
@@ -387,8 +387,11 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '3.6';
+  var VERSION = '3.7';
   var NEWS = [
+    ['🕯️', 'Des pouvoirs propres à Morvane', 'Les 8 héros ont des pouvoirs entièrement repensés : Écu du Parjure, Bûcher du Roi Creux, Minuit Moins Trois, Exhumation, Ronde des Loups, Psaume Inversé, Carreau de Gibet, Cent Cendres... chacun avec sa propre icône.'],
+    ['🎲', 'Des pouvoirs qui jouent avec les dés', 'Certains pouvoirs changent tes dés (un petit dé devient un 6, les Lames deviennent des Braises, toute ta main se retourne), te font piocher, te rendent une action ou ouvrent un point faible.'],
+    ['👑', 'Huit nouveaux ultimes', 'Le Serment Tenu, La Dernière Flamme, Douze Coups de Minuit, Le Grand Ossuaire, Hiver Rouge, Miracle Profane, La Corde Tranchée, Le Foyer Intérieur.'],
     ['🛠️', 'Une interface forgée', 'Boutons, emplacements de pouvoir et camp sont désormais sertis dans des cadres de fer et d’or en pixel art, avec leurs propres icônes.'],
     ['🕯️', 'La Veilleuse te guide', 'Le tutoriel est maintenant raconté par la Veilleuse, dans le style des dialogues de l’histoire.'],
     ['🧭', 'Des boutons plus simples', 'En combat, deux grands boutons : ⚔️ Frapper et 🛡️ Parer, avec tes pouvoirs juste en dessous. Vitesse, jeu automatique, posture et aide sont rangés dans le menu ☰.'],

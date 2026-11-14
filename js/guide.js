@@ -34,6 +34,8 @@ UI.guide = (function () {
   (function skin() {
     var r = document.documentElement.style;
     ['iron', 'gold', 'cyan', 'dark'].forEach(function (k) { r.setProperty('--fr-' + k, 'url(' + Sprites.url('ui_' + k) + ')'); });
+    // icônes pixel des pouvoirs et des ultimes de chaque héros
+    DATA.HEROES.forEach(function (h) { h.skills.forEach(function (k) { k.icon = UI.spr('sk_' + k.id, 'ski'); }); h.ult.icon = UI.spr('ul_' + h.id, 'ski'); });
   })();
 
   function build() {

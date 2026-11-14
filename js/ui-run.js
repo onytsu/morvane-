@@ -28,7 +28,7 @@ UI.run = (function () {
       '<div class="dtray" id="dtray"><div class="dside"><button class="dbag" id="dbag" data-act="bag">🎒<b></b></button><button class="dre" id="dre" data-act="dreroll">↻<b></b></button><button class="dre dfl" id="dfl" data-act="dflip">⇅<b></b></button></div><div class="dhand" id="dhand"></div><div class="dgrid" id="dgrid"></div></div>' +
       '<div class="hud">' +
       '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><span></span></div></div></div>' +
-      '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + UI.spr('i_ult', 'ic') + h.ult.name + '</span></button>' +
+      '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + UI.spr('ul_' + h.id, 'ic') + h.ult.name + '</span></button>' +
       '<div class="turnrow"><span class="aps" id="aps"></span><b id="tlabel"></b><span class="hsts" id="hsts"></span><span class="grow"></span><button class="tog pass" id="tpass" data-act="pass">Fin du tour</button></div>' +
       '<div class="mainacts"><button class="bigact strike" id="bstrike" data-act="strike" data-info="strike">' + UI.spr('i_sword', 'ic') + '<b>Frapper</b></button>' +
       '<button class="bigact parry" id="bparry" data-act="parry" data-info="parry">' + UI.spr('i_shield', 'ic') + '<b>Parer</b><span class="cd"></span></button></div>' +

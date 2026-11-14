@@ -998,3 +998,8 @@ h3.gold, h3 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
 .wk { width: 32px; height: 32px; margin: -16px 0 0 -16px; filter: drop-shadow(0 0 6px #ffd84a); }
 .wk .ic { width: 32px; height: 32px; }
 .camp-scene .lock b { font-family: var(--serif); letter-spacing: .08em; }
+/* v3.7 : icônes pixel des pouvoirs */
+img.ski { display: inline-block; width: 32px; height: 32px; image-rendering: pixelated; vertical-align: middle; filter: drop-shadow(0 2px 0 #000a); }
+.skb .e .ski { width: 32px; height: 32px; }
+#toasts img.ski, .float img.ski { width: 20px; height: 20px; }
+.li .ic img.ski, .sk .ic img.ski, .skhead .ic img.ski, .choice .ic img.ski { width: 32px; height: 32px; }
