@@ -77,7 +77,7 @@ var UI = (function () {
   }
   function setHtml(id, n) {
     var s = E.byId(D.SETS, id); if (!s) return '';
-    var h = '<div class="setbox"><b>' + s.icon + ' ' + s.name + '</b> <span class="tiny">' + n + '/6 portés</span>';
+    var h = '<div class="setbox" style="--sc:' + s.color + '"><b>' + s.icon + ' ' + s.name + '</b> <span class="tiny">' + n + '/6 portés</span>';
     [2, 4, 6].forEach(function (t) { var parts = []; for (var k in s.bonus[t]) { var f = fmtMod(k, s.bonus[t][k]); if (f) parts.push(f[1] + ' ' + f[0]); } h += '<div class="sb' + (n >= t ? ' on' : '') + '"><i>' + t + '</i><span>' + parts.join(' · ') + '</span></div>'; });
     return h + '<div class="tiny dim">Set de la zone : ' + D.ZONES[s.zone - 1].name + '</div></div>';
   }
@@ -143,7 +143,7 @@ var UI = (function () {
   ACT.omen = function (d) { closeModal(); SND.play('door'); S().hero = d.h; E.startRun(d.h, +d.z || 1, d.id || null); UI.run.show(); };
   function itemTile(it, extra) {
     var b = E.itemBase(it), eq = E.equippedBy(it.uid);
-    return '<button class="item r' + it.rar + (it.set ? ' set' : '') + '" data-act="item" data-uid="' + it.uid + '">' + b.icon +
+    return '<button class="item r' + it.rar + E.setAttr(it) + '" data-act="item" data-uid="' + it.uid + '">' + b.icon +
       '<span class="lv">' + it.ilvl + '</span>' + (it.up ? '<span class="up">+' + it.up + '</span>' : '') +
       (eq ? '<span class="eq">' + (eq === S().hero ? '✅' : '👤') + '</span>' : '') + (it.isNew ? '<span class="nw"></span>' : '') + (it.set ? '<span class="sm">◆</span>' : '') + (it.lock ? '<span class="eq" style="right:auto;left:2px;bottom:auto;top:1px">🔒</span>' : '') + (extra || '') + '</button>';
   }
@@ -336,7 +336,7 @@ var UI = (function () {
       var better = cur !== it.uid && !E.equippedBy(it.uid) && (!curIt || E.itemScore(it) > E.itemScore(curIt) * 1.02);
       return itemTile(it, better ? '<span class="arrow" style="left:auto;right:3px;top:' + (it.up ? '11' : '0') + 'px">▲</span>' : '');
     }).join('') + '</div>';
-    h += '<div class="tiny dim center" style="margin-top:12px">Couleurs : <span class="c0">Normal</span> · <span class="c1">Commun</span> · <span class="c2">Rare</span> · <span class="c3">Épique</span> · <span class="c4">Légendaire</span> · <span class="c5">Unique</span> · <span style="color:#6dffb0">◆ Set (double contour)</span></div>';
+    h += '<div class="tiny dim center" style="margin-top:12px">Couleurs : <span class="c0">Normal</span> · <span class="c1">Commun</span> · <span class="c2">Rare</span> · <span class="c3">Épique</span> · <span class="c4">Légendaire</span> · <span class="c5">Unique</span> · ◆ Set : double contour, une couleur par set (' + D.SETS.map(function (z) { return '<span style="color:' + z.color + '">' + z.icon + '</span>'; }).join(' ') + ')</div>';
     return h;
   }
   // ---------- fusion : 3 objets de même rareté -> 1 objet de la rareté au-dessus ----------
@@ -386,7 +386,7 @@ var UI = (function () {
   function itemSheet(it, ctx) {
     var b = E.itemBase(it), p = E.itemParts(it), rar = D.RARITIES[it.rar], uq = it.uq ? E.byId(D.UNIQUES, it.uq) : null;
     var slot = E.byId(D.SLOTS, b.slot), eqBy = E.equippedBy(it.uid), hs = S().heroes[S().hero];
-    var h = '<div class="item-head"><div class="item r' + it.rar + (it.set ? ' set' : '') + '">' + b.icon + '</div><div class="grow"><h3 class="c' + it.rar + '" style="font-size:17px">' + E.itemName(it) + '</h3><div class="small"><b class="c' + it.rar + '">' + rar.name + '</b> · ' + slot.name + ' · niveau ' + it.ilvl + (it.up ? ' · <span class="gold">+' + it.up + '</span>' : '') + '</div>' + (eqBy ? '<div class="tiny good">Équipé par ' + E.hero(eqBy).name + '</div>' : '') + '</div></div>';
+    var h = '<div class="item-head"><div class="item r' + it.rar + E.setAttr(it) + '">' + b.icon + '</div><div class="grow"><h3 class="c' + it.rar + '" style="font-size:17px">' + E.itemName(it) + '</h3><div class="small"><b class="c' + it.rar + '">' + rar.name + '</b> · ' + slot.name + ' · niveau ' + it.ilvl + (it.up ? ' · <span class="gold">+' + it.up + '</span>' : '') + '</div>' + (eqBy ? '<div class="tiny good">Équipé par ' + E.hero(eqBy).name + '</div>' : '') + '</div></div>';
     h += '<div class="' + (uq ? 'uq' : '') + '">' + modLines(p.base) + (Object.keys(p.aff).length ? '<div style="border-top:1px solid #ffffff12;margin:4px 0"></div>' + modLines(p.aff) : '') + modLines(p.pw, 'pw') + '</div>';
     if (uq) h += '<div class="lore">« ' + uq.lore + ' »</div>';
     if (it.set) h += setHtml(it.set, E.setCounts(S().hero)[it.set] || 0);
@@ -401,7 +401,7 @@ var UI = (function () {
     else h += '<button class="btn off">Amélioration max</button>';
     if (tc) h += '<button class="btn' + (S().essence >= tc.essence ? '' : ' off') + '" data-act="temper" data-uid="' + it.uid + '">🔥 Retremper niv. ' + tc.target + '<br><span class="tiny">💠 ' + E.fmt(tc.essence) + '</span></button>';
     h += '</div><div class="btns">';
-    if (it.set) h += '<div class="tiny center" style="width:100%;color:#6dffb0">◆ Pièce de set : ni recyclable, ni fusionnable.</div>';
+    if (it.set) h += '<div class="tiny center" style="width:100%;color:' + E.setColor(it.set) + '">◆ Pièce de set : ni recyclable, ni fusionnable.</div>';
     else if (!eqBy && !it.lock) h += '<button class="btn" data-act="salvage" data-uid="' + it.uid + '">♻️ Recycler (+' + E.fmt(E.salvageValue(it)) + ' 💠)</button>';
     h += '<button class="btn" data-act="close">Fermer</button></div>';
     return h;

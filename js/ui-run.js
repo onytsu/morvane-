@@ -113,7 +113,7 @@ UI.run = (function () {
     var set = D.SETS[z.id - 1];
     UI.modal('<div class="center tiny gold" style="letter-spacing:.3em">ZONE ' + z.id + ' / 6</div><h2 style="color:' + z.color + ';font-size:24px;margin:4px 0 10px">' + z.name + '</h2><p class="center" style="font-style:italic;line-height:1.5">' + z.lore + '</p>' +
       '<div class="li"><div class="ic">☠️</div><div class="grow"><b>Gardien : ' + D.ENEMIES[z.boss].name + '</b><div class="small dim">Il t’attend à l’étage ' + (Math.floor((run.floor - 1) / 10) * 10 + 10) + '. ' + z.mech + '</div></div></div>' +
-      '<div class="li"><div class="ic">' + set.icon + '</div><div class="grow"><b style="color:#6dffb0">◆ ' + set.name + '</b><div class="small dim">Le set d’objets qu’on ne trouve qu’ici.</div></div></div>' +
+      '<div class="li"><div class="ic">' + set.icon + '</div><div class="grow"><b style="color:' + set.color + '">◆ ' + set.name + '</b><div class="small dim">Le set d’objets qu’on ne trouve qu’ici.</div></div></div>' +
       '<div class="btns"><button class="btn primary big" data-act="close">ENTRER</button></div>', true);
   }
   function ending() {
@@ -548,7 +548,7 @@ UI.run = (function () {
   function lootCards(items) {
     return items.map(function (g, i) {
       var it = g.item, b = E.itemBase(it);
-      return '<div class="lootc" style="animation-delay:' + (0.15 + i * 0.22) + 's"><button class="item r' + it.rar + (it.set ? ' set' : '') + '"' + (g.salvaged ? ' style="opacity:.45"' : ' data-act="item" data-uid="' + it.uid + '"') + '>' + b.icon + '<span class="lv">' + it.ilvl + '</span></button><b class="c' + it.rar + '">' + D.RARITIES[it.rar].name + '</b><div class="dim">' + (g.salvaged ? '♻️ +' + g.essence + ' 💠' : b.name) + '</div></div>';
+      return '<div class="lootc" style="animation-delay:' + (0.15 + i * 0.22) + 's"><button class="item r' + it.rar + (it.set ? ' set' : '') + '"' + (it.set ? ' style="--sc:' + E.setColor(it.set) + (g.salvaged ? ';opacity:.45"' : '"') : g.salvaged ? ' style="opacity:.45"' : '') + (g.salvaged ? '' : ' data-act="item" data-uid="' + it.uid + '"') + '>' + b.icon + '<span class="lv">' + it.ilvl + '</span></button><b class="c' + it.rar + '">' + D.RARITIES[it.rar].name + '</b><div class="dim">' + (g.salvaged ? '♻️ +' + g.essence + ' 💠' : b.name) + '</div></div>';
     }).join('');
   }
   function lootFx(items) {

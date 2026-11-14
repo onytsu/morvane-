@@ -228,11 +228,11 @@ h3 { font-size: 15px; }
 .rh img { width: 82%; height: 82%; } .rh.on { border-color: var(--gold); box-shadow: 0 0 10px #d9a44177; background: #2a1d2c; }
 .rh.lk img { filter: brightness(.55) grayscale(1); opacity: .7; } .rh span { position: absolute; font-size: 15px; }
 .hero-stage .nav { z-index: 4; } .hero-stage .lock { z-index: 2; padding: 20px 50px; }
-.item .sm { position: absolute; left: 50%; bottom: -1px; transform: translateX(-50%); font-size: 9px; color: #6dffb0; text-shadow: 0 0 4px #000, 0 0 6px #2bd67b; }
-.setbox { margin-top: 8px; padding: 8px 10px; border-radius: 10px; border: 1px solid #2f6b4c; background: #12201a; }
-.setbox > b { color: #6dffb0; } .setbox .sb { display: flex; gap: 8px; align-items: baseline; font-size: 12.5px; color: #7c8a82; padding: 1px 0; }
+.item .sm { position: absolute; left: 50%; bottom: -1px; transform: translateX(-50%); font-size: 9px; color: var(--sc, #6dffb0); text-shadow: 0 0 4px #000, 0 0 6px var(--sc, #2bd67b); }
+.setbox { margin-top: 8px; padding: 8px 10px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--sc, #6dffb0) 45%, #000); background: color-mix(in srgb, var(--sc, #6dffb0) 9%, #0e0c12); }
+.setbox > b { color: var(--sc, #6dffb0); } .setbox .sb { display: flex; gap: 8px; align-items: baseline; font-size: 12.5px; color: #7c8a82; padding: 1px 0; }
 .setbox .sb i { font-style: normal; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; border: 1px solid currentColor; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex: none; }
-.setbox .sb.on { color: #6dffb0; font-weight: 600; }
+.setbox .sb.on { color: var(--sc, #6dffb0); font-weight: 600; }
 .arena.hasbg { background-size: cover; background-position: center bottom; background-repeat: no-repeat; image-rendering: pixelated; }
 .arena.hasbg::before { display: none; }
 .arena.hasbg::after { background: radial-gradient(ellipse at 50% 45%, transparent 35%, #000a 100%), linear-gradient(#0006, transparent 25%); }
@@ -1113,7 +1113,7 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 #gainpop .gi { width: 32px; height: 32px; image-rendering: pixelated; }
 #gainpop .gtap { margin-top: 6px; font-size: 11px; color: #8e869c; }
 /* Pièces de set : double contour, couleur de rareté à l'extérieur, vert du set à l'intérieur */
-.item.set::after { content: ''; position: absolute; inset: 2px; border-radius: 10px; border: 2px solid #3fe08f; box-shadow: 0 0 6px #2bd67b99, inset 0 0 6px #2bd67b55; pointer-events: none; }
+.item.set::after { content: ''; position: absolute; inset: 2px; border-radius: 10px; border: 2px solid var(--sc, #3fe08f); box-shadow: 0 0 6px color-mix(in srgb, var(--sc, #2bd67b) 60%, transparent), inset 0 0 6px color-mix(in srgb, var(--sc, #2bd67b) 35%, transparent); pointer-events: none; }
 .item-head .item.set::after, .lootc .item.set::after { inset: 3px; border-width: 2.5px; }
 </style></head>
 <body><div id="app"><div id="screen"></div><div id="overlay"></div><div id="modal"></div><div id="toasts"></div><div id="flash"></div></div>
@@ -1549,12 +1549,12 @@ var DATA = (function () {
 
   // ---------- Sets d'objets (bonus à 2, 4 et 6 pièces portées). Un set par zone. ----------
   var SETS = [
-    { id: 'set_fossoyeur', name: 'Ossements du Fossoyeur', short: 'du Fossoyeur', icon: '⚰️', zone: 1, bonus: { 2: { killHeal: 3, hpP: 10 }, 4: { atkP: 20, gf: 30 }, 6: { revive: 1, firstStrike: 200 } } },
-    { id: 'set_corbeau', name: 'Voile du Corbeau', short: 'du Corbeau', icon: '🦅', zone: 2, bonus: { 2: { crit: 6, dodge: 4 }, 4: { critd: 45, spdP: 12 }, 6: { echo: 25, weakP: 100 } } },
-    { id: 'set_peste', name: 'Suaire de la Peste', short: 'de la Peste', icon: '☠️', zone: 3, bonus: { 2: { poisonHit: 30, bleedHit: 20 }, 4: { poisonP: 80, bleedP: 80 }, 6: { exec: 70, ls: 6 } } },
-    { id: 'set_inquisiteur', name: "Vœux de l'Inquisiteur", short: "de l'Inquisiteur", icon: '⛪', zone: 4, bonus: { 2: { defP: 25, block: 5 }, 4: { hpP: 25, parryP: 150 }, 6: { takenP: -20, startShield: 35 } } },
-    { id: 'set_braises', name: 'Cœur des Braises', short: 'des Braises', icon: '🔥', zone: 5, bonus: { 2: { burnHit: 35, pow: 15 }, 4: { burnP: 90, cdr: 12 }, 6: { dmgP: 30, chain: 90 } } },
-    { id: 'set_roi', name: 'Regalia du Roi Creux', short: 'du Roi Creux', icon: '👑', zone: 6, bonus: { 2: { gf: 30, mf: 25 }, 4: { allP: 8, ultP: 50 }, 6: { boonChoices: 1, allP: 12 } } }
+    { id: 'set_fossoyeur', color: '#eadfb8', name: 'Ossements du Fossoyeur', short: 'du Fossoyeur', icon: '⚰️', zone: 1, bonus: { 2: { killHeal: 3, hpP: 10 }, 4: { atkP: 20, gf: 30 }, 6: { revive: 1, firstStrike: 200 } } },
+    { id: 'set_corbeau', color: '#38d9d0', name: 'Voile du Corbeau', short: 'du Corbeau', icon: '🦅', zone: 2, bonus: { 2: { crit: 6, dodge: 4 }, 4: { critd: 45, spdP: 12 }, 6: { echo: 25, weakP: 100 } } },
+    { id: 'set_peste', color: '#a6e23a', name: 'Suaire de la Peste', short: 'de la Peste', icon: '☠️', zone: 3, bonus: { 2: { poisonHit: 30, bleedHit: 20 }, 4: { poisonP: 80, bleedP: 80 }, 6: { exec: 70, ls: 6 } } },
+    { id: 'set_inquisiteur', color: '#ff5fd2', name: "Vœux de l'Inquisiteur", short: "de l'Inquisiteur", icon: '⛪', zone: 4, bonus: { 2: { defP: 25, block: 5 }, 4: { hpP: 25, parryP: 150 }, 6: { takenP: -20, startShield: 35 } } },
+    { id: 'set_braises', color: '#ff4a2a', name: 'Cœur des Braises', short: 'des Braises', icon: '🔥', zone: 5, bonus: { 2: { burnHit: 35, pow: 15 }, 4: { burnP: 90, cdr: 12 }, 6: { dmgP: 30, chain: 90 } } },
+    { id: 'set_roi', color: '#ffcc33', name: 'Regalia du Roi Creux', short: 'du Roi Creux', icon: '👑', zone: 6, bonus: { 2: { gf: 30, mf: 25 }, 4: { allP: 8, ultP: 50 }, 6: { boonChoices: 1, allP: 12 } } }
   ];
 
   // ---------- Présages (un au choix au début de chaque descente) ----------
@@ -2272,6 +2272,9 @@ if (typeof module !== 'undefined') module.exports = DATA;
     }
     return it;
   };
+  E.setColor = function (id) { var s = id && byId(D.SETS, id); return s ? s.color : '#6dffb0'; };
+  // classe + couleur du set pour une tuile d'objet (double contour)
+  E.setAttr = function (it) { return it.set ? ' set" style="--sc:' + E.setColor(it.set) : ''; };
   E.itemBase = function (it) { return byId(D.BASES, it.base); };
   E.itemName = function (it) {
     if (it.uq) return byId(D.UNIQUES, it.uq).name;
@@ -6599,7 +6602,7 @@ var UI = (function () {
   }
   function setHtml(id, n) {
     var s = E.byId(D.SETS, id); if (!s) return '';
-    var h = '<div class="setbox"><b>' + s.icon + ' ' + s.name + '</b> <span class="tiny">' + n + '/6 portés</span>';
+    var h = '<div class="setbox" style="--sc:' + s.color + '"><b>' + s.icon + ' ' + s.name + '</b> <span class="tiny">' + n + '/6 portés</span>';
     [2, 4, 6].forEach(function (t) { var parts = []; for (var k in s.bonus[t]) { var f = fmtMod(k, s.bonus[t][k]); if (f) parts.push(f[1] + ' ' + f[0]); } h += '<div class="sb' + (n >= t ? ' on' : '') + '"><i>' + t + '</i><span>' + parts.join(' · ') + '</span></div>'; });
     return h + '<div class="tiny dim">Set de la zone : ' + D.ZONES[s.zone - 1].name + '</div></div>';
   }
@@ -6665,7 +6668,7 @@ var UI = (function () {
   ACT.omen = function (d) { closeModal(); SND.play('door'); S().hero = d.h; E.startRun(d.h, +d.z || 1, d.id || null); UI.run.show(); };
   function itemTile(it, extra) {
     var b = E.itemBase(it), eq = E.equippedBy(it.uid);
-    return '<button class="item r' + it.rar + (it.set ? ' set' : '') + '" data-act="item" data-uid="' + it.uid + '">' + b.icon +
+    return '<button class="item r' + it.rar + E.setAttr(it) + '" data-act="item" data-uid="' + it.uid + '">' + b.icon +
       '<span class="lv">' + it.ilvl + '</span>' + (it.up ? '<span class="up">+' + it.up + '</span>' : '') +
       (eq ? '<span class="eq">' + (eq === S().hero ? '✅' : '👤') + '</span>' : '') + (it.isNew ? '<span class="nw"></span>' : '') + (it.set ? '<span class="sm">◆</span>' : '') + (it.lock ? '<span class="eq" style="right:auto;left:2px;bottom:auto;top:1px">🔒</span>' : '') + (extra || '') + '</button>';
   }
@@ -6858,7 +6861,7 @@ var UI = (function () {
       var better = cur !== it.uid && !E.equippedBy(it.uid) && (!curIt || E.itemScore(it) > E.itemScore(curIt) * 1.02);
       return itemTile(it, better ? '<span class="arrow" style="left:auto;right:3px;top:' + (it.up ? '11' : '0') + 'px">▲</span>' : '');
     }).join('') + '</div>';
-    h += '<div class="tiny dim center" style="margin-top:12px">Couleurs : <span class="c0">Normal</span> · <span class="c1">Commun</span> · <span class="c2">Rare</span> · <span class="c3">Épique</span> · <span class="c4">Légendaire</span> · <span class="c5">Unique</span> · <span style="color:#6dffb0">◆ Set (double contour)</span></div>';
+    h += '<div class="tiny dim center" style="margin-top:12px">Couleurs : <span class="c0">Normal</span> · <span class="c1">Commun</span> · <span class="c2">Rare</span> · <span class="c3">Épique</span> · <span class="c4">Légendaire</span> · <span class="c5">Unique</span> · ◆ Set : double contour, une couleur par set (' + D.SETS.map(function (z) { return '<span style="color:' + z.color + '">' + z.icon + '</span>'; }).join(' ') + ')</div>';
     return h;
   }
   // ---------- fusion : 3 objets de même rareté -> 1 objet de la rareté au-dessus ----------
@@ -6908,7 +6911,7 @@ var UI = (function () {
   function itemSheet(it, ctx) {
     var b = E.itemBase(it), p = E.itemParts(it), rar = D.RARITIES[it.rar], uq = it.uq ? E.byId(D.UNIQUES, it.uq) : null;
     var slot = E.byId(D.SLOTS, b.slot), eqBy = E.equippedBy(it.uid), hs = S().heroes[S().hero];
-    var h = '<div class="item-head"><div class="item r' + it.rar + (it.set ? ' set' : '') + '">' + b.icon + '</div><div class="grow"><h3 class="c' + it.rar + '" style="font-size:17px">' + E.itemName(it) + '</h3><div class="small"><b class="c' + it.rar + '">' + rar.name + '</b> · ' + slot.name + ' · niveau ' + it.ilvl + (it.up ? ' · <span class="gold">+' + it.up + '</span>' : '') + '</div>' + (eqBy ? '<div class="tiny good">Équipé par ' + E.hero(eqBy).name + '</div>' : '') + '</div></div>';
+    var h = '<div class="item-head"><div class="item r' + it.rar + E.setAttr(it) + '">' + b.icon + '</div><div class="grow"><h3 class="c' + it.rar + '" style="font-size:17px">' + E.itemName(it) + '</h3><div class="small"><b class="c' + it.rar + '">' + rar.name + '</b> · ' + slot.name + ' · niveau ' + it.ilvl + (it.up ? ' · <span class="gold">+' + it.up + '</span>' : '') + '</div>' + (eqBy ? '<div class="tiny good">Équipé par ' + E.hero(eqBy).name + '</div>' : '') + '</div></div>';
     h += '<div class="' + (uq ? 'uq' : '') + '">' + modLines(p.base) + (Object.keys(p.aff).length ? '<div style="border-top:1px solid #ffffff12;margin:4px 0"></div>' + modLines(p.aff) : '') + modLines(p.pw, 'pw') + '</div>';
     if (uq) h += '<div class="lore">« ' + uq.lore + ' »</div>';
     if (it.set) h += setHtml(it.set, E.setCounts(S().hero)[it.set] || 0);
@@ -6923,7 +6926,7 @@ var UI = (function () {
     else h += '<button class="btn off">Amélioration max</button>';
     if (tc) h += '<button class="btn' + (S().essence >= tc.essence ? '' : ' off') + '" data-act="temper" data-uid="' + it.uid + '">🔥 Retremper niv. ' + tc.target + '<br><span class="tiny">💠 ' + E.fmt(tc.essence) + '</span></button>';
     h += '</div><div class="btns">';
-    if (it.set) h += '<div class="tiny center" style="width:100%;color:#6dffb0">◆ Pièce de set : ni recyclable, ni fusionnable.</div>';
+    if (it.set) h += '<div class="tiny center" style="width:100%;color:' + E.setColor(it.set) + '">◆ Pièce de set : ni recyclable, ni fusionnable.</div>';
     else if (!eqBy && !it.lock) h += '<button class="btn" data-act="salvage" data-uid="' + it.uid + '">♻️ Recycler (+' + E.fmt(E.salvageValue(it)) + ' 💠)</button>';
     h += '<button class="btn" data-act="close">Fermer</button></div>';
     return h;
@@ -7169,7 +7172,7 @@ UI.run = (function () {
     var set = D.SETS[z.id - 1];
     UI.modal('<div class="center tiny gold" style="letter-spacing:.3em">ZONE ' + z.id + ' / 6</div><h2 style="color:' + z.color + ';font-size:24px;margin:4px 0 10px">' + z.name + '</h2><p class="center" style="font-style:italic;line-height:1.5">' + z.lore + '</p>' +
       '<div class="li"><div class="ic">☠️</div><div class="grow"><b>Gardien : ' + D.ENEMIES[z.boss].name + '</b><div class="small dim">Il t’attend à l’étage ' + (Math.floor((run.floor - 1) / 10) * 10 + 10) + '. ' + z.mech + '</div></div></div>' +
-      '<div class="li"><div class="ic">' + set.icon + '</div><div class="grow"><b style="color:#6dffb0">◆ ' + set.name + '</b><div class="small dim">Le set d’objets qu’on ne trouve qu’ici.</div></div></div>' +
+      '<div class="li"><div class="ic">' + set.icon + '</div><div class="grow"><b style="color:' + set.color + '">◆ ' + set.name + '</b><div class="small dim">Le set d’objets qu’on ne trouve qu’ici.</div></div></div>' +
       '<div class="btns"><button class="btn primary big" data-act="close">ENTRER</button></div>', true);
   }
   function ending() {
@@ -7604,7 +7607,7 @@ UI.run = (function () {
   function lootCards(items) {
     return items.map(function (g, i) {
       var it = g.item, b = E.itemBase(it);
-      return '<div class="lootc" style="animation-delay:' + (0.15 + i * 0.22) + 's"><button class="item r' + it.rar + (it.set ? ' set' : '') + '"' + (g.salvaged ? ' style="opacity:.45"' : ' data-act="item" data-uid="' + it.uid + '"') + '>' + b.icon + '<span class="lv">' + it.ilvl + '</span></button><b class="c' + it.rar + '">' + D.RARITIES[it.rar].name + '</b><div class="dim">' + (g.salvaged ? '♻️ +' + g.essence + ' 💠' : b.name) + '</div></div>';
+      return '<div class="lootc" style="animation-delay:' + (0.15 + i * 0.22) + 's"><button class="item r' + it.rar + (it.set ? ' set' : '') + '"' + (it.set ? ' style="--sc:' + E.setColor(it.set) + (g.salvaged ? ';opacity:.45"' : '"') : g.salvaged ? ' style="opacity:.45"' : '') + (g.salvaged ? '' : ' data-act="item" data-uid="' + it.uid + '"') + '>' + b.icon + '<span class="lv">' + it.ilvl + '</span></button><b class="c' + it.rar + '">' + D.RARITIES[it.rar].name + '</b><div class="dim">' + (g.salvaged ? '♻️ +' + g.essence + ' 💠' : b.name) + '</div></div>';
     }).join('');
   }
   function lootFx(items) {

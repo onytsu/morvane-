@@ -224,11 +224,11 @@ h3 { font-size: 15px; }
 .rh img { width: 82%; height: 82%; } .rh.on { border-color: var(--gold); box-shadow: 0 0 10px #d9a44177; background: #2a1d2c; }
 .rh.lk img { filter: brightness(.55) grayscale(1); opacity: .7; } .rh span { position: absolute; font-size: 15px; }
 .hero-stage .nav { z-index: 4; } .hero-stage .lock { z-index: 2; padding: 20px 50px; }
-.item .sm { position: absolute; left: 50%; bottom: -1px; transform: translateX(-50%); font-size: 9px; color: #6dffb0; text-shadow: 0 0 4px #000, 0 0 6px #2bd67b; }
-.setbox { margin-top: 8px; padding: 8px 10px; border-radius: 10px; border: 1px solid #2f6b4c; background: #12201a; }
-.setbox > b { color: #6dffb0; } .setbox .sb { display: flex; gap: 8px; align-items: baseline; font-size: 12.5px; color: #7c8a82; padding: 1px 0; }
+.item .sm { position: absolute; left: 50%; bottom: -1px; transform: translateX(-50%); font-size: 9px; color: var(--sc, #6dffb0); text-shadow: 0 0 4px #000, 0 0 6px var(--sc, #2bd67b); }
+.setbox { margin-top: 8px; padding: 8px 10px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--sc, #6dffb0) 45%, #000); background: color-mix(in srgb, var(--sc, #6dffb0) 9%, #0e0c12); }
+.setbox > b { color: var(--sc, #6dffb0); } .setbox .sb { display: flex; gap: 8px; align-items: baseline; font-size: 12.5px; color: #7c8a82; padding: 1px 0; }
 .setbox .sb i { font-style: normal; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; border: 1px solid currentColor; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex: none; }
-.setbox .sb.on { color: #6dffb0; font-weight: 600; }
+.setbox .sb.on { color: var(--sc, #6dffb0); font-weight: 600; }
 .arena.hasbg { background-size: cover; background-position: center bottom; background-repeat: no-repeat; image-rendering: pixelated; }
 .arena.hasbg::before { display: none; }
 .arena.hasbg::after { background: radial-gradient(ellipse at 50% 45%, transparent 35%, #000a 100%), linear-gradient(#0006, transparent 25%); }
@@ -1109,5 +1109,5 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 #gainpop .gi { width: 32px; height: 32px; image-rendering: pixelated; }
 #gainpop .gtap { margin-top: 6px; font-size: 11px; color: #8e869c; }
 /* Pièces de set : double contour, couleur de rareté à l'extérieur, vert du set à l'intérieur */
-.item.set::after { content: ''; position: absolute; inset: 2px; border-radius: 10px; border: 2px solid #3fe08f; box-shadow: 0 0 6px #2bd67b99, inset 0 0 6px #2bd67b55; pointer-events: none; }
+.item.set::after { content: ''; position: absolute; inset: 2px; border-radius: 10px; border: 2px solid var(--sc, #3fe08f); box-shadow: 0 0 6px color-mix(in srgb, var(--sc, #2bd67b) 60%, transparent), inset 0 0 6px color-mix(in srgb, var(--sc, #2bd67b) 35%, transparent); pointer-events: none; }
 .item-head .item.set::after, .lootc .item.set::after { inset: 3px; border-width: 2.5px; }

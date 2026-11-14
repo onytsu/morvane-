@@ -429,12 +429,12 @@ var DATA = (function () {
 
   // ---------- Sets d'objets (bonus à 2, 4 et 6 pièces portées). Un set par zone. ----------
   var SETS = [
-    { id: 'set_fossoyeur', name: 'Ossements du Fossoyeur', short: 'du Fossoyeur', icon: '⚰️', zone: 1, bonus: { 2: { killHeal: 3, hpP: 10 }, 4: { atkP: 20, gf: 30 }, 6: { revive: 1, firstStrike: 200 } } },
-    { id: 'set_corbeau', name: 'Voile du Corbeau', short: 'du Corbeau', icon: '🦅', zone: 2, bonus: { 2: { crit: 6, dodge: 4 }, 4: { critd: 45, spdP: 12 }, 6: { echo: 25, weakP: 100 } } },
-    { id: 'set_peste', name: 'Suaire de la Peste', short: 'de la Peste', icon: '☠️', zone: 3, bonus: { 2: { poisonHit: 30, bleedHit: 20 }, 4: { poisonP: 80, bleedP: 80 }, 6: { exec: 70, ls: 6 } } },
-    { id: 'set_inquisiteur', name: "Vœux de l'Inquisiteur", short: "de l'Inquisiteur", icon: '⛪', zone: 4, bonus: { 2: { defP: 25, block: 5 }, 4: { hpP: 25, parryP: 150 }, 6: { takenP: -20, startShield: 35 } } },
-    { id: 'set_braises', name: 'Cœur des Braises', short: 'des Braises', icon: '🔥', zone: 5, bonus: { 2: { burnHit: 35, pow: 15 }, 4: { burnP: 90, cdr: 12 }, 6: { dmgP: 30, chain: 90 } } },
-    { id: 'set_roi', name: 'Regalia du Roi Creux', short: 'du Roi Creux', icon: '👑', zone: 6, bonus: { 2: { gf: 30, mf: 25 }, 4: { allP: 8, ultP: 50 }, 6: { boonChoices: 1, allP: 12 } } }
+    { id: 'set_fossoyeur', color: '#eadfb8', name: 'Ossements du Fossoyeur', short: 'du Fossoyeur', icon: '⚰️', zone: 1, bonus: { 2: { killHeal: 3, hpP: 10 }, 4: { atkP: 20, gf: 30 }, 6: { revive: 1, firstStrike: 200 } } },
+    { id: 'set_corbeau', color: '#38d9d0', name: 'Voile du Corbeau', short: 'du Corbeau', icon: '🦅', zone: 2, bonus: { 2: { crit: 6, dodge: 4 }, 4: { critd: 45, spdP: 12 }, 6: { echo: 25, weakP: 100 } } },
+    { id: 'set_peste', color: '#a6e23a', name: 'Suaire de la Peste', short: 'de la Peste', icon: '☠️', zone: 3, bonus: { 2: { poisonHit: 30, bleedHit: 20 }, 4: { poisonP: 80, bleedP: 80 }, 6: { exec: 70, ls: 6 } } },
+    { id: 'set_inquisiteur', color: '#ff5fd2', name: "Vœux de l'Inquisiteur", short: "de l'Inquisiteur", icon: '⛪', zone: 4, bonus: { 2: { defP: 25, block: 5 }, 4: { hpP: 25, parryP: 150 }, 6: { takenP: -20, startShield: 35 } } },
+    { id: 'set_braises', color: '#ff4a2a', name: 'Cœur des Braises', short: 'des Braises', icon: '🔥', zone: 5, bonus: { 2: { burnHit: 35, pow: 15 }, 4: { burnP: 90, cdr: 12 }, 6: { dmgP: 30, chain: 90 } } },
+    { id: 'set_roi', color: '#ffcc33', name: 'Regalia du Roi Creux', short: 'du Roi Creux', icon: '👑', zone: 6, bonus: { 2: { gf: 30, mf: 25 }, 4: { allP: 8, ultP: 50 }, 6: { boonChoices: 1, allP: 12 } } }
   ];
 
   // ---------- Présages (un au choix au début de chaque descente) ----------

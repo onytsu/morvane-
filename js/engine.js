@@ -126,6 +126,9 @@
     }
     return it;
   };
+  E.setColor = function (id) { var s = id && byId(D.SETS, id); return s ? s.color : '#6dffb0'; };
+  // classe + couleur du set pour une tuile d'objet (double contour)
+  E.setAttr = function (it) { return it.set ? ' set" style="--sc:' + E.setColor(it.set) : ''; };
   E.itemBase = function (it) { return byId(D.BASES, it.base); };
   E.itemName = function (it) {
     if (it.uq) return byId(D.UNIQUES, it.uq).name;
