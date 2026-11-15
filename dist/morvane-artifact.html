@@ -1196,6 +1196,8 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 /* figure possible avec la main : « Paire possible » tient dans la case */
 .dfig .maybe { font-size: 9px; letter-spacing: 0; } .dfig .maybe small { font-size: 8px; color: #8a7d9c; }
 .bigact.cool b { margin-right: 26px; }
+.gifts.compact { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; } .gifts.compact .li { margin: 0; padding: 4px 6px; gap: 6px; min-height: 0; }
+.gifts.compact .li .small { display: none; } .gifts.compact .li b { font-size: 11.5px; line-height: 1.2; } .gifts.compact .li .ic { transform: scale(.8); }
 
 :root { color-scheme: dark; --sat: 0px; --sab: 0px; } html, body { height: 100%; } #app { height: 100%; }</style>
 <div id="app"><div id="screen"></div><div id="overlay"></div><div id="modal"></div><div id="toasts"></div><div id="flash"></div></div>
@@ -1590,7 +1592,7 @@ var DATA = (function () {
   var VERSION = '4.6';
   var NEWS = [
     ['🧹', 'Balayer', 'Quand des ennemis ne font pas le poids, un bouton « Balayer le combat » le règle d’un geste, butin compris. Il te rend la main si ça tourne mal.'],
-    ['⚡', 'Victoire éclair', 'Le compteur « Tour 1/2 » montre l’objectif : gagne dans les temps et tu touches +50 % d’or et de Cendres.'],
+    ['⚡', 'Victoire éclair', 'Le compteur « Tour 1/2 » montre l’objectif (3 tours contre une horde ou une élite) : gagne dans les temps et tu touches +50 % d’or et de Cendres.'],
     ['🗡️', 'Coup de grâce', 'Un ennemi (hors boss) touché sous 12 % de ses PV est achevé d’un coup. Élites et boss ont moins de PV mais frappent plus fort : des combats plus courts et plus tendus.'],
     ['💾', 'Combat sauvegardé', 'Fermer l’appli en plein combat ne le remet plus à zéro : tu reprends au début du tour où tu étais.'],
     ['⚖️', 'Colporteur plus clair', 'Touche un objet en vente pour voir sa fiche, et sa comparaison avec ton équipement s’affiche tout de suite. Plus de marchand dès les premières cases.'],
@@ -3750,7 +3752,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     }
   }
   // Nombre de tours pour décrocher le bonus Éclair (0 : pas de bonus dans cette salle)
-  E.eclairPar = function (c, r) { if (!c || !r || c.cond === 'defi' || r.wasMimic || c.swept) return 0; return r.type === 'combat' ? (r.group.length >= 3 ? 3 : 2) : r.type === 'elite' || r.forceElite ? 4 : 0; };
+  E.eclairPar = function (c, r) { if (!c || !r || c.cond === 'defi' || r.wasMimic || c.swept) return 0; return r.type === 'combat' ? (r.group.length >= 3 ? 3 : 2) : r.type === 'elite' || r.forceElite ? 3 : 0; };
   function finish(run, c) {
     if (c.done) return; c.done = true;
     if (!c.win) { ev(c, { k: 'dead' }); run.phase = 'dead'; return; }
@@ -3780,7 +3782,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     }
     heal(run, run.stats.hp * 0.08, true);
     // Rattrapage : un héros en retard sur la profondeur gagne plus d'expérience (moins de premières descentes qui arrivent au boss au niveau 3)
-    var lag = 1 + (run.floor - (run.startFloor || 1) + 1) / 2 - run.lvl; if (lag > 0) c.xp *= 1 + 0.35 * lag;
+    var lag = Math.min(2.5, 1 + (run.floor - (run.startFloor || 1) + 1) / 2 - run.lvl); if (lag > 0) c.xp *= 1 + 0.35 * lag;
     res.lvlUps = gainXp(run, c.xp);
     run.result = res; run.phase = 'victory';
     ev(c, { k: 'win', boss: r.type === 'boss' });
@@ -7363,7 +7365,7 @@ UI.run = (function () {
     if (!run.gifts || !run.gifts.length || run.giftsSeen) return ''; run.giftsSeen = 1;
     var n = {}, h = ''; run.gifts.forEach(function (id) { n[id] = (n[id] || 0) + 1; });
     Object.keys(n).forEach(function (id) { var b = E.boonById(id); if (b) h += '<div class="li"><div class="ic">' + b.icon + '</div><div class="grow"><b>' + b.name + (n[id] > 1 ? ' ×' + n[id] : '') + '</b><div class="small dim">' + b.desc + '</div></div></div>'; });
-    return '<div class="center small gold" style="margin:10px 0 4px">' + UI.spr('bn_tout', 'ski') + ' ' + run.gifts.length + ' aubaine' + (run.gifts.length > 1 ? 's' : '') + ' offerte' + (run.gifts.length > 1 ? 's' : '') + ' pour cette descente</div><div class="gifts">' + h + '</div>';
+    return '<div class="center small gold" style="margin:10px 0 4px">' + UI.spr('bn_tout', 'ski') + ' ' + run.gifts.length + ' aubaine' + (run.gifts.length > 1 ? 's' : '') + ' offerte' + (run.gifts.length > 1 ? 's' : '') + ' pour cette descente</div><div class="gifts' + (Object.keys(n).length > 4 ? ' compact' : '') + '">' + h + '</div>';
   }
   function zoneIntro(run) {
     var z = E.zoneOf(run.floor);

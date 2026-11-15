@@ -388,7 +388,7 @@ var DATA = (function () {
   var VERSION = '4.6';
   var NEWS = [
     ['🧹', 'Balayer', 'Quand des ennemis ne font pas le poids, un bouton « Balayer le combat » le règle d’un geste, butin compris. Il te rend la main si ça tourne mal.'],
-    ['⚡', 'Victoire éclair', 'Le compteur « Tour 1/2 » montre l’objectif : gagne dans les temps et tu touches +50 % d’or et de Cendres.'],
+    ['⚡', 'Victoire éclair', 'Le compteur « Tour 1/2 » montre l’objectif (3 tours contre une horde ou une élite) : gagne dans les temps et tu touches +50 % d’or et de Cendres.'],
     ['🗡️', 'Coup de grâce', 'Un ennemi (hors boss) touché sous 12 % de ses PV est achevé d’un coup. Élites et boss ont moins de PV mais frappent plus fort : des combats plus courts et plus tendus.'],
     ['💾', 'Combat sauvegardé', 'Fermer l’appli en plein combat ne le remet plus à zéro : tu reprends au début du tour où tu étais.'],
     ['⚖️', 'Colporteur plus clair', 'Touche un objet en vente pour voir sa fiche, et sa comparaison avec ton équipement s’affiche tout de suite. Plus de marchand dès les premières cases.'],

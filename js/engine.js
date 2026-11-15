@@ -1516,7 +1516,7 @@
     }
   }
   // Nombre de tours pour décrocher le bonus Éclair (0 : pas de bonus dans cette salle)
-  E.eclairPar = function (c, r) { if (!c || !r || c.cond === 'defi' || r.wasMimic || c.swept) return 0; return r.type === 'combat' ? (r.group.length >= 3 ? 3 : 2) : r.type === 'elite' || r.forceElite ? 4 : 0; };
+  E.eclairPar = function (c, r) { if (!c || !r || c.cond === 'defi' || r.wasMimic || c.swept) return 0; return r.type === 'combat' ? (r.group.length >= 3 ? 3 : 2) : r.type === 'elite' || r.forceElite ? 3 : 0; };
   function finish(run, c) {
     if (c.done) return; c.done = true;
     if (!c.win) { ev(c, { k: 'dead' }); run.phase = 'dead'; return; }
@@ -1546,7 +1546,7 @@
     }
     heal(run, run.stats.hp * 0.08, true);
     // Rattrapage : un héros en retard sur la profondeur gagne plus d'expérience (moins de premières descentes qui arrivent au boss au niveau 3)
-    var lag = 1 + (run.floor - (run.startFloor || 1) + 1) / 2 - run.lvl; if (lag > 0) c.xp *= 1 + 0.35 * lag;
+    var lag = Math.min(2.5, 1 + (run.floor - (run.startFloor || 1) + 1) / 2 - run.lvl); if (lag > 0) c.xp *= 1 + 0.35 * lag;
     res.lvlUps = gainXp(run, c.xp);
     run.result = res; run.phase = 'victory';
     ev(c, { k: 'win', boss: r.type === 'boss' });

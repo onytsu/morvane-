@@ -131,7 +131,7 @@ UI.run = (function () {
     if (!run.gifts || !run.gifts.length || run.giftsSeen) return ''; run.giftsSeen = 1;
     var n = {}, h = ''; run.gifts.forEach(function (id) { n[id] = (n[id] || 0) + 1; });
     Object.keys(n).forEach(function (id) { var b = E.boonById(id); if (b) h += '<div class="li"><div class="ic">' + b.icon + '</div><div class="grow"><b>' + b.name + (n[id] > 1 ? ' ×' + n[id] : '') + '</b><div class="small dim">' + b.desc + '</div></div></div>'; });
-    return '<div class="center small gold" style="margin:10px 0 4px">' + UI.spr('bn_tout', 'ski') + ' ' + run.gifts.length + ' aubaine' + (run.gifts.length > 1 ? 's' : '') + ' offerte' + (run.gifts.length > 1 ? 's' : '') + ' pour cette descente</div><div class="gifts">' + h + '</div>';
+    return '<div class="center small gold" style="margin:10px 0 4px">' + UI.spr('bn_tout', 'ski') + ' ' + run.gifts.length + ' aubaine' + (run.gifts.length > 1 ? 's' : '') + ' offerte' + (run.gifts.length > 1 ? 's' : '') + ' pour cette descente</div><div class="gifts' + (Object.keys(n).length > 4 ? ' compact' : '') + '">' + h + '</div>';
   }
   function zoneIntro(run) {
     var z = E.zoneOf(run.floor);

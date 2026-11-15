@@ -1195,3 +1195,5 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 /* figure possible avec la main : « Paire possible » tient dans la case */
 .dfig .maybe { font-size: 9px; letter-spacing: 0; } .dfig .maybe small { font-size: 8px; color: #8a7d9c; }
 .bigact.cool b { margin-right: 26px; }
+.gifts.compact { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; } .gifts.compact .li { margin: 0; padding: 4px 6px; gap: 6px; min-height: 0; }
+.gifts.compact .li .small { display: none; } .gifts.compact .li b { font-size: 11.5px; line-height: 1.2; } .gifts.compact .li .ic { transform: scale(.8); }
