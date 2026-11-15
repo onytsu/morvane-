@@ -64,17 +64,20 @@
     for (k in ref) if (S[k] === undefined) S[k] = ref[k];
     for (k in ref.stats) if (S.stats[k] === undefined) S.stats[k] = ref.stats[k];
     for (k in ref.settings) if (S.settings[k] === undefined) S.settings[k] = ref.settings[k];
-    if (S.run) { if (!S.run.bag) S.run.bag = startBag(S.run.hero); S.run.pendingDice = S.run.pendingDice || 0; S.run.evos = S.run.evos || []; S.run.pendingEvos = S.run.pendingEvos || 0; S.run.cnt = S.run.cnt || {}; S.run.primeLog = S.run.primeLog || []; if (!S.run.primes) { S.run.primes = []; rollPrimes(S.run); } if (!S.run.board) { recalc(S.run); genBoard(S.run, Math.floor((S.run.floor - 1) / 10) * 10, S.run.floor % 10 === 0 ? CELLS + 1 : ((S.run.floor - 1) % 10) * 4 + 1); if (S.run.phase === 'doors') rollDice(S.run); } S.run.combat = null; if (S.run.phase === 'combat') E._buildCombat(S.run, true); }
+    if (S.run) { if (!S.run.bag) S.run.bag = startBag(S.run.hero); S.run.pendingDice = S.run.pendingDice || 0; S.run.evos = S.run.evos || []; S.run.pendingEvos = S.run.pendingEvos || 0; S.run.cnt = S.run.cnt || {}; S.run.primeLog = S.run.primeLog || []; if (!S.run.primes) { S.run.primes = []; rollPrimes(S.run); } if (!S.run.board) { recalc(S.run); genBoard(S.run, Math.floor((S.run.floor - 1) / 10) * 10, S.run.floor % 10 === 0 ? CELLS + 1 : ((S.run.floor - 1) % 10) * 4 + 1); if (S.run.phase === 'doors') rollDice(S.run); } var sc = S.run.combat; S.run.combat = null;
+      // un combat sauvegardé reprend où il en était ; sinon (anciennes sauvegardes) il est rejoué depuis le début
+      if (S.run.phase === 'combat') { if (sc && !sc.over && sc.enemies && sc.enemies.length && sc.hero && sc.hand && sc.pile) { sc.events = []; sc.orbs = []; S.run.combat = sc; } else E._buildCombat(S.run, true); } }
     E.S = S;
     return fresh;
   };
   E.save = function () {
     if (!store || !S) return false;
     try {
-      var c = S.run ? S.run.combat : null;
-      if (S.run) S.run.combat = null;
-      var txt = JSON.stringify(S);
-      if (S.run) S.run.combat = c;
+      // le combat en cours est gardé (sans sa file d'animations) : fermer l'appli ne le remet plus à zéro
+      var c = S.run ? S.run.combat : null, evs = c ? c.events : null;
+      if (c) { if (c.over) S.run.combat = null; else c.events = []; }
+      var txt;
+      try { txt = JSON.stringify(S); } finally { if (S.run) S.run.combat = c; if (c) c.events = evs; }
       store.setItem(SAVE_KEY, txt);
       return true;
     } catch (e) { return false; }
@@ -741,6 +744,8 @@
   };
 
   // ---------- combat ----------
+  // v4.6 : combats plus courts. Élites, champions et boss ont moins de PV mais frappent un peu plus fort.
+  var FOE_HP = { elite: 0.6, boss: 0.55 }, FOE_ATK = { elite: 1.12, boss: 1.15 }; E.FOE_HP = FOE_HP;
   function mkEnemy(run, spec, hpMul) {
     var sp = typeof spec === 'string' ? { k: spec } : spec, key = sp.k, b = D.ENEMIES[key], F = run.floor;
     var hs = Math.pow(GROW.hp, F - 1), as = Math.pow(GROW.atk, F - 1);
@@ -751,12 +756,13 @@
       hm *= f.hp || 1; am *= f.atk || 1; im *= f.int || 1; defK += f.def || 0; name += ' ' + f.name;
     });
     if (sp.gold) name = "Porteur d'or";
+    var tier = b.boss ? 'boss' : b.elite || sp.champ ? 'elite' : null; if (tier) { hm *= FOE_HP[tier]; am *= FOE_ATK[tier]; }
     var hp = b.hp * hs * hm * 1.32 * (1 + (run.stats.enemyHpP || 0) / 100), atk = b.atk * as * am * 1.2 * (1 + (run.stats.enemyAtkP || 0) / 100);
     return {
       key: key, name: name, hp: hp, maxhp: hp, atk: atk, def: b.def * as + defK * atk, int: b.int * im, t: b.int * im * rf(0.5, 1), ab: ab,
       fix: sp.fix || null, fix2: sp.fix2 || null, champ: !!sp.champ, big: sp.fix === 'geant' || sp.fix2 === 'geant', flee: sp.flee || 0, gold: !!sp.gold,
-      elite: !!b.elite, boss: !!b.boss, st: {}, charge: null, chargeCd: ab.charge ? ab.charge * rf(0.6, 0.9) : 0,
-      healT: 6, summonT: 10, shieldT: 5, shield: 0, enraged: false, dead: false, id: 0
+      elite: !!b.elite, boss: !!b.boss, st: {}, charge: null, chargeCd: ab.charge ? ab.charge * rf(0.3, 0.55) : 0,
+      healT: 4, summonT: 6, shieldT: 3, shield: 0, enraged: false, dead: false, id: 0
     };
   }
   E._buildCombat = function (run, restore) {
@@ -772,9 +778,12 @@
     c.turn = 'hero'; c.round = 1; c.qi = 0; c.rerolls = 1 + (st.diceRerolls || 0);
     c.pile = shuffle(run.bag.map(function (d, i) { return i; })); c.disc = []; c.hand = []; c.dfx = {};
     c.events.push({ k: r.type === 'boss' ? 'boss' : 'start' }); c.events.push({ k: 'pturn', n: 1 }); drawTurn(run, c);
+    if (!restore) E.save();
   };
   // ----- Tour par tour. Un tour vaut ROUND secondes de l'ancien temps réel : les durées et recharges restent écrites en secondes. -----
   var ROUND = 2, AP = 2; E.ROUND = ROUND; E.AP = AP;
+  // Fureur : passé ce temps (en secondes de jeu, 2 par tour), les ennemis frappent de plus en plus fort
+  var FURY = { mob: 24, boss: 44 };
   E.turns = function (sec) { return Math.max(1, Math.ceil(sec / ROUND - 1e-9)); };
   // ----- Dés de combat (v4.0). Le sac de dés du héros : à chaque tour il en pioche 3, les lance, et les joue depuis sa main.
   // Un dé joué agit tout de suite et ne coûte aucune action. Les 3 premiers dés joués d'un tour (main ou pouvoir) forment une figure.
@@ -917,7 +926,7 @@
     return d * Math.max(0.3, 1 + st.takenP / 100) * (run.stance === 'a' ? 1.2 : run.stance === 'd' ? 0.75 : 1);
   }
   function intentOf(run, c, e) {
-    var dt = ROUND, o = { k: 'wait' }, limit = c.boss ? 70 : 40, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1, enr = e.enraged ? 1.25 : 1;
+    var dt = ROUND, o = { k: 'wait' }, limit = c.boss ? FURY.boss : FURY.mob, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1, enr = e.enraged ? 1.25 : 1;
     if (e.dead) return o;
     if (e.flee > 0 && e.flee - dt <= 0) return { k: 'flee' };
     if (e.st.stun > 0) return { k: 'stun' };
@@ -1055,11 +1064,14 @@
     if (ls > 0 && !o.dot) heroHeal(run, c, dmg * ls / 100);
     if (o.drain) heroHeal(run, c, dmg);
     if (crit && run.hero === 'assassin') applyDot(run, e, 'poison');
+    // Coup de grâce : un ennemi (hors boss) touché sous 12 % de ses PV est achevé, on ne traîne plus pour les dernières miettes
+    if (e.hp > 0 && !e.boss && !o.dot && e.hp < e.maxhp * GRACE) { ev(c, { k: 'grace', id: e.id }); e.hp = 0; }
     if (!e.enraged && e.ab.enrage && e.hp > 0 && e.hp / e.maxhp < 0.3) { e.enraged = true; ev(c, { k: 'enrage', id: e.id }); }
     if (e.hp <= 0 && e.ab.rebirth && !e.reborn) { e.reborn = 1; e.hp = e.maxhp * 0.4; e.enraged = true; e.st = {}; ev(c, { k: 'bossfx', id: e.id, txt: 'IL SE RELÈVE !', big: 1 }); }
     else if (e.hp <= 0) kill(run, c, e);
     return dmg;
   }
+  var GRACE = 0.12; E.GRACE = GRACE;
   function applyDot(run, e, kind) {
     var st = run.stats;
     if (kind === 'burn') e.st.burn = { t: 3, dps: Math.max(e.st.burn ? e.st.burn.dps : 0, st.atk * 0.25 * (1 + st.burnP / 100)) };
@@ -1379,6 +1391,32 @@
     if (h.parryCd <= 0 && c.enemies.some(function (e) { return !e.dead && e.charge; })) { if (E.parry()) return true; }
     return E.strike();
   };
+  // ----- Balayer (v4.6) : un combat ordinaire gagné d'avance se règle d'un geste, sans taper chaque dé -----
+  // Proposé au début du combat quand les ennemis ne font pas le poids : leurs PV tiennent en quelques coups et leur menace est faible.
+  E.canSweep = function () {
+    var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || c.round !== 1 || c.acted || c.swept) return false;
+    var r = run.room; if (!r || r.type !== 'combat' || r.wasMimic || c.cond === 'defi') return false;
+    var st = run.stats, foes = alive(c), hp = 0, threat = 0; if (!foes.length) return false;
+    foes.forEach(function (e) { var it = intentOf(run, c, e); hp += e.hp + (e.shield || 0); threat += (it.dmg || 0) * (it.n || 1); if (e.ab.heal || e.ab.summon) hp *= 1.3; });
+    return hp <= st.atk * 7 && threat <= st.hp * 0.08 && run.hp >= st.hp * 0.5;
+  };
+  // Le combat est joué en entier par le pilote automatique. Il rend la main si le héros perd plus de 20 % de ses PV max.
+  E.sweep = function () {
+    if (!E.canSweep()) return false;
+    var run = S.run, c = run.combat, hp0 = run.hp, lim = run.stats.hp * 0.2, n = 0, stop = false; c.swept = true;
+    var deaths = [];
+    while (!c.over && n++ < 3000) {
+      if (c.turn === 'hero') { if (run.hp < hp0 - lim) { stop = true; break; } if (!E.autoAct()) E.pass(); }
+      else E.foeStep();
+      if (!c.over) { c.events.forEach(function (e) { if (e.k === 'die' || e.k === 'summon') deaths.push(e); }); c.events.length = 0; }
+    }
+    c.events = deaths.concat(c.events);
+    // l'interface ne rejoue pas tout : seule la fin est montrée
+    var keep = c.events.filter(function (e) { return e.k === 'win' || e.k === 'dead' || e.k === 'die' || e.k === 'summon' || e.k === 'orbTake'; });
+    c.events.length = 0; c.events.push({ k: 'swept', stop: stop }); keep.forEach(function (e) { c.events.push(e); });
+    if (stop) E.save();
+    return stop ? 'stop' : true;
+  };
   // Un ennemi joue son tour. Renvoie true s'il reste des ennemis à faire jouer.
   E.foeStep = function () {
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'foes') return false;
@@ -1402,7 +1440,7 @@
     if (e.st.weak > 0) e.st.weak -= dt; if (e.st.vuln > 0) e.st.vuln -= dt;
     if (e.st.stun > 0) { e.st.stun -= dt; ev(c, { k: 'stunned', id: e.id }); return; }
     var sp = (e.enraged ? 1.4 : 1) * (c.cond === 'hate' ? 1.3 : 1);
-    var limit = c.boss ? 70 : 40, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1;
+    var limit = c.boss ? FURY.boss : FURY.mob, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1;
     if (fury > 1 && !c.fury) { c.fury = true; ev(c, { k: 'fury' }); }
     if (e.ab.heal) { e.healT -= dt; if (e.healT <= 0) { e.healT = 6; var low = alive(c).sort(function (a, b) { return a.hp / a.maxhp - b.hp / b.maxhp; })[0]; if (low && low.hp < low.maxhp) { low.hp = Math.min(low.maxhp, low.hp + low.maxhp * e.ab.heal / 100); ev(c, { k: 'eheal', id: low.id }); } } }
     if (e.ab.shield) { e.shieldT -= dt; if (e.shieldT <= 0) { e.shieldT = 10; e.shield = e.maxhp * e.ab.shield / 100; ev(c, { k: 'eshield', id: e.id }); } }
@@ -1445,7 +1483,7 @@
     // point faible : visible pendant un tour
     if (c.weak) { c.weak = null; c.weakT = rf(5, 9); }
     else { c.weakT -= dt * (c.cond === 'tenebres' ? 2 : 1) * (run.hero === 'chasseuse' ? 2 : 1); if (c.weakT <= 0) { var al0 = alive(c); if (al0.length) { c.weak = { id: pick(al0).id, t: ROUND }; ev(c, { k: 'weak', id: c.weak.id }); } } }
-    c.round++; c.turn = 'hero'; h.ap = AP; ev(c, { k: 'pturn', n: c.round }); drawTurn(run, c);
+    c.round++; c.turn = 'hero'; h.ap = AP; ev(c, { k: 'pturn', n: c.round }); drawTurn(run, c); E.save();
   }
   // Spécialité de chaque boss
   function bossTick(run, c, e, dt) {
@@ -1477,6 +1515,8 @@
       case 'pretresse': hit(run, c, e, 0.25, { noCrit: true, dot: 'ally' }); heroHeal(run, c, st.hp * 0.018); break;
     }
   }
+  // Nombre de tours pour décrocher le bonus Éclair (0 : pas de bonus dans cette salle)
+  E.eclairPar = function (c, r) { if (!c || !r || c.cond === 'defi' || r.wasMimic) return 0; return r.type === 'combat' ? (r.group.length >= 3 ? 4 : 3) : r.type === 'elite' || r.forceElite ? 5 : 0; };
   function finish(run, c) {
     if (c.done) return; c.done = true;
     if (!c.win) { ev(c, { k: 'dead' }); run.phase = 'dead'; return; }
@@ -1488,6 +1528,9 @@
     var r = run.room, res = { items: c.drops, gold: c.gold, cendres: c.cendres, xp: c.xp, type: r.type };
     run.gold += c.gold; run.cendres += c.cendres; S.cendres += c.cendres;
     if (c.cond === 'defi') { res.defi = c.t <= 20; if (res.defi) { res.items.push(dropItem(run, 'chest', 2)); run.gold += 40; res.gold += 40; } }
+    // Éclair : gagner vite rapporte (+50 % or et Cendres)
+    var par = E.eclairPar(c, r);
+    if (par) { res.eclair = c.round <= par; if (res.eclair) { var eg = Math.ceil(c.gold * 0.5) + 3, ecd = Math.ceil(c.cendres * 0.5); run.gold += eg; res.gold += eg; run.cendres += ecd; S.cendres += ecd; res.cendres += ecd; S.stats.eclairs = (S.stats.eclairs || 0) + 1; bump(run, 'eclairs'); } }
     if (r.type === 'arene') { res.artifact = giveArtifact(run); run.pendingBoons++; res.items.push(dropItem(run, 'chest', 2)); res.arene = true; S.stats.arenes++; }
     if (r.type === 'boss' || r.type === 'elite' || r.forceElite || r.type === 'arene') { run.pendingDice = (run.pendingDice || 0) + 1; res.die = 1; }
     else { run.dieTick = (run.dieTick || 0) + 1; if (run.dieTick >= 3) { run.dieTick = 0; run.pendingDice = (run.pendingDice || 0) + 1; res.die = 1; } }

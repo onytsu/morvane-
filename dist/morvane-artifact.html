@@ -1183,6 +1183,12 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 .camp-scene .nav, .camp-name { z-index: 6; }
 /* v4.5 : un bouton doré désactivé doit avoir l'air désactivé */
 .btn.goldb.off { opacity: .5; filter: grayscale(.9) brightness(.75); box-shadow: none; } .btn.goldb.off::after { display: none; }
+/* v4.6 : Balayer, vitesse, objectif Éclair ; boutons du tour plus grands au doigt */
+.sweepb { display: none; position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 30; height: 40px; padding: 0 18px; border-radius: 10px; border: 1px solid #d9f5b8; background: #9fd36a; color: #1c2a0e; font-weight: 800; font-size: 13px; letter-spacing: .3px; box-shadow: 0 4px 14px #0008, 0 0 12px #9fd36a66; white-space: nowrap; }
+.sweepb.on { display: block; animation: pulse .7s infinite alternate; }
+.turnrow .tog.spd { color: var(--gold); min-width: 34px; padding: 0 6px; }
+.turnrow .tog, .turnrow .tog.pass { height: 36px; }
+.turnrow #tlabel.eclair { color: #ffd76a; text-shadow: 0 0 8px #f2bd5e88; }
 
 :root { color-scheme: dark; --sat: 0px; --sab: 0px; } html, body { height: 100%; } #app { height: 100%; }</style>
 <div id="app"><div id="screen"></div><div id="overlay"></div><div id="modal"></div><div id="toasts"></div><div id="flash"></div></div>
@@ -1779,7 +1785,7 @@ var DATA = (function () {
     maitre_chaines: { name: 'Maître des chaînes', hp: 220, atk: 12, int: 1.8, def: 5, ab: { burn: 50, summon: 'diablotin', charge: 9 }, elite: true },
     devoreur_etoiles: { name: "Dévoreur d'étoiles", hp: 240, atk: 13, int: 2.0, def: 4, ab: { leech: 50, dodge: 15, charge: 7, enrage: 1 }, elite: true },
     // Boss
-    fossoyeur: { name: 'Le Fossoyeur', hp: 520, atk: 11, int: 2.0, def: 4, ab: { charge: 8, summon: 'squelette', enrage: 1, burst: 1 }, boss: true },
+    fossoyeur: { name: 'Le Fossoyeur', hp: 380, atk: 11, int: 2.0, def: 4, ab: { charge: 8, summon: 'squelette', enrage: 1, burst: 1 }, boss: true },
     mere_ronces: { name: 'La Mère des Ronces', hp: 600, atk: 10, int: 1.6, def: 5, ab: { bleed: 60, heal: 5, charge: 9, thorns: 15, roots: 13 }, boss: true },
     leviathan: { name: 'Le Léviathan fangeux', hp: 700, atk: 12, int: 2.0, def: 6, ab: { poison: 70, charge: 7, summon: 'sangsue', enrage: 1, dive: 15 }, boss: true },
     eveque: { name: "L'Évêque sans visage", hp: 650, atk: 12, int: 1.8, def: 5, ab: { charge: 6, weak: 50, summon: 'cultiste', shield: 10, ward: 1 }, boss: true },
@@ -2279,17 +2285,20 @@ if (typeof module !== 'undefined') module.exports = DATA;
     for (k in ref) if (S[k] === undefined) S[k] = ref[k];
     for (k in ref.stats) if (S.stats[k] === undefined) S.stats[k] = ref.stats[k];
     for (k in ref.settings) if (S.settings[k] === undefined) S.settings[k] = ref.settings[k];
-    if (S.run) { if (!S.run.bag) S.run.bag = startBag(S.run.hero); S.run.pendingDice = S.run.pendingDice || 0; S.run.evos = S.run.evos || []; S.run.pendingEvos = S.run.pendingEvos || 0; S.run.cnt = S.run.cnt || {}; S.run.primeLog = S.run.primeLog || []; if (!S.run.primes) { S.run.primes = []; rollPrimes(S.run); } if (!S.run.board) { recalc(S.run); genBoard(S.run, Math.floor((S.run.floor - 1) / 10) * 10, S.run.floor % 10 === 0 ? CELLS + 1 : ((S.run.floor - 1) % 10) * 4 + 1); if (S.run.phase === 'doors') rollDice(S.run); } S.run.combat = null; if (S.run.phase === 'combat') E._buildCombat(S.run, true); }
+    if (S.run) { if (!S.run.bag) S.run.bag = startBag(S.run.hero); S.run.pendingDice = S.run.pendingDice || 0; S.run.evos = S.run.evos || []; S.run.pendingEvos = S.run.pendingEvos || 0; S.run.cnt = S.run.cnt || {}; S.run.primeLog = S.run.primeLog || []; if (!S.run.primes) { S.run.primes = []; rollPrimes(S.run); } if (!S.run.board) { recalc(S.run); genBoard(S.run, Math.floor((S.run.floor - 1) / 10) * 10, S.run.floor % 10 === 0 ? CELLS + 1 : ((S.run.floor - 1) % 10) * 4 + 1); if (S.run.phase === 'doors') rollDice(S.run); } var sc = S.run.combat; S.run.combat = null;
+      // un combat sauvegardé reprend où il en était ; sinon (anciennes sauvegardes) il est rejoué depuis le début
+      if (S.run.phase === 'combat') { if (sc && !sc.over && sc.enemies && sc.enemies.length && sc.hero && sc.hand && sc.pile) { sc.events = []; sc.orbs = []; S.run.combat = sc; } else E._buildCombat(S.run, true); } }
     E.S = S;
     return fresh;
   };
   E.save = function () {
     if (!store || !S) return false;
     try {
-      var c = S.run ? S.run.combat : null;
-      if (S.run) S.run.combat = null;
-      var txt = JSON.stringify(S);
-      if (S.run) S.run.combat = c;
+      // le combat en cours est gardé (sans sa file d'animations) : fermer l'appli ne le remet plus à zéro
+      var c = S.run ? S.run.combat : null, evs = c ? c.events : null;
+      if (c) { if (c.over) S.run.combat = null; else c.events = []; }
+      var txt;
+      try { txt = JSON.stringify(S); } finally { if (S.run) S.run.combat = c; if (c) c.events = evs; }
       store.setItem(SAVE_KEY, txt);
       return true;
     } catch (e) { return false; }
@@ -2956,6 +2965,8 @@ if (typeof module !== 'undefined') module.exports = DATA;
   };
 
   // ---------- combat ----------
+  // v4.6 : combats plus courts. Élites, champions et boss ont moins de PV mais frappent un peu plus fort.
+  var FOE_HP = { elite: 0.6, boss: 0.55 }, FOE_ATK = { elite: 1.12, boss: 1.15 }; E.FOE_HP = FOE_HP;
   function mkEnemy(run, spec, hpMul) {
     var sp = typeof spec === 'string' ? { k: spec } : spec, key = sp.k, b = D.ENEMIES[key], F = run.floor;
     var hs = Math.pow(GROW.hp, F - 1), as = Math.pow(GROW.atk, F - 1);
@@ -2966,12 +2977,13 @@ if (typeof module !== 'undefined') module.exports = DATA;
       hm *= f.hp || 1; am *= f.atk || 1; im *= f.int || 1; defK += f.def || 0; name += ' ' + f.name;
     });
     if (sp.gold) name = "Porteur d'or";
+    var tier = b.boss ? 'boss' : b.elite || sp.champ ? 'elite' : null; if (tier) { hm *= FOE_HP[tier]; am *= FOE_ATK[tier]; }
     var hp = b.hp * hs * hm * 1.32 * (1 + (run.stats.enemyHpP || 0) / 100), atk = b.atk * as * am * 1.2 * (1 + (run.stats.enemyAtkP || 0) / 100);
     return {
       key: key, name: name, hp: hp, maxhp: hp, atk: atk, def: b.def * as + defK * atk, int: b.int * im, t: b.int * im * rf(0.5, 1), ab: ab,
       fix: sp.fix || null, fix2: sp.fix2 || null, champ: !!sp.champ, big: sp.fix === 'geant' || sp.fix2 === 'geant', flee: sp.flee || 0, gold: !!sp.gold,
-      elite: !!b.elite, boss: !!b.boss, st: {}, charge: null, chargeCd: ab.charge ? ab.charge * rf(0.6, 0.9) : 0,
-      healT: 6, summonT: 10, shieldT: 5, shield: 0, enraged: false, dead: false, id: 0
+      elite: !!b.elite, boss: !!b.boss, st: {}, charge: null, chargeCd: ab.charge ? ab.charge * rf(0.3, 0.55) : 0,
+      healT: 4, summonT: 6, shieldT: 3, shield: 0, enraged: false, dead: false, id: 0
     };
   }
   E._buildCombat = function (run, restore) {
@@ -2987,9 +2999,12 @@ if (typeof module !== 'undefined') module.exports = DATA;
     c.turn = 'hero'; c.round = 1; c.qi = 0; c.rerolls = 1 + (st.diceRerolls || 0);
     c.pile = shuffle(run.bag.map(function (d, i) { return i; })); c.disc = []; c.hand = []; c.dfx = {};
     c.events.push({ k: r.type === 'boss' ? 'boss' : 'start' }); c.events.push({ k: 'pturn', n: 1 }); drawTurn(run, c);
+    if (!restore) E.save();
   };
   // ----- Tour par tour. Un tour vaut ROUND secondes de l'ancien temps réel : les durées et recharges restent écrites en secondes. -----
   var ROUND = 2, AP = 2; E.ROUND = ROUND; E.AP = AP;
+  // Fureur : passé ce temps (en secondes de jeu, 2 par tour), les ennemis frappent de plus en plus fort
+  var FURY = { mob: 24, boss: 44 };
   E.turns = function (sec) { return Math.max(1, Math.ceil(sec / ROUND - 1e-9)); };
   // ----- Dés de combat (v4.0). Le sac de dés du héros : à chaque tour il en pioche 3, les lance, et les joue depuis sa main.
   // Un dé joué agit tout de suite et ne coûte aucune action. Les 3 premiers dés joués d'un tour (main ou pouvoir) forment une figure.
@@ -3132,7 +3147,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     return d * Math.max(0.3, 1 + st.takenP / 100) * (run.stance === 'a' ? 1.2 : run.stance === 'd' ? 0.75 : 1);
   }
   function intentOf(run, c, e) {
-    var dt = ROUND, o = { k: 'wait' }, limit = c.boss ? 70 : 40, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1, enr = e.enraged ? 1.25 : 1;
+    var dt = ROUND, o = { k: 'wait' }, limit = c.boss ? FURY.boss : FURY.mob, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1, enr = e.enraged ? 1.25 : 1;
     if (e.dead) return o;
     if (e.flee > 0 && e.flee - dt <= 0) return { k: 'flee' };
     if (e.st.stun > 0) return { k: 'stun' };
@@ -3270,11 +3285,14 @@ if (typeof module !== 'undefined') module.exports = DATA;
     if (ls > 0 && !o.dot) heroHeal(run, c, dmg * ls / 100);
     if (o.drain) heroHeal(run, c, dmg);
     if (crit && run.hero === 'assassin') applyDot(run, e, 'poison');
+    // Coup de grâce : un ennemi (hors boss) touché sous 12 % de ses PV est achevé, on ne traîne plus pour les dernières miettes
+    if (e.hp > 0 && !e.boss && !o.dot && e.hp < e.maxhp * GRACE) { ev(c, { k: 'grace', id: e.id }); e.hp = 0; }
     if (!e.enraged && e.ab.enrage && e.hp > 0 && e.hp / e.maxhp < 0.3) { e.enraged = true; ev(c, { k: 'enrage', id: e.id }); }
     if (e.hp <= 0 && e.ab.rebirth && !e.reborn) { e.reborn = 1; e.hp = e.maxhp * 0.4; e.enraged = true; e.st = {}; ev(c, { k: 'bossfx', id: e.id, txt: 'IL SE RELÈVE !', big: 1 }); }
     else if (e.hp <= 0) kill(run, c, e);
     return dmg;
   }
+  var GRACE = 0.12; E.GRACE = GRACE;
   function applyDot(run, e, kind) {
     var st = run.stats;
     if (kind === 'burn') e.st.burn = { t: 3, dps: Math.max(e.st.burn ? e.st.burn.dps : 0, st.atk * 0.25 * (1 + st.burnP / 100)) };
@@ -3594,6 +3612,32 @@ if (typeof module !== 'undefined') module.exports = DATA;
     if (h.parryCd <= 0 && c.enemies.some(function (e) { return !e.dead && e.charge; })) { if (E.parry()) return true; }
     return E.strike();
   };
+  // ----- Balayer (v4.6) : un combat ordinaire gagné d'avance se règle d'un geste, sans taper chaque dé -----
+  // Proposé au début du combat quand les ennemis ne font pas le poids : leurs PV tiennent en quelques coups et leur menace est faible.
+  E.canSweep = function () {
+    var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || c.round !== 1 || c.acted || c.swept) return false;
+    var r = run.room; if (!r || r.type !== 'combat' || r.wasMimic || c.cond === 'defi') return false;
+    var st = run.stats, foes = alive(c), hp = 0, threat = 0; if (!foes.length) return false;
+    foes.forEach(function (e) { var it = intentOf(run, c, e); hp += e.hp + (e.shield || 0); threat += (it.dmg || 0) * (it.n || 1); if (e.ab.heal || e.ab.summon) hp *= 1.3; });
+    return hp <= st.atk * 7 && threat <= st.hp * 0.08 && run.hp >= st.hp * 0.5;
+  };
+  // Le combat est joué en entier par le pilote automatique. Il rend la main si le héros perd plus de 20 % de ses PV max.
+  E.sweep = function () {
+    if (!E.canSweep()) return false;
+    var run = S.run, c = run.combat, hp0 = run.hp, lim = run.stats.hp * 0.2, n = 0, stop = false; c.swept = true;
+    var deaths = [];
+    while (!c.over && n++ < 3000) {
+      if (c.turn === 'hero') { if (run.hp < hp0 - lim) { stop = true; break; } if (!E.autoAct()) E.pass(); }
+      else E.foeStep();
+      if (!c.over) { c.events.forEach(function (e) { if (e.k === 'die' || e.k === 'summon') deaths.push(e); }); c.events.length = 0; }
+    }
+    c.events = deaths.concat(c.events);
+    // l'interface ne rejoue pas tout : seule la fin est montrée
+    var keep = c.events.filter(function (e) { return e.k === 'win' || e.k === 'dead' || e.k === 'die' || e.k === 'summon' || e.k === 'orbTake'; });
+    c.events.length = 0; c.events.push({ k: 'swept', stop: stop }); keep.forEach(function (e) { c.events.push(e); });
+    if (stop) E.save();
+    return stop ? 'stop' : true;
+  };
   // Un ennemi joue son tour. Renvoie true s'il reste des ennemis à faire jouer.
   E.foeStep = function () {
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'foes') return false;
@@ -3617,7 +3661,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     if (e.st.weak > 0) e.st.weak -= dt; if (e.st.vuln > 0) e.st.vuln -= dt;
     if (e.st.stun > 0) { e.st.stun -= dt; ev(c, { k: 'stunned', id: e.id }); return; }
     var sp = (e.enraged ? 1.4 : 1) * (c.cond === 'hate' ? 1.3 : 1);
-    var limit = c.boss ? 70 : 40, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1;
+    var limit = c.boss ? FURY.boss : FURY.mob, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1;
     if (fury > 1 && !c.fury) { c.fury = true; ev(c, { k: 'fury' }); }
     if (e.ab.heal) { e.healT -= dt; if (e.healT <= 0) { e.healT = 6; var low = alive(c).sort(function (a, b) { return a.hp / a.maxhp - b.hp / b.maxhp; })[0]; if (low && low.hp < low.maxhp) { low.hp = Math.min(low.maxhp, low.hp + low.maxhp * e.ab.heal / 100); ev(c, { k: 'eheal', id: low.id }); } } }
     if (e.ab.shield) { e.shieldT -= dt; if (e.shieldT <= 0) { e.shieldT = 10; e.shield = e.maxhp * e.ab.shield / 100; ev(c, { k: 'eshield', id: e.id }); } }
@@ -3660,7 +3704,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     // point faible : visible pendant un tour
     if (c.weak) { c.weak = null; c.weakT = rf(5, 9); }
     else { c.weakT -= dt * (c.cond === 'tenebres' ? 2 : 1) * (run.hero === 'chasseuse' ? 2 : 1); if (c.weakT <= 0) { var al0 = alive(c); if (al0.length) { c.weak = { id: pick(al0).id, t: ROUND }; ev(c, { k: 'weak', id: c.weak.id }); } } }
-    c.round++; c.turn = 'hero'; h.ap = AP; ev(c, { k: 'pturn', n: c.round }); drawTurn(run, c);
+    c.round++; c.turn = 'hero'; h.ap = AP; ev(c, { k: 'pturn', n: c.round }); drawTurn(run, c); E.save();
   }
   // Spécialité de chaque boss
   function bossTick(run, c, e, dt) {
@@ -3692,6 +3736,8 @@ if (typeof module !== 'undefined') module.exports = DATA;
       case 'pretresse': hit(run, c, e, 0.25, { noCrit: true, dot: 'ally' }); heroHeal(run, c, st.hp * 0.018); break;
     }
   }
+  // Nombre de tours pour décrocher le bonus Éclair (0 : pas de bonus dans cette salle)
+  E.eclairPar = function (c, r) { if (!c || !r || c.cond === 'defi' || r.wasMimic) return 0; return r.type === 'combat' ? (r.group.length >= 3 ? 4 : 3) : r.type === 'elite' || r.forceElite ? 5 : 0; };
   function finish(run, c) {
     if (c.done) return; c.done = true;
     if (!c.win) { ev(c, { k: 'dead' }); run.phase = 'dead'; return; }
@@ -3703,6 +3749,9 @@ if (typeof module !== 'undefined') module.exports = DATA;
     var r = run.room, res = { items: c.drops, gold: c.gold, cendres: c.cendres, xp: c.xp, type: r.type };
     run.gold += c.gold; run.cendres += c.cendres; S.cendres += c.cendres;
     if (c.cond === 'defi') { res.defi = c.t <= 20; if (res.defi) { res.items.push(dropItem(run, 'chest', 2)); run.gold += 40; res.gold += 40; } }
+    // Éclair : gagner vite rapporte (+50 % or et Cendres)
+    var par = E.eclairPar(c, r);
+    if (par) { res.eclair = c.round <= par; if (res.eclair) { var eg = Math.ceil(c.gold * 0.5) + 3, ecd = Math.ceil(c.cendres * 0.5); run.gold += eg; res.gold += eg; run.cendres += ecd; S.cendres += ecd; res.cendres += ecd; S.stats.eclairs = (S.stats.eclairs || 0) + 1; bump(run, 'eclairs'); } }
     if (r.type === 'arene') { res.artifact = giveArtifact(run); run.pendingBoons++; res.items.push(dropItem(run, 'chest', 2)); res.arene = true; S.stats.arenes++; }
     if (r.type === 'boss' || r.type === 'elite' || r.forceElite || r.type === 'arene') { run.pendingDice = (run.pendingDice || 0) + 1; res.die = 1; }
     else { run.dieTick = (run.dieTick || 0) + 1; if (run.dieTick >= 3) { run.dieTick = 0; run.pendingDice = (run.pendingDice || 0) + 1; res.die = 1; } }
@@ -7201,7 +7250,7 @@ UI.run = (function () {
       '<div class="hud">' +
       '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><span></span></div></div></div>' +
       '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + UI.spr('ul_' + h.id, 'ic') + h.ult.name + '</span></button>' +
-      '<div class="turnrow"><span class="aps" id="aps"></span><b id="tlabel"></b><span class="hsts" id="hsts"></span><span class="grow"></span><button class="tog pass" id="tpass" data-act="pass">Fin du tour</button></div>' +
+      '<div class="turnrow"><span class="aps" id="aps"></span><b id="tlabel"></b><span class="hsts" id="hsts"></span><span class="grow"></span><button class="tog spd" id="tspd" data-act="speed"></button><button class="tog pass" id="tpass" data-act="pass">Fin du tour</button></div>' +
       '<div class="mainacts"><button class="bigact strike" id="bstrike" data-act="strike" data-info="strike">' + UI.spr('i_sword', 'ic') + '<b>Frapper</b></button>' +
       '<button class="bigact parry" id="bparry" data-act="parry" data-info="parry">' + UI.spr('i_shield', 'ic') + '<b>Parer</b><span class="cd"></span></button></div>' +
       '<div class="skills">' + h.skills.map(function (k, i) { return '<button class="skb" id="sk' + i + '" data-act="skill" data-i="' + i + '" data-info="skill:' + i + '"><span class="e">' + k.icon + '</span><span class="cd"></span><span class="ev"></span><span class="nm">' + k.name + '</span><span class="need">' + D.NEEDS[k.need].label + '</span><span class="n"></span></button>'; }).join('') +
@@ -7221,7 +7270,7 @@ UI.run = (function () {
     a.style.setProperty('--z1', z.bg[0]); a.style.setProperty('--z2', z.bg[1]); a.style.setProperty('--zc', z.color);
     var bg = typeof Backgrounds !== 'undefined' ? ' style="background-image:url(' + Backgrounds.url(z.id) + ')"' : ''; a.classList.add('hasbg'); a.classList.remove('danger');
     a.innerHTML = '<div class="abg"' + bg + '></div><div class="rays"></div><div class="fog f1"></div>' + propsHtml(z.id) + '<div class="unit hero enter" id="uhero">' + UI.spr(run.hero) + '</div><div class="minions" id="minions"></div><div class="fog f2"></div><div class="vig"></div>' +
-      '<button class="primes" id="primes" data-act="primes"></button><button class="cdice" id="cdice" data-act="cdice"></button><div class="combo" id="combo"></div>' + extraHtml(run);
+      '<button class="primes" id="primes" data-act="primes"></button><button class="cdice" id="cdice" data-act="cdice"></button><div class="combo" id="combo"></div><button class="sweepb" id="tsweep" data-act="sweep">Balayer le combat</button>' + extraHtml(run);
     els = {}; posOf = {}; floats = 0; lootShown = 0; combo = 0; orbEls = {}; shotEls = {}; primeKey = '';
     vfx = typeof VFX !== 'undefined' ? VFX.attach(a) : null;
     fxL = typeof FX !== 'undefined' ? FX.attach(a, { ambient: ['dust', 'leaves', 'fireflies', 'gold', 'embers', 'void'][z.id - 1], warm: 2 }) : null;
@@ -7577,6 +7626,8 @@ UI.run = (function () {
           floatAt(el || hero, 'RENVOYÉ !', 'crit'); SND.play('block'); UI.vib(20); hitstop(45); punch(); break;
         case 'charge': if (el) floatAt(el, '⚠️ Il charge !', 'txt'); break;
         case 'interrupt': floatAt(el, 'Interrompu !', 'txt'); break;
+        case 'grace': floatAt(el, 'ACHEVÉ', 'big'); tuto('grace', '🗡️ <b>Coup de grâce.</b> Un ennemi (hors boss) touché sous 12 % de ses PV est achevé d’un coup.'); break;
+        case 'swept': if (e.stop) UI.toast('Balayage interrompu : le combat se corse, reprends la main !', true); else SND.play('levelup', 0.5); break;
         case 'enrage': floatAt(el, 'ENRAGÉ', 'big'); var ep = center(el); if (vfx && ep) { VFX.ring(vfx, ep.x, ep.y, 'fury', 120, 0.45, 8); VFX.sparks(vfx, ep.x, ep.y, 'fury', 20, { speed: 280, g: -160 }); } break;
         case 'summon': var idx = -1; c.enemies.forEach(function (x, j) { if (x.id === e.id) idx = j; }); if (idx >= 0) { addEnemy(c.enemies[idx], idx, true); if (!e.quiet) floatAt(els[e.id], 'Invoqué', 'txt'); var sp0 = center(els[e.id]); if (vfx && sp0) { VFX.flash(vfx, sp0.x, sp0.y, 'dark', 80, 0.3); VFX.ring(vfx, sp0.x, sp0.y + 20, 'dark', 70, 0.4, 4); } } break;
         case 'eheal': floatAt(el, 'Soin', 'heal'); break;
@@ -7633,7 +7684,12 @@ UI.run = (function () {
     bst.classList.toggle('ready', mine && ap > 0 && !S().settings.auto); bst.classList.toggle('weakmode', wkOn); bst.classList.toggle('off', !!c && run.phase === 'combat' && (!mine || ap <= 0));
     if (bst.dataset.w !== (wkOn ? '1' : '0')) { bst.dataset.w = wkOn ? '1' : '0'; bst.firstChild.src = Sprites.url(wkOn ? 'i_burst' : 'i_sword'); bst.children[1].textContent = wkOn ? 'Critique !' : 'Frapper'; }
     $('#tpass').classList.toggle('off', !mine);
-    var left = mine && ap <= 0 && c.hand.length > 0, tlb = $('#tlabel'), tlt = !c || run.phase !== 'combat' ? '' : left ? 'Joue tes dés' : 'Tour ' + c.round;
+    var par = c ? E.eclairPar(c, run.room) : 0, left = mine && ap <= 0 && c.hand.length > 0, tlb = $('#tlabel'), tlt = !c || run.phase !== 'combat' ? '' : left ? 'Joue tes dés' : 'Tour ' + c.round + (par && c.round <= par ? '/' + par : '');
+    if (tlb) tlb.classList.toggle('eclair', !!par && !!c && c.round <= par && !left);
+    var tsp = $('#tspd'), spt = 'x' + (S().settings.speed || 1); if (tsp && tsp.textContent !== spt) tsp.textContent = spt;
+    var tsw = $('#tsweep'), swOn = mine && !S().settings.auto && E.canSweep(); if (tsw) tsw.classList.toggle('on', swOn);
+    if (swOn && !(UI.guide && UI.guide.open())) tuto('sweep', '🧹 <b>Balayer</b> : ces ennemis ne font pas le poids. Touche <b>Balayer</b> pour régler le combat d’un geste (butin compris), ou joue-le toi-même.');
+    if (par && !swOn && c.round === 1 && mine && !(UI.guide && UI.guide.open())) tuto('eclair', '⚡ <b>Éclair.</b> « Tour 1/3 » : gagne avant la fin du tour 3 et tu touches +50 % d’or et de Cendres.');
     if (tlb && tlb.textContent !== tlt) tlb.textContent = tlt; $('#tpass').classList.toggle('ready', left && !S().settings.auto);
     updateTray(run);
     for (i = 0; i < 3; i++) {
@@ -7691,12 +7747,12 @@ UI.run = (function () {
       var c = run.combat;
       if (run.phase === 'combat' && c) {
         if (built !== c) buildArena();
-        if (c.turn !== lastTurn) { lastTurn = c.turn; stepT = c.turn === 'foes' ? 0.55 : 0.6; }
+        if (c.turn !== lastTurn) { lastTurn = c.turn; stepT = c.turn === 'foes' ? 0.4 : 0.45; }
         if (stopT > 0) stopT -= dt;
         else if (!paused && !wiping && !c.over && !UI.story.open() && !$('#modal').classList.contains('on') && !(UI.guide && UI.guide.open())) {
           stepT -= dt * (S().settings.speed || 1);
           if (stepT <= 0) {
-            if (c.turn === 'foes') stepT = E.foeStep() ? 0.6 : 0.3;
+            if (c.turn === 'foes') stepT = E.foeStep() ? 0.42 : 0.25;
             else if (S().settings.auto) { E.autoAct(); stepT = 0.5; }
             else stepT = 0;
           }
@@ -7750,6 +7806,7 @@ UI.run = (function () {
     h += '<h2>' + (r.chest ? ['🧰 Coffre forcé', '🧰 Coffre ouvert', '🗝️ Beau crochetage', '🗝️ Crochetage parfait !'][r.grade == null ? 1 : r.grade] : r.arene ? '🏟️ Arène conquise' : r.variant === 'champion' ? '💪 Champion terrassé' : r.variant === 'horde' ? 'Horde massacrée' : r.boss ? '☠️ BOSS VAINCU' : r.type === 'elite' ? '👹 Élite vaincue' : 'Victoire') + '</h2>';
     if (r.firstKill) h += '<div class="center gold small" style="margin-bottom:6px">Nouvelle zone débloquée : tu pourras repartir d’ici !</div>';
     h += '<div class="gains">' + (r.gold ? '<span class="gold">+' + r.gold + ' 💰</span>' : '') + (r.cendres ? '<span class="ash">+' + E.fmt(r.cendres) + ' 🔥</span>' : '') + (r.lvlUps ? '<span style="color:#b3a6ff">Niveau ' + run.lvl + ' !</span>' : '') + (r.lvlUps && run.pendingEvos > 0 ? '<span class="gold">✨ Éveil !</span>' : '') + '</div>';
+    if (r.eclair) h += '<div class="center small gold" style="margin-bottom:6px">⚡ <b>Éclair !</b> Victoire rapide : +50 % or et Cendres.</div>';
     if (r.defi != null) h += '<div class="center small ' + (r.defi ? 'good' : 'dim') + '" style="margin-bottom:6px">⏱️ Défi du bourreau : ' + (r.defi ? '<b>réussi !</b> Coffre bonus.' : 'trop lent cette fois.') + '</div>';
     if (r.arene) h += '<div class="center small gold" style="margin-bottom:6px">Récompense : un artefact, une aubaine et un objet.</div>';
     if (r.die) h += '<div class="center small gold" style="margin-bottom:6px">🎲 Un nouveau dé t’attend pour ton sac.</div>';
@@ -7985,6 +8042,7 @@ UI.run = (function () {
     if (c.weak) c.enemies.forEach(function (x, j) { if (!x.dead && x.id === c.weak.id) wi = j; });
     if (wi >= 0 ? !E.hitWeak(wi) : !E.strike()) SND.play('error');
   };
+  ACT.sweep = function () { if (!myTurn() || !E.canSweep()) return; SND.play('click'); E.sweep(); };
   ACT.pass = function () { if (myTurn()) { SND.play('click'); E.pass(); } };
   ACT.skill = function (d) {
     var run = S().run, i = +d.i; if (!myTurn()) return;

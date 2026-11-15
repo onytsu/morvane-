@@ -590,7 +590,7 @@ var DATA = (function () {
     maitre_chaines: { name: 'Maître des chaînes', hp: 220, atk: 12, int: 1.8, def: 5, ab: { burn: 50, summon: 'diablotin', charge: 9 }, elite: true },
     devoreur_etoiles: { name: "Dévoreur d'étoiles", hp: 240, atk: 13, int: 2.0, def: 4, ab: { leech: 50, dodge: 15, charge: 7, enrage: 1 }, elite: true },
     // Boss
-    fossoyeur: { name: 'Le Fossoyeur', hp: 520, atk: 11, int: 2.0, def: 4, ab: { charge: 8, summon: 'squelette', enrage: 1, burst: 1 }, boss: true },
+    fossoyeur: { name: 'Le Fossoyeur', hp: 380, atk: 11, int: 2.0, def: 4, ab: { charge: 8, summon: 'squelette', enrage: 1, burst: 1 }, boss: true },
     mere_ronces: { name: 'La Mère des Ronces', hp: 600, atk: 10, int: 1.6, def: 5, ab: { bleed: 60, heal: 5, charge: 9, thorns: 15, roots: 13 }, boss: true },
     leviathan: { name: 'Le Léviathan fangeux', hp: 700, atk: 12, int: 2.0, def: 6, ab: { poison: 70, charge: 7, summon: 'sangsue', enrage: 1, dive: 15 }, boss: true },
     eveque: { name: "L'Évêque sans visage", hp: 650, atk: 12, int: 1.8, def: 5, ab: { charge: 6, weak: 50, summon: 'cultiste', shield: 10, ward: 1 }, boss: true },

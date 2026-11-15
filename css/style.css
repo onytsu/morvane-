@@ -1182,3 +1182,9 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 .camp-scene .nav, .camp-name { z-index: 6; }
 /* v4.5 : un bouton doré désactivé doit avoir l'air désactivé */
 .btn.goldb.off { opacity: .5; filter: grayscale(.9) brightness(.75); box-shadow: none; } .btn.goldb.off::after { display: none; }
+/* v4.6 : Balayer, vitesse, objectif Éclair ; boutons du tour plus grands au doigt */
+.sweepb { display: none; position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 30; height: 40px; padding: 0 18px; border-radius: 10px; border: 1px solid #d9f5b8; background: #9fd36a; color: #1c2a0e; font-weight: 800; font-size: 13px; letter-spacing: .3px; box-shadow: 0 4px 14px #0008, 0 0 12px #9fd36a66; white-space: nowrap; }
+.sweepb.on { display: block; animation: pulse .7s infinite alternate; }
+.turnrow .tog.spd { color: var(--gold); min-width: 34px; padding: 0 6px; }
+.turnrow .tog, .turnrow .tog.pass { height: 36px; }
+.turnrow #tlabel.eclair { color: #ffd76a; text-shadow: 0 0 8px #f2bd5e88; }
