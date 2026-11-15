@@ -177,6 +177,15 @@
     return true;
   };
   E.unequip = function (slot, heroId) { delete S.heroes[heroId || S.hero].equip[slot]; if (S.run) recalc(S.run); };
+  // Nombre d'emplacements où un objet du sac ferait mieux que l'équipement actuel (sans rien changer)
+  E.betterCount = function (heroId) {
+    heroId = heroId || S.hero; var n = 0;
+    D.SLOTS.forEach(function (sl) {
+      var cur = S.heroes[heroId].equip[sl.id], curIt = cur ? E.findItem(cur) : null, bs = curIt ? E.itemScore(curIt) : -1;
+      if (S.inv.some(function (it) { var o = E.equippedBy(it.uid); return E.itemBase(it).slot === sl.id && !(o && o !== heroId) && it !== curIt && E.itemScore(it) > bs; })) n++;
+    });
+    return n;
+  };
   E.equipBest = function (heroId) {
     heroId = heroId || S.hero; var changed = 0;
     D.SLOTS.forEach(function (sl) {

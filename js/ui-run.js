@@ -981,7 +981,7 @@ UI.run = (function () {
       (sum.heroUps ? '<div class="small good" style="margin-top:5px">▲ Maîtrise +' + sum.heroUps + ' : +' + (3 * sum.heroUps) + ' % attaque et PV · <b>+' + sum.heroUps + ' point' + (sum.heroUps > 1 ? 's' : '') + ' de talent</b>' + ((lvlBefore < 2 && hs.lvl >= 2) || (lvlBefore < 3 && hs.lvl >= 3) ? ' · <b>nouveau pouvoir débloqué !</b>' : '') + ((lvlBefore < 4 && hs.lvl >= 4) || (lvlBefore < 8 && hs.lvl >= 8) ? ' · <b>+1 emplacement de pacte</b>' : '') + '</div>' : '<div class="tiny dim" style="margin-top:4px">+' + sum.mxp + ' expérience</div>') + '</div>';
     if (items.length) html += '<div class="card"><b>Butin gardé</b> <span class="tiny dim">(il est à toi pour toujours)</span><div class="inv-grid" style="margin-top:8px">' + items.slice(0, 18).map(function (it) { return UI.itemTile(it); }).join('') + '</div></div>';
     html += '<div class="card small dim">💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)] + '</div>' +
-      '<button class="btn goldb wide" data-act="deathBest" style="margin-bottom:8px">⚡ Équiper le meilleur</button>' +
+      (E.betterCount(S().hero) ? '<button class="btn goldb wide" data-act="deathBest" style="margin-bottom:8px">⚡ Équiper le meilleur (' + E.betterCount(S().hero) + ')</button>' : '') +
       '<div class="btns" style="margin-top:0"><button class="btn" data-act="toHub">🏰 Camp</button><button class="btn primary" data-act="again" data-z="' + startZone + '">⚔️ RELANCER</button></div><div style="height:20px"></div></div>';
     $('#screen').innerHTML = html;
     if (typeof FX !== 'undefined') FX.attach($('#screen'), { ambient: 'ash', warm: 4 });

@@ -177,6 +177,8 @@ var UI = (function () {
     var idle = E.idleInfo(), newItems = S().inv.some(function (i) { return i.isNew; });
     var metaOk = D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; });
     var tabs = [['hero', '🔥', 'Camp', idle.full || E.contractReady() || E.talentPoints(S().hero) > 0 || E.dailyInfo().claimable || UI.story.fresh()], ['sac', '🎒', 'Sac', newItems], ['autel', '⚱️', 'Autel', metaOk], ['pactes', '📜', 'Pactes', pactFree() || E.famNew()], ['faits', '🏆', 'Hauts faits', false]];
+    // v4.8 : au début, le camp n'ouvre que l'essentiel ; pactes et hauts faits arrivent à la 2e descente (ou au premier pacte)
+    if (S().stats.runs < 2) tabs = tabs.filter(function (t) { return t[0] !== 'faits' && (t[0] !== 'pactes' || S().pacts.length); });
     var body = { hero: tabHero, sac: tabSac, autel: tabAutel, pactes: tabPactes, faits: tabFaits }[st.tab]();
     $('#screen').innerHTML = '<div class="topbar"><span class="title grow">MORVANE</span><span class="cur ash">🔥 ' + E.fmt(S().cendres) + '</span><span class="cur ess">💠 ' + E.fmt(S().essence) + '</span><button class="icon-btn" data-act="settings">⚙️</button></div>' +
       '<div class="content" id="content">' + body + '</div><div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (st.tab === t[0] ? ' on' : '') + '" data-act="tab" data-tab="' + t[0] + '"><span class="ti">' + t[1] + '</span>' + t[2] + (t[3] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
@@ -224,6 +226,7 @@ var UI = (function () {
     html += '<div class="tiny dim center" style="margin:6px 0 12px">Record : étage ' + S().stats.best + '</div>';
     var tpts = E.talentPoints(h.id), gl = E.gloryInfo();
     var q = [['talents', 'i_star', 'Talents', tpts ? tpts + ' point' + (tpts > 1 ? 's' : '') : 'Maîtrise ' + hs.lvl, tpts > 0], ['quests', 'i_scroll', 'Quêtes', 'contrats du jour', E.contractReady() || idle.full], ['chron', 'i_book', 'Histoire', 'la Chronique', UI.story.fresh()], ['glory', 'i_medal', 'Gloire', 'palier ' + gl.lvl, false]];
+    if (S().stats.runs < 2) q = q.filter(function (x) { return x[0] === 'talents' || x[0] === 'chron'; });
     html += '<div class="camp-quick">' + q.map(function (x) { return '<button class="qk" data-act="' + x[0] + '">' + spr(x[1], 'ic') + '<b>' + x[2] + '</b><span>' + x[3] + '</span>' + (x[4] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
     return html;
   }

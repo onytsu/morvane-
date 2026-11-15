@@ -1601,6 +1601,7 @@ var DATA = (function () {
   var NEWS = [
     ['👆', 'Un toucher, un dé', 'Touche un dé : il agit tout de suite. Un petit mot sous chaque dé dit ce qu’il fait. Pour Retourner, touche le bouton puis le dé.'],
     ['⚔️', 'Frappes automatiques', 'Main vide et rien à craindre : tes actions restantes frappent toutes seules. Quand un ennemi charge, montre un point faible ou lance un crâne, la main reste à toi.'],
+    ['🏰', 'Un camp qui s’ouvre peu à peu', 'Au début, le camp ne montre que l’essentiel (talents, histoire, sac, autel). Quêtes, gloire, pactes et hauts faits arrivent à la 2e descente. « Équiper le meilleur » n’apparaît que s’il y a mieux à porter.'],
     ['🕯️', 'Un début plus direct', 'Prologue raccourci, tutoriel en 5 étapes où tu joues toi-même, et les outils (Relance, Retourne, sac, primes) arrivent après tes premières victoires.'],
     ['🎨', 'Des personnages plus fins', 'Héros et monstres sont dessinés en double résolution : contours plus fins, courbes plus douces, relief et reflets. Les 8 héros et les monstres de la Crypte ont reçu des détails à la main (bouclier bordé d’or, plis des capes, os fêlés...).'],
     ['🔍', 'Fini le flou', 'Les images arrivent déjà agrandies au pixel près : sur iPhone, les personnages et les décors ne sont plus lissés.'],
@@ -2426,6 +2427,15 @@ if (typeof module !== 'undefined') module.exports = DATA;
     return true;
   };
   E.unequip = function (slot, heroId) { delete S.heroes[heroId || S.hero].equip[slot]; if (S.run) recalc(S.run); };
+  // Nombre d'emplacements où un objet du sac ferait mieux que l'équipement actuel (sans rien changer)
+  E.betterCount = function (heroId) {
+    heroId = heroId || S.hero; var n = 0;
+    D.SLOTS.forEach(function (sl) {
+      var cur = S.heroes[heroId].equip[sl.id], curIt = cur ? E.findItem(cur) : null, bs = curIt ? E.itemScore(curIt) : -1;
+      if (S.inv.some(function (it) { var o = E.equippedBy(it.uid); return E.itemBase(it).slot === sl.id && !(o && o !== heroId) && it !== curIt && E.itemScore(it) > bs; })) n++;
+    });
+    return n;
+  };
   E.equipBest = function (heroId) {
     heroId = heroId || S.hero; var changed = 0;
     D.SLOTS.forEach(function (sl) {
@@ -6942,6 +6952,8 @@ var UI = (function () {
     var idle = E.idleInfo(), newItems = S().inv.some(function (i) { return i.isNew; });
     var metaOk = D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; });
     var tabs = [['hero', '🔥', 'Camp', idle.full || E.contractReady() || E.talentPoints(S().hero) > 0 || E.dailyInfo().claimable || UI.story.fresh()], ['sac', '🎒', 'Sac', newItems], ['autel', '⚱️', 'Autel', metaOk], ['pactes', '📜', 'Pactes', pactFree() || E.famNew()], ['faits', '🏆', 'Hauts faits', false]];
+    // v4.8 : au début, le camp n'ouvre que l'essentiel ; pactes et hauts faits arrivent à la 2e descente (ou au premier pacte)
+    if (S().stats.runs < 2) tabs = tabs.filter(function (t) { return t[0] !== 'faits' && (t[0] !== 'pactes' || S().pacts.length); });
     var body = { hero: tabHero, sac: tabSac, autel: tabAutel, pactes: tabPactes, faits: tabFaits }[st.tab]();
     $('#screen').innerHTML = '<div class="topbar"><span class="title grow">MORVANE</span><span class="cur ash">🔥 ' + E.fmt(S().cendres) + '</span><span class="cur ess">💠 ' + E.fmt(S().essence) + '</span><button class="icon-btn" data-act="settings">⚙️</button></div>' +
       '<div class="content" id="content">' + body + '</div><div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (st.tab === t[0] ? ' on' : '') + '" data-act="tab" data-tab="' + t[0] + '"><span class="ti">' + t[1] + '</span>' + t[2] + (t[3] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
@@ -6989,6 +7001,7 @@ var UI = (function () {
     html += '<div class="tiny dim center" style="margin:6px 0 12px">Record : étage ' + S().stats.best + '</div>';
     var tpts = E.talentPoints(h.id), gl = E.gloryInfo();
     var q = [['talents', 'i_star', 'Talents', tpts ? tpts + ' point' + (tpts > 1 ? 's' : '') : 'Maîtrise ' + hs.lvl, tpts > 0], ['quests', 'i_scroll', 'Quêtes', 'contrats du jour', E.contractReady() || idle.full], ['chron', 'i_book', 'Histoire', 'la Chronique', UI.story.fresh()], ['glory', 'i_medal', 'Gloire', 'palier ' + gl.lvl, false]];
+    if (S().stats.runs < 2) q = q.filter(function (x) { return x[0] === 'talents' || x[0] === 'chron'; });
     html += '<div class="camp-quick">' + q.map(function (x) { return '<button class="qk" data-act="' + x[0] + '">' + spr(x[1], 'ic') + '<b>' + x[2] + '</b><span>' + x[3] + '</span>' + (x[4] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
     return html;
   }
@@ -8316,7 +8329,7 @@ UI.run = (function () {
       (sum.heroUps ? '<div class="small good" style="margin-top:5px">▲ Maîtrise +' + sum.heroUps + ' : +' + (3 * sum.heroUps) + ' % attaque et PV · <b>+' + sum.heroUps + ' point' + (sum.heroUps > 1 ? 's' : '') + ' de talent</b>' + ((lvlBefore < 2 && hs.lvl >= 2) || (lvlBefore < 3 && hs.lvl >= 3) ? ' · <b>nouveau pouvoir débloqué !</b>' : '') + ((lvlBefore < 4 && hs.lvl >= 4) || (lvlBefore < 8 && hs.lvl >= 8) ? ' · <b>+1 emplacement de pacte</b>' : '') + '</div>' : '<div class="tiny dim" style="margin-top:4px">+' + sum.mxp + ' expérience</div>') + '</div>';
     if (items.length) html += '<div class="card"><b>Butin gardé</b> <span class="tiny dim">(il est à toi pour toujours)</span><div class="inv-grid" style="margin-top:8px">' + items.slice(0, 18).map(function (it) { return UI.itemTile(it); }).join('') + '</div></div>';
     html += '<div class="card small dim">💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)] + '</div>' +
-      '<button class="btn goldb wide" data-act="deathBest" style="margin-bottom:8px">⚡ Équiper le meilleur</button>' +
+      (E.betterCount(S().hero) ? '<button class="btn goldb wide" data-act="deathBest" style="margin-bottom:8px">⚡ Équiper le meilleur (' + E.betterCount(S().hero) + ')</button>' : '') +
       '<div class="btns" style="margin-top:0"><button class="btn" data-act="toHub">🏰 Camp</button><button class="btn primary" data-act="again" data-z="' + startZone + '">⚔️ RELANCER</button></div><div style="height:20px"></div></div>';
     $('#screen').innerHTML = html;
     if (typeof FX !== 'undefined') FX.attach($('#screen'), { ambient: 'ash', warm: 4 });
@@ -8886,8 +8899,8 @@ UI.guide = (function () {
     { t: 'Le camp', x: 'Te voilà revenu. Entre deux descentes, on se repose ici, près de la dernière flamme.' },
     { s: '.camp-hero', t: 'Ton héros', x: 'Touche-le : il te répond. Touche-le encore pour voir ses pouvoirs, son équipement et sa force. Les flèches changent de héros.' },
     { s: '[data-act=descend]', t: 'Descendre', x: 'Quand tu es prêt, retourne dans les profondeurs. Ce que tu trouves, <b>tu le gardes</b>, même dans la mort.' },
-    { s: '.camp-quick', t: 'Autour du feu', x: 'Tes talents, les quêtes du jour, la chronique de Morvane et ta gloire. Une braise rouge signale ce qui t’attend.' },
-    { s: '.tabs', t: 'Le reste', x: 'Ton sac, l’autel des bonus permanents, les pactes et tes hauts faits.', btn: 'Compris' }
+    { s: '.camp-quick', t: 'Autour du feu', x: 'Tes talents et la chronique de Morvane. Une braise rouge signale ce qui t’attend. D’autres feux s’allumeront au fil de tes descentes.' },
+    { s: '.tabs', t: 'Le reste', x: 'Ton sac, et l’<b>autel</b> : tes Cendres y achètent des bonus pour toujours. Le reste s’ouvrira plus tard.', btn: 'Compris' }
   ];
   // Habillage : les cadres pixel servent de bordures à toute l’interface
   (function skin() {

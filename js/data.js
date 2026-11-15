@@ -389,6 +389,7 @@ var DATA = (function () {
   var NEWS = [
     ['👆', 'Un toucher, un dé', 'Touche un dé : il agit tout de suite. Un petit mot sous chaque dé dit ce qu’il fait. Pour Retourner, touche le bouton puis le dé.'],
     ['⚔️', 'Frappes automatiques', 'Main vide et rien à craindre : tes actions restantes frappent toutes seules. Quand un ennemi charge, montre un point faible ou lance un crâne, la main reste à toi.'],
+    ['🏰', 'Un camp qui s’ouvre peu à peu', 'Au début, le camp ne montre que l’essentiel (talents, histoire, sac, autel). Quêtes, gloire, pactes et hauts faits arrivent à la 2e descente. « Équiper le meilleur » n’apparaît que s’il y a mieux à porter.'],
     ['🕯️', 'Un début plus direct', 'Prologue raccourci, tutoriel en 5 étapes où tu joues toi-même, et les outils (Relance, Retourne, sac, primes) arrivent après tes premières victoires.'],
     ['🎨', 'Des personnages plus fins', 'Héros et monstres sont dessinés en double résolution : contours plus fins, courbes plus douces, relief et reflets. Les 8 héros et les monstres de la Crypte ont reçu des détails à la main (bouclier bordé d’or, plis des capes, os fêlés...).'],
     ['🔍', 'Fini le flou', 'Les images arrivent déjà agrandies au pixel près : sur iPhone, les personnages et les décors ne sont plus lissés.'],

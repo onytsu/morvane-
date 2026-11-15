@@ -21,8 +21,8 @@ UI.guide = (function () {
     { t: 'Le camp', x: 'Te voilà revenu. Entre deux descentes, on se repose ici, près de la dernière flamme.' },
     { s: '.camp-hero', t: 'Ton héros', x: 'Touche-le : il te répond. Touche-le encore pour voir ses pouvoirs, son équipement et sa force. Les flèches changent de héros.' },
     { s: '[data-act=descend]', t: 'Descendre', x: 'Quand tu es prêt, retourne dans les profondeurs. Ce que tu trouves, <b>tu le gardes</b>, même dans la mort.' },
-    { s: '.camp-quick', t: 'Autour du feu', x: 'Tes talents, les quêtes du jour, la chronique de Morvane et ta gloire. Une braise rouge signale ce qui t’attend.' },
-    { s: '.tabs', t: 'Le reste', x: 'Ton sac, l’autel des bonus permanents, les pactes et tes hauts faits.', btn: 'Compris' }
+    { s: '.camp-quick', t: 'Autour du feu', x: 'Tes talents et la chronique de Morvane. Une braise rouge signale ce qui t’attend. D’autres feux s’allumeront au fil de tes descentes.' },
+    { s: '.tabs', t: 'Le reste', x: 'Ton sac, et l’<b>autel</b> : tes Cendres y achètent des bonus pour toujours. Le reste s’ouvrira plus tard.', btn: 'Compris' }
   ];
   // Habillage : les cadres pixel servent de bordures à toute l’interface
   (function skin() {
