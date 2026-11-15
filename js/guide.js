@@ -94,7 +94,7 @@ UI.guide = (function () {
   }
   // Tutoriel du premier combat (ou relancé depuis le menu)
   function start(replay) {
-    var t = S().tuto; t.guide = 1; ['skill3', 'aim', 'press', 'intent', 'dice2'].forEach(function (k) { t[k] = 1; });
+    var t = S().tuto; t.guide = 1; ['skill3', 'aim', 'press', 'intent', 'dice2', 'dice4'].forEach(function (k) { t[k] = 1; });
     run(FIGHT, null);
   }
   function once(key) {

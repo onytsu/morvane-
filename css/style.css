@@ -1203,3 +1203,5 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 .dtool.dfl.on { box-shadow: 0 0 0 2px #7fd0ff, 0 0 12px #7fd0ff88; }
 /* v4.8 : premiers combats épurés */
 #app.novice #dre, #app.novice #dfl, #app.novice #dbag, #app.novice #primes { visibility: hidden; }
+/* frappes auto retenues : Frapper et Parer attendent une décision */
+.bigact.nudge { animation: pulse .6s infinite alternate; box-shadow: 0 0 0 2px #f2bd5e88, 0 0 14px #f2bd5e55; }

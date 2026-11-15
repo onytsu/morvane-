@@ -217,7 +217,7 @@ UI.run = (function () {
     var fl = $('#dfl'); fl.lastChild.textContent = c ? (c.flips || 0) : ''; fl.classList.toggle('off', !(mine && c.hand.length > 0 && c.flips > 0));
     fl.classList.toggle('on', flipMode);
     var hh = '';
-    if (c && c.hand.length) c.hand.forEach(function (d, k) { hh += '<button class="hd' + (flipMode && mine ? ' flipme' : '') + (handRoll ? ' roll' : '') + '" style="animation-delay:' + (k * 0.06) + 's" data-act="hdie" data-i="' + k + '">' + tdie(d.t, d.v, (d.fire ? ' fire' : '') + (d.ice ? ' ice' : '') + (d.up ? ' up' : '')) + '<span class="dcap">' + (DCAP[d.t] || '') + '</span></button>'; });
+    if (c && c.hand.length) c.hand.forEach(function (d, k) { hh += '<button class="hd' + (flipMode && mine ? ' flipme' : k === selDie && mine && !auto ? ' sel' : '') + (handRoll ? ' roll' : '') + '" style="animation-delay:' + (k * 0.06) + 's" data-act="hdie" data-i="' + k + '" data-info="hdie:' + k + '">' + tdie(d.t, d.v, (d.fire ? ' fire' : '') + (d.ice ? ' ice' : '') + (d.up ? ' up' : '')) + '<span class="dcap">' + (DCAP[d.t] || '') + '</span></button>'; });
     else hh = '<span class="dnone">' + (c ? (mine ? 'Tous tes dés sont joués' : 'Les ennemis jouent...') : '🎲 Ton sac : ' + run.bag.length + ' dés') + '</span>';
     $('#dhand').innerHTML = hh; handRoll = false;
     // la figure du tour : 3 cases qui se remplissent avec la valeur de chaque dé joué
@@ -245,8 +245,8 @@ UI.run = (function () {
   ACT.hdie = function (d) {
     var run = S().run, c = run && run.combat, i = +d.i; if (!c || !c.hand[i]) return;
     if (c.turn !== 'hero' || S().settings.auto) { dieInfo(c.hand[i].t, c.hand[i].v, (c.hand[i].fire ? '<br>🔥 <b>Dé enflammé</b> : le jouer te coûte 3 % de tes PV.' : '') + (c.hand[i].ice ? '<br>❄️ <b>Dé gelé</b> : tu es entravé, ton meilleur dé est tombé à 1. ⇅ Retourner le dégèle.' : '')); trayKey = ''; return; }
-    if (performance.now() - lastPlay < 280) return;
-    // v4.8 : un seul toucher joue le dé. En mode Retourne, il est retourné à la place.
+    if (performance.now() - lastPlay < 420) return; // l'ancien double toucher ne joue plus deux dés
+    // v4.8 : un seul toucher joue le dé. En mode Retourne, il est retourné à la place. (Appui long : le choisir pour un pouvoir.)
     selDie = -1;
     if (flipMode) { flipMode = false; if (E.flipDie(i)) { SND.play('equip', 0.7); handRoll = false; } else SND.play('error'); trayKey = ''; return; }
     lastPlay = performance.now(); if (!E.playDie(i)) SND.play('error');
@@ -371,7 +371,7 @@ UI.run = (function () {
     for (i = 0; i < evs.length; i++) {
       e = evs[i]; el = e.id ? els[e.id] : null;
       switch (e.k) {
-        case 'start': SND.music(zoneMusic(run)); UI.story.enterZone(run, function () { intro(run); if (!S().tuto.guide && UI.guide) { S().tuto['help_' + run.hero] = 1; setTimeout(function () { UI.guide.start(); }, 700); } else if (!S().tuto['help_' + run.hero]) { S().tuto['help_' + run.hero] = 1; helpSheet(true); } else zoneIntro(run); }); break;
+        case 'start': SND.music(zoneMusic(run)); (S().tuto.guide ? UI.story.enterZone : function (r, fn) { fn(); })(run, function () { /* toute première partie : on joue d'abord, l'arrivée dans la Crypte sera racontée au combat suivant */ intro(run); if (!S().tuto.guide && UI.guide) { S().tuto['help_' + run.hero] = 1; setTimeout(function () { UI.guide.start(); }, 700); } else if (!S().tuto['help_' + run.hero]) { S().tuto['help_' + run.hero] = 1; helpSheet(true); } else zoneIntro(run); }); break;
         case 'boss': bossEntrance(els[c.enemies[0].id], E.zoneOf(run.floor).id); SND.music(E.zoneOf(run.floor).id === 6 ? 'final' : 'boss'); SND.play('boss_intro'); banner(c.enemies[0].name.toUpperCase(), 'BOSS'); UI.flash('#c2283a66'); UI.vib(80); if (!UI.story.inZone(run, 'boss') && E.zoneOf(run.floor).taunt.length > 4) UI.toast('<i>« ' + E.zoneOf(run.floor).taunt + ' »</i>', true); break;
         case 'dmg':
           if (e.sh) { floatAt(el, 'Bouclier', 'txt'); break; }
@@ -486,7 +486,10 @@ UI.run = (function () {
     bst.classList.toggle('ready', mine && ap > 0 && !S().settings.auto); bst.classList.toggle('weakmode', wkOn); bst.classList.toggle('off', !!c && run.phase === 'combat' && (!mine || ap <= 0));
     if (bst.dataset.w !== (wkOn ? '1' : '0')) { bst.dataset.w = wkOn ? '1' : '0'; bst.firstChild.src = Sprites.url(wkOn ? 'i_burst' : 'i_sword'); bst.children[1].textContent = wkOn ? 'Critique !' : 'Frapper'; }
     $('#tpass').classList.toggle('off', !mine);
-    var par = c ? E.eclairPar(c, run.room) : 0, left = mine && ap <= 0 && c.hand.length > 0, tlb = $('#tlabel'), tlt = !c || run.phase !== 'combat' ? '' : left ? 'Joue tes dés' : 'Tour ' + c.round + (par && c.round <= par ? '/' + par : '');
+    // frappes auto retenues (charge, point faible, crâne, gros coup, ultime prêt) : on le dit et Frapper/Parer pulsent
+    var held = !!c && mine && !S().settings.auto && !c.hand.length && c.hero.ap > 0 && !c.over && !autoStrikeOk(run, c);
+    $('#bstrike').classList.toggle('nudge', held); $('#bparry').classList.toggle('nudge', held && c.hero.parryCd <= 0);
+    var par = c ? E.eclairPar(c, run.room) : 0, left = mine && ap <= 0 && c.hand.length > 0, tlb = $('#tlabel'), tlt = !c || run.phase !== 'combat' ? '' : left ? 'Joue tes dés' : held ? 'À toi : frappe ou pare' : 'Tour ' + c.round + (par && c.round <= par ? '/' + par : '');
     if (tlb) tlb.classList.toggle('eclair', !!par && !!c && c.round <= par && !left);
     var tsp = $('#tspd'), spt = 'x' + (S().settings.speed || 1); if (tsp && tsp.textContent !== spt) tsp.textContent = spt;
     var tsw = $('#tsweep'), swOn = mine && !S().settings.auto && S().stats.kills > 0 && !(UI.guide && UI.guide.open()) && E.canSweep(); if (tsw) tsw.classList.toggle('on', swOn);
@@ -544,7 +547,7 @@ UI.run = (function () {
   // v4.8 : main vide et rien à décider (pas de charge, de point faible, de crâne, de gros coup en vue) : les actions restantes frappent seules
   var autoT = 0;
   function autoStrikeOk(run, c) {
-    if (c.turn !== 'hero' || c.over || c.hand.length || c.hero.ap <= 0 || c.weak || (c.shots && c.shots.length)) return false;
+    if (c.turn !== 'hero' || c.over || c.hand.length || c.hero.ap <= 0 || c.weak || (c.shots && c.shots.length) || (run.ult || 0) >= 100) return false;
     var threat = 0, ch = false; c.enemies.forEach(function (e) { if (e.dead) return; if (e.charge) ch = true; });
     if (ch) return false;
     E.intents().forEach(function (it) { threat += (it.dmg || 0) * (it.n || 1); });
@@ -866,7 +869,7 @@ UI.run = (function () {
     if (c.hero.cds[i] > 0) { SND.play('error'); UI.toast(k.icon + ' <b>' + k.name + '</b> se recharge : encore ' + E.turns(c.hero.cds[i]) + ' tour' + (E.turns(c.hero.cds[i]) > 1 ? 's' : '') + '.'); return; }
     if (!c.hand.length) { SND.play('error'); UI.toast('🎲 Plus de dé en main. Un pouvoir se lance en y glissant <b>' + nd.txt + '</b> : garde-en un au prochain tour.', true); return; }
     if (!c.hand[selDie]) { var bd = E.bestDie(i); if (bd >= 0) { E.useSkill(i, bd); return; } }
-    if (!E.dieFits(i, selDie)) { SND.play('error'); var alt = E.bestDie(i); UI.toast(k.icon + ' <b>' + k.name + '</b> demande <b>' + nd.txt + '</b>.' + (c.flips > 0 ? ' Essaie de ⇅ retourner un dé.' : ' Aucun dé ne convient ce tour.'), true); return; }
+    if (!E.dieFits(i, selDie)) { SND.play('error'); var alt = E.bestDie(i); UI.toast(k.icon + ' <b>' + k.name + '</b> demande <b>' + nd.txt + '</b>.' + (c.flips > 0 && (S().stats.kills || 0) >= 3 ? ' Essaie de ⇅ retourner un dé.' : ' Aucun dé ne convient ce tour.'), true); return; }
     E.useSkill(i, selDie);
   };
   ACT.potion = function () { var run = S().run; if (!run) return; if (E.usePotion()) { if (!run.combat || run.phase !== 'combat') SND.play('potion'); } else SND.play('error'); };
@@ -935,6 +938,9 @@ UI.run = (function () {
   ACT.info = function (type, arg) {
     var run = S().run; if (!run || UI.st.screen !== 'run' || $('#modal').classList.contains('on')) return;
     var hero = E.hero(run.hero);
+    if (type === 'hdie') { var cc = run.combat, dd = cc && cc.hand[+arg]; if (!dd) return; var mine = cc.turn === 'hero' && !S().settings.auto, pv = E.dieCalc(+arg);
+      if (mine) { selDie = +arg; trayKey = ''; }
+      dieInfo(dd.t, pv && pv.v !== dd.v ? pv.v : dd.v, (dd.fire ? '<br>🔥 <b>En feu</b> : le jouer te coûte 3 % de tes PV.' : '') + (dd.ice ? '<br>❄️ <b>Gelé</b> : ⇅ Retourner le dégèle.' : '') + (mine ? '<br><span class="gold">Choisi : touche un <b>pouvoir</b> pour l’y glisser, ou le dé pour le jouer.</span>' : '')); return; }
     if (type === 'skill') UI.modal(UI.skillSheet(run.hero, +arg));
     else if (type === 'foe') ACT.foeLive({ i: arg });
     else if (type === 'ult') miniSheet(hero.ult.icon, hero.ult.name, 'Ultime ' + E.de(hero.name) + ' · chargé à ' + Math.floor(run.ult || 0) + ' %', hero.ult.desc + '<br><br><span class="dim">La barre dorée se remplit quand tu frappes, tues, encaisses, lances un pouvoir ou touches un point faible 🎯. Elle garde sa charge d’une salle à l’autre.</span>');

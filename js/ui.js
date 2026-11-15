@@ -176,7 +176,7 @@ var UI = (function () {
     SND.music('hub');
     var idle = E.idleInfo(), newItems = S().inv.some(function (i) { return i.isNew; });
     var metaOk = D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; });
-    var tabs = [['hero', '🔥', 'Camp', idle.full || E.contractReady() || E.talentPoints(S().hero) > 0 || E.dailyInfo().claimable || UI.story.fresh()], ['sac', '🎒', 'Sac', newItems], ['autel', '⚱️', 'Autel', metaOk], ['pactes', '📜', 'Pactes', pactFree() || E.famNew()], ['faits', '🏆', 'Hauts faits', false]];
+    var tabs = [['hero', '🔥', 'Camp', idle.full || (S().stats.runs >= 2 && E.contractReady()) || E.talentPoints(S().hero) > 0 || E.dailyInfo().claimable || UI.story.fresh()], ['sac', '🎒', 'Sac', newItems], ['autel', '⚱️', 'Autel', metaOk], ['pactes', '📜', 'Pactes', pactFree() || E.famNew()], ['faits', '🏆', 'Hauts faits', false]];
     // v4.8 : au début, le camp n'ouvre que l'essentiel ; pactes et hauts faits arrivent à la 2e descente (ou au premier pacte)
     if (S().stats.runs < 2) tabs = tabs.filter(function (t) { return t[0] !== 'faits' && (t[0] !== 'pactes' || S().pacts.length); });
     var body = { hero: tabHero, sac: tabSac, autel: tabAutel, pactes: tabPactes, faits: tabFaits }[st.tab]();
