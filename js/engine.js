@@ -135,10 +135,17 @@
   // « de » élidé devant une voyelle : « d’Aldric », « d’Écu du Parjure », mais « de Hrolf »
   E.de = function (n) { return (/^[AEIOUYÀÂÉÈÊËÎÏÔÛÜaeiouyàâéèêëîïôûü]/.test(n) ? 'd’' : 'de ') + n; };
   E.itemBase = function (it) { return byId(D.BASES, it.base); };
+  // Adjectif tiré du premier bonus de l'objet, accordé au nom (« Épée cruelle », « Grèves vives »)
+  function adjOf(k, g) {
+    var a = null; for (var i = 0; i < D.AFFIXES.length; i++) if (D.AFFIXES[i].k === k) a = D.AFFIXES[i];
+    if (!a || !a.pre) return '';
+    var f = a.pre.split('|'); return f[{ f: 1, mp: 2, fp: 3 }[g] || 0] || f[0];
+  }
   E.itemName = function (it) {
     if (it.uq) return byId(D.UNIQUES, it.uq).name;
     var b = byId(D.BASES, it.base), n = b.name;
     if (it.set) n += ' ' + byId(D.SETS, it.set).short;
+    else if (it.aff && it.aff.length) { var adj = adjOf(it.aff[0][0], b.g); if (adj) n += ' ' + adj; }
     if (it.pw) n += ' « ' + byId(D.POWERS, it.pw).name + ' »';
     return n + (it.up ? ' +' + it.up : '');
   };

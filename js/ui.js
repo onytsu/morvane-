@@ -48,6 +48,8 @@ var UI = (function () {
   function fmtMod(k, v) {
     var m = D.MODS[k]; if (!m || !v) return null;
     var a = Math.abs(v), num;
+    if (k === 'regen') a *= E.ROUND; // écrit en % par seconde, le jeu compte en tours
+    if (k === 'vulnStart') a = E.turns(a);
     if (m.fmt === 'flat') num = (a < 20 && Math.round(a * 10) % 10 ? a.toFixed(1).replace('.', ',') : E.fmt(a));
     else num = (Math.round(a * 10) % 10 ? a.toFixed(1).replace('.', ',') : Math.round(a)) + ' %';
     return [k === 'cdr' ? 'Vitesse de recharge' : m.n, (v >= 0 ? '+' : '−') + num];

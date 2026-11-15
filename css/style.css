@@ -677,6 +677,7 @@ h3.gold, h3 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
 /* ================= v3.3 : histoire, décors, détails ================= */
 /* --- scènes d'histoire --- */
 #story { position: absolute; inset: 0; z-index: 70; display: none; flex-direction: column; background: #050409; --sc: #ffb347; user-select: none; -webkit-user-select: none; }
+#story.card { margin: 0; padding: 0; border: 0; border-radius: 0; } /* « card » nomme ici le carton de chapitre, pas le style des panneaux .card */
 #story.on { display: flex; animation: stin .4s ease-out; } @keyframes stin { from { opacity: 0; } }
 .st-scene { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 .st-scene .fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; image-rendering: pixelated; }
@@ -1111,6 +1112,8 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 /* Pièces de set : double contour, couleur de rareté à l'extérieur, vert du set à l'intérieur */
 .item.set::after { content: ''; position: absolute; inset: 2px; border-radius: 10px; border: 2px solid var(--sc, #3fe08f); box-shadow: 0 0 6px color-mix(in srgb, var(--sc, #2bd67b) 60%, transparent), inset 0 0 6px color-mix(in srgb, var(--sc, #2bd67b) 35%, transparent); pointer-events: none; }
 .item-head .item.set::after, .lootc .item.set::after { inset: 3px; border-width: 2.5px; }
+/* le niveau, le +N et les marques restent lisibles par-dessus le double contour des sets */
+.item.set > span { z-index: 1; }
 
 /* ===== v4.3 : la vie des personnages ===== */
 /* Combat : le héros respire, change d'appui, puis serre son arme (cycle long, sans toucher aux filtres) */

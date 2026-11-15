@@ -267,7 +267,7 @@ UI.run = (function () {
     run.bag.forEach(function (d) { var k = d.t + '|' + d.f.join(''); if (!groups[k]) { groups[k] = { d: d, n: 0 }; order.push(k); } groups[k].n++; });
     h = '<h2>🎒 Ton sac de dés</h2><div class="tiny dim center" style="margin:-6px 0 10px">' + run.bag.length + ' dés · tu en pioches ' + (3 + (run.stats.diceHand || 0)) + ' par tour · le sac se remélange quand il est vide</div>';
     order.forEach(function (k) { var g = groups[k], d = g.d; h += '<div class="li"><div class="ic">' + tdie(d.t, facesTxt(d.f)) + '</div><div class="grow"><b>' + E.dieName(d) + (g.n > 1 ? ' ×' + g.n : '') + '</b> <span class="tiny dim">faces ' + d.f[0] + ' à ' + d.f[5] + '</span><div class="small dim">' + D.DICE[d.t].desc + '</div></div></div>'; });
-    h += '<h3 class="gold" style="margin:10px 0 6px">Jouer un dé</h3><div class="small dim" style="line-height:1.6">Touche un dé de ta main pour le choisir, retouche-le pour le <b>jouer</b> : il agit tout de suite et ne coûte <b>aucune action</b>. Tu peux aussi le glisser dans un <b>pouvoir</b> s’il respecte sa condition (≤3, PAIR, ≥4...).</div>';
+    h += '<h3 class="gold" style="margin:10px 0 6px">Jouer un dé</h3><div class="small dim" style="line-height:1.6">Touche un dé de ta main : il <b>agit tout de suite</b> et ne coûte <b>aucune action</b>. Touche un <b>pouvoir</b> qui s’illumine : il prend tout seul le bon dé. Pour choisir toi-même le dé d’un pouvoir, <b>appui long</b> sur le dé, puis touche le pouvoir (condition ≤3, PAIR, ≥4...).</div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les figures</h3><div class="tiny dim" style="margin-bottom:6px">Les <b>3 premiers dés</b> que tu joues dans un tour forment une figure, selon le chiffre affiché sur chacun. L’ordre ne compte pas.</div>';
     D.FIGS.forEach(function (f) { h += '<div class="li"><div class="ic">' + f[0] + '</div><div class="grow"><b>' + f[1] + '</b> <span class="tiny dim">' + f[2] + '</span><div class="small dim">' + f[3] + '</div></div></div>'; });
     h += '<div class="btns"><button class="btn primary big" data-act="close">FERMER</button></div>';
@@ -463,7 +463,7 @@ UI.run = (function () {
     var key = run.floor + '|' + run.gold + '|' + run.cendres + '|' + run.lvl + '|' + Object.keys(run.boons).length + run.artifacts.length + '|' + run.evos.length;
     if (updateHud.key !== key) {
       updateHud.key = key;
-      $('#rzone').innerHTML = '<b style="color:' + z.color + '">' + z.name + '</b> · étage ' + run.floor + (E.cycleOf(run.floor) ? ' · <span class="bad">Abîme ' + E.cycleOf(run.floor) + '</span>' : '');
+      $('#rzone').innerHTML = '<b style="color:' + z.color + '">' + z.name + '</b> · <span style="white-space:nowrap">étage ' + run.floor + '</span>' + (E.cycleOf(run.floor) ? ' · <span class="bad">Abîme ' + E.cycleOf(run.floor) + '</span>' : '');
       var p = ''; for (i = 1; i <= 10; i++) p += '<i class="' + (i <= pos ? 'on' : '') + (i === 10 ? ' boss' : '') + '"></i>';
       $('#rpips').innerHTML = p; $('#rgold').textContent = '💰 ' + run.gold; $('#rcend').textContent = '🔥 ' + E.fmt(run.cendres);
       $('#rlvl').textContent = run.lvl;
