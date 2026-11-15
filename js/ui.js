@@ -10,11 +10,46 @@ var UI = (function () {
     if (typeof Sprites === 'undefined') return '<span class="emo">👤</span>';
     return '<img class="px ' + (cls || '') + '" src="' + Sprites.url(id) + '" alt="" draggable="false">';
   }
+  // Emojis -> icônes pixel : chaque emoji écrit dans la page est remplacé à l'affichage par son icône (Sprites.emo)
+  var emoRe = null;
+  function emoNode(t) {
+    var v = t.nodeValue; if (!v || v.length > 4000) return;
+    if (!emoRe) emoRe = new RegExp('(' + Object.keys(Sprites.emo).join('|') + ')\uFE0F?', 'g');
+    emoRe.lastIndex = 0; if (!emoRe.test(v)) return;
+    var f = document.createDocumentFragment(), last = 0, m; emoRe.lastIndex = 0;
+    while ((m = emoRe.exec(v))) {
+      if (m.index > last) f.appendChild(document.createTextNode(v.slice(last, m.index)));
+      var im = document.createElement('img'); im.className = 'emo px'; im.alt = ''; im.draggable = false; im.src = Sprites.url(Sprites.emo[m[1]]);
+      f.appendChild(im); last = m.index + m[0].length;
+    }
+    if (last < v.length) f.appendChild(document.createTextNode(v.slice(last)));
+    if (t.parentNode) t.parentNode.replaceChild(f, t);
+  }
+  function emoScan(n) {
+    if (n.nodeType === 3) return emoNode(n);
+    if (n.nodeType !== 1 || /^(SCRIPT|STYLE|TEXTAREA|INPUT|CANVAS)$/.test(n.tagName)) return;
+    var w = document.createTreeWalker(n, NodeFilter.SHOW_TEXT), list = [], t;
+    while ((t = w.nextNode())) list.push(t);
+    list.forEach(emoNode);
+  }
+  function emoWatch(root) {
+    if (typeof Sprites === 'undefined' || !Sprites.emo || !root || typeof MutationObserver === 'undefined') return;
+    emoScan(root);
+    new MutationObserver(function (ms) {
+      for (var i = 0; i < ms.length; i++) {
+        var m = ms[i];
+        if (m.type === 'characterData') emoNode(m.target);
+        else for (var j = 0; j < m.addedNodes.length; j++) emoScan(m.addedNodes[j]);
+      }
+    }).observe(root, { childList: true, subtree: true, characterData: true });
+  }
+  // écrit un texte seulement s'il a changé (le texte affiché ne contient plus les emojis, devenus des images)
+  function setTxt(el, s) { if (el && el._raw !== s) { el._raw = s; el.textContent = s; } }
   function fmtMod(k, v) {
     var m = D.MODS[k]; if (!m || !v) return null;
     var a = Math.abs(v), num;
-    if (m.fmt === 'flat') num = (a < 20 && Math.round(a * 10) % 10 ? a.toFixed(1) : E.fmt(a));
-    else num = (Math.round(a * 10) % 10 ? a.toFixed(1) : Math.round(a)) + ' %';
+    if (m.fmt === 'flat') num = (a < 20 && Math.round(a * 10) % 10 ? a.toFixed(1).replace('.', ',') : E.fmt(a));
+    else num = (Math.round(a * 10) % 10 ? a.toFixed(1).replace('.', ',') : Math.round(a)) + ' %';
     return [k === 'cdr' ? 'Vitesse de recharge' : m.n, (v >= 0 ? '+' : '−') + num];
   }
   function modLines(mods, cls) {
@@ -23,7 +58,7 @@ var UI = (function () {
   }
   function toast(msg, long) {
     var t = document.createElement('div'); t.className = 'toast' + (long ? ' long' : ''); t.innerHTML = msg; $('#toasts').appendChild(t);
-    while ($('#toasts').children.length > 3) $('#toasts').removeChild($('#toasts').firstChild);
+    while ($('#toasts').children.length > 2) $('#toasts').removeChild($('#toasts').firstChild);
     setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, long ? 6000 : 3200);
   }
   function flash(color) { var f = $('#flash'); f.style.background = color; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
@@ -42,7 +77,7 @@ var UI = (function () {
   }
   function setHtml(id, n) {
     var s = E.byId(D.SETS, id); if (!s) return '';
-    var h = '<div class="setbox"><b>' + s.icon + ' ' + s.name + '</b> <span class="tiny">' + n + '/6 portés</span>';
+    var h = '<div class="setbox" style="--sc:' + s.color + '"><b>' + s.icon + ' ' + s.name + '</b> <span class="tiny">' + n + '/6 portés</span>';
     [2, 4, 6].forEach(function (t) { var parts = []; for (var k in s.bonus[t]) { var f = fmtMod(k, s.bonus[t][k]); if (f) parts.push(f[1] + ' ' + f[0]); } h += '<div class="sb' + (n >= t ? ' on' : '') + '"><i>' + t + '</i><span>' + parts.join(' · ') + '</span></div>'; });
     return h + '<div class="tiny dim">Set de la zone : ' + D.ZONES[s.zone - 1].name + '</div></div>';
   }
@@ -54,7 +89,7 @@ var UI = (function () {
     var h = E.hero(heroId), k = h.skills[i], own = E.heroUnlocked(heroId), run = S().run && S().run.hero === heroId ? S().run : null;
     var ok = own && E.skillUnlocked(heroId, i), cd = run ? E.skillCd(run, i) : k.cd * (1 - (own ? E.heroStats(heroId, null).cdr : 0) / 100);
     var nums = own ? E.skillNumbers(heroId, i, run) : [];
-    var html = '<div class="skhead"><div class="ic">' + k.icon + '</div><div class="grow"><b>' + k.name + '</b><div class="tiny dim">Pouvoir ' + (i + 1) + ' de ' + h.name + ' · 🎲 ' + D.NEEDS[k.need].txt + ' · recharge ' + E.turns(cd) + ' tours</div>' + tagsHtml(k) + '</div></div>';
+    var html = '<div class="skhead"><div class="ic">' + k.icon + '</div><div class="grow"><b>' + k.name + '</b><div class="tiny dim">Pouvoir ' + (i + 1) + ' ' + E.de(h.name) + ' · 🎲 ' + D.NEEDS[k.need].txt + ' · recharge ' + E.turns(cd) + ' tours</div>' + tagsHtml(k) + '</div></div>';
     if (!ok) html += '<div class="card small gold">🔒 Se débloque à Maîtrise ' + (i + 1) + ' : joue ' + h.name + ' pour la monter.</div>';
     html += '<p style="margin:10px 2px">' + k.desc + '</p>';
     html += '<div class="li on"><div class="ic"><span class="needb">' + D.NEEDS[k.need].label + '</span></div><div class="grow"><b>Emplacement de dé</b><div class="small dim">Se lance en y glissant <b>' + D.NEEDS[k.need].txt + '</b>, sans coûter d’action. ' + (k.flat ? 'La valeur du dé ne change rien : sers-toi d’un petit dé.' : 'La valeur du dé règle sa puissance : 5 = 100 %, 6 = 110 %, 1 = 60 %.') + '</div></div></div>';
@@ -108,7 +143,7 @@ var UI = (function () {
   ACT.omen = function (d) { closeModal(); SND.play('door'); S().hero = d.h; E.startRun(d.h, +d.z || 1, d.id || null); UI.run.show(); };
   function itemTile(it, extra) {
     var b = E.itemBase(it), eq = E.equippedBy(it.uid);
-    return '<button class="item r' + it.rar + '" data-act="item" data-uid="' + it.uid + '">' + b.icon +
+    return '<button class="item r' + it.rar + E.setAttr(it) + '" data-act="item" data-uid="' + it.uid + '">' + b.icon +
       '<span class="lv">' + it.ilvl + '</span>' + (it.up ? '<span class="up">+' + it.up + '</span>' : '') +
       (eq ? '<span class="eq">' + (eq === S().hero ? '✅' : '👤') + '</span>' : '') + (it.isNew ? '<span class="nw"></span>' : '') + (it.set ? '<span class="sm">◆</span>' : '') + (it.lock ? '<span class="eq" style="right:auto;left:2px;bottom:auto;top:1px">🔒</span>' : '') + (extra || '') + '</button>';
   }
@@ -125,7 +160,7 @@ var UI = (function () {
   ACT.enter = function () {
     SND.unlock(); SND.play('door');
     if (!S().stats.runs && !S().run) {
-      modal('<h2>La descente</h2><p class="center">Le Roi Creux a éteint le monde. Six royaumes pourrissent sous la terre de Morvane.</p><p class="center">Descends. Meurs. <b>Garde ton butin.</b> Reviens plus fort.</p><p class="center dim small">Le combat se joue au tour par tour.<br>Un petit tutoriel te guidera au premier combat.</p><div class="btns"><button class="btn primary big" data-act="firstRun">DESCENDRE</button></div>', true);
+      ACT.firstRun(); // le prologue explique tout : plus de fenêtre avant
       return;
     }
     if (S().run) { UI.run.show(); return; }
@@ -141,11 +176,13 @@ var UI = (function () {
     SND.music('hub');
     var idle = E.idleInfo(), newItems = S().inv.some(function (i) { return i.isNew; });
     var metaOk = D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; });
-    var tabs = [['hero', '🔥', 'Camp', idle.full || E.contractReady() || E.talentPoints(S().hero) > 0 || E.dailyInfo().claimable || UI.story.fresh()], ['sac', '🎒', 'Sac', newItems], ['autel', '⚱️', 'Autel', metaOk], ['pactes', '📜', 'Pactes', pactFree() || E.famNew()], ['faits', '🏆', 'Hauts faits', false]];
+    var tabs = [['hero', '🔥', 'Camp', idle.full || (S().stats.runs >= 2 && E.contractReady()) || E.talentPoints(S().hero) > 0 || E.dailyInfo().claimable || UI.story.fresh()], ['sac', '🎒', 'Sac', newItems], ['autel', '⚱️', 'Autel', metaOk], ['pactes', '📜', 'Pactes', pactFree() || E.famNew()], ['faits', '🏆', 'Hauts faits', false]];
+    // v4.8 : au début, le camp n'ouvre que l'essentiel ; pactes et hauts faits arrivent à la 2e descente (ou au premier pacte)
+    if (S().stats.runs < 2) tabs = tabs.filter(function (t) { return t[0] !== 'faits' && (t[0] !== 'pactes' || S().pacts.length); });
     var body = { hero: tabHero, sac: tabSac, autel: tabAutel, pactes: tabPactes, faits: tabFaits }[st.tab]();
     $('#screen').innerHTML = '<div class="topbar"><span class="title grow">MORVANE</span><span class="cur ash">🔥 ' + E.fmt(S().cendres) + '</span><span class="cur ess">💠 ' + E.fmt(S().essence) + '</span><button class="icon-btn" data-act="settings">⚙️</button></div>' +
       '<div class="content" id="content">' + body + '</div><div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (st.tab === t[0] ? ' on' : '') + '" data-act="tab" data-tab="' + t[0] + '"><span class="ti">' + t[1] + '</span>' + t[2] + (t[3] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
-    if (st.tab === 'hero' && typeof FX !== 'undefined') FX.attach($('.camp-scene'), { ambient: 'embers', fire: { x: 0.66, y: 0.86, s: 2.6 }, warm: 2 });
+    campFx = null; if (st.tab === 'hero' && typeof FX !== 'undefined') campFx = FX.attach($('.camp-scene'), { ambient: 'embers', fire: { x: 0.66, y: 0.86, s: 2.6 }, warm: 2 });
     $('#content').classList.toggle('camp', st.tab === 'hero');
     flushAch();
     if (S().stats.boss6 > 0 && !S().run && UI.story.seen()['c6.end']) UI.story.play('epi', null, { card: true });
@@ -166,7 +203,7 @@ var UI = (function () {
     var idle = E.idleInfo(), dl = E.dailyInfo();
     html += '<div class="camp-scene' + (un ? '' : ' locked') + '" style="background-image:url(' + Backgrounds.url('camp') + ')"><div class="camp-sky"></div><div class="camp-glow"></div>';
     html += '<button class="camp-name" data-act="roster"><b>' + h.name + '</b><span>' + h.title + '</span></button>';
-    html += '<button class="camp-hero" data-act="heroSheet">' + sprH + spr('p_buche', 'log') + '</button>' + (un ? famHtml('famh') : '');
+    html += '<button class="camp-hero" data-act="heroPoke">' + sprH + spr('p_buche', 'log') + '</button>' + (un ? famHtml('famh') : '');
     html += '<button class="nav l" data-act="heroNav" data-d="-1">‹</button><button class="nav r" data-act="heroNav" data-d="1">›</button>';
     if (un) {
       html += '<div class="camp-chips"><span>Maîtrise <b>' + hs.lvl + '</b></span><span>Puissance <b>' + E.fmt(E.power(h.id)) + '</b></span></div>';
@@ -175,7 +212,7 @@ var UI = (function () {
       if (S().stats.best > 0 && idle.amount > 0) gifts += '<button class="gift" data-act="idle">' + spr('i_urn', 'ic') + '<span>+' + E.fmt(idle.amount) + '</span></button>';
       if (gifts) html += '<div class="camp-gifts">' + gifts + '</div>';
     } else {
-      var how = h.unlock.cost ? '<button class="btn goldb' + (S().cendres >= h.unlock.cost ? '' : ' off') + '" data-act="unlock" data-id="' + h.id + '">Recruter — 🔥 ' + E.fmt(h.unlock.cost) + '</button>' : '<div class="gold small">Vaincs ' + D.ENEMIES[D.ZONES[h.unlock.boss - 1].boss].name + '<br><span class="dim">(boss de la zone ' + h.unlock.boss + ')</span></div>';
+      var how = h.unlock.cost ? '<button class="btn goldb' + (S().cendres >= h.unlock.cost ? '' : ' off') + '" data-act="unlock" data-id="' + h.id + '">Recruter — 🔥 ' + E.fmt(h.unlock.cost) + '</button>' : '<div class="gold small">Vaincs ' + D.ENEMIES[D.ZONES[h.unlock.boss - 1].boss].name.replace(/^(Le|La|Les) /, function (m) { return m.toLowerCase(); }) + '<br><span class="dim">(boss de la zone ' + h.unlock.boss + ')</span></div>';
       html += '<div class="lock"><div style="font-size:26px">🔒</div><b>' + h.role + '</b>' + how + '</div>';
     }
     html += '</div>';
@@ -189,9 +226,38 @@ var UI = (function () {
     html += '<div class="tiny dim center" style="margin:6px 0 12px">Record : étage ' + S().stats.best + '</div>';
     var tpts = E.talentPoints(h.id), gl = E.gloryInfo();
     var q = [['talents', 'i_star', 'Talents', tpts ? tpts + ' point' + (tpts > 1 ? 's' : '') : 'Maîtrise ' + hs.lvl, tpts > 0], ['quests', 'i_scroll', 'Quêtes', 'contrats du jour', E.contractReady() || idle.full], ['chron', 'i_book', 'Histoire', 'la Chronique', UI.story.fresh()], ['glory', 'i_medal', 'Gloire', 'palier ' + gl.lvl, false]];
+    if (S().stats.runs < 2) q = q.filter(function (x) { return x[0] === 'talents' || x[0] === 'chron'; });
     html += '<div class="camp-quick">' + q.map(function (x) { return '<button class="qk" data-act="' + x[0] + '">' + spr(x[1], 'ic') + '<b>' + x[2] + '</b><span>' + x[3] + '</span>' + (x[4] ? '<i class="dot"></i>' : '') + '</button>'; }).join('') + '</div>';
     return html;
   }
+  // ---------- le héros réagit quand on le touche au camp : geste, braises, une réplique ; retoucher ouvre sa fiche ----------
+  var campFx = null, pokeT = 0, typeT = 0, lastPoke = {};
+  var POKE = {
+    chevalier: ['Mon serment pèse plus lourd que mon armure.', 'Le feu tient. Moi aussi.', 'Dis-moi quand. Je suis prêt depuis vingt ans.'],
+    pyro: ['Approche, mais pas trop. Je mords.', 'Ce feu est mignon. Le mien brûle mieux.', 'Encore une descente ? J’ai froid aux doigts.'],
+    assassin: ['Tu ne m’as pas entendu arriver. C’est normal.', 'Chaque ombre a son prix.', 'Pas de gloire. Juste du travail propre.'],
+    necro: ['Chut. Les morts parlent, et toi, tu les couvres.', 'Ils m’attendent en bas. Ce serait impoli de tarder.', 'Une âme de plus ou de moins… qui compte ?'],
+    berserker: ['Encore ! Je n’ai pas assez saigné aujourd’hui.', 'Le froid ? Chez moi, ça s’appelle le printemps.', 'Donne-moi une porte. Je la casse.'],
+    pretresse: ['Que la flamme te garde. Elle, au moins, n’a pas menti.', 'Je prie encore. Plus pour les mêmes.', 'Respire. La nuit est longue, mais elle finit.'],
+    chasseuse: ['Chaque corde que je coupe est une prière.', 'Mes flèches sont prêtes. Le bois aussi.', 'Écoute. Les branches grincent. Il m’attend.'],
+    moine: ['Le poing ne frappe pas. Il répond.', 'Assieds-toi. Le feu ne demande rien.', 'La douleur est une maîtresse patiente.']
+  };
+  var PV = { chevalier: 150, pyro: 190, assassin: 170, necro: 120, berserker: 100, pretresse: 260, chasseuse: 230, moine: 140 };
+  ACT.heroPoke = function () {
+    var h = E.hero(st.view), sc = $('.camp-scene'), sp = $('.camp-hero .spr'); if (!sc || !sp || !E.heroUnlocked(h.id)) return;
+    var old = $('.camp-say'); if (old) { ACT.heroSheet(); return; } // la bulle est là : deuxième toucher = fiche
+    ['g-swing', 'g-nod', 'g-shrug'].forEach(function (g) { sp.classList.remove(g); }); void sp.offsetWidth;
+    var g = ['g-swing', 'g-nod', 'g-shrug'][Math.floor(Math.random() * 3)]; sp.classList.add(g); setTimeout(function () { sp.classList.remove(g); }, 1000);
+    var hb = $('.camp-hero').getBoundingClientRect(), sr = sc.getBoundingClientRect();
+    if (campFx) FX.burst(campFx, hb.left - sr.left + hb.width * 0.55, hb.top - sr.top + hb.height * 0.45, g === 'g-swing' ? 'crit' : 'burn', g === 'g-swing' ? 16 : 10);
+    SND.play(g === 'g-swing' ? 'equip' : 'click', 0.6); vib(12);
+    var L = POKE[h.id] || POKE.chevalier, i; do { i = Math.floor(Math.random() * L.length); } while (L.length > 1 && i === lastPoke[h.id]); lastPoke[h.id] = i;
+    var full = L[i], b = document.createElement('button'); b.className = 'camp-say'; b.dataset.act = 'heroSheet';
+    b.innerHTML = '<span class="t"></span><b>Voir sa fiche ›</b>'; sc.appendChild(b);
+    var t = b.firstChild, n = 0, k = 0; clearInterval(typeT); clearTimeout(pokeT);
+    typeT = setInterval(function () { if (!document.body.contains(t)) { clearInterval(typeT); return; } n += 2; t.textContent = full.slice(0, n); if (k++ % 2 === 0 && SND.blip) SND.blip(PV[h.id] || 160, 0.7, 'square'); if (n >= full.length) { clearInterval(typeT); b.classList.add('done'); } }, 26);
+    pokeT = setTimeout(function () { b.classList.add('out'); setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 300); }, 4800);
+  };
   // Fiche du héros : stats, équipement, pouvoirs
   ACT.heroSheet = function () {
     var h = E.hero(st.view); if (!E.heroUnlocked(h.id)) return; SND.play('click');
@@ -238,10 +304,10 @@ var UI = (function () {
   // ---------- talents ----------
   function renderTalents() {
     var id = S().hero, hero = E.hero(id), hs = S().heroes[id], pts = E.talentPoints(id), tal = hs.tal || {};
-    var h = '<h2>🌟 Talents de ' + hero.name + '</h2><div class="center small" style="margin:-6px 0 10px">' + (pts ? '<b class="gold">' + pts + ' point' + (pts > 1 ? 's' : '') + ' à placer</b>' : '<span class="dim">Aucun point. Chaque niveau de Maîtrise en donne un.</span>') + '</div>';
+    var h = '<h2>🌟 Talents ' + E.de(hero.name) + '</h2><div class="center small" style="margin:-6px 0 10px">' + (pts ? '<b class="gold">' + pts + ' point' + (pts > 1 ? 's' : '') + ' à placer</b>' : '<span class="dim">Aucun point. Chaque niveau de Maîtrise en donne un.</span>') + '</div>';
     D.TALENTS[id].forEach(function (t) {
       var r = tal[t.id] || 0, parts = [], tot = [];
-      for (var k in t.mods) { var f = fmtMod(k, t.mods[k]); if (f && /^s[123]P$/.test(k)) f[0] = 'dégâts de ' + hero.skills[+k.charAt(1) - 1].name; if (f) parts.push(f[1] + ' ' + f[0]); var g = fmtMod(k, t.mods[k] * r); if (g && r) tot.push(g[1]); }
+      for (var k in t.mods) { var f = fmtMod(k, t.mods[k]); if (f && /^s[123]P$/.test(k)) f[0] = 'dégâts ' + E.de(hero.skills[+k.charAt(1) - 1].name); if (f) parts.push(f[1] + ' ' + f[0]); var g = fmtMod(k, t.mods[k] * r); if (g && r) tot.push(g[1]); }
       var pips = ''; for (var i = 0; i < t.max; i++) pips += '<i class="' + (i < r ? 'on' : '') + '"></i>';
       h += '<div class="li' + (r ? ' on' : '') + '"><div class="ic">' + t.icon + '</div><div class="grow"><b>' + t.name + '</b> <span class="tiny gold">' + (r ? 'total ' + tot.join(' ') : '') + '</span><div class="small dim">' + parts.join(' · ') + ' par rang</div><div class="pips" style="margin-top:4px">' + pips + '</div></div>' +
         (r >= t.max ? '<span class="gold small">MAX</span>' : '<button class="btn sm ' + (pts ? 'goldb' : 'off') + '" data-act="talentAdd" data-id="' + t.id + '">＋</button>') + '</div>';
@@ -301,17 +367,17 @@ var UI = (function () {
       var better = cur !== it.uid && !E.equippedBy(it.uid) && (!curIt || E.itemScore(it) > E.itemScore(curIt) * 1.02);
       return itemTile(it, better ? '<span class="arrow" style="left:auto;right:3px;top:' + (it.up ? '11' : '0') + 'px">▲</span>' : '');
     }).join('') + '</div>';
-    h += '<div class="tiny dim center" style="margin-top:12px">Couleurs : <span class="c0">Normal</span> · <span class="c1">Commun</span> · <span class="c2">Rare</span> · <span class="c3">Épique</span> · <span class="c4">Légendaire</span> · <span class="c5">Unique</span></div>';
+    h += '<div class="tiny dim center" style="margin-top:12px">Couleurs : <span class="c0">Normal</span> · <span class="c1">Commun</span> · <span class="c2">Rare</span> · <span class="c3">Épique</span> · <span class="c4">Légendaire</span> · <span class="c5">Unique</span> · ◆ Set : double contour, une couleur par set (' + D.SETS.map(function (z) { return '<span style="color:' + z.color + '">' + z.icon + '</span>'; }).join(' ') + ')</div>';
     return h;
   }
   // ---------- fusion : 3 objets de même rareté -> 1 objet de la rareté au-dessus ----------
   function renderFuse() {
     var sel = st.fuse || (st.fuse = []), first = sel.length ? E.findItem(sel[0]) : null, pv = sel.length === 3 ? E.fusePreview(sel) : null;
     var pool = S().inv.filter(E.canFuse).sort(function (a, b) { return (a.rar - b.rar) || (a.ilvl - b.ilvl); });
-    var h = '<h2>⚗️ Fusion</h2><p class="small dim center" style="margin-top:-4px">Choisis <b style="color:var(--text)">3 objets de la même couleur</b>. Ils fondent en <b style="color:var(--text)">1 objet de la couleur au-dessus</b>, du type du premier choisi et au niveau du meilleur des trois. Deux pièces d’un même set donnent une pièce de ce set.</p>';
+    var h = '<h2>⚗️ Fusion</h2><p class="small dim center" style="margin-top:-4px">Choisis <b style="color:var(--text)">3 objets de la même couleur</b>. Ils fondent en <b style="color:var(--text)">1 objet de la couleur au-dessus</b>, du type du premier choisi et au niveau du meilleur des trois.</p>';
     h += '<div class="fslots">' + [0, 1, 2].map(function (i) { var it = sel[i] != null ? E.findItem(sel[i]) : null; return it ? '<button class="item r' + it.rar + '" data-act="fusePick" data-uid="' + it.uid + '">' + E.itemBase(it).icon + '<span class="lv">' + it.ilvl + '</span></button>' : '<div class="slot empty">＋</div>'; }).join('') +
       '<div class="farrow">➜</div>' + (pv ? '<div class="item r' + pv.rar + '">' + E.byId(D.SLOTS, pv.slot).icon + '<span class="lv">' + pv.ilvl + '</span></div>' : '<div class="slot empty">?</div>') + '</div>';
-    h += '<div class="center small" style="min-height:20px;margin-bottom:8px">' + (pv ? 'Résultat : <b class="c' + pv.rar + '">' + D.RARITIES[pv.rar].name + '</b> · ' + E.byId(D.SLOTS, pv.slot).name + ' niveau ' + pv.ilvl + (pv.set ? ' · <span style="color:#6dffb0">◆ ' + E.byId(D.SETS, pv.set).name + '</span>' : '') : first ? 'Encore ' + (3 - sel.length) + ' objet' + (3 - sel.length > 1 ? 's' : '') + ' <b class="c' + first.rar + '">' + D.RARITIES[first.rar].name + '</b>' : '<span class="dim">Les objets équipés, verrouillés, légendaires et uniques ne se fusionnent pas.</span>') + '</div>';
+    h += '<div class="center small" style="min-height:20px;margin-bottom:8px">' + (pv ? 'Résultat : <b class="c' + pv.rar + '">' + D.RARITIES[pv.rar].name + '</b> · ' + E.byId(D.SLOTS, pv.slot).name + ' niveau ' + pv.ilvl + (pv.set ? ' · <span style="color:#6dffb0">◆ ' + E.byId(D.SETS, pv.set).name + '</span>' : '') : first ? 'Encore ' + (3 - sel.length) + ' objet' + (3 - sel.length > 1 ? 's' : '') + ' <b class="c' + first.rar + '">' + D.RARITIES[first.rar].name + '</b>' : '<span class="dim">Les objets équipés, verrouillés, de set, légendaires et uniques ne se fusionnent pas.</span>') + '</div>';
     if (!pool.length) h += '<div class="center dim" style="padding:16px">Aucun objet à fusionner pour l’instant.</div>';
     h += '<div class="inv-grid">' + pool.map(function (it) {
       var on = sel.indexOf(it.uid) >= 0, no = !on && (sel.length >= 3 || (first && first.rar !== it.rar));
@@ -337,21 +403,27 @@ var UI = (function () {
   ACT.filter = function (d) { st.filter = d.f; SND.play('click'); hub(); };
   ACT.equipBest = function () { var n = E.equipBest(S().hero); S().inv.forEach(function (i) { i.isNew = false; }); if (n) { SND.play('equip'); toast('⚡ ' + n + ' objet' + (n > 1 ? 's' : '') + ' équipé' + (n > 1 ? 's' : '')); } else toast('Tu portes déjà le meilleur.'); E.save(); keepScroll(hub); };
   ACT.salvageMenu = function () {
-    var a = S().settings.autoSalvage, h = '<h2>Recycler</h2><p class="small dim center">Recycler détruit des objets et donne de l’<span class="ess">💠 Essence</span> pour améliorer les autres. Les objets équipés ou verrouillés 🔒 sont protégés.</p>';
+    var a = S().settings.autoSalvage, h = '<h2>Recycler</h2><p class="small dim center">Recycler détruit des objets et donne de l’<span class="ess">💠 Essence</span> pour améliorer les autres. Les objets équipés, verrouillés 🔒 ou de <span style="color:#6dffb0">◆ set</span> sont protégés.</p>';
     [0, 1, 2, 3].forEach(function (r) {
-      var n = S().inv.filter(function (i) { return i.rar <= r && !i.lock && !E.equippedBy(i.uid); }).length;
+      var n = S().inv.filter(function (i) { return i.rar <= r && !i.lock && !i.set && !E.equippedBy(i.uid); }).length;
       h += '<button class="btn wide" style="margin-bottom:6px" data-act="salvageBelow" data-r="' + r + '">Tout jusqu’à <b class="c' + r + '">&nbsp;' + D.RARITIES[r].name + '</b>&nbsp;(' + n + ')</button>';
     });
     h += '<h3 style="margin-top:10px">Recyclage automatique du butin</h3><div class="filters" style="margin-top:6px">' + [-1, 0, 1, 2].map(function (r) { return '<button class="chip' + (a === r ? ' on' : '') + '" data-act="autoSalv" data-r="' + r + '">' + (r < 0 ? 'Jamais' : '≤ ' + D.RARITIES[r].name) + '</button>'; }).join('') + '</div><div class="btns"><button class="btn" data-act="close">Fermer</button></div>';
     modal(h);
   };
-  ACT.salvageBelow = function (d) { var r = E.salvageBelow(+d.r); if (r.n) { SND.play('salvage'); toast('♻️ ' + r.n + ' objets → +' + E.fmt(r.essence) + ' 💠'); } E.save(); closeModal(); refresh(); };
+  ACT.salvageBelow = function (d) {
+    var n = S().inv.filter(function (i) { return i.rar <= +d.r && !i.lock && !i.set && !E.equippedBy(i.uid); }).length;
+    if (!d.ok && n && (+d.r >= 2 || n >= 15)) { // demander confirmation avant de détruire beaucoup, ou du Rare et plus
+      modal('<h2>Recycler ' + n + ' objet' + (n > 1 ? 's' : '') + ' ?</h2><p class="center small">Tous les objets jusqu’à <b class="c' + d.r + '">' + D.RARITIES[+d.r].name + '</b> seront détruits, sauf ceux équipés, verrouillés 🔒 ou de set. <span class="bad">C’est définitif.</span></p><div class="btns"><button class="btn" data-act="salvageMenu">Annuler</button><button class="btn primary" data-act="salvageBelow" data-r="' + d.r + '" data-ok="1">♻️ Recycler</button></div>');
+      return;
+    }
+    var r = E.salvageBelow(+d.r); if (r.n) { SND.play('salvage'); toast('♻️ ' + r.n + ' objets → +' + E.fmt(r.essence) + ' 💠'); } E.save(); closeModal(); refresh(); };
   ACT.autoSalv = function (d) { S().settings.autoSalvage = +d.r; E.save(); ACT.salvageMenu(); };
 
   function itemSheet(it, ctx) {
     var b = E.itemBase(it), p = E.itemParts(it), rar = D.RARITIES[it.rar], uq = it.uq ? E.byId(D.UNIQUES, it.uq) : null;
     var slot = E.byId(D.SLOTS, b.slot), eqBy = E.equippedBy(it.uid), hs = S().heroes[S().hero];
-    var h = '<div class="item-head"><div class="item r' + it.rar + '">' + b.icon + '</div><div class="grow"><h3 class="c' + it.rar + '" style="font-size:17px">' + E.itemName(it) + '</h3><div class="small"><b class="c' + it.rar + '">' + rar.name + '</b> · ' + slot.name + ' · niveau ' + it.ilvl + (it.up ? ' · <span class="gold">+' + it.up + '</span>' : '') + '</div>' + (eqBy ? '<div class="tiny good">Équipé par ' + E.hero(eqBy).name + '</div>' : '') + '</div></div>';
+    var h = '<div class="item-head"><div class="item r' + it.rar + E.setAttr(it) + '">' + b.icon + '</div><div class="grow"><h3 class="c' + it.rar + '" style="font-size:17px">' + E.itemName(it) + '</h3><div class="small"><b class="c' + it.rar + '">' + rar.name + '</b> · ' + slot.name + ' · niveau ' + it.ilvl + (it.up ? ' · <span class="gold">+' + it.up + '</span>' : '') + '</div>' + (eqBy ? '<div class="tiny good">Équipé par ' + E.hero(eqBy).name + '</div>' : '') + '</div></div>';
     h += '<div class="' + (uq ? 'uq' : '') + '">' + modLines(p.base) + (Object.keys(p.aff).length ? '<div style="border-top:1px solid #ffffff12;margin:4px 0"></div>' + modLines(p.aff) : '') + modLines(p.pw, 'pw') + '</div>';
     if (uq) h += '<div class="lore">« ' + uq.lore + ' »</div>';
     if (it.set) h += setHtml(it.set, E.setCounts(S().hero)[it.set] || 0);
@@ -366,12 +438,15 @@ var UI = (function () {
     else h += '<button class="btn off">Amélioration max</button>';
     if (tc) h += '<button class="btn' + (S().essence >= tc.essence ? '' : ' off') + '" data-act="temper" data-uid="' + it.uid + '">🔥 Retremper niv. ' + tc.target + '<br><span class="tiny">💠 ' + E.fmt(tc.essence) + '</span></button>';
     h += '</div><div class="btns">';
-    if (!eqBy && !it.lock) h += '<button class="btn" data-act="salvage" data-uid="' + it.uid + '">♻️ Recycler (+' + E.fmt(E.salvageValue(it)) + ' 💠)</button>';
+    if (it.set) h += '<div class="tiny center" style="width:100%;color:' + E.setColor(it.set) + '">◆ Pièce de set : ni recyclable, ni fusionnable.</div>';
+    else if (!eqBy && !it.lock) h += '<button class="btn" data-act="salvage" data-uid="' + it.uid + '">♻️ Recycler (+' + E.fmt(E.salvageValue(it)) + ' 💠)</button>';
     h += '<button class="btn" data-act="close">Fermer</button></div>';
     return h;
   }
   function refresh() { if (st.screen === 'hub') keepScroll(hub); else if (UI.run) UI.run.refresh(); }
   ACT.item = function (d) { var it = E.findItem(+d.uid); if (!it) return; it.isNew = false; SND.play('click'); modal(itemSheet(it, S().run && st.screen === 'run' ? 'run' : 'hub')); };
+  // Objet vendu par le Colporteur : sa fiche complète avant d'acheter
+  ACT.shopItem = function (d) { var r = S().run, s = r && r.room && r.room.stock && r.room.stock[+d.i]; if (!s || !s.item) return; SND.play('click'); modal(itemSheet(s.item, 'view')); };
   ACT.equip = function (d) { E.equip(+d.uid, S().hero); SND.play('equip'); E.save(); closeModal(); refresh(); };
   ACT.unequip = function (d) { E.unequip(d.slot, S().hero); SND.play('click'); E.save(); closeModal(); refresh(); };
   ACT.lock = function (d) { var it = E.findItem(+d.uid); it.lock = !it.lock; E.save(); modal(itemSheet(it)); refresh(); };
@@ -398,7 +473,7 @@ var UI = (function () {
     var h = '<div class="card small"><b>' + hero.name + '</b> porte <b class="gold">' + hs.pacts.length + '/' + slots + '</b> pacte' + (slots > 1 ? 's' : '') + '. <span class="dim">Un emplacement de plus à Maîtrise 4 et 8. Les pactes se gagnent avec les Hauts faits.</span></div>';
     D.PACTS.forEach(function (p) {
       var own = S().pacts.indexOf(p.id) >= 0, on = hs.pacts.indexOf(p.id) >= 0;
-      h += '<button class="li' + (on ? ' on' : '') + (own ? '' : ' locked') + '" style="width:100%;text-align:left" data-act="pact" data-id="' + p.id + '"><div class="ic">' + (own ? p.icon : '🔒') + '</div><div class="grow"><b>' + p.name + '</b><div class="small dim">' + p.desc + '</div>' + (own ? '' : '<div class="tiny gold">' + p.how + '</div>') + '</div>' + (on ? '<span class="gold">✔</span>' : '') + '</button>';
+      h += '<button class="li' + (on ? ' on' : '') + (own ? '' : ' locked') + '" style="width:100%;text-align:left" data-act="pact" data-id="' + p.id + '"><div class="ic">' + (own ? p.icon : spr('i_lock', 'ski')) + '</div><div class="grow"><b>' + p.name + '</b><div class="small dim">' + p.desc + '</div>' + (own ? '' : '<div class="tiny gold">' + p.how + '</div>') + '</div>' + (on ? '<span class="gold">✔</span>' : '') + '</button>';
     });
     h += '<h3 style="margin:14px 0 4px">🐾 Familiers</h3><div class="small dim" style="margin-bottom:8px">Tue assez de monstres d’une espèce pour en apprivoiser un. Un seul t’accompagne à la fois, pour tous tes héros.</div>';
     D.FAMILIARS.forEach(function (f) {
@@ -492,5 +567,5 @@ var UI = (function () {
   function boot() { E.load(); applySettings(); st.view = S().hero; splash(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else setTimeout(boot, 0);
 
-  return { ACT: ACT, $: $, S: S, spr: spr, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, famHtml: famHtml, vib: vib, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod, skillSheet: skillSheet, foeSheet: foeSheet, tagsHtml: tagsHtml, abIcons: abIcons };
+  return { ACT: ACT, $: $, S: S, spr: spr, emoWatch: emoWatch, setTxt: setTxt, toast: toast, flash: flash, modal: modal, closeModal: closeModal, overlay: overlay, hub: hub, itemTile: itemTile, itemSheet: itemSheet, askOmen: askOmen, setHtml: setHtml, famHtml: famHtml, vib: vib, modLines: modLines, flushAch: flushAch, st: st, fmtMod: fmtMod, skillSheet: skillSheet, foeSheet: foeSheet, tagsHtml: tagsHtml, abIcons: abIcons };
 })();

@@ -73,8 +73,21 @@ var SND = (function () {
       cur = { s: s, g: g }; curName = name;
     });
   }
+  // Bip de dialogue, synthétisé (pas de fichier) : un petit son de machine à écrire, plus ou moins aigu selon qui parle
+  var blipN = 0;
+  function blip(freq, vol, wave) {
+    if (!on.sfx || !ctx || !unlocked) return false;
+    try {
+      var now = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      o.type = wave || 'square'; o.frequency.value = (freq || 180) * (0.92 + Math.random() * 0.16);
+      f.type = 'lowpass'; f.frequency.value = 2200;
+      g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.09 * (vol == null ? 1 : vol), now + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+      o.connect(f); f.connect(g); g.connect(sfxGain); o.start(now); o.stop(now + 0.06);
+      blipN++; return true;
+    } catch (e) { return false; }
+  }
   function set(kind, v) { on[kind] = !!v; if (kind === 'music') { if (!v) stopCur(0.3); else if (wanted) music(wanted); } }
   function pause(p) { if (!ctx) return; try { if (p) ctx.suspend(); else if (unlocked) ctx.resume(); } catch (e) { } }
   ['pointerdown', 'touchend', 'keydown'].forEach(function (evn) { window.addEventListener(evn, unlock, { passive: true }); });
-  return { play: play, music: music, set: set, pause: pause, unlock: unlock };
+  return { play: play, music: music, set: set, pause: pause, unlock: unlock, blip: blip, blips: function () { return blipN; } };
 })();

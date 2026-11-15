@@ -64,17 +64,20 @@
     for (k in ref) if (S[k] === undefined) S[k] = ref[k];
     for (k in ref.stats) if (S.stats[k] === undefined) S.stats[k] = ref.stats[k];
     for (k in ref.settings) if (S.settings[k] === undefined) S.settings[k] = ref.settings[k];
-    if (S.run) { if (!S.run.bag) S.run.bag = startBag(S.run.hero); S.run.pendingDice = S.run.pendingDice || 0; S.run.evos = S.run.evos || []; S.run.pendingEvos = S.run.pendingEvos || 0; S.run.cnt = S.run.cnt || {}; S.run.primeLog = S.run.primeLog || []; if (!S.run.primes) { S.run.primes = []; rollPrimes(S.run); } if (!S.run.board) { recalc(S.run); genBoard(S.run, Math.floor((S.run.floor - 1) / 10) * 10, S.run.floor % 10 === 0 ? CELLS + 1 : ((S.run.floor - 1) % 10) * 4 + 1); if (S.run.phase === 'doors') rollDice(S.run); } S.run.combat = null; if (S.run.phase === 'combat') E._buildCombat(S.run, true); }
+    if (S.run) { if (!S.run.bag) S.run.bag = startBag(S.run.hero); S.run.pendingDice = S.run.pendingDice || 0; S.run.evos = S.run.evos || []; S.run.pendingEvos = S.run.pendingEvos || 0; S.run.cnt = S.run.cnt || {}; S.run.primeLog = S.run.primeLog || []; if (!S.run.primes) { S.run.primes = []; rollPrimes(S.run); } if (!S.run.board) { recalc(S.run); genBoard(S.run, Math.floor((S.run.floor - 1) / 10) * 10, S.run.floor % 10 === 0 ? CELLS + 1 : ((S.run.floor - 1) % 10) * 4 + 1); if (S.run.phase === 'doors') rollDice(S.run); } var sc = S.run.combat; S.run.combat = null;
+      // un combat sauvegardé reprend où il en était ; sinon (anciennes sauvegardes) il est rejoué depuis le début
+      if (S.run.phase === 'combat') { if (sc && !sc.over && sc.enemies && sc.enemies.length && sc.hero && sc.hand && sc.pile) { sc.events = []; sc.orbs = []; S.run.combat = sc; } else E._buildCombat(S.run, true); } }
     E.S = S;
     return fresh;
   };
   E.save = function () {
     if (!store || !S) return false;
     try {
-      var c = S.run ? S.run.combat : null;
-      if (S.run) S.run.combat = null;
-      var txt = JSON.stringify(S);
-      if (S.run) S.run.combat = c;
+      // le combat en cours est gardé (sans sa file d'animations) : fermer l'appli ne le remet plus à zéro
+      var c = S.run ? S.run.combat : null, evs = c ? c.events : null;
+      if (c) { if (c.over) S.run.combat = null; else c.events = []; }
+      var txt;
+      try { txt = JSON.stringify(S); } finally { if (S.run) S.run.combat = c; if (c) c.events = evs; }
       store.setItem(SAVE_KEY, txt);
       return true;
     } catch (e) { return false; }
@@ -126,6 +129,11 @@
     }
     return it;
   };
+  E.setColor = function (id) { var s = id && byId(D.SETS, id); return s ? s.color : '#6dffb0'; };
+  // classe + couleur du set pour une tuile d'objet (double contour)
+  E.setAttr = function (it) { return it.set ? ' set" style="--sc:' + E.setColor(it.set) : ''; };
+  // « de » élidé devant une voyelle : « d’Aldric », « d’Écu du Parjure », mais « de Hrolf »
+  E.de = function (n) { return (/^[AEIOUYÀÂÉÈÊËÎÏÔÛÜaeiouyàâéèêëîïôûü]/.test(n) ? 'd’' : 'de ') + n; };
   E.itemBase = function (it) { return byId(D.BASES, it.base); };
   E.itemName = function (it) {
     if (it.uq) return byId(D.UNIQUES, it.uq).name;
@@ -169,6 +177,15 @@
     return true;
   };
   E.unequip = function (slot, heroId) { delete S.heroes[heroId || S.hero].equip[slot]; if (S.run) recalc(S.run); };
+  // Nombre d'emplacements où un objet du sac ferait mieux que l'équipement actuel (sans rien changer)
+  E.betterCount = function (heroId) {
+    heroId = heroId || S.hero; var n = 0;
+    D.SLOTS.forEach(function (sl) {
+      var cur = S.heroes[heroId].equip[sl.id], curIt = cur ? E.findItem(cur) : null, bs = curIt ? E.itemScore(curIt) : -1;
+      if (S.inv.some(function (it) { var o = E.equippedBy(it.uid); return E.itemBase(it).slot === sl.id && !(o && o !== heroId) && it !== curIt && E.itemScore(it) > bs; })) n++;
+    });
+    return n;
+  };
   E.equipBest = function (heroId) {
     heroId = heroId || S.hero; var changed = 0;
     D.SLOTS.forEach(function (sl) {
@@ -194,15 +211,15 @@
     return Math.ceil((it.rar + 1) * (it.rar + 1) * (1 + it.ilvl / 15) * (it.rar === 5 ? 3 : 1) + 0.6 * (it.spent || 0));
   };
   E.salvage = function (uid) {
-    var it = E.findItem(uid); if (!it || it.lock || E.equippedBy(uid)) return 0;
+    var it = E.findItem(uid); if (!it || it.lock || it.set || E.equippedBy(uid)) return 0;
     var v = E.salvageValue(it); S.essence += v; S.inv.splice(S.inv.indexOf(it), 1); return v;
   };
   E.salvageBelow = function (maxRar) {
     var tot = 0, n = 0;
-    S.inv.slice().forEach(function (it) { if (it.rar <= maxRar && !it.lock && !E.equippedBy(it.uid)) { tot += E.salvage(it.uid); n++; } });
+    S.inv.slice().forEach(function (it) { if (it.rar <= maxRar && !it.lock && !it.set && !E.equippedBy(it.uid)) { tot += E.salvage(it.uid); n++; } });
     return { n: n, essence: tot };
   };
-  E.canFuse = function (it) { return !!it && it.rar <= 3 && !it.uq && !it.lock && !E.equippedBy(it.uid); };
+  E.canFuse = function (it) { return !!it && it.rar <= 3 && !it.uq && !it.set && !it.lock && !E.equippedBy(it.uid); };
   E.fusePreview = function (uids) {
     var its = uids.map(E.findItem);
     if (its.length !== 3 || its.some(function (i) { return !E.canFuse(i); })) return null;
@@ -232,12 +249,14 @@
   function giveItem(it) {
     S.stats.items++;
     if (it.rar === 3) S.stats.epic++; if (it.rar === 4) S.stats.leg++; if (it.rar === 5) S.stats.uni++;
-    if (it.rar <= S.settings.autoSalvage) { var v = E.salvageValue(it); S.essence += v; return { item: it, salvaged: true, essence: v }; }
+    if (it.rar <= S.settings.autoSalvage && !it.set) { var v = E.salvageValue(it); S.essence += v; return { item: it, salvaged: true, essence: v }; }
     S.inv.push(it);
     if (S.inv.length > INV_MAX) {
       var worst = null, ws = 1e99;
-      S.inv.forEach(function (o) { if (o === it || o.lock || E.equippedBy(o.uid)) return; var sc = o.rar * 1e6 + o.ilvl; if (sc < ws) { ws = sc; worst = o; } });
-      if (worst) E.salvage(worst.uid);
+      // le nouvel objet entre dans la comparaison : on ne jette jamais mieux que ce qu'on ramasse
+      S.inv.forEach(function (o) { if (o.lock || o.set || E.equippedBy(o.uid)) return; var sc = o.rar * 1e6 + o.ilvl; if (sc < ws || (sc === ws && o === it)) { ws = sc; worst = o; } });
+      if (worst === it) { var vn = E.salvageValue(it); S.inv.pop(); S.essence += vn; return { item: it, salvaged: true, essence: vn, full: true }; }
+      if (worst) { var nm = E.itemName(worst), vw = E.salvage(worst.uid); return { item: it, salvaged: false, bumped: nm, essence: vw }; }
     }
     return { item: it, salvaged: false };
   }
@@ -400,7 +419,7 @@
     var run = {
       hero: heroId, floor: (startZone - 1) * 10 + 1, startFloor: (startZone - 1) * 10 + 1, lvl: 1, xp: 0, gold: 0, hp: 1,
       potions: 0, potionsMax: 2, mods: {}, boons: {}, artifacts: [], rerolls: 0, revived: 0, rooms: 0, kills: 0, loot: [],
-      cendres: 0, bosses: 0, ult: 0, stance: 'n', phase: 'room', doors: [], room: null, pendingBoons: 0, offer: null, evos: [], pendingEvos: 0, evoOffer: null, result: null, combat: null, t: 0, log: [], cnt: {}, primes: [], primeLog: []
+      cendres: 0, bosses: 0, ult: 0, bestBefore: S.stats.best, rt: 0, stance: 'n', phase: 'room', doors: [], room: null, pendingBoons: 0, offer: null, evos: [], pendingEvos: 0, evoOffer: null, result: null, combat: null, t: 0, log: [], cnt: {}, primes: [], primeLog: []
     };
     run.bag = startBag(heroId); run.pendingDice = 0; run.diceOffer = null; run.dieTick = 0;
     S.run = run; S.hero = heroId; S.stats.runs++;
@@ -409,7 +428,7 @@
     run.hp = run.stats.hp; run.potions = run.potionsMax; run.gold = run.stats.startGold; run.rerolls = run.stats.rerolls;
     var free = run.stats.startBoons + (startZone - 1) * 3;
     if (startZone > 1) run.lvl = 1 + (startZone - 1) * 3;
-    for (var i = 0; i < free; i++) { var o = offerBoons(run, 1, 0); if (o.length) applyBoon(run, o[0]); }
+    run.gifts = []; for (var i = 0; i < free; i++) { var o = offerBoons(run, 1, 0); if (o.length) { applyBoon(run, o[0]); run.gifts.push(o[0]); } }
     if (run.stats.startArtifact) giveArtifact(run);
     for (var ei = Math.floor(run.lvl / 4) + run.stats.startEvo; ei > 0; ei--) grantEvo(run);
     recalc(run); run.hp = run.stats.hp; run.potions = run.potionsMax; run.rerolls = run.stats.rerolls;
@@ -527,7 +546,7 @@
   function genBoard(run, base, pos) {
     var cells = ['start'], prev = 'combat', i;
     for (i = 1; i <= CELLS; i++) {
-      var w = { combat: 44, elite: i <= 8 ? 0 : 10 * (run.stats.eliteW ? 3 : 1), tresor: 6, marchand: 6, repos: run.stats.noRest ? 0 : 6, autel: 5, event: 9, mercenaire: i <= 10 ? 0 : 4, arene: i <= 16 ? 0 : 4, forge: 6, runes: 6, roue: 5, bourse: 6, piege: 6, fontaine: 3 };
+      var w = { combat: 44, elite: i <= 8 ? 0 : 10 * (run.stats.eliteW ? 3 : 1), tresor: 6, marchand: i <= 6 ? 0 : 6, repos: run.stats.noRest ? 0 : 6, autel: 5, event: 9, mercenaire: i <= 10 ? 0 : 4, arene: i <= 16 ? 0 : 4, forge: 6, runes: 6, roue: 5, bourse: 6, piege: 6, fontaine: 3 };
       if (prev !== 'combat') { w[prev] *= 0.1; w.combat *= 1.5; }
       var types = Object.keys(w).filter(function (k) { return w[k] > 0; });
       var t = i <= 2 ? 'combat' : wpick(types, function (k) { return w[k]; });
@@ -734,6 +753,8 @@
   };
 
   // ---------- combat ----------
+  // v4.6 : combats plus courts. Élites, champions et boss ont moins de PV mais frappent un peu plus fort.
+  var FOE_HP = { elite: 0.6, boss: 0.55 }, FOE_ATK = { elite: 1.12, boss: 1.15 }; E.FOE_HP = FOE_HP;
   function mkEnemy(run, spec, hpMul) {
     var sp = typeof spec === 'string' ? { k: spec } : spec, key = sp.k, b = D.ENEMIES[key], F = run.floor;
     var hs = Math.pow(GROW.hp, F - 1), as = Math.pow(GROW.atk, F - 1);
@@ -744,12 +765,13 @@
       hm *= f.hp || 1; am *= f.atk || 1; im *= f.int || 1; defK += f.def || 0; name += ' ' + f.name;
     });
     if (sp.gold) name = "Porteur d'or";
+    var tier = b.boss ? 'boss' : b.elite || sp.champ ? 'elite' : null; if (tier) { hm *= FOE_HP[tier]; am *= FOE_ATK[tier]; }
     var hp = b.hp * hs * hm * 1.32 * (1 + (run.stats.enemyHpP || 0) / 100), atk = b.atk * as * am * 1.2 * (1 + (run.stats.enemyAtkP || 0) / 100);
     return {
       key: key, name: name, hp: hp, maxhp: hp, atk: atk, def: b.def * as + defK * atk, int: b.int * im, t: b.int * im * rf(0.5, 1), ab: ab,
       fix: sp.fix || null, fix2: sp.fix2 || null, champ: !!sp.champ, big: sp.fix === 'geant' || sp.fix2 === 'geant', flee: sp.flee || 0, gold: !!sp.gold,
-      elite: !!b.elite, boss: !!b.boss, st: {}, charge: null, chargeCd: ab.charge ? ab.charge * rf(0.6, 0.9) : 0,
-      healT: 6, summonT: 10, shieldT: 5, shield: 0, enraged: false, dead: false, id: 0
+      elite: !!b.elite, boss: !!b.boss, st: {}, charge: null, chargeCd: ab.charge ? ab.charge * rf(0.3, 0.55) : 0,
+      healT: 4, summonT: 6, shieldT: 3, shield: 0, enraged: false, dead: false, id: 0
     };
   }
   E._buildCombat = function (run, restore) {
@@ -763,35 +785,33 @@
     r.group.forEach(function (k) { var e = mkEnemy(run, k, n >= 3 ? 0.8 : 1); e.id = c.nextId++; if (st.vulnStart) e.st.vuln = st.vulnStart; if (c.cond === 'fragile') e.st.vuln = Math.max(e.st.vuln || 0, 8); c.enemies.push(e); });
     run.combat = c;
     c.turn = 'hero'; c.round = 1; c.qi = 0; c.rerolls = 1 + (st.diceRerolls || 0);
-    // table de dés : 9 cases, une case ×2 et une case +2 ; un boss en scelle une
-    var cs = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8]); c.grid = []; for (var gi = 0; gi < 9; gi++) c.grid.push({ r: null, d: null });
-    c.grid[cs[0]].r = 'x2'; c.grid[cs[1]].r = 'p2'; if (c.boss) c.grid[cs[2]].r = 'seal';
     c.pile = shuffle(run.bag.map(function (d, i) { return i; })); c.disc = []; c.hand = []; c.dfx = {};
     c.events.push({ k: r.type === 'boss' ? 'boss' : 'start' }); c.events.push({ k: 'pturn', n: 1 }); drawTurn(run, c);
+    if (!restore) E.save();
   };
   // ----- Tour par tour. Un tour vaut ROUND secondes de l'ancien temps réel : les durées et recharges restent écrites en secondes. -----
   var ROUND = 2, AP = 2; E.ROUND = ROUND; E.AP = AP;
+  // Fureur : passé ce temps (en secondes de jeu, 2 par tour), les ennemis frappent de plus en plus fort
+  var FURY = { mob: 24, boss: 44 };
   E.turns = function (sec) { return Math.max(1, Math.ceil(sec / ROUND - 1e-9)); };
-  // ----- Dés de combat (v3.2). Le sac de dés du héros : à chaque tour il en pioche, les lance, et les pose sur une table de 9 cases.
-  // Un dé posé agit tout de suite. Les dés restent sur la table jusqu'à ce qu'elle soit pleine : elle est alors purgée au tour suivant.
-  var LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
-  var ADJ = [[1, 3], [0, 2, 4], [1, 5], [0, 4, 6], [1, 3, 5, 7], [2, 4, 8], [3, 7], [4, 6, 8], [5, 7]];
-  E.LINES = LINES; E.ADJ = ADJ;
+  // ----- Dés de combat (v4.0). Le sac de dés du héros : à chaque tour il en pioche 3, les lance, et les joue depuis sa main.
+  // Un dé joué agit tout de suite et ne coûte aucune action. Les 3 premiers dés joués d'un tour (main ou pouvoir) forment une figure.
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function startBag(heroId) { return (D.BAGS[heroId] || D.BAGS.chevalier).map(function (t) { return { t: t, f: [1, 2, 3, 4, 5, 6] }; }); }
   E.startBag = startBag;
+  var VMAX = 12;
   function rollDie(run, bi) { var d = run.bag[bi], f = pick(d.f); if (run.hero === 'assassin' && f === 1) return { bi: bi, t: d.t, v: 6 + (run.stats.diceV || 0), night: true }; return { bi: bi, t: d.t, v: f + (run.stats.diceV || 0) }; }
   // passifs : +n au plus petit dé de la main
-  function boostLow(c, n) { if (!c.hand.length) return false; var lo = c.hand.reduce(function (a, b) { return b.v < a.v ? b : a; }); lo.v = Math.min(9, lo.v + n); lo.ice = false; return true; }
+  function boostLow(c, n) { if (!c.hand.length) return false; var lo = c.hand.reduce(function (a, b) { return b.v < a.v ? b : a; }); lo.v = Math.min(VMAX, lo.v + n); lo.ice = false; return true; }
   // pioche un dé de plus (pouvoirs qui remplissent la main)
   function drawOne(run, c) { if (!c.pile.length) { c.pile = shuffle(c.disc); c.disc = []; } if (!c.pile.length) return; c.hand.push(rollDie(run, c.pile.pop())); ev(c, { k: 'draw', n: c.hand.length, again: 1 }); }
   // retourne un dé sur sa face opposée, sans dépenser de retournement
-  function flipValue(run, d) { var f = run.bag[d.bi].f, b = run.stats.diceV || 0; d.v = Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b)) + b; d.ice = false; }
-  function freeCells(c) { var o = []; c.grid.forEach(function (g, i) { if (!g.d && g.r !== 'seal') o.push(i); }); return o; }
+  function flipOf(run, d) { var f = run.bag[d.bi].f, b = run.stats.diceV || 0, k = d.bonus || 0; return Math.min(VMAX, Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b - k)) + b + k); }
+  function flipValue(run, d) { d.v = flipOf(run, d); d.ice = false; }
   function drawTurn(run, c) {
     var h = c.hero, n = 3 + (run.stats.diceHand || 0);
     c.dfx = {}; c.acted = false; h.ap = AP + (run.hero === 'berserker' && run.hp < run.stats.hp * 0.3 ? 1 : 0); c.weakRefund = false; c.foyerX2 = false;
-    if (!freeCells(c).length) { c.grid.forEach(function (g) { g.d = null; }); ug(run, 10); ev(c, { k: 'gclear' }); }
+    c.played = []; c.lastT = null;
     c.hand = [];
     while (c.hand.length < n) {
       if (!c.pile.length) { c.pile = shuffle(c.disc); c.disc = []; }
@@ -807,73 +827,67 @@
     if (run.hero === 'chevalier' && h.oath) { for (var oi = 0; oi < Math.min(3, h.oath); oi++) boostLow(c, 1); ev(c, { k: 'passive', txt: '+' + Math.min(3, h.oath) + ' Serment' }); h.oath = 0; }
     ev(c, { k: 'draw', n: c.hand.length });
   }
-  // Ce que vaudrait le dé `die` posé sur la case ci (sans rien changer). Le Miroir prend le type et la valeur du plus fort voisin.
-  function dieCalc(c, die, ci) {
-    var g = c.grid, t = die.t, v = die.v, mir = false, bonus = 0;
-    if (t === 'miroir') {
-      var best = null; mir = true;
-      ADJ[ci].forEach(function (a) { var d = g[a].d; if (d && d.t !== 'miroir' && (!best || d.v > best.v)) best = d; });
-      if (!best) return { t: 'miroir', v: 0, base: die.v, mir: true, bonus: 0 };
-      t = best.t; v = best.v;
-    }
-    ADJ[ci].forEach(function (a) { var d = g[a].d; if (d && d.t === 'echo') bonus += Math.ceil(d.v / 2); });
-    if (g[ci].r === 'x2') v *= 2; else if (g[ci].r === 'p2') v += 2;
-    if (S.run && S.run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2) v *= 2;
-    return { t: t, v: Math.min(20, v + bonus), base: die.v, mir: mir, bonus: bonus };
+  function foyerOn(run, c) { return run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2; }
+  // Ce que fera le dé `die` s'il est joué maintenant. Le Miroir prend le type du dernier dé joué ce tour (une Lame s'il n'y en a pas).
+  function dieCalc(run, c, die) {
+    var t = die.t, v = die.v, mir = false;
+    if (t === 'miroir') { mir = true; t = c.lastT || 'lame'; }
+    if (foyerOn(run, c)) v *= 2;
+    return { t: t, v: v, base: die.v, mir: mir };
   }
-  E.dieCalc = function (hi, ci) { var c = S.run && S.run.combat; return c && c.hand[hi] && c.grid[ci] && !c.grid[ci].d && c.grid[ci].r !== 'seal' ? dieCalc(c, c.hand[hi], ci) : null; };
+  E.dieCalc = function (hi) { var c = S.run && S.run.combat; return c && c.hand[hi] ? dieCalc(S.run, c, c.hand[hi]) : null; };
   function dieFx(run, c, t, v) {
     var st = run.stats, h = c.hero, e = target(c), n;
-    if (t === 'lame') { if (e) hit(run, c, e, 0.18 * v, { die: 1 }); }
-    else if (t === 'garde') { n = st.hp * 0.015 * v; h.shield = Math.min(st.hp * 0.6, h.shield + n); h.shieldT = Math.max(h.shieldT, ROUND); ev(c, { k: 'dshield', v: n }); }
-    else if (t === 'seve') heroHeal(run, c, st.hp * 0.006 * v);
-    else if (t === 'braise') { if (e) { hit(run, c, e, 0.12 * v, { die: 1 }); if (!e.dead) applyDot(run, e, 'burn'); } }
+    if (t === 'lame') { if (e) hit(run, c, e, 0.22 * v, { die: 1 }); }
+    else if (t === 'garde') { n = st.hp * 0.021 * v; h.shield = Math.min(st.hp * 0.6, h.shield + n); h.shieldT = Math.max(h.shieldT, ROUND); ev(c, { k: 'dshield', v: n }); }
+    else if (t === 'seve') heroHeal(run, c, st.hp * 0.007 * v);
+    else if (t === 'braise') { if (e) { hit(run, c, e, 0.15 * v, { die: 1 }); if (!e.dead) applyDot(run, e, 'burn'); } }
     else if (t === 'venin') { if (e) { for (n = Math.ceil(v / 2); n > 0; n--) applyDot(run, e, 'poison'); ev(c, { k: 'dpoison', id: e.id }); } }
-    else if (t === 'foudre') { alive(c).forEach(function (x) { hit(run, c, x, 0.09 * v, { die: 1 }); }); ev(c, { k: 'chain' }); }
+    else if (t === 'foudre') { alive(c).forEach(function (x) { hit(run, c, x, 0.1 * v, { die: 1 }); }); ev(c, { k: 'chain' }); }
     else if (t === 'astre') { ug(run, 2 * v); ev(c, { k: 'dult', v: 2 * v }); }
+    else if (t === 'echo') {
+      // Écho : les autres dés de ta main gagnent la moitié de sa valeur. Seul, il charge l'ultime.
+      var b = Math.ceil(v / 2);
+      if (c.hand.length) { c.hand.forEach(function (d) { var nv = Math.min(VMAX, d.v + b); d.bonus = (d.bonus || 0) + nv - d.v; d.v = nv; d.ice = false; d.up = 1; }); ev(c, { k: 'echoUp', v: b }); }
+      else { ug(run, 2 * v); ev(c, { k: 'dult', v: 2 * v }); }
+    }
   }
-  // Figure formée par trois valeurs alignées (ou null)
+  // Les trois figures, lues sur les valeurs des 3 premiers dés joués dans le tour (dans n'importe quel ordre)
   function figKind(vals, st) {
-    var a = vals.slice().sort(function (x, y) { return x - y; }), s = a[0] + a[1] + a[2], p = 1 + (st.diceP || 0) / 100, n;
-    if (a[0] === a[2]) return { id: 'jackpot', name: 'BRELAN', icon: '👑', ap: 1, crit: 1, desc: '+1 action et tous tes coups sont critiques ce tour.' };
-    if (a[1] === a[0] + 1 && a[2] === a[1] + 1) return { id: 'suite', name: 'SUITE', icon: '✨', nextCrit: 1, desc: 'Ton prochain coup est critique.' };
-    if (s === 7) return { id: 'sept', name: 'SEPT CHANCEUX', icon: '🍀', freeSkill: 1, desc: 'Ce tour, tes pouvoirs acceptent n’importe quel dé.' };
-    if (s >= 15) { n = Math.round(40 * p); return { id: 'fort', name: 'COUP FORT', icon: '💥', dmg: n, desc: '+' + n + ' % dégâts ce tour.' }; }
-    if (s <= 6) { n = Math.min(80, Math.round(40 * p)); return { id: 'garde', name: 'PRUDENCE', icon: '🛡️', guard: n, desc: '-' + n + ' % dégâts subis jusqu’à ton prochain tour.' }; }
+    if (vals.length < 3) return null;
+    var a = vals.slice(0, 3).sort(function (x, y) { return x - y; }), n;
+    if (a[0] === a[2]) return { id: 'jackpot', name: 'BRELAN', icon: '👑', ap: 1, crit: 1, desc: '+1 action ⚡ et tous tes coups sont critiques ce tour.' };
+    if (a[1] === a[0] + 1 && a[2] === a[1] + 1) return { id: 'suite', name: 'SUITE', icon: '✨', ap: 1, nextCrit: 1, desc: '+1 action ⚡ et ton prochain coup est critique.' };
+    if (a[0] === a[1] || a[1] === a[2]) { n = Math.round(30 * (1 + (st.diceP || 0) / 100)); return { id: 'paire', name: 'PAIRE', icon: '🎲', dmg: n, desc: '+' + n + ' % de dégâts ce tour.' }; }
     return null;
   }
-  function figure(run, c, L) {
-    var k = figKind(L.map(function (x) { return c.grid[x].d.base; }), run.stats), h = c.hero, f = c.dfx; if (!k) return;
-    if (k.ap) h.ap += k.ap; if (k.crit) f.crit = 1; if (k.freeSkill) f.freeSkill = 1;
-    if (k.dmg) f.dmg = Math.max(f.dmg || 0, k.dmg); if (k.guard) f.guard = Math.max(f.guard || 0, k.guard);
+  E.figKind = function (vals) { return figKind(vals, (S.run && S.run.stats) || {}); };
+  // Enregistre un dé joué ; au 3e dé du tour, la figure se déclenche (une seule fois par tour)
+  function noteDie(run, c, v) {
+    if (!c.played) c.played = [];
+    if (c.played.length >= 3) return;
+    c.played.push(v); if (c.played.length < 3) return;
+    var k = figKind(c.played, run.stats), h = c.hero, f = c.dfx;
+    if (!k) { ev(c, { k: 'figure', id: 'rien', name: 'Pas de figure', icon: '', desc: '', vals: c.played.slice() }); return; }
+    if (k.ap) h.ap += k.ap; if (k.crit) f.crit = 1;
+    if (k.dmg) f.dmg = Math.max(f.dmg || 0, k.dmg);
     if (k.nextCrit) h.nextCrit = true;
     f.id = k.id; f.name = k.name; f.icon = k.icon; f.desc = k.desc;
     S.stats.doubles = (S.stats.doubles || 0) + 1; run.dbl = (run.dbl || 0) + 1; bump(run, 'doubles');
-    ev(c, { k: 'figure', id: k.id, name: k.name, icon: k.icon, desc: k.desc, line: L });
+    ev(c, { k: 'figure', id: k.id, name: k.name, icon: k.icon, desc: k.desc, vals: c.played.slice() });
   }
-  // Figures que formerait le dé n° hi posé sur la case ci (pour l'aperçu)
-  E.figAt = function (hi, ci) {
-    var run = S.run, c = run && run.combat, out = []; if (!c || !c.hand[hi]) return out;
-    LINES.forEach(function (L) {
-      if (L.indexOf(ci) < 0) return; var vals = [], ok = true;
-      L.forEach(function (x) { if (x === ci) vals.push(c.hand[hi].v); else if (c.grid[x].d) vals.push(c.grid[x].d.base); else ok = false; });
-      var k = ok ? figKind(vals, run.stats) : null; if (k) out.push(k);
-    });
-    return out;
-  };
-  // Pose le dé n° hi de la main sur la case ci. Ne coûte aucune action.
-  E.placeDie = function (hi, ci) {
+  // Joue le dé n° hi de la main. Ne coûte aucune action.
+  E.playDie = function (hi) {
     var run = S.run, c = run && run.combat;
-    if (!c || c.over || c.turn !== 'hero' || !c.hand[hi] || !c.grid[ci] || c.grid[ci].d || c.grid[ci].r === 'seal') return false;
-    var die = c.hand.splice(hi, 1)[0], r = dieCalc(c, die, ci);
-    dieBurn(run, c, die);
-    c.grid[ci].d = { t: r.t, v: r.v, base: r.base, mir: r.mir }; c.disc.push(die.bi); c.acted = true;
-    if (run.hero === 'moine' && (c.hero.elan || 0) >= 10 && !c.foyerX2) { c.foyerX2 = true; ev(c, { k: 'passive', txt: 'Foyer ×2' }); }
+    if (!c || c.over || c.turn !== 'hero' || !c.hand[hi]) return false;
+    var die = c.hand.splice(hi, 1)[0], r = dieCalc(run, c, die);
+    dieBurn(run, c, die); c.disc.push(die.bi); c.acted = true;
+    if (foyerOn(run, c)) { c.foyerX2 = true; ev(c, { k: 'passive', txt: 'Foyer ×2' }); }
     if (run.hero === 'pretresse' && r.base % 2 === 0) heroHeal(run, c, run.stats.hp * 0.02);
     S.stats.dice = (S.stats.dice || 0) + 1;
-    ev(c, { k: 'place', ci: ci, t: r.t, v: r.v, mir: r.mir });
-    dieFx(run, c, r.t, r.v);
-    if (!c.over) LINES.forEach(function (L) { if (L.indexOf(ci) >= 0 && c.grid[L[0]].d && c.grid[L[1]].d && c.grid[L[2]].d) figure(run, c, L); });
+    ev(c, { k: 'place', t: r.t, v: r.v, mir: r.mir });
+    dieFx(run, c, r.t, r.v); c.lastT = r.t;
+    if (!c.over) noteDie(run, c, r.base);
     if (c.over) finish(run, c); else endIfDone(run, c);
     return true;
   };
@@ -882,7 +896,7 @@
   // Retourne le dé n° hi sur sa face opposée (1↔6, 2↔5, 3↔4) : une fois par tour, sans action
   E.flipDie = function (hi) {
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || !c.hand[hi] || !(c.flips > 0)) return false;
-    var d = c.hand[hi], f = run.bag[d.bi].f, b = run.stats.diceV || 0, nv = Math.max(1, f[0] + f[5] - (d.ice ? f[0] : d.v - b)) + b;
+    var d = c.hand[hi], nv = flipOf(run, d);
     if (nv === d.v) return false;
     c.flips--; d.v = nv; d.ice = false; ev(c, { k: 'flip', hi: hi, v: nv }); return true;
   };
@@ -906,10 +920,10 @@
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || !c.hand.length || c.rerolls <= 0) return false;
     c.rerolls--; c.hand = c.hand.map(function (d) { return rollDie(run, d.bi); }); ev(c, { k: 'draw', n: c.hand.length, again: 1 }); return true;
   };
-  // Le tour du héros s'arrête quand il n'a plus d'action ET plus de dé à poser
+  // Le tour du héros s'arrête quand il n'a plus d'action ET plus de dé en main
   function endIfDone(run, c) {
     if (c.over || c.turn !== 'hero' || c.hero.ap > 0) return;
-    if (c.hand.length && alive(c).length && !c.nextWave && (freeCells(c).length || [0, 1, 2].some(function (i) { return c.hero.cds[i] <= 0 && E.skillUnlocked(run.hero, i) && bestDie(run, c, i) >= 0; }))) { ev(c, { k: 'handleft' }); return; }
+    if (c.hand.length && alive(c).length && !c.nextWave) { ev(c, { k: 'handleft' }); return; }
     beginFoes(run, c);
   }
   // Ce que l'ennemi e fera à son prochain tour : { k: atk|big|prep|stun|hidden|wait|flee, n, dmg, heal, shield, summon }
@@ -921,7 +935,7 @@
     return d * Math.max(0.3, 1 + st.takenP / 100) * (run.stance === 'a' ? 1.2 : run.stance === 'd' ? 0.75 : 1);
   }
   function intentOf(run, c, e) {
-    var dt = ROUND, o = { k: 'wait' }, limit = c.boss ? 70 : 40, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1, enr = e.enraged ? 1.25 : 1;
+    var dt = ROUND, o = { k: 'wait' }, limit = c.boss ? FURY.boss : FURY.mob, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1, enr = e.enraged ? 1.25 : 1;
     if (e.dead) return o;
     if (e.flee > 0 && e.flee - dt <= 0) return { k: 'flee' };
     if (e.st.stun > 0) return { k: 'stun' };
@@ -937,30 +951,23 @@
     return o;
   }
   E.intents = function () { var run = S.run, c = run && run.combat; return c ? c.enemies.map(function (e) { return intentOf(run, c, e); }) : []; };
-  // Pose automatiquement les dés de la main (mode AUTO et robot de test) : au plus offrant, case par case
-  var FIGW = { jackpot: 9, suite: 2, sept: 2.5, fort: 3, garde: 1.5 };
+  // Joue automatiquement les dés de la main (mode AUTO et robot de test) : l'Écho d'abord, le Miroir en dernier, puis au plus offrant
   function autoPlace(run, c) {
     var guard = 0, h = c.hero;
     while (c.hand.length && !c.over && c.turn === 'hero' && guard++ < 12) {
-      var free = freeCells(c), foes = alive(c), frac = run.hp / run.stats.hp, threat = -h.shield, best = null; if (!free.length || !foes.length) break;
+      var foes = alive(c), frac = run.hp / run.stats.hp, threat = -h.shield, best = null; if (!foes.length) break;
       foes.forEach(function (e) { var it = intentOf(run, c, e); threat += (it.dmg || 0) * (it.n || 1); });
       c.hand.forEach(function (die, hi) {
-        free.forEach(function (ci) {
-          var r = dieCalc(c, die, ci), w = 0;
-          if (r.t === 'lame') w = 1; else if (r.t === 'braise') w = 0.9; else if (r.t === 'venin') w = 0.8; else if (r.t === 'foudre') w = 0.45 * foes.length;
-          else if (r.t === 'garde') w = threat > 0 ? 0.9 : 0.15; else if (r.t === 'seve') w = frac > 0.95 ? 0.05 : frac < 0.5 ? 1.3 : 0.8;
-          else if (r.t === 'astre') w = (run.ult || 0) < 100 ? 0.6 : 0;
-          else if (r.t === 'echo') w = 0.25 * ADJ[ci].filter(function (a) { return !c.grid[a].d && c.grid[a].r !== 'seal'; }).length + (c.hand.length > 1 ? 0.3 : 0);
-          var sc = r.v * w;
-          LINES.forEach(function (L) {
-            if (L.indexOf(ci) < 0) return; var vals = [], ok = true;
-            L.forEach(function (x) { if (x === ci) vals.push(r.base); else if (c.grid[x].d) vals.push(c.grid[x].d.base); else ok = false; });
-            var k = ok ? figKind(vals, run.stats) : null; if (k) sc += FIGW[k.id];
-          });
-          if (!best || sc > best.sc) best = { hi: hi, ci: ci, sc: sc };
-        });
+        var r = dieCalc(run, c, die), w = 0;
+        if (die.t === 'echo') w = c.hand.length > 1 ? 9 : 0.5;
+        else if (die.t === 'miroir') w = c.lastT ? 0.6 : 0.1;
+        else if (r.t === 'lame') w = 1; else if (r.t === 'braise') w = 0.9; else if (r.t === 'venin') w = 0.8; else if (r.t === 'foudre') w = 0.45 * foes.length;
+        else if (r.t === 'garde') w = threat > 0 ? 0.9 : 0.15; else if (r.t === 'seve') w = frac > 0.95 ? 0.05 : frac < 0.5 ? 1.3 : 0.8;
+        else if (r.t === 'astre') w = (run.ult || 0) < 100 ? 0.6 : 0;
+        var sc = r.v * w;
+        if (!best || sc > best.sc) best = { hi: hi, sc: sc };
       });
-      if (!best) break; E.placeDie(best.hi, best.ci);
+      if (!best) break; E.playDie(best.hi);
     }
   }
   // ----- Offres de dés : après une élite, un boss, une arène, et un combat ordinaire sur trois -----
@@ -1066,11 +1073,14 @@
     if (ls > 0 && !o.dot) heroHeal(run, c, dmg * ls / 100);
     if (o.drain) heroHeal(run, c, dmg);
     if (crit && run.hero === 'assassin') applyDot(run, e, 'poison');
+    // Coup de grâce : un ennemi (hors boss) touché sous 12 % de ses PV est achevé, on ne traîne plus pour les dernières miettes
+    if (e.hp > 0 && !e.boss && !o.dot && e.hp < e.maxhp * GRACE) { ev(c, { k: 'grace', id: e.id }); e.hp = 0; }
     if (!e.enraged && e.ab.enrage && e.hp > 0 && e.hp / e.maxhp < 0.3) { e.enraged = true; ev(c, { k: 'enrage', id: e.id }); }
     if (e.hp <= 0 && e.ab.rebirth && !e.reborn) { e.reborn = 1; e.hp = e.maxhp * 0.4; e.enraged = true; e.st = {}; ev(c, { k: 'bossfx', id: e.id, txt: 'IL SE RELÈVE !', big: 1 }); }
     else if (e.hp <= 0) kill(run, c, e);
     return dmg;
   }
+  var GRACE = 0.12; E.GRACE = GRACE;
   function applyDot(run, e, kind) {
     var st = run.stats;
     if (kind === 'burn') e.st.burn = { t: 3, dps: Math.max(e.st.burn ? e.st.burn.dps : 0, st.atk * 0.25 * (1 + st.burnP / 100)) };
@@ -1301,7 +1311,7 @@
       case 'a3': var low = e.hp / e.maxhp < 0.35; hit(run, c, e, low ? 7.5 : 3.0, { skill: 3 }); if (e.dead) h.ap += 1; break;
       case 'n1': hit(run, c, e, 2.0, { skill: 1 }); if (h.skel >= 3 + st.skel) drawOne(run, c); else h.skel = h.skel + 1; break;
       case 'n2': hit(run, c, e, 1.9 * (1 + 0.3 * (h.skel || 0)), { skill: 2, drain: true }); break;
-      case 'n3': h.skel = 3 + st.skel; h.buffs.skelF = { t: 6, v: 3 }; var buried = 0; c.grid.forEach(function (g) { if (g.d) { g.d = null; buried++; } }); if (buried) { ug(run, 5 * buried); ev(c, { k: 'gclear' }); } break;
+      case 'n3': h.skel = 3 + st.skel; h.buffs.skelF = { t: 6, v: 3 }; drawOne(run, c); ug(run, 10); break;
       case 'b1': hit(run, c, e, 2.0, { skill: 1 }); if (!e.dead) applyDot(run, e, 'bleed'); if (!e.dead && run.hp < st.hp * 0.5) hit(run, c, e, 1.0, { skill: 1 }); break;
       case 'b2': run.hp = Math.max(1, run.hp - run.hp * 0.10); h.buffs.spd = { t: 6, v: 60 }; h.buffs.ls = { t: 6, v: 15 }; h.ap += 1; break;
       case 'b3': var cnt = all.length; all.forEach(function (x) { hit(run, c, x, x.st.bleed ? 3.3 : 2.2, { skill: 3 }); }); heroHeal(run, c, st.hp * 0.05 * cnt); break;
@@ -1317,6 +1327,7 @@
     }
     evoFx(run, c, i, e);
     if (st.skillHeal) heroHeal(run, c, st.hp * st.skillHeal / 100);
+    if (!c.over) noteDie(run, c, die.v);
     if (st.skillEcho && h.cds[i] > 0.5 && rnd() * 100 < st.skillEcho) { h.cds[i] = 0.5; ev(c, { k: 'free', i: i }); }
     c.pw = 1;
     if (c.over) finish(run, c);
@@ -1370,8 +1381,8 @@
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero') return false;
     var h = c.hero, hero = E.hero(run.hero), frac = run.hp / run.stats.hp;
     var charging = c.enemies.some(function (e) { return !e.dead && e.charge; });
-    if (frac < 0.35 && run.potions > 0) E.usePotion();
-    if ((run.ult || 0) >= 100 && (frac < 0.6 || alive(c).length > 1 || c.boss || c.round > 2)) { E.useUlt(); if (c.over || c.turn !== 'hero') return true; }
+    if (frac < 0.35 && run.potions > 0 && !c.sweeping) E.usePotion();
+    if ((run.ult || 0) >= 100 && !c.sweeping && (frac < 0.6 || alive(c).length > 1 || c.boss || c.round > 2)) { E.useUlt(); if (c.over || c.turn !== 'hero') return true; }
     for (var i = 0; i < 3; i++) {
       if (h.cds[i] > 0 || !E.skillUnlocked(run.hero, i)) continue;
       var id = hero.skills[i].id;
@@ -1381,13 +1392,39 @@
       if (id === 'b2' && frac < 0.25) continue;
       if (id === 'a3') { var t = target(c); if (t && t.hp / t.maxhp > 0.35 && !t.boss && alive(c).length > 1) continue; }
       var hi = bestDie(run, c, i);
-      if (hi < 0 && c.flips > 0) { for (var fj = 0; fj < c.hand.length && hi < 0; fj++) { var fd = c.hand[fj], ff = run.bag[fd.bi].f, fb = run.stats.diceV || 0; if (!fd.ice && D.NEEDS[hero.skills[i].need].ok(Math.max(1, ff[0] + ff[5] - (fd.v - fb)) + fb) && E.flipDie(fj)) hi = fj; } }
+      if (hi < 0 && c.flips > 0) { for (var fj = 0; fj < c.hand.length && hi < 0; fj++) { var fd = c.hand[fj]; if (!fd.ice && D.NEEDS[hero.skills[i].need].ok(flipOf(run, fd)) && E.flipDie(fj)) hi = fj; } }
       if (hi >= 0 && E.useSkill(i, hi)) return true;
     }
     autoPlace(run, c); if (c.over || c.turn !== 'hero') return true;
     if (h.ap <= 0) return E.pass();
     if (h.parryCd <= 0 && c.enemies.some(function (e) { return !e.dead && e.charge; })) { if (E.parry()) return true; }
     return E.strike();
+  };
+  // ----- Balayer (v4.6) : un combat ordinaire gagné d'avance se règle d'un geste, sans taper chaque dé -----
+  // Proposé au début du combat quand les ennemis ne font pas le poids : leurs PV tiennent en quelques coups et leur menace est faible.
+  E.canSweep = function () {
+    var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero' || c.round !== 1 || c.acted || c.swept) return false;
+    var r = run.room; if (!r || r.type !== 'combat' || r.wasMimic || c.cond === 'defi') return false;
+    var st = run.stats, foes = alive(c), hp = 0, threat = 0; if (!foes.length) return false;
+    foes.forEach(function (e) { var it = intentOf(run, c, e); hp += e.hp + (e.shield || 0); threat += (it.dmg || 0) * (it.n || 1); if (e.ab.heal || e.ab.summon) hp *= 1.3; });
+    return hp <= st.atk * 25 && threat <= st.hp * 0.18 && run.hp >= st.hp * 0.5;
+  };
+  // Le combat est joué en entier par le pilote automatique. Il rend la main si le héros perd plus de 20 % de ses PV max.
+  E.sweep = function () {
+    if (!E.canSweep()) return false;
+    var run = S.run, c = run.combat, hp0 = run.hp, lim = run.stats.hp * 0.2, n = 0, stop = false; c.swept = true; c.sweeping = true;
+    var deaths = [];
+    while (!c.over && n++ < 3000) {
+      if (c.turn === 'hero') { if (run.hp < hp0 - lim) { stop = true; break; } if (!E.autoAct()) E.pass(); }
+      else E.foeStep();
+      if (!c.over) { c.events.forEach(function (e) { if (e.k === 'die' || e.k === 'summon') deaths.push(e); }); c.events.length = 0; }
+    }
+    c.events = deaths.concat(c.events); c.sweeping = false;
+    // l'interface ne rejoue pas tout : seule la fin est montrée
+    var keep = c.events.filter(function (e) { return e.k === 'win' || e.k === 'dead' || e.k === 'die' || e.k === 'summon' || e.k === 'orbTake'; });
+    c.events.length = 0; c.events.push({ k: 'swept', stop: stop }); keep.forEach(function (e) { c.events.push(e); });
+    if (stop) E.save();
+    return stop ? 'stop' : true;
   };
   // Un ennemi joue son tour. Renvoie true s'il reste des ennemis à faire jouer.
   E.foeStep = function () {
@@ -1412,7 +1449,7 @@
     if (e.st.weak > 0) e.st.weak -= dt; if (e.st.vuln > 0) e.st.vuln -= dt;
     if (e.st.stun > 0) { e.st.stun -= dt; ev(c, { k: 'stunned', id: e.id }); return; }
     var sp = (e.enraged ? 1.4 : 1) * (c.cond === 'hate' ? 1.3 : 1);
-    var limit = c.boss ? 70 : 40, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1;
+    var limit = c.boss ? FURY.boss : FURY.mob, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1;
     if (fury > 1 && !c.fury) { c.fury = true; ev(c, { k: 'fury' }); }
     if (e.ab.heal) { e.healT -= dt; if (e.healT <= 0) { e.healT = 6; var low = alive(c).sort(function (a, b) { return a.hp / a.maxhp - b.hp / b.maxhp; })[0]; if (low && low.hp < low.maxhp) { low.hp = Math.min(low.maxhp, low.hp + low.maxhp * e.ab.heal / 100); ev(c, { k: 'eheal', id: low.id }); } } }
     if (e.ab.shield) { e.shieldT -= dt; if (e.shieldT <= 0) { e.shieldT = 10; e.shield = e.maxhp * e.ab.shield / 100; ev(c, { k: 'eshield', id: e.id }); } }
@@ -1455,7 +1492,7 @@
     // point faible : visible pendant un tour
     if (c.weak) { c.weak = null; c.weakT = rf(5, 9); }
     else { c.weakT -= dt * (c.cond === 'tenebres' ? 2 : 1) * (run.hero === 'chasseuse' ? 2 : 1); if (c.weakT <= 0) { var al0 = alive(c); if (al0.length) { c.weak = { id: pick(al0).id, t: ROUND }; ev(c, { k: 'weak', id: c.weak.id }); } } }
-    c.round++; c.turn = 'hero'; h.ap = AP; ev(c, { k: 'pturn', n: c.round }); drawTurn(run, c);
+    c.round++; c.turn = 'hero'; h.ap = AP; ev(c, { k: 'pturn', n: c.round }); drawTurn(run, c); E.save();
   }
   // Spécialité de chaque boss
   function bossTick(run, c, e, dt) {
@@ -1487,6 +1524,8 @@
       case 'pretresse': hit(run, c, e, 0.25, { noCrit: true, dot: 'ally' }); heroHeal(run, c, st.hp * 0.018); break;
     }
   }
+  // Nombre de tours pour décrocher le bonus Éclair (0 : pas de bonus dans cette salle)
+  E.eclairPar = function (c, r) { if (!c || !r || c.cond === 'defi' || r.wasMimic || c.swept) return 0; return r.type === 'combat' ? (r.group.length >= 3 ? 3 : 2) : r.type === 'elite' || r.forceElite ? 3 : 0; };
   function finish(run, c) {
     if (c.done) return; c.done = true;
     if (!c.win) { ev(c, { k: 'dead' }); run.phase = 'dead'; return; }
@@ -1498,6 +1537,9 @@
     var r = run.room, res = { items: c.drops, gold: c.gold, cendres: c.cendres, xp: c.xp, type: r.type };
     run.gold += c.gold; run.cendres += c.cendres; S.cendres += c.cendres;
     if (c.cond === 'defi') { res.defi = c.t <= 20; if (res.defi) { res.items.push(dropItem(run, 'chest', 2)); run.gold += 40; res.gold += 40; } }
+    // Éclair : gagner vite rapporte (+50 % or et Cendres)
+    var par = E.eclairPar(c, r);
+    if (par) { res.eclair = c.round <= par; if (res.eclair) { var eg = Math.ceil(c.gold * 0.5) + 3, ecd = Math.ceil(c.cendres * 0.5); run.gold += eg; res.gold += eg; run.cendres += ecd; S.cendres += ecd; res.cendres += ecd; S.stats.eclairs = (S.stats.eclairs || 0) + 1; bump(run, 'eclairs'); } }
     if (r.type === 'arene') { res.artifact = giveArtifact(run); run.pendingBoons++; res.items.push(dropItem(run, 'chest', 2)); res.arene = true; S.stats.arenes++; }
     if (r.type === 'boss' || r.type === 'elite' || r.forceElite || r.type === 'arene') { run.pendingDice = (run.pendingDice || 0) + 1; res.die = 1; }
     else { run.dieTick = (run.dieTick || 0) + 1; if (run.dieTick >= 3) { run.dieTick = 0; run.pendingDice = (run.pendingDice || 0) + 1; res.die = 1; } }
@@ -1512,6 +1554,8 @@
       heal(run, run.stats.hp * 0.3, true); res.boss = true; if (zn === 6 && res.firstKill) res.ending = true; if (run.ally) { res.allyLeft = run.ally; run.ally = null; }
     }
     heal(run, run.stats.hp * 0.08, true);
+    // Rattrapage : un héros en retard sur la profondeur gagne plus d'expérience (moins de premières descentes qui arrivent au boss au niveau 3)
+    var lag = Math.min(2.5, 1 + (run.floor - (run.startFloor || 1) + 1) / 2 - run.lvl); if (lag > 0) c.xp *= 1 + 0.35 * lag;
     res.lvlUps = gainXp(run, c.xp);
     run.result = res; run.phase = 'victory';
     ev(c, { k: 'win', boss: r.type === 'boss' });
@@ -1553,7 +1597,7 @@
     var gUps = addGlory(score);
     var bonus = Math.ceil(run.cendres * 0.25 + 5 * (run.rooms));
     S.cendres += bonus;
-    var sum = { hero: run.hero, floor: reached, rooms: run.rooms, kills: run.kills, cendres: run.cendres + bonus, bonus: bonus, loot: run.loot, lvl: run.lvl, mxp: mxp, heroLvl: hs.lvl, heroUps: ups, abandon: !!abandon, time: run.t, bosses: run.bosses, dmg: run.dmg || 0, maxHit: run.maxHit || 0, score: score, scoreRec: scoreRec, gloryUps: gUps, record: reached >= S.stats.best && reached > (S.stats.prevBest || 0) };
+    var sum = { hero: run.hero, floor: reached, rooms: run.rooms, kills: run.kills, cendres: run.cendres + bonus, bonus: bonus, loot: run.loot, lvl: run.lvl, mxp: mxp, heroLvl: hs.lvl, heroUps: ups, abandon: !!abandon, time: run.rt || run.t, bosses: run.bosses, dmg: run.dmg || 0, maxHit: run.maxHit || 0, score: score, scoreRec: scoreRec, gloryUps: gUps, record: S.stats.best > (bestBefore != null ? bestBefore : (S.stats.prevBest || 0)) }; // même règle que « Record : étage N » au camp
     S.stats.prevBest = Math.max(S.stats.prevBest || 0, S.stats.best);
     S.run = null; E.checkAch(); E.save();
     return sum;
