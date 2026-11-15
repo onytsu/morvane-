@@ -58,7 +58,7 @@ var UI = (function () {
   }
   function toast(msg, long) {
     var t = document.createElement('div'); t.className = 'toast' + (long ? ' long' : ''); t.innerHTML = msg; $('#toasts').appendChild(t);
-    while ($('#toasts').children.length > 3) $('#toasts').removeChild($('#toasts').firstChild);
+    while ($('#toasts').children.length > 2) $('#toasts').removeChild($('#toasts').firstChild);
     setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, long ? 6000 : 3200);
   }
   function flash(color) { var f = $('#flash'); f.style.background = color; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
@@ -442,6 +442,8 @@ var UI = (function () {
   }
   function refresh() { if (st.screen === 'hub') keepScroll(hub); else if (UI.run) UI.run.refresh(); }
   ACT.item = function (d) { var it = E.findItem(+d.uid); if (!it) return; it.isNew = false; SND.play('click'); modal(itemSheet(it, S().run && st.screen === 'run' ? 'run' : 'hub')); };
+  // Objet vendu par le Colporteur : sa fiche complète avant d'acheter
+  ACT.shopItem = function (d) { var r = S().run, s = r && r.room && r.room.stock && r.room.stock[+d.i]; if (!s || !s.item) return; SND.play('click'); modal(itemSheet(s.item, 'view')); };
   ACT.equip = function (d) { E.equip(+d.uid, S().hero); SND.play('equip'); E.save(); closeModal(); refresh(); };
   ACT.unequip = function (d) { E.unequip(d.slot, S().hero); SND.play('click'); E.save(); closeModal(); refresh(); };
   ACT.lock = function (d) { var it = E.findItem(+d.uid); it.lock = !it.lock; E.save(); modal(itemSheet(it)); refresh(); };

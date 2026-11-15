@@ -103,7 +103,7 @@ h3 { font-size: 15px; }
 #modal.on.centered { align-items: center; }
 .sheet h2 { text-align: center; margin-bottom: 10px; }
 .btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; } .btns .btn { flex: 1; }
-#toasts { position: absolute; left: 0; right: 0; top: calc(6px + var(--sat)); z-index: 50; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+#toasts { position: absolute; left: 0; right: 0; top: calc(58px + var(--sat)); z-index: 50; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
 .toast { background: #241a2ddd; border: 1px solid var(--gold); color: var(--text); padding: 8px 14px; border-radius: 10px; font-size: 13.5px; max-width: 90%; text-align: center; animation: toast 3.2s forwards; box-shadow: 0 4px 16px #000a; }
 .toast.long { animation-duration: 6s; }
 #flash { position: absolute; inset: 0; pointer-events: none; z-index: 60; opacity: 0; }
@@ -1189,6 +1189,13 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 .turnrow .tog.spd { color: var(--gold); min-width: 34px; padding: 0 6px; }
 .turnrow .tog, .turnrow .tog.pass { height: 36px; }
 .turnrow #tlabel.eclair { color: #ffd76a; text-shadow: 0 0 8px #f2bd5e88; }
+.gifts { max-height: 46vh; overflow-y: auto; }
+/* sablier de la parade : à droite, le mot PARER reste lisible */
+.bigact .cd { inset: 3px 4px auto auto; z-index: 2; padding: 0 4px; height: 14px; line-height: 14px; border-radius: 4px; font-size: 10px; background: #07050c; }
+.bigact.cool { filter: saturate(.35) brightness(.7); }
+/* figure possible avec la main : « Paire possible » tient dans la case */
+.dfig .maybe { font-size: 9px; letter-spacing: 0; } .dfig .maybe small { font-size: 8px; color: #8a7d9c; }
+.bigact.cool b { margin-right: 26px; }
 
 :root { color-scheme: dark; --sat: 0px; --sab: 0px; } html, body { height: 100%; } #app { height: 100%; }</style>
 <div id="app"><div id="screen"></div><div id="overlay"></div><div id="modal"></div><div id="toasts"></div><div id="flash"></div></div>
@@ -1580,8 +1587,14 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.1';
+  var VERSION = '4.6';
   var NEWS = [
+    ['🧹', 'Balayer', 'Quand des ennemis ne font pas le poids, un bouton « Balayer le combat » le règle d’un geste, butin compris. Il te rend la main si ça tourne mal.'],
+    ['⚡', 'Victoire éclair', 'Le compteur « Tour 1/2 » montre l’objectif : gagne dans les temps et tu touches +50 % d’or et de Cendres.'],
+    ['🗡️', 'Coup de grâce', 'Un ennemi (hors boss) touché sous 12 % de ses PV est achevé d’un coup. Élites et boss ont moins de PV mais frappent plus fort : des combats plus courts et plus tendus.'],
+    ['💾', 'Combat sauvegardé', 'Fermer l’appli en plein combat ne le remet plus à zéro : tu reprends au début du tour où tu étais.'],
+    ['⚖️', 'Colporteur plus clair', 'Touche un objet en vente pour voir sa fiche, et sa comparaison avec ton équipement s’affiche tout de suite. Plus de marchand dès les premières cases.'],
+    ['🌒', 'Aubaines offertes visibles', 'En partant d’une zone avancée, les aubaines offertes te sont montrées au départ.'],
     ['💰', 'Des gains qui se voient', 'Après un choix (Mystère, feu de camp, autel...), ce que tu gagnes ou perds s’affiche en grand au milieu de l’écran : or, PV, attaque, aubaine, objet.'],
     ['👁️', 'Des intentions discrètes', 'Les icônes géantes au-dessus des ennemis redeviennent une petite étiquette sous leur nom.'],
     ['🎲', 'Des combats plus simples', 'La table de 9 cases disparaît. Touche un dé de ta main, retouche-le : il agit tout de suite. Ou glisse-le dans un pouvoir. Plus de cases ×2, +2 ni de voisins à calculer.'],
@@ -2640,7 +2653,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     run.hp = run.stats.hp; run.potions = run.potionsMax; run.gold = run.stats.startGold; run.rerolls = run.stats.rerolls;
     var free = run.stats.startBoons + (startZone - 1) * 3;
     if (startZone > 1) run.lvl = 1 + (startZone - 1) * 3;
-    for (var i = 0; i < free; i++) { var o = offerBoons(run, 1, 0); if (o.length) applyBoon(run, o[0]); }
+    run.gifts = []; for (var i = 0; i < free; i++) { var o = offerBoons(run, 1, 0); if (o.length) { applyBoon(run, o[0]); run.gifts.push(o[0]); } }
     if (run.stats.startArtifact) giveArtifact(run);
     for (var ei = Math.floor(run.lvl / 4) + run.stats.startEvo; ei > 0; ei--) grantEvo(run);
     recalc(run); run.hp = run.stats.hp; run.potions = run.potionsMax; run.rerolls = run.stats.rerolls;
@@ -2758,7 +2771,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
   function genBoard(run, base, pos) {
     var cells = ['start'], prev = 'combat', i;
     for (i = 1; i <= CELLS; i++) {
-      var w = { combat: 44, elite: i <= 8 ? 0 : 10 * (run.stats.eliteW ? 3 : 1), tresor: 6, marchand: 6, repos: run.stats.noRest ? 0 : 6, autel: 5, event: 9, mercenaire: i <= 10 ? 0 : 4, arene: i <= 16 ? 0 : 4, forge: 6, runes: 6, roue: 5, bourse: 6, piege: 6, fontaine: 3 };
+      var w = { combat: 44, elite: i <= 8 ? 0 : 10 * (run.stats.eliteW ? 3 : 1), tresor: 6, marchand: i <= 6 ? 0 : 6, repos: run.stats.noRest ? 0 : 6, autel: 5, event: 9, mercenaire: i <= 10 ? 0 : 4, arene: i <= 16 ? 0 : 4, forge: 6, runes: 6, roue: 5, bourse: 6, piege: 6, fontaine: 3 };
       if (prev !== 'combat') { w[prev] *= 0.1; w.combat *= 1.5; }
       var types = Object.keys(w).filter(function (k) { return w[k] > 0; });
       var t = i <= 2 ? 'combat' : wpick(types, function (k) { return w[k]; });
@@ -3593,8 +3606,8 @@ if (typeof module !== 'undefined') module.exports = DATA;
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero') return false;
     var h = c.hero, hero = E.hero(run.hero), frac = run.hp / run.stats.hp;
     var charging = c.enemies.some(function (e) { return !e.dead && e.charge; });
-    if (frac < 0.35 && run.potions > 0) E.usePotion();
-    if ((run.ult || 0) >= 100 && (frac < 0.6 || alive(c).length > 1 || c.boss || c.round > 2)) { E.useUlt(); if (c.over || c.turn !== 'hero') return true; }
+    if (frac < 0.35 && run.potions > 0 && !c.sweeping) E.usePotion();
+    if ((run.ult || 0) >= 100 && !c.sweeping && (frac < 0.6 || alive(c).length > 1 || c.boss || c.round > 2)) { E.useUlt(); if (c.over || c.turn !== 'hero') return true; }
     for (var i = 0; i < 3; i++) {
       if (h.cds[i] > 0 || !E.skillUnlocked(run.hero, i)) continue;
       var id = hero.skills[i].id;
@@ -3619,19 +3632,19 @@ if (typeof module !== 'undefined') module.exports = DATA;
     var r = run.room; if (!r || r.type !== 'combat' || r.wasMimic || c.cond === 'defi') return false;
     var st = run.stats, foes = alive(c), hp = 0, threat = 0; if (!foes.length) return false;
     foes.forEach(function (e) { var it = intentOf(run, c, e); hp += e.hp + (e.shield || 0); threat += (it.dmg || 0) * (it.n || 1); if (e.ab.heal || e.ab.summon) hp *= 1.3; });
-    return hp <= st.atk * 7 && threat <= st.hp * 0.08 && run.hp >= st.hp * 0.5;
+    return hp <= st.atk * 25 && threat <= st.hp * 0.18 && run.hp >= st.hp * 0.5;
   };
   // Le combat est joué en entier par le pilote automatique. Il rend la main si le héros perd plus de 20 % de ses PV max.
   E.sweep = function () {
     if (!E.canSweep()) return false;
-    var run = S.run, c = run.combat, hp0 = run.hp, lim = run.stats.hp * 0.2, n = 0, stop = false; c.swept = true;
+    var run = S.run, c = run.combat, hp0 = run.hp, lim = run.stats.hp * 0.2, n = 0, stop = false; c.swept = true; c.sweeping = true;
     var deaths = [];
     while (!c.over && n++ < 3000) {
       if (c.turn === 'hero') { if (run.hp < hp0 - lim) { stop = true; break; } if (!E.autoAct()) E.pass(); }
       else E.foeStep();
       if (!c.over) { c.events.forEach(function (e) { if (e.k === 'die' || e.k === 'summon') deaths.push(e); }); c.events.length = 0; }
     }
-    c.events = deaths.concat(c.events);
+    c.events = deaths.concat(c.events); c.sweeping = false;
     // l'interface ne rejoue pas tout : seule la fin est montrée
     var keep = c.events.filter(function (e) { return e.k === 'win' || e.k === 'dead' || e.k === 'die' || e.k === 'summon' || e.k === 'orbTake'; });
     c.events.length = 0; c.events.push({ k: 'swept', stop: stop }); keep.forEach(function (e) { c.events.push(e); });
@@ -3737,7 +3750,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     }
   }
   // Nombre de tours pour décrocher le bonus Éclair (0 : pas de bonus dans cette salle)
-  E.eclairPar = function (c, r) { if (!c || !r || c.cond === 'defi' || r.wasMimic) return 0; return r.type === 'combat' ? (r.group.length >= 3 ? 4 : 3) : r.type === 'elite' || r.forceElite ? 5 : 0; };
+  E.eclairPar = function (c, r) { if (!c || !r || c.cond === 'defi' || r.wasMimic || c.swept) return 0; return r.type === 'combat' ? (r.group.length >= 3 ? 3 : 2) : r.type === 'elite' || r.forceElite ? 4 : 0; };
   function finish(run, c) {
     if (c.done) return; c.done = true;
     if (!c.win) { ev(c, { k: 'dead' }); run.phase = 'dead'; return; }
@@ -3766,6 +3779,8 @@ if (typeof module !== 'undefined') module.exports = DATA;
       heal(run, run.stats.hp * 0.3, true); res.boss = true; if (zn === 6 && res.firstKill) res.ending = true; if (run.ally) { res.allyLeft = run.ally; run.ally = null; }
     }
     heal(run, run.stats.hp * 0.08, true);
+    // Rattrapage : un héros en retard sur la profondeur gagne plus d'expérience (moins de premières descentes qui arrivent au boss au niveau 3)
+    var lag = 1 + (run.floor - (run.startFloor || 1) + 1) / 2 - run.lvl; if (lag > 0) c.xp *= 1 + 0.35 * lag;
     res.lvlUps = gainXp(run, c.xp);
     run.result = res; run.phase = 'victory';
     ev(c, { k: 'win', boss: r.type === 'boss' });
@@ -6705,7 +6720,7 @@ var UI = (function () {
   }
   function toast(msg, long) {
     var t = document.createElement('div'); t.className = 'toast' + (long ? ' long' : ''); t.innerHTML = msg; $('#toasts').appendChild(t);
-    while ($('#toasts').children.length > 3) $('#toasts').removeChild($('#toasts').firstChild);
+    while ($('#toasts').children.length > 2) $('#toasts').removeChild($('#toasts').firstChild);
     setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, long ? 6000 : 3200);
   }
   function flash(color) { var f = $('#flash'); f.style.background = color; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
@@ -7089,6 +7104,8 @@ var UI = (function () {
   }
   function refresh() { if (st.screen === 'hub') keepScroll(hub); else if (UI.run) UI.run.refresh(); }
   ACT.item = function (d) { var it = E.findItem(+d.uid); if (!it) return; it.isNew = false; SND.play('click'); modal(itemSheet(it, S().run && st.screen === 'run' ? 'run' : 'hub')); };
+  // Objet vendu par le Colporteur : sa fiche complète avant d'acheter
+  ACT.shopItem = function (d) { var r = S().run, s = r && r.room && r.room.stock && r.room.stock[+d.i]; if (!s || !s.item) return; SND.play('click'); modal(itemSheet(s.item, 'view')); };
   ACT.equip = function (d) { E.equip(+d.uid, S().hero); SND.play('equip'); E.save(); closeModal(); refresh(); };
   ACT.unequip = function (d) { E.unequip(d.slot, S().hero); SND.play('click'); E.save(); closeModal(); refresh(); };
   ACT.lock = function (d) { var it = E.findItem(+d.uid); it.lock = !it.lock; E.save(); modal(itemSheet(it)); refresh(); };
@@ -7341,13 +7358,22 @@ UI.run = (function () {
     if (S().run.combat.enemies.some(function (x) { return x.fix && !x.champ; })) tuto('fix', '✴️ Les monstres au <b>nom doré</b> ont un pouvoir en plus (vampirique, explosif, géant...). Ils sont plus durs, mais rapportent plus.');
   }
   // Présentation d'une zone, la première fois qu'on y entre
+  // Aubaines offertes au départ (zone 2+, Baptême) : on les montre au lieu de les appliquer en silence
+  function giftsHtml(run) {
+    if (!run.gifts || !run.gifts.length || run.giftsSeen) return ''; run.giftsSeen = 1;
+    var n = {}, h = ''; run.gifts.forEach(function (id) { n[id] = (n[id] || 0) + 1; });
+    Object.keys(n).forEach(function (id) { var b = E.boonById(id); if (b) h += '<div class="li"><div class="ic">' + b.icon + '</div><div class="grow"><b>' + b.name + (n[id] > 1 ? ' ×' + n[id] : '') + '</b><div class="small dim">' + b.desc + '</div></div></div>'; });
+    return '<div class="center small gold" style="margin:10px 0 4px">' + UI.spr('bn_tout', 'ski') + ' ' + run.gifts.length + ' aubaine' + (run.gifts.length > 1 ? 's' : '') + ' offerte' + (run.gifts.length > 1 ? 's' : '') + ' pour cette descente</div><div class="gifts">' + h + '</div>';
+  }
   function zoneIntro(run) {
-    var z = E.zoneOf(run.floor); if (S().tuto['zone' + z.id]) return; S().tuto['zone' + z.id] = 1;
+    var z = E.zoneOf(run.floor);
+    if (S().tuto['zone' + z.id]) { var gh = giftsHtml(run); if (gh) UI.modal(gh + '<div class="btns"><button class="btn primary big" data-act="close">EN AVANT</button></div>', true); return; }
+    S().tuto['zone' + z.id] = 1;
     var set = D.SETS[z.id - 1];
     UI.modal('<div class="center tiny gold" style="letter-spacing:.3em">ZONE ' + z.id + ' / 6</div><h2 style="color:' + z.color + ';font-size:24px;margin:4px 0 10px">' + z.name + '</h2><p class="center" style="font-style:italic;line-height:1.5">' + z.lore + '</p>' +
       '<div class="li"><div class="ic">☠️</div><div class="grow"><b>Gardien : ' + D.ENEMIES[z.boss].name + '</b><div class="small dim">Il t’attend à l’étage ' + (Math.floor((run.floor - 1) / 10) * 10 + 10) + '. ' + z.mech + '</div></div></div>' +
       '<div class="li"><div class="ic">' + set.icon + '</div><div class="grow"><b style="color:' + set.color + '">◆ ' + set.name + '</b><div class="small dim">Le set d’objets qu’on ne trouve qu’ici.</div></div></div>' +
-      '<div class="btns"><button class="btn primary big" data-act="close">ENTRER</button></div>', true);
+      giftsHtml(run) + '<div class="btns"><button class="btn primary big" data-act="close">ENTRER</button></div>', true);
   }
   function ending() {
     UI.modal('<div class="center tiny gold" style="letter-spacing:.3em">FIN ?</div><h2 style="color:#b48cff;font-size:24px;margin:4px 0 10px">Le trône est vide</h2>' +
@@ -7427,7 +7453,7 @@ UI.run = (function () {
     for (i = 0; i < 3; i++) sh += '<i class="' + (i < pl.length ? 'on' : '') + '">' + (i < pl.length ? pl[i] : '') + '</i>';
     if (c && c.dfx && c.dfx.id) fig = '<b class="k-' + c.dfx.id + '">' + c.dfx.name + '</b>';
     else if (pl.length >= 3) fig = '<span>aucune</span>';
-    else if (fc) fig = '<span class="maybe">' + fc.name.charAt(0) + fc.name.slice(1).toLowerCase() + ' ?</span>';
+    else if (fc) fig = '<span class="maybe">' + fc.name.charAt(0) + fc.name.slice(1).toLowerCase() + ' <small>possible</small></span>';
     else fig = '<span>figure</span>';
     $('#dslots').innerHTML = sh; var dfg = $('#dfig'); dfg.innerHTML = fig;
     $('#dfigw').classList.toggle('lit', !!figLine);
@@ -7485,7 +7511,7 @@ UI.run = (function () {
     b.style.left = Math.max(34, Math.min(a.clientWidth - 34, p.x + Math.random() * 110 - 55)) + 'px';
     b.style.top = Math.max(70, Math.min(a.clientHeight - 30, p.b - 16 + Math.random() * 34 - 8)) + 'px';
     a.appendChild(b); orbEls[e.oid] = b;
-    tuto('orb', '🔮 <b>Des orbes !</b> Les ramasser ne coûte aucune action, mais elles s’éteignent au bout de 3 tours : 💰 or, ❤️ soin, 🌟 ultime, 🔥 fureur (+30 % dégâts).');
+    var oc = S().run && S().run.combat; if (oc && !oc.over) tuto('orb', '🔮 <b>Des orbes !</b> Les ramasser ne coûte aucune action, mais elles s’éteignent au bout de 3 tours : 💰 or, ❤️ soin, 🌟 ultime, 🔥 fureur (+30 % dégâts).');
   }
   function dropOrb(oid, cls) { var b = orbEls[oid]; if (!b) return null; delete orbEls[oid]; b.classList.add(cls); setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 320); return b; }
   function takeOrb(e) {
@@ -7687,9 +7713,10 @@ UI.run = (function () {
     var par = c ? E.eclairPar(c, run.room) : 0, left = mine && ap <= 0 && c.hand.length > 0, tlb = $('#tlabel'), tlt = !c || run.phase !== 'combat' ? '' : left ? 'Joue tes dés' : 'Tour ' + c.round + (par && c.round <= par ? '/' + par : '');
     if (tlb) tlb.classList.toggle('eclair', !!par && !!c && c.round <= par && !left);
     var tsp = $('#tspd'), spt = 'x' + (S().settings.speed || 1); if (tsp && tsp.textContent !== spt) tsp.textContent = spt;
-    var tsw = $('#tsweep'), swOn = mine && !S().settings.auto && E.canSweep(); if (tsw) tsw.classList.toggle('on', swOn);
-    if (swOn && !(UI.guide && UI.guide.open())) tuto('sweep', '🧹 <b>Balayer</b> : ces ennemis ne font pas le poids. Touche <b>Balayer</b> pour régler le combat d’un geste (butin compris), ou joue-le toi-même.');
-    if (par && !swOn && c.round === 1 && mine && !(UI.guide && UI.guide.open())) tuto('eclair', '⚡ <b>Éclair.</b> « Tour 1/3 » : gagne avant la fin du tour 3 et tu touches +50 % d’or et de Cendres.');
+    var tsw = $('#tsweep'), swOn = mine && !S().settings.auto && S().stats.kills > 0 && !(UI.guide && UI.guide.open()) && E.canSweep(); if (tsw) tsw.classList.toggle('on', swOn);
+    var calm = !(UI.guide && UI.guide.open()) && !$('#modal').classList.contains('on') && !UI.story.open();
+    if (swOn && calm) tuto('sweep', '🧹 <b>Balayer</b> : ces ennemis ne font pas le poids. Touche <b>Balayer</b> pour régler le combat d’un geste (butin compris), ou joue-le toi-même.');
+    if (par && !swOn && c.round === 1 && mine && S().stats.kills > 0 && calm) tuto('eclair', '⚡ <b>Éclair.</b> « Tour 1/3 » : gagne avant la fin du tour 3 et tu touches +50 % d’or et de Cendres.');
     if (tlb && tlb.textContent !== tlt) tlb.textContent = tlt; $('#tpass').classList.toggle('ready', left && !S().settings.auto);
     updateTray(run);
     for (i = 0; i < 3; i++) {
@@ -7959,7 +7986,9 @@ UI.run = (function () {
       r.stock.forEach(function (s, i) {
         var no = s.sold || run.gold < s.price || (s.kind === 'potion' && run.potions >= run.potionsMax) || (s.kind === 'heal' && run.hp >= run.stats.hp);
         var rc = s.kind === 'item' ? ' c' + s.item.rar : '';
-        h += '<div class="li"><div class="ic">' + (s.kind === 'boon' ? UI.spr('bn_tout', 'ski') : s.icon) + '</div><div class="grow"><b class="' + rc + '">' + s.name + '</b><div class="small dim">' + s.desc + '</div></div><button class="btn sm ' + (no ? 'off' : 'goldb') + '" data-act="room" data-a="buy" data-arg="' + i + '">' + (s.sold ? 'Vendu' : '💰 ' + s.price) + '</button></div>';
+        var desc = s.desc, tap = '';
+        if (s.kind === 'item') { var sl = E.itemBase(s.item).slot, cu = S().heroes[run.hero].equip[sl], ci = cu ? E.findItem(cu) : null, df = ci ? Math.round((E.itemScore(s.item) / E.itemScore(ci) - 1) * 100) : null; desc += ' · ' + (df == null ? '<span class="good">emplacement vide</span>' : '<span class="' + (df >= 0 ? 'good' : 'bad') + '">' + (df >= 0 ? '▲ +' : '▼ ') + df + ' %</span>') + ' · <u>voir</u>'; tap = ' data-act="shopItem" data-i="' + i + '"'; }
+        h += '<div class="li"' + tap + '><div class="ic">' + (s.kind === 'boon' ? UI.spr('bn_tout', 'ski') : s.icon) + '</div><div class="grow"><b class="' + rc + '">' + s.name + '</b><div class="small dim">' + desc + '</div></div><button class="btn sm ' + (no ? 'off' : 'goldb') + '" data-act="room" data-a="buy" data-arg="' + i + '">' + (s.sold ? 'Vendu' : '💰 ' + s.price) + '</button></div>';
       });
       h += '<div class="btns"><button class="btn primary" data-act="room" data-a="leave">Repartir</button></div>';
     } else if (t === 'repos') {
@@ -8042,7 +8071,7 @@ UI.run = (function () {
     if (c.weak) c.enemies.forEach(function (x, j) { if (!x.dead && x.id === c.weak.id) wi = j; });
     if (wi >= 0 ? !E.hitWeak(wi) : !E.strike()) SND.play('error');
   };
-  ACT.sweep = function () { if (!myTurn() || !E.canSweep()) return; SND.play('click'); E.sweep(); };
+  ACT.sweep = function () { if (!myTurn() || !S().stats.kills || !E.canSweep()) return; SND.play('click'); E.sweep(); };
   ACT.pass = function () { if (myTurn()) { SND.play('click'); E.pass(); } };
   ACT.skill = function (d) {
     var run = S().run, i = +d.i; if (!myTurn()) return;
@@ -8167,7 +8196,7 @@ UI.run = (function () {
     if (items.length) html += '<div class="card"><b>Butin gardé</b> <span class="tiny dim">(il est à toi pour toujours)</span><div class="inv-grid" style="margin-top:8px">' + items.slice(0, 18).map(function (it) { return UI.itemTile(it); }).join('') + '</div></div>';
     html += '<div class="card small dim">💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)] + '</div>' +
       '<button class="btn goldb wide" data-act="deathBest" style="margin-bottom:8px">⚡ Équiper le meilleur</button>' +
-      '<div class="btns" style="margin-top:0"><button class="btn" data-act="toHub">🏰 Sanctuaire</button><button class="btn primary" data-act="again" data-z="' + startZone + '">⚔️ RELANCER</button></div><div style="height:20px"></div></div>';
+      '<div class="btns" style="margin-top:0"><button class="btn" data-act="toHub">🏰 Camp</button><button class="btn primary" data-act="again" data-z="' + startZone + '">⚔️ RELANCER</button></div><div style="height:20px"></div></div>';
     $('#screen').innerHTML = html;
     if (typeof FX !== 'undefined') FX.attach($('#screen'), { ambient: 'ash', warm: 4 });
     if (sum.record) setTimeout(function () { SND.play('levelup'); }, 500);
@@ -8177,7 +8206,7 @@ UI.run = (function () {
     if (metaOk) setTimeout(function () { UI.toast('⚱️ Tu as assez de Cendres pour un bonus permanent à l’<b>Autel</b> !', true); }, 900);
   }
   ACT.deathBest = function (d, el) { var n = E.equipBest(S().hero); S().inv.forEach(function (i) { i.isNew = false; }); E.save(); SND.play(n ? 'equip' : 'click'); UI.toast(n ? '⚡ ' + n + ' objet' + (n > 1 ? 's' : '') + ' équipé' + (n > 1 ? 's' : '') + ' — Puissance ' + E.fmt(E.power(S().hero)) : 'Tu portes déjà le meilleur.'); el.classList.add('off'); };
-  ACT.toHub = function () { SND.play('click'); UI.hub(D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; }) ? 'autel' : 'hero'); };
+  ACT.toHub = function () { SND.play('click'); UI.hub(S().tuto.gcamp && D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; }) ? 'autel' : 'hero'); };
   ACT.again = function (d) { UI.askOmen(S().hero, Math.min(+d.z || 1, E.maxStartZone())); };
 
   // Fin d'une épreuve (forge, runes, roue) : message, puis on passe à la suite

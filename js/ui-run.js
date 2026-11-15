@@ -126,13 +126,22 @@ UI.run = (function () {
     if (S().run.combat.enemies.some(function (x) { return x.fix && !x.champ; })) tuto('fix', '✴️ Les monstres au <b>nom doré</b> ont un pouvoir en plus (vampirique, explosif, géant...). Ils sont plus durs, mais rapportent plus.');
   }
   // Présentation d'une zone, la première fois qu'on y entre
+  // Aubaines offertes au départ (zone 2+, Baptême) : on les montre au lieu de les appliquer en silence
+  function giftsHtml(run) {
+    if (!run.gifts || !run.gifts.length || run.giftsSeen) return ''; run.giftsSeen = 1;
+    var n = {}, h = ''; run.gifts.forEach(function (id) { n[id] = (n[id] || 0) + 1; });
+    Object.keys(n).forEach(function (id) { var b = E.boonById(id); if (b) h += '<div class="li"><div class="ic">' + b.icon + '</div><div class="grow"><b>' + b.name + (n[id] > 1 ? ' ×' + n[id] : '') + '</b><div class="small dim">' + b.desc + '</div></div></div>'; });
+    return '<div class="center small gold" style="margin:10px 0 4px">' + UI.spr('bn_tout', 'ski') + ' ' + run.gifts.length + ' aubaine' + (run.gifts.length > 1 ? 's' : '') + ' offerte' + (run.gifts.length > 1 ? 's' : '') + ' pour cette descente</div><div class="gifts">' + h + '</div>';
+  }
   function zoneIntro(run) {
-    var z = E.zoneOf(run.floor); if (S().tuto['zone' + z.id]) return; S().tuto['zone' + z.id] = 1;
+    var z = E.zoneOf(run.floor);
+    if (S().tuto['zone' + z.id]) { var gh = giftsHtml(run); if (gh) UI.modal(gh + '<div class="btns"><button class="btn primary big" data-act="close">EN AVANT</button></div>', true); return; }
+    S().tuto['zone' + z.id] = 1;
     var set = D.SETS[z.id - 1];
     UI.modal('<div class="center tiny gold" style="letter-spacing:.3em">ZONE ' + z.id + ' / 6</div><h2 style="color:' + z.color + ';font-size:24px;margin:4px 0 10px">' + z.name + '</h2><p class="center" style="font-style:italic;line-height:1.5">' + z.lore + '</p>' +
       '<div class="li"><div class="ic">☠️</div><div class="grow"><b>Gardien : ' + D.ENEMIES[z.boss].name + '</b><div class="small dim">Il t’attend à l’étage ' + (Math.floor((run.floor - 1) / 10) * 10 + 10) + '. ' + z.mech + '</div></div></div>' +
       '<div class="li"><div class="ic">' + set.icon + '</div><div class="grow"><b style="color:' + set.color + '">◆ ' + set.name + '</b><div class="small dim">Le set d’objets qu’on ne trouve qu’ici.</div></div></div>' +
-      '<div class="btns"><button class="btn primary big" data-act="close">ENTRER</button></div>', true);
+      giftsHtml(run) + '<div class="btns"><button class="btn primary big" data-act="close">ENTRER</button></div>', true);
   }
   function ending() {
     UI.modal('<div class="center tiny gold" style="letter-spacing:.3em">FIN ?</div><h2 style="color:#b48cff;font-size:24px;margin:4px 0 10px">Le trône est vide</h2>' +
@@ -212,7 +221,7 @@ UI.run = (function () {
     for (i = 0; i < 3; i++) sh += '<i class="' + (i < pl.length ? 'on' : '') + '">' + (i < pl.length ? pl[i] : '') + '</i>';
     if (c && c.dfx && c.dfx.id) fig = '<b class="k-' + c.dfx.id + '">' + c.dfx.name + '</b>';
     else if (pl.length >= 3) fig = '<span>aucune</span>';
-    else if (fc) fig = '<span class="maybe">' + fc.name.charAt(0) + fc.name.slice(1).toLowerCase() + ' ?</span>';
+    else if (fc) fig = '<span class="maybe">' + fc.name.charAt(0) + fc.name.slice(1).toLowerCase() + ' <small>possible</small></span>';
     else fig = '<span>figure</span>';
     $('#dslots').innerHTML = sh; var dfg = $('#dfig'); dfg.innerHTML = fig;
     $('#dfigw').classList.toggle('lit', !!figLine);
@@ -270,7 +279,7 @@ UI.run = (function () {
     b.style.left = Math.max(34, Math.min(a.clientWidth - 34, p.x + Math.random() * 110 - 55)) + 'px';
     b.style.top = Math.max(70, Math.min(a.clientHeight - 30, p.b - 16 + Math.random() * 34 - 8)) + 'px';
     a.appendChild(b); orbEls[e.oid] = b;
-    tuto('orb', '🔮 <b>Des orbes !</b> Les ramasser ne coûte aucune action, mais elles s’éteignent au bout de 3 tours : 💰 or, ❤️ soin, 🌟 ultime, 🔥 fureur (+30 % dégâts).');
+    var oc = S().run && S().run.combat; if (oc && !oc.over) tuto('orb', '🔮 <b>Des orbes !</b> Les ramasser ne coûte aucune action, mais elles s’éteignent au bout de 3 tours : 💰 or, ❤️ soin, 🌟 ultime, 🔥 fureur (+30 % dégâts).');
   }
   function dropOrb(oid, cls) { var b = orbEls[oid]; if (!b) return null; delete orbEls[oid]; b.classList.add(cls); setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 320); return b; }
   function takeOrb(e) {
@@ -472,9 +481,10 @@ UI.run = (function () {
     var par = c ? E.eclairPar(c, run.room) : 0, left = mine && ap <= 0 && c.hand.length > 0, tlb = $('#tlabel'), tlt = !c || run.phase !== 'combat' ? '' : left ? 'Joue tes dés' : 'Tour ' + c.round + (par && c.round <= par ? '/' + par : '');
     if (tlb) tlb.classList.toggle('eclair', !!par && !!c && c.round <= par && !left);
     var tsp = $('#tspd'), spt = 'x' + (S().settings.speed || 1); if (tsp && tsp.textContent !== spt) tsp.textContent = spt;
-    var tsw = $('#tsweep'), swOn = mine && !S().settings.auto && E.canSweep(); if (tsw) tsw.classList.toggle('on', swOn);
-    if (swOn && !(UI.guide && UI.guide.open())) tuto('sweep', '🧹 <b>Balayer</b> : ces ennemis ne font pas le poids. Touche <b>Balayer</b> pour régler le combat d’un geste (butin compris), ou joue-le toi-même.');
-    if (par && !swOn && c.round === 1 && mine && !(UI.guide && UI.guide.open())) tuto('eclair', '⚡ <b>Éclair.</b> « Tour 1/3 » : gagne avant la fin du tour 3 et tu touches +50 % d’or et de Cendres.');
+    var tsw = $('#tsweep'), swOn = mine && !S().settings.auto && S().stats.kills > 0 && !(UI.guide && UI.guide.open()) && E.canSweep(); if (tsw) tsw.classList.toggle('on', swOn);
+    var calm = !(UI.guide && UI.guide.open()) && !$('#modal').classList.contains('on') && !UI.story.open();
+    if (swOn && calm) tuto('sweep', '🧹 <b>Balayer</b> : ces ennemis ne font pas le poids. Touche <b>Balayer</b> pour régler le combat d’un geste (butin compris), ou joue-le toi-même.');
+    if (par && !swOn && c.round === 1 && mine && S().stats.kills > 0 && calm) tuto('eclair', '⚡ <b>Éclair.</b> « Tour 1/3 » : gagne avant la fin du tour 3 et tu touches +50 % d’or et de Cendres.');
     if (tlb && tlb.textContent !== tlt) tlb.textContent = tlt; $('#tpass').classList.toggle('ready', left && !S().settings.auto);
     updateTray(run);
     for (i = 0; i < 3; i++) {
@@ -744,7 +754,9 @@ UI.run = (function () {
       r.stock.forEach(function (s, i) {
         var no = s.sold || run.gold < s.price || (s.kind === 'potion' && run.potions >= run.potionsMax) || (s.kind === 'heal' && run.hp >= run.stats.hp);
         var rc = s.kind === 'item' ? ' c' + s.item.rar : '';
-        h += '<div class="li"><div class="ic">' + (s.kind === 'boon' ? UI.spr('bn_tout', 'ski') : s.icon) + '</div><div class="grow"><b class="' + rc + '">' + s.name + '</b><div class="small dim">' + s.desc + '</div></div><button class="btn sm ' + (no ? 'off' : 'goldb') + '" data-act="room" data-a="buy" data-arg="' + i + '">' + (s.sold ? 'Vendu' : '💰 ' + s.price) + '</button></div>';
+        var desc = s.desc, tap = '';
+        if (s.kind === 'item') { var sl = E.itemBase(s.item).slot, cu = S().heroes[run.hero].equip[sl], ci = cu ? E.findItem(cu) : null, df = ci ? Math.round((E.itemScore(s.item) / E.itemScore(ci) - 1) * 100) : null; desc += ' · ' + (df == null ? '<span class="good">emplacement vide</span>' : '<span class="' + (df >= 0 ? 'good' : 'bad') + '">' + (df >= 0 ? '▲ +' : '▼ ') + df + ' %</span>') + ' · <u>voir</u>'; tap = ' data-act="shopItem" data-i="' + i + '"'; }
+        h += '<div class="li"' + tap + '><div class="ic">' + (s.kind === 'boon' ? UI.spr('bn_tout', 'ski') : s.icon) + '</div><div class="grow"><b class="' + rc + '">' + s.name + '</b><div class="small dim">' + desc + '</div></div><button class="btn sm ' + (no ? 'off' : 'goldb') + '" data-act="room" data-a="buy" data-arg="' + i + '">' + (s.sold ? 'Vendu' : '💰 ' + s.price) + '</button></div>';
       });
       h += '<div class="btns"><button class="btn primary" data-act="room" data-a="leave">Repartir</button></div>';
     } else if (t === 'repos') {
@@ -827,7 +839,7 @@ UI.run = (function () {
     if (c.weak) c.enemies.forEach(function (x, j) { if (!x.dead && x.id === c.weak.id) wi = j; });
     if (wi >= 0 ? !E.hitWeak(wi) : !E.strike()) SND.play('error');
   };
-  ACT.sweep = function () { if (!myTurn() || !E.canSweep()) return; SND.play('click'); E.sweep(); };
+  ACT.sweep = function () { if (!myTurn() || !S().stats.kills || !E.canSweep()) return; SND.play('click'); E.sweep(); };
   ACT.pass = function () { if (myTurn()) { SND.play('click'); E.pass(); } };
   ACT.skill = function (d) {
     var run = S().run, i = +d.i; if (!myTurn()) return;
@@ -952,7 +964,7 @@ UI.run = (function () {
     if (items.length) html += '<div class="card"><b>Butin gardé</b> <span class="tiny dim">(il est à toi pour toujours)</span><div class="inv-grid" style="margin-top:8px">' + items.slice(0, 18).map(function (it) { return UI.itemTile(it); }).join('') + '</div></div>';
     html += '<div class="card small dim">💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)] + '</div>' +
       '<button class="btn goldb wide" data-act="deathBest" style="margin-bottom:8px">⚡ Équiper le meilleur</button>' +
-      '<div class="btns" style="margin-top:0"><button class="btn" data-act="toHub">🏰 Sanctuaire</button><button class="btn primary" data-act="again" data-z="' + startZone + '">⚔️ RELANCER</button></div><div style="height:20px"></div></div>';
+      '<div class="btns" style="margin-top:0"><button class="btn" data-act="toHub">🏰 Camp</button><button class="btn primary" data-act="again" data-z="' + startZone + '">⚔️ RELANCER</button></div><div style="height:20px"></div></div>';
     $('#screen').innerHTML = html;
     if (typeof FX !== 'undefined') FX.attach($('#screen'), { ambient: 'ash', warm: 4 });
     if (sum.record) setTimeout(function () { SND.play('levelup'); }, 500);
@@ -962,7 +974,7 @@ UI.run = (function () {
     if (metaOk) setTimeout(function () { UI.toast('⚱️ Tu as assez de Cendres pour un bonus permanent à l’<b>Autel</b> !', true); }, 900);
   }
   ACT.deathBest = function (d, el) { var n = E.equipBest(S().hero); S().inv.forEach(function (i) { i.isNew = false; }); E.save(); SND.play(n ? 'equip' : 'click'); UI.toast(n ? '⚡ ' + n + ' objet' + (n > 1 ? 's' : '') + ' équipé' + (n > 1 ? 's' : '') + ' — Puissance ' + E.fmt(E.power(S().hero)) : 'Tu portes déjà le meilleur.'); el.classList.add('off'); };
-  ACT.toHub = function () { SND.play('click'); UI.hub(D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; }) ? 'autel' : 'hero'); };
+  ACT.toHub = function () { SND.play('click'); UI.hub(S().tuto.gcamp && D.META.some(function (m) { var c = E.metaCost(m.id); return c != null && c <= S().cendres; }) ? 'autel' : 'hero'); };
   ACT.again = function (d) { UI.askOmen(S().hero, Math.min(+d.z || 1, E.maxStartZone())); };
 
   // Fin d'une épreuve (forge, runes, roue) : message, puis on passe à la suite

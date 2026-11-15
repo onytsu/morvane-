@@ -419,7 +419,7 @@
     run.hp = run.stats.hp; run.potions = run.potionsMax; run.gold = run.stats.startGold; run.rerolls = run.stats.rerolls;
     var free = run.stats.startBoons + (startZone - 1) * 3;
     if (startZone > 1) run.lvl = 1 + (startZone - 1) * 3;
-    for (var i = 0; i < free; i++) { var o = offerBoons(run, 1, 0); if (o.length) applyBoon(run, o[0]); }
+    run.gifts = []; for (var i = 0; i < free; i++) { var o = offerBoons(run, 1, 0); if (o.length) { applyBoon(run, o[0]); run.gifts.push(o[0]); } }
     if (run.stats.startArtifact) giveArtifact(run);
     for (var ei = Math.floor(run.lvl / 4) + run.stats.startEvo; ei > 0; ei--) grantEvo(run);
     recalc(run); run.hp = run.stats.hp; run.potions = run.potionsMax; run.rerolls = run.stats.rerolls;
@@ -537,7 +537,7 @@
   function genBoard(run, base, pos) {
     var cells = ['start'], prev = 'combat', i;
     for (i = 1; i <= CELLS; i++) {
-      var w = { combat: 44, elite: i <= 8 ? 0 : 10 * (run.stats.eliteW ? 3 : 1), tresor: 6, marchand: 6, repos: run.stats.noRest ? 0 : 6, autel: 5, event: 9, mercenaire: i <= 10 ? 0 : 4, arene: i <= 16 ? 0 : 4, forge: 6, runes: 6, roue: 5, bourse: 6, piege: 6, fontaine: 3 };
+      var w = { combat: 44, elite: i <= 8 ? 0 : 10 * (run.stats.eliteW ? 3 : 1), tresor: 6, marchand: i <= 6 ? 0 : 6, repos: run.stats.noRest ? 0 : 6, autel: 5, event: 9, mercenaire: i <= 10 ? 0 : 4, arene: i <= 16 ? 0 : 4, forge: 6, runes: 6, roue: 5, bourse: 6, piege: 6, fontaine: 3 };
       if (prev !== 'combat') { w[prev] *= 0.1; w.combat *= 1.5; }
       var types = Object.keys(w).filter(function (k) { return w[k] > 0; });
       var t = i <= 2 ? 'combat' : wpick(types, function (k) { return w[k]; });
@@ -1372,8 +1372,8 @@
     var run = S.run, c = run && run.combat; if (!c || c.over || c.turn !== 'hero') return false;
     var h = c.hero, hero = E.hero(run.hero), frac = run.hp / run.stats.hp;
     var charging = c.enemies.some(function (e) { return !e.dead && e.charge; });
-    if (frac < 0.35 && run.potions > 0) E.usePotion();
-    if ((run.ult || 0) >= 100 && (frac < 0.6 || alive(c).length > 1 || c.boss || c.round > 2)) { E.useUlt(); if (c.over || c.turn !== 'hero') return true; }
+    if (frac < 0.35 && run.potions > 0 && !c.sweeping) E.usePotion();
+    if ((run.ult || 0) >= 100 && !c.sweeping && (frac < 0.6 || alive(c).length > 1 || c.boss || c.round > 2)) { E.useUlt(); if (c.over || c.turn !== 'hero') return true; }
     for (var i = 0; i < 3; i++) {
       if (h.cds[i] > 0 || !E.skillUnlocked(run.hero, i)) continue;
       var id = hero.skills[i].id;
@@ -1398,19 +1398,19 @@
     var r = run.room; if (!r || r.type !== 'combat' || r.wasMimic || c.cond === 'defi') return false;
     var st = run.stats, foes = alive(c), hp = 0, threat = 0; if (!foes.length) return false;
     foes.forEach(function (e) { var it = intentOf(run, c, e); hp += e.hp + (e.shield || 0); threat += (it.dmg || 0) * (it.n || 1); if (e.ab.heal || e.ab.summon) hp *= 1.3; });
-    return hp <= st.atk * 7 && threat <= st.hp * 0.08 && run.hp >= st.hp * 0.5;
+    return hp <= st.atk * 25 && threat <= st.hp * 0.18 && run.hp >= st.hp * 0.5;
   };
   // Le combat est joué en entier par le pilote automatique. Il rend la main si le héros perd plus de 20 % de ses PV max.
   E.sweep = function () {
     if (!E.canSweep()) return false;
-    var run = S.run, c = run.combat, hp0 = run.hp, lim = run.stats.hp * 0.2, n = 0, stop = false; c.swept = true;
+    var run = S.run, c = run.combat, hp0 = run.hp, lim = run.stats.hp * 0.2, n = 0, stop = false; c.swept = true; c.sweeping = true;
     var deaths = [];
     while (!c.over && n++ < 3000) {
       if (c.turn === 'hero') { if (run.hp < hp0 - lim) { stop = true; break; } if (!E.autoAct()) E.pass(); }
       else E.foeStep();
       if (!c.over) { c.events.forEach(function (e) { if (e.k === 'die' || e.k === 'summon') deaths.push(e); }); c.events.length = 0; }
     }
-    c.events = deaths.concat(c.events);
+    c.events = deaths.concat(c.events); c.sweeping = false;
     // l'interface ne rejoue pas tout : seule la fin est montrée
     var keep = c.events.filter(function (e) { return e.k === 'win' || e.k === 'dead' || e.k === 'die' || e.k === 'summon' || e.k === 'orbTake'; });
     c.events.length = 0; c.events.push({ k: 'swept', stop: stop }); keep.forEach(function (e) { c.events.push(e); });
@@ -1516,7 +1516,7 @@
     }
   }
   // Nombre de tours pour décrocher le bonus Éclair (0 : pas de bonus dans cette salle)
-  E.eclairPar = function (c, r) { if (!c || !r || c.cond === 'defi' || r.wasMimic) return 0; return r.type === 'combat' ? (r.group.length >= 3 ? 4 : 3) : r.type === 'elite' || r.forceElite ? 5 : 0; };
+  E.eclairPar = function (c, r) { if (!c || !r || c.cond === 'defi' || r.wasMimic || c.swept) return 0; return r.type === 'combat' ? (r.group.length >= 3 ? 3 : 2) : r.type === 'elite' || r.forceElite ? 4 : 0; };
   function finish(run, c) {
     if (c.done) return; c.done = true;
     if (!c.win) { ev(c, { k: 'dead' }); run.phase = 'dead'; return; }
@@ -1545,6 +1545,8 @@
       heal(run, run.stats.hp * 0.3, true); res.boss = true; if (zn === 6 && res.firstKill) res.ending = true; if (run.ally) { res.allyLeft = run.ally; run.ally = null; }
     }
     heal(run, run.stats.hp * 0.08, true);
+    // Rattrapage : un héros en retard sur la profondeur gagne plus d'expérience (moins de premières descentes qui arrivent au boss au niveau 3)
+    var lag = 1 + (run.floor - (run.startFloor || 1) + 1) / 2 - run.lvl; if (lag > 0) c.xp *= 1 + 0.35 * lag;
     res.lvlUps = gainXp(run, c.xp);
     run.result = res; run.phase = 'victory';
     ev(c, { k: 'win', boss: r.type === 'boss' });

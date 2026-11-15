@@ -385,8 +385,14 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.1';
+  var VERSION = '4.6';
   var NEWS = [
+    ['🧹', 'Balayer', 'Quand des ennemis ne font pas le poids, un bouton « Balayer le combat » le règle d’un geste, butin compris. Il te rend la main si ça tourne mal.'],
+    ['⚡', 'Victoire éclair', 'Le compteur « Tour 1/2 » montre l’objectif : gagne dans les temps et tu touches +50 % d’or et de Cendres.'],
+    ['🗡️', 'Coup de grâce', 'Un ennemi (hors boss) touché sous 12 % de ses PV est achevé d’un coup. Élites et boss ont moins de PV mais frappent plus fort : des combats plus courts et plus tendus.'],
+    ['💾', 'Combat sauvegardé', 'Fermer l’appli en plein combat ne le remet plus à zéro : tu reprends au début du tour où tu étais.'],
+    ['⚖️', 'Colporteur plus clair', 'Touche un objet en vente pour voir sa fiche, et sa comparaison avec ton équipement s’affiche tout de suite. Plus de marchand dès les premières cases.'],
+    ['🌒', 'Aubaines offertes visibles', 'En partant d’une zone avancée, les aubaines offertes te sont montrées au départ.'],
     ['💰', 'Des gains qui se voient', 'Après un choix (Mystère, feu de camp, autel...), ce que tu gagnes ou perds s’affiche en grand au milieu de l’écran : or, PV, attaque, aubaine, objet.'],
     ['👁️', 'Des intentions discrètes', 'Les icônes géantes au-dessus des ennemis redeviennent une petite étiquette sous leur nom.'],
     ['🎲', 'Des combats plus simples', 'La table de 9 cases disparaît. Touche un dé de ta main, retouche-le : il agit tout de suite. Ou glisse-le dans un pouvoir. Plus de cases ×2, +2 ni de voisins à calculer.'],
