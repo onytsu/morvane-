@@ -21,20 +21,16 @@ UI.story = (function () {
   var CH = [
     { id: 'pro', num: 'Prologue', title: 'La dernière flamme', zone: 0, color: '#ffb347', beats: [
       { key: 'pro', label: 'La dernière flamme', bg: 'title', pages: [
-        [null, 'Morvane était un royaume de cloches et de moissons. Puis la peste est montée du marais, et le roi Théobald est mort comme tout le monde.'],
-        [null, 'Son peuple ne l’a pas accepté. Quarante nuits, il a prié pour qu’il revienne. La quarante et unième, quelque chose a répondu.'],
-        [null, 'Le roi s’est relevé. Une armure, une couronne, et rien dedans. Depuis, chaque feu qu’il approche s’éteint. On l’appelle le Roi Creux.'],
-        ['V', 'Te voilà debout. Doucement : tu étais de la cendre il y a un instant.', { bg: 'camp', l: 'H', r: 'veilleuse' }],
-        ['V', 'Je suis la Veilleuse. Cette flamme est la dernière de Morvane. Tant qu’elle brûle, ceux qu’elle a réchauffés peuvent se relever.'],
-        ['V', 'Sous cette chapelle, six royaumes pourrissent. Tout en bas, il y a un trône. Descends. Si tu tombes, je te rallumerai.'],
-        ['V', 'Emporte cette braise. Par elle, je te verrai. Et de temps en temps, je te parlerai.'],
+        [null, 'Morvane était un royaume de cloches et de moissons. Puis la peste a tué le roi. Son peuple a prié quarante nuits pour qu’il revienne, et quelque chose a répondu.'],
+        [null, 'Le roi s’est relevé : une armure, une couronne, et rien dedans. Chaque feu qu’il approche s’éteint. On l’appelle le Roi Creux.'],
+        ['V', 'Te voilà debout. Je suis la Veilleuse, et cette flamme est la dernière de Morvane. Tant qu’elle brûle, tu te relèveras.', { bg: 'camp', l: 'H', r: 'veilleuse' }],
+        ['V', 'Sous cette chapelle, six royaumes pourrissent. Tout en bas, il y a un trône. Descends. Si tu tombes, je te rallumerai, et ce que tu as trouvé te restera.'],
         ['H', '@hero']
       ] }
     ] },
     { id: 'c1', num: 'Chapitre I', title: 'Ceux qui ne dorment plus', zone: 1, beats: [
       { key: 'c1.intro', label: 'La descente', pages: [
-        [null, 'Sous la chapelle, l’escalier descend plus loin que les fondations. Les dalles portent des noms. La plupart ont été grattés.'],
-        [null, 'Ici reposaient les morts de Morvane. Reposaient. Les tombes sont ouvertes, et elles l’ont été de l’intérieur.'],
+        [null, 'Sous la chapelle reposaient les morts de Morvane. Reposaient. Les tombes sont ouvertes, et elles l’ont été de l’intérieur.'],
         ['V', 'Le Fossoyeur a enterré le roi de ses propres mains. Demande-lui ce qu’il a entendu, cette nuit-là.', { r: 'veilleuse' }]
       ] },
       { key: 'c1.mid', label: 'Le compte à la craie', pages: [

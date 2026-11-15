@@ -1198,6 +1198,12 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 .bigact.cool b { margin-right: 26px; }
 .gifts.compact { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; } .gifts.compact .li { margin: 0; padding: 4px 6px; gap: 6px; min-height: 0; }
 .gifts.compact .li .small { display: none; } .gifts.compact .li b { font-size: 11.5px; line-height: 1.2; } .gifts.compact .li .ic { transform: scale(.8); }
+/* v4.8 : un mot sous chaque dé, mode Retourne */
+.hd .dcap { display: block; margin-top: 3px; font-size: 10.5px; line-height: 11px; font-weight: 700; letter-spacing: .02em; color: #e2d8ef; text-align: center; white-space: nowrap; }
+.hd.flipme .tdie { animation: pulse .5s infinite alternate; box-shadow: 0 0 0 2px #7fd0ff, 0 0 12px #7fd0ff; }
+.dtool.dfl.on { box-shadow: 0 0 0 2px #7fd0ff, 0 0 12px #7fd0ff88; }
+/* v4.8 : premiers combats épurés */
+#app.novice #dre, #app.novice #dfl, #app.novice #dbag, #app.novice #primes { visibility: hidden; }
 
 :root { color-scheme: dark; --sat: 0px; --sab: 0px; } html, body { height: 100%; } #app { height: 100%; }</style>
 <div id="app"><div id="screen"></div><div id="overlay"></div><div id="modal"></div><div id="toasts"></div><div id="flash"></div></div>
@@ -1589,8 +1595,11 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.7';
+  var VERSION = '4.8';
   var NEWS = [
+    ['👆', 'Un toucher, un dé', 'Touche un dé : il agit tout de suite. Un petit mot sous chaque dé dit ce qu’il fait. Pour Retourner, touche le bouton puis le dé.'],
+    ['⚔️', 'Frappes automatiques', 'Main vide et rien à craindre : tes actions restantes frappent toutes seules. Quand un ennemi charge, montre un point faible ou lance un crâne, la main reste à toi.'],
+    ['🕯️', 'Un début plus direct', 'Prologue raccourci, tutoriel en 5 étapes où tu joues toi-même, et les outils (Relance, Retourne, sac, primes) arrivent après tes premières victoires.'],
     ['🎨', 'Des personnages plus fins', 'Héros et monstres sont dessinés en double résolution : contours plus fins, courbes plus douces, relief et reflets. Les 8 héros et les monstres de la Crypte ont reçu des détails à la main (bouclier bordé d’or, plis des capes, os fêlés...).'],
     ['🔍', 'Fini le flou', 'Les images arrivent déjà agrandies au pixel près : sur iPhone, les personnages et les décors ne sont plus lissés.'],
     ['🧹', 'Balayer', 'Quand des ennemis ne font pas le poids, un bouton « Balayer le combat » le règle d’un geste, butin compris. Il te rend la main si ça tourne mal.'],
@@ -6914,7 +6923,7 @@ var UI = (function () {
   ACT.enter = function () {
     SND.unlock(); SND.play('door');
     if (!S().stats.runs && !S().run) {
-      modal('<h2>La descente</h2><p class="center">Le Roi Creux a éteint le monde. Six royaumes pourrissent sous la terre de Morvane.</p><p class="center">Descends. Meurs. <b>Garde ton butin.</b> Reviens plus fort.</p><p class="center dim small">Le combat se joue au tour par tour.<br>Un petit tutoriel te guidera au premier combat.</p><div class="btns"><button class="btn primary big" data-act="firstRun">DESCENDRE</button></div>', true);
+      ACT.firstRun(); // le prologue explique tout : plus de fenêtre avant
       return;
     }
     if (S().run) { UI.run.show(); return; }
@@ -7329,6 +7338,8 @@ UI.run = (function () {
   var running = false, paused = false, last = 0, shownPhase = null, phaseTimer = null, els = {}, posOf = {}, floats = 0, built = null, fxL = null, lootShown = 0, combo = 0, comboT = null;
   // v2.0 : lumière, orbes, projectiles, primes
   var vfx = null, orbEls = {}, shotEls = {}, stopT = 0, primeKey = '', wiping = false, stepT = 0, lastTurn = '', moving = false, diceKey = '', selDie = -1, trayKey = '', lastPlaced = -1, figLine = null, handRoll = false, diceMode = null;
+  var DCAP = { lame: 'frappe', garde: 'bouclier', seve: 'soin', echo: 'renfort', miroir: 'copie', braise: 'brûle', venin: 'poison', foudre: 'tous', astre: 'ultime' };
+  var flipMode = false;
   var DSHORT = { lame: 'frappe', garde: 'protège', seve: 'soigne', echo: 'renforce le reste de ta main', miroir: 'copie le dernier dé joué', braise: 'frappe et brûle', venin: 'empoisonne', foudre: 'frappe tous', astre: 'charge l’ultime' };
   var RANGED = { pyro: 'fire', necro: 'dark', chasseuse: 'blade', pretresse: 'holy' };
   var ORB = { gold: '💰', heal: '❤️', ult: '🌟', fury: '🔥' };
@@ -7530,14 +7541,16 @@ UI.run = (function () {
     var tr = $('#dtray'); if (!tr) return;
     var c = run.phase === 'combat' && run.combat && !run.combat.over ? run.combat : null, mine = !!c && c.turn === 'hero', auto = !!S().settings.auto, i;
     if (c && selDie >= c.hand.length) selDie = -1;
-    var key = !c ? 'x' + run.bag.length : [mine ? 1 : 0, selDie, c.rerolls, c.flips, auto ? 1 : 0, figLine ? 1 : 0, (c.played || []).join(''), c.dfx && c.dfx.id, c.lastT, c.hand.map(function (d) { return d.t + d.v + (d.fire ? 'f' : '') + (d.ice ? 'i' : '') + (d.up ? 'u' : ''); }).join(','), c.hero.ap].join('|');
+    if (!c || !mine || !(c.flips > 0)) flipMode = false;
+    var key = !c ? 'x' + run.bag.length : [mine ? 1 : 0, flipMode ? 'F' : selDie, c.rerolls, c.flips, auto ? 1 : 0, figLine ? 1 : 0, (c.played || []).join(''), c.dfx && c.dfx.id, c.lastT, c.hand.map(function (d) { return d.t + d.v + (d.fire ? 'f' : '') + (d.ice ? 'i' : '') + (d.up ? 'u' : ''); }).join(','), c.hero.ap].join('|');
     if (key === trayKey) return; trayKey = key;
     tr.className = 'dtray' + (!c ? ' idle' : mine ? '' : ' wait');
     $('#dbag').lastChild.textContent = run.bag.length;
     var re = $('#dre'), canRe = mine && c.hand.length > 0 && c.rerolls > 0; re.lastChild.textContent = c ? c.rerolls : ''; re.classList.toggle('off', !canRe);
     var fl = $('#dfl'); fl.lastChild.textContent = c ? (c.flips || 0) : ''; fl.classList.toggle('off', !(mine && c.hand.length > 0 && c.flips > 0));
+    fl.classList.toggle('on', flipMode);
     var hh = '';
-    if (c && c.hand.length) c.hand.forEach(function (d, k) { hh += '<button class="hd' + (k === selDie && mine && !auto ? ' sel' : '') + (handRoll ? ' roll' : '') + '" style="animation-delay:' + (k * 0.06) + 's" data-act="hdie" data-i="' + k + '">' + tdie(d.t, d.v, (d.fire ? ' fire' : '') + (d.ice ? ' ice' : '') + (d.up ? ' up' : '')) + '</button>'; });
+    if (c && c.hand.length) c.hand.forEach(function (d, k) { hh += '<button class="hd' + (flipMode && mine ? ' flipme' : '') + (handRoll ? ' roll' : '') + '" style="animation-delay:' + (k * 0.06) + 's" data-act="hdie" data-i="' + k + '">' + tdie(d.t, d.v, (d.fire ? ' fire' : '') + (d.ice ? ' ice' : '') + (d.up ? ' up' : '')) + '<span class="dcap">' + (DCAP[d.t] || '') + '</span></button>'; });
     else hh = '<span class="dnone">' + (c ? (mine ? 'Tous tes dés sont joués' : 'Les ennemis jouent...') : '🎲 Ton sac : ' + run.bag.length + ' dés') + '</span>';
     $('#dhand').innerHTML = hh; handRoll = false;
     // la figure du tour : 3 cases qui se remplissent avec la valeur de chaque dé joué
@@ -7555,7 +7568,8 @@ UI.run = (function () {
       var pv = E.dieCalc(selDie), what = sd.t === 'echo' ? (c.hand.length > 1 ? 'donne +' + Math.ceil(sd.v / 2) + ' aux autres dés' : 'charge ton ultime') : sd.t === 'miroir' ? 'copie ' + D.DICE[pv.t].name : DSHORT[sd.t];
       hint = '<b class="t-' + sd.t + '">' + D.DICE[sd.t].name + ' ' + (pv && pv.v !== sd.v ? pv.v : sd.v) + '</b> ' + what + (sd.fire ? ' · <b class="t-braise">en feu : -3 % PV</b>' : sd.ice ? ' · <b class="t-garde">gelé</b> (⇅ le dégèle)' : '') + ' <i>›</i> <u>retouche pour jouer</u>';
     }
-    else if (c.hand.length) hint = 'Touche un <u>dé</u> pour le choisir' + (c.hero.ap > 0 ? ' · joue tes dés avant de frapper' : ' · ou termine ton tour');
+    else if (flipMode) hint = '⇅ Touche le dé à <u>retourner</u>';
+    else if (c.hand.length) hint = 'Touche un <u>dé</u> pour le jouer · ou un <u>pouvoir</u>' + (c.hero.ap > 0 ? ', puis frappe' : '');
     else hint = c.hero.ap > 0 ? 'Dés joués · frappe, pare, ou termine ton tour' : 'Il ne te reste plus qu’à <u>terminer ton tour</u>';
     var dh = $('#dhint'); if (dh) dh.innerHTML = hint;
   }
@@ -7565,8 +7579,10 @@ UI.run = (function () {
     var run = S().run, c = run && run.combat, i = +d.i; if (!c || !c.hand[i]) return;
     if (c.turn !== 'hero' || S().settings.auto) { dieInfo(c.hand[i].t, c.hand[i].v, (c.hand[i].fire ? '<br>🔥 <b>Dé enflammé</b> : le jouer te coûte 3 % de tes PV.' : '') + (c.hand[i].ice ? '<br>❄️ <b>Dé gelé</b> : tu es entravé, ton meilleur dé est tombé à 1. ⇅ Retourner le dégèle.' : '')); trayKey = ''; return; }
     if (performance.now() - lastPlay < 280) return;
-    if (i === selDie) { lastPlay = performance.now(); selDie = -1; if (!E.playDie(i)) SND.play('error'); }
-    else { selDie = i; SND.play('click', 0.6); }
+    // v4.8 : un seul toucher joue le dé. En mode Retourne, il est retourné à la place.
+    selDie = -1;
+    if (flipMode) { flipMode = false; if (E.flipDie(i)) { SND.play('equip', 0.7); handRoll = false; } else SND.play('error'); trayKey = ''; return; }
+    lastPlay = performance.now(); if (!E.playDie(i)) SND.play('error');
     trayKey = '';
   };
   ACT.dreroll = function () {
@@ -7576,8 +7592,7 @@ UI.run = (function () {
   };
   ACT.dflip = function () {
     var run = S().run, c = run && run.combat;
-    if (c && c.turn === 'hero' && c.hand.length && !c.hand[selDie]) { UI.toast('⇅ Choisis d’abord le dé à retourner.'); return; }
-    if (c && myTurn() && E.flipDie(selDie)) { SND.play('equip', 0.7); handRoll = false; trayKey = ''; return; }
+    if (c && c.turn === 'hero' && c.hand.length && c.flips > 0 && !S().settings.auto) { flipMode = !flipMode; SND.play('click'); trayKey = ''; if (flipMode) tuto('flip1', '⇅ Touche maintenant le dé à <b>retourner</b> : 1↔6, 2↔5, 3↔4.'); return; }
     UI.toast('⇅ <b>Retourner.</b> Retourne le dé choisi sur sa face opposée : 1↔6, 2↔5, 3↔4. Pratique pour compléter une figure ou la condition d’un pouvoir. ' + (c ? (c.flips > 0 ? 'Une fois par tour.' : 'Déjà utilisé ce tour.') : 'Une fois par tour.'), true);
   };
   function bagSheet() {
@@ -7718,7 +7733,7 @@ UI.run = (function () {
         case 'potion': SND.play('potion'); break;
         case 'die': if (el) { var dp = center(el); if (vfx && dp) VFX.death(vfx, dp.x, dp.y, e.boss); souls(el, e.boss ? 12 : 3, e.boss ? 10 : 3); dropGems(c, el); el.classList.add('dead'); el.classList.remove('charging'); } SND.play(e.boss ? 'boss_die' : 'die'); if (e.boss) { UI.flash('#ffffffaa'); anim($('#arena'), 'shake', 250); hitstop(160); UI.vib([40, 40, 120]); } break;
         case 'pturn': var fgp = $('#cdice'); if (fgp) fgp.innerHTML = ''; if (e.n === 2) tuto('intent', '👁️ <b>Intentions.</b> Sous le nom de chaque ennemi : ce qu’il fera à son tour. ⚔️ 12 = il frappera pour 12 · ⚠️ = il charge un gros coup · 💤 = il ne fera rien.'); anim($('#aps'), 'bump', 300); if (e.n > 1) { floatAt(hero, 'À toi', 'txt'); } document.querySelectorAll('.unit.en.acting').forEach(function (x) { x.classList.remove('acting'); }); break;
-        case 'draw': handRoll = true; trayKey = ''; if (!e.again) selDie = -1; SND.play('click', 0.8); setTimeout(function () { SND.play('click', 0.6); }, 90); tuto('dice4', '🎲 <b>Tes dés.</b> À chaque tour tu pioches 3 dés. Touche un dé pour le choisir, <b>retouche-le pour le jouer</b> : il agit tout de suite, sans coûter d’action. Ou glisse-le dans un <b>pouvoir</b>.<br>Les 3 dés joués forment peut-être une <b>figure</b> : Paire, Suite (2-3-4) ou Brelan.'); break;
+        case 'draw': handRoll = true; trayKey = ''; if (!e.again) selDie = -1; SND.play('click', 0.8); setTimeout(function () { SND.play('click', 0.6); }, 90); tuto('dice4', '🎲 <b>Tes dés.</b> À chaque tour tu pioches 3 dés. <b>Touche un dé</b> : il agit tout de suite, sans coûter d’action. Ou touche un <b>pouvoir</b> : il prend le bon dé tout seul.<br>Les 3 dés joués forment peut-être une <b>figure</b> : Paire, Suite (2-3-4) ou Brelan.'); break;
         case 'slot': anim($('#sk' + e.i), 'fire', 300); SND.play('equip', 0.6); trayKey = ''; tuto('slot2', '🎲 <b>Dé glissé dans un pouvoir.</b> Plus le dé est fort, plus le pouvoir frappe : un 5 vaut 100 %, un 6 vaut 110 %, un 1 vaut 60 %. Les pouvoirs d’appui, eux, se contentent d’un petit dé.'); break;
         case 'flip': trayKey = ''; break;
         case 'place': SND.play(e.t === 'garde' ? 'block' : e.t === 'echo' || e.mir ? 'equip' : 'click', 0.7); if (e.t === 'echo') floatAt(hero, '✨ Écho', 'txt'); else if (e.mir) floatAt(hero, '🪞 Miroir', 'txt'); break;
@@ -7775,6 +7790,8 @@ UI.run = (function () {
   }
   function stIcons(st) { return (st.burn ? '🔥' : '') + (st.poison ? '☠️' + (st.poison.n > 1 ? st.poison.n : '') : '') + (st.bleed ? '🩸' : '') + (st.stun > 0 ? '💫' : '') + (st.weak > 0 ? '⬇️' : '') + (st.slow > 0 ? '🕸️' : '') + (st.vuln > 0 ? '🎯' : ''); }
   function updateHud() {
+    // v4.8 : les outils arrivent au fil du jeu. Les premiers combats n'ont que les dés, les pouvoirs, Frapper et Parer.
+    var nov = (S().stats.kills || 0) < 3, app = $('#app'); if (app.classList.contains('novice') !== nov) { app.classList.toggle('novice', nov); if (!nov && S().run && S().run.combat) tuto('tools', '🎲 <b>Nouveaux outils.</b> <b>Relance</b> relance ta main (une fois par combat), <b>Retourne</b> met un dé sur sa face opposée (une fois par tour). Les <b>primes</b> en haut paient des petits objectifs.'); }
     var run = S().run; if (!run) return; var c = run.combat, stt = run.stats, z = E.zoneOf(run.floor), pos = ((run.floor - 1) % 10) + 1, i;
     var key = run.floor + '|' + run.gold + '|' + run.cendres + '|' + run.lvl + '|' + Object.keys(run.boons).length + run.artifacts.length + '|' + run.evos.length;
     if (updateHud.key !== key) {
@@ -7857,6 +7874,15 @@ UI.run = (function () {
     var m = $('#minions'), n = c.hero.skel || 0;
     if (m && m.children.length !== n) { var h = ''; for (var i = 0; i < n; i++) h += UI.spr('serviteur'); m.innerHTML = h; }
   }
+  // v4.8 : main vide et rien à décider (pas de charge, de point faible, de crâne, de gros coup en vue) : les actions restantes frappent seules
+  var autoT = 0;
+  function autoStrikeOk(run, c) {
+    if (c.turn !== 'hero' || c.over || c.hand.length || c.hero.ap <= 0 || c.weak || (c.shots && c.shots.length)) return false;
+    var threat = 0, ch = false; c.enemies.forEach(function (e) { if (e.dead) return; if (e.charge) ch = true; });
+    if (ch) return false;
+    E.intents().forEach(function (it) { threat += (it.dmg || 0) * (it.n || 1); });
+    return threat < run.stats.hp * 0.15;
+  }
   function frame(ts) {
     if (!running) return;
     var dt = Math.min(0.1, (ts - last) / 1000); last = ts;
@@ -7873,7 +7899,8 @@ UI.run = (function () {
           if (stepT <= 0) {
             if (c.turn === 'foes') stepT = E.foeStep() ? 0.42 : 0.25;
             else if (S().settings.auto) { E.autoAct(); stepT = 0.5; }
-            else stepT = 0;
+            else if (autoStrikeOk(run, c)) { autoT += dt; if (autoT > 0.6) { autoT = 0.15; if (E.strike()) tuto('autostrike', '⚔️ Plus de dé en main : tes actions restantes <b>frappent toutes seules</b>. Quand un ennemi charge ou montre un point faible, c’est toi qui décides.'); } stepT = 0; }
+            else { autoT = 0; stepT = 0; }
           }
         }
       }
@@ -8172,7 +8199,7 @@ UI.run = (function () {
     if (c.hero.cds[i] > 0) { SND.play('error'); UI.toast(k.icon + ' <b>' + k.name + '</b> se recharge : encore ' + E.turns(c.hero.cds[i]) + ' tour' + (E.turns(c.hero.cds[i]) > 1 ? 's' : '') + '.'); return; }
     if (!c.hand.length) { SND.play('error'); UI.toast('🎲 Plus de dé en main. Un pouvoir se lance en y glissant <b>' + nd.txt + '</b> : garde-en un au prochain tour.', true); return; }
     if (!c.hand[selDie]) { var bd = E.bestDie(i); if (bd >= 0) { E.useSkill(i, bd); return; } }
-    if (!E.dieFits(i, selDie)) { SND.play('error'); var alt = E.bestDie(i); UI.toast(k.icon + ' <b>' + k.name + '</b> demande <b>' + nd.txt + '</b>.' + (alt >= 0 ? ' Choisis d’abord ce dé dans ta main.' : c.flips > 0 ? ' Essaie de ⇅ retourner un dé.' : ' Aucun dé ne convient ce tour.'), true); if (alt >= 0) { selDie = alt; trayKey = ''; } return; }
+    if (!E.dieFits(i, selDie)) { SND.play('error'); var alt = E.bestDie(i); UI.toast(k.icon + ' <b>' + k.name + '</b> demande <b>' + nd.txt + '</b>.' + (c.flips > 0 ? ' Essaie de ⇅ retourner un dé.' : ' Aucun dé ne convient ce tour.'), true); return; }
     E.useSkill(i, selDie);
   };
   ACT.potion = function () { var run = S().run; if (!run) return; if (E.usePotion()) { if (!run.combat || run.phase !== 'combat') SND.play('potion'); } else SND.play('error'); };
@@ -8221,7 +8248,7 @@ UI.run = (function () {
     }
     h += '<div class="li on"><div class="ic">✨</div><div class="grow"><b>Éveils de pouvoir</b><div class="small dim">Tous les 4 niveaux d’une descente (4, 8, 12...), tu fais évoluer un de tes pouvoirs. Un ✦ sur le bouton montre qu’il est éveillé.</div></div></div>';
     h += '<div class="li on"><div class="ic">🎲</div><div class="grow"><b>Tour par tour</b><div class="small dim">À ton tour tu as <b>2 actions ⚡</b>. Frapper, parer, toucher un point faible ou renvoyer un crâne coûtent 1 action. Les pouvoirs, eux, se paient avec un dé. L’ultime, la fiole, la posture et les orbes sont gratuits. Ensuite chaque ennemi joue, l’un après l’autre.</div></div></div>';
-    h += '<div class="li on"><div class="ic">🎒</div><div class="grow"><b>Dés de combat</b><div class="small dim">À chaque tour tu pioches <b>3 dés</b>. Touche un dé pour le choisir, <b>retouche-le pour le jouer</b> : il agit tout de suite, <b>sans coûter d’action</b>. Ou glisse-le dans un <b>pouvoir</b> : chacun affiche le dé qu’il demande (≤3, PAIR, ≥4...), et plus le dé est fort, plus le pouvoir l’est.<br>⚔️ Lame frappe · 🛡️ Garde protège · ❤️ Sève soigne · ✨ Écho renforce le reste de ta main · 🪞 Miroir copie le dernier dé joué<br><b>Figures</b> : les 3 premiers dés joués du tour. 🎲 Paire (+30 % dégâts) · ✨ Suite 2-3-4 (+1 action, prochain coup critique) · 👑 Brelan (+1 action, coups critiques).<br>⇅ <b>Retourner</b> change un dé en sa face opposée, une fois par tour. ↻ relance ta main : 1 fois par combat.</div><div class="btns" style="margin-top:6px"><button class="btn sm" data-act="bag">🎒 Mon sac et les figures</button></div></div></div>';
+    h += '<div class="li on"><div class="ic">🎒</div><div class="grow"><b>Dés de combat</b><div class="small dim">À chaque tour tu pioches <b>3 dés</b>. <b>Touche un dé</b> : il agit tout de suite, <b>sans coûter d’action</b>. Ou touche un <b>pouvoir</b> : il prend le meilleur dé qui convient. Chacun affiche le dé qu’il demande (≤3, PAIR, ≥4...), et plus le dé est fort, plus le pouvoir l’est.<br>⚔️ Lame frappe · 🛡️ Garde protège · ❤️ Sève soigne · ✨ Écho renforce le reste de ta main · 🪞 Miroir copie le dernier dé joué<br><b>Figures</b> : les 3 premiers dés joués du tour. 🎲 Paire (+30 % dégâts) · ✨ Suite 2-3-4 (+1 action, prochain coup critique) · 👑 Brelan (+1 action, coups critiques).<br>⇅ <b>Retourner</b> change un dé en sa face opposée, une fois par tour. ↻ relance ta main : 1 fois par combat.</div><div class="btns" style="margin-top:6px"><button class="btn sm" data-act="bag">🎒 Mon sac et les figures</button></div></div></div>';
     h += '<div class="li on"><div class="ic">👁️</div><div class="grow"><b>Intentions</b><div class="small dim">Sous le nom de chaque ennemi, ce qu’il fera à son tour : ⚔️ 12 il frappe pour 12 · 💥 gros coup · ⚠️ il charge (étourdis-le ou pare) · 💤 rien · ✚ soin · 👥 renfort.</div></div></div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les autres boutons</h3>' +
       '<div class="li"><div class="ic">⚔️</div><div class="grow"><b>Frapper</b><div class="small dim">Attaque l’ennemi visé (▼). Plus ta vitesse d’attaque est haute, plus tu donnes de coups par action. Toucher un ennemi le vise ; le toucher encore le frappe.</div></div></div>' +
@@ -8492,20 +8519,16 @@ UI.story = (function () {
   var CH = [
     { id: 'pro', num: 'Prologue', title: 'La dernière flamme', zone: 0, color: '#ffb347', beats: [
       { key: 'pro', label: 'La dernière flamme', bg: 'title', pages: [
-        [null, 'Morvane était un royaume de cloches et de moissons. Puis la peste est montée du marais, et le roi Théobald est mort comme tout le monde.'],
-        [null, 'Son peuple ne l’a pas accepté. Quarante nuits, il a prié pour qu’il revienne. La quarante et unième, quelque chose a répondu.'],
-        [null, 'Le roi s’est relevé. Une armure, une couronne, et rien dedans. Depuis, chaque feu qu’il approche s’éteint. On l’appelle le Roi Creux.'],
-        ['V', 'Te voilà debout. Doucement : tu étais de la cendre il y a un instant.', { bg: 'camp', l: 'H', r: 'veilleuse' }],
-        ['V', 'Je suis la Veilleuse. Cette flamme est la dernière de Morvane. Tant qu’elle brûle, ceux qu’elle a réchauffés peuvent se relever.'],
-        ['V', 'Sous cette chapelle, six royaumes pourrissent. Tout en bas, il y a un trône. Descends. Si tu tombes, je te rallumerai.'],
-        ['V', 'Emporte cette braise. Par elle, je te verrai. Et de temps en temps, je te parlerai.'],
+        [null, 'Morvane était un royaume de cloches et de moissons. Puis la peste a tué le roi. Son peuple a prié quarante nuits pour qu’il revienne, et quelque chose a répondu.'],
+        [null, 'Le roi s’est relevé : une armure, une couronne, et rien dedans. Chaque feu qu’il approche s’éteint. On l’appelle le Roi Creux.'],
+        ['V', 'Te voilà debout. Je suis la Veilleuse, et cette flamme est la dernière de Morvane. Tant qu’elle brûle, tu te relèveras.', { bg: 'camp', l: 'H', r: 'veilleuse' }],
+        ['V', 'Sous cette chapelle, six royaumes pourrissent. Tout en bas, il y a un trône. Descends. Si tu tombes, je te rallumerai, et ce que tu as trouvé te restera.'],
         ['H', '@hero']
       ] }
     ] },
     { id: 'c1', num: 'Chapitre I', title: 'Ceux qui ne dorment plus', zone: 1, beats: [
       { key: 'c1.intro', label: 'La descente', pages: [
-        [null, 'Sous la chapelle, l’escalier descend plus loin que les fondations. Les dalles portent des noms. La plupart ont été grattés.'],
-        [null, 'Ici reposaient les morts de Morvane. Reposaient. Les tombes sont ouvertes, et elles l’ont été de l’intérieur.'],
+        [null, 'Sous la chapelle reposaient les morts de Morvane. Reposaient. Les tombes sont ouvertes, et elles l’ont été de l’intérieur.'],
         ['V', 'Le Fossoyeur a enterré le roi de ses propres mains. Demande-lui ce qu’il a entendu, cette nuit-là.', { r: 'veilleuse' }]
       ] },
       { key: 'c1.mid', label: 'Le compte à la craie', pages: [
@@ -8845,18 +8868,11 @@ UI.guide = (function () {
 
   // Tutoriel du premier combat, raconté par la Veilleuse
   var FIGHT = [
-    { t: 'Ton premier combat', x: 'Écoute-moi bien, voyageur. Ici, chacun frappe à son tour : <b>toi d’abord</b>, puis tes ennemis. Laisse-moi te montrer.' },
-    { s: '.unit.en', t: 'L’ennemi', x: 'Au-dessus de sa tête, il trahit <b>ce qu’il va faire</b>. Un glaive et un nombre : il frappera pour autant.<br>S’ils sont plusieurs, touche celui que tu veux viser.' },
-    { s: '.hprow', t: 'Ta vie', x: 'Cette barre rouge, c’est ce qu’il te reste de vie. Le petit blason à côté porte ton niveau.' },
-    { s: '#aps', t: 'Tes actions', x: 'Ces deux losanges d’or sont tes <b>actions</b>. Frapper ou parer en coûte une.' },
-    { s: '#bstrike', t: 'Frapper', x: 'Ta lame contre l’ennemi visé.<br>Quand un ennemi baisse sa garde, ce bouton se couvre d’<b class="g-y">or</b> et devient <b class="g-y">Critique</b>. Ne laisse pas passer ta chance.' },
-    { s: '#bparry', t: 'Parer', x: 'Quand un ennemi rassemble ses forces pour un grand coup, ce bouton s’embrase de <b class="g-c">bleu</b>.<br>Pare à cet instant : le coup est brisé, et tu ripostes.' },
-    { s: '#dhand', t: 'Tes dés', x: 'À chaque tour, tu tires <b>trois dés</b> de ton sac. Touche un dé pour le choisir, <b>retouche-le pour le jouer</b> : il agit aussitôt, et ne coûte rien. La ligne du haut te dit toujours ce qu’il fera.' },
-    { s: '#dfigw', t: 'Les figures', x: 'Les <b>trois premiers dés</b> que tu joues dans un tour s’inscrivent ici. Deux pareils font une <b>Paire</b>, trois qui se suivent une <b>Suite</b>, trois pareils un <b>Brelan</b>. Plus la figure est rare, plus elle paie.' },
-    { s: '.skills', t: 'Tes pouvoirs', x: 'Tes pouvoirs se nourrissent d’un dé, pas d’une action. L’étiquette dit lequel ils réclament. Quand ton dé convient, le cadre <b class="g-g">s’illumine</b>.' },
-    { s: '#tpass', t: 'Fin du tour', x: 'Quand tu as tout joué, rends la main. Les ennemis agiront.' },
-    { s: '[data-act=runMenu]', t: 'Le menu', x: 'L’aide, la vitesse, le jeu automatique et la posture dorment ici. Tu pourras m’y rappeler.' },
-    { t: 'Va, maintenant', x: 'Frappe juste, joue tes dés… et <b class="g-c">guette la lueur bleue</b>.', btn: 'Au combat' }
+    { t: 'Ton premier combat', x: 'Écoute-moi bien, voyageur. Ici, chacun frappe à son tour : <b>toi d’abord</b>, puis tes ennemis. Essaie, je te guide.', btn: 'Montre-moi' },
+    { s: '.dhand .hd', t: 'Joue un dé', x: 'À chaque tour, tu tires <b>trois dés</b>. <b>Touche celui-ci</b> : il agit aussitôt. Le petit mot dessous dit ce qu’il fait.', tap: 1 },
+    { s: '.unit.en', t: 'L’ennemi', x: 'Sous son nom, il trahit <b>ce qu’il va faire</b> : un glaive et un nombre, il frappera pour autant.' },
+    { s: '.skills', t: 'Tes pouvoirs', x: 'Un pouvoir se nourrit d’un dé. Quand son cadre <b class="g-g">s’illumine</b>, touche-le : il prend le bon dé tout seul.' },
+    { s: '#bstrike', t: 'Frapper et parer', x: 'Tes dés joués, tes <b>deux actions</b> frappent, toutes seules si rien ne menace.<br>Quand un ennemi rassemble ses forces, <b class="g-c">Parer</b> s’embrase de bleu : pare, et son coup se brise.', btn: 'Au combat' }
   ];
   // Rappels qui apparaissent une seule fois, au bon moment
   var ONCE = {
@@ -8895,7 +8911,12 @@ UI.guide = (function () {
       e.stopPropagation();
       if (e.target.closest('.g-skip')) { SND.play('click'); close(); return; }
       if (e.target.closest('.g-next')) { SND.play('click'); next(); return; }
-      var st = steps[idx]; if (st && st.tap && e.target.closest('.g-hole')) { var el = target(st); close(); if (el) el.click(); }
+      var st = steps[idx]; if (st && st.tap && e.target.closest('.g-hole')) {
+        var el = target(st);
+        // étape à faire soi-même : l'action se joue, puis la Veilleuse reprend après un court instant
+        if (idx < steps.length - 1) { root.classList.remove('on', 'pop'); if (el) el.click(); setTimeout(function () { if (!isOpen) return; root.classList.add('on'); next(); }, 1100); }
+        else { close(); if (el) el.click(); }
+      }
     });
     window.addEventListener('resize', function () { if (isOpen) place(); });
   }
@@ -8908,6 +8929,7 @@ UI.guide = (function () {
     var many = steps.length > 1, d = ''; if (many) for (var i = 0; i < steps.length; i++) d += '<i class="' + (i === idx ? 'on' : '') + '"></i>';
     bub.querySelector('.g-dots').innerHTML = d;
     bub.querySelector('.g-next').textContent = st.btn || (idx < steps.length - 1 ? 'Suivant' : 'Compris');
+    bub.querySelector('.g-next').style.display = st.tap && many ? 'none' : ''; // étape à faire soi-même : pas de bouton, on touche l'élément
     bub.querySelector('.g-skip').style.display = many && idx < steps.length - 1 ? '' : 'none';
     root.classList.toggle('tap', !!st.tap);
     if (!el) { root.classList.add('center'); hole.style.cssText = ''; bub.style.top = ''; bub.style.bottom = ''; return; }

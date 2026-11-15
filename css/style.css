@@ -1197,3 +1197,9 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 .bigact.cool b { margin-right: 26px; }
 .gifts.compact { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; } .gifts.compact .li { margin: 0; padding: 4px 6px; gap: 6px; min-height: 0; }
 .gifts.compact .li .small { display: none; } .gifts.compact .li b { font-size: 11.5px; line-height: 1.2; } .gifts.compact .li .ic { transform: scale(.8); }
+/* v4.8 : un mot sous chaque dé, mode Retourne */
+.hd .dcap { display: block; margin-top: 3px; font-size: 10.5px; line-height: 11px; font-weight: 700; letter-spacing: .02em; color: #e2d8ef; text-align: center; white-space: nowrap; }
+.hd.flipme .tdie { animation: pulse .5s infinite alternate; box-shadow: 0 0 0 2px #7fd0ff, 0 0 12px #7fd0ff; }
+.dtool.dfl.on { box-shadow: 0 0 0 2px #7fd0ff, 0 0 12px #7fd0ff88; }
+/* v4.8 : premiers combats épurés */
+#app.novice #dre, #app.novice #dfl, #app.novice #dbag, #app.novice #primes { visibility: hidden; }

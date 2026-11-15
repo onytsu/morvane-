@@ -5,6 +5,8 @@ UI.run = (function () {
   var running = false, paused = false, last = 0, shownPhase = null, phaseTimer = null, els = {}, posOf = {}, floats = 0, built = null, fxL = null, lootShown = 0, combo = 0, comboT = null;
   // v2.0 : lumière, orbes, projectiles, primes
   var vfx = null, orbEls = {}, shotEls = {}, stopT = 0, primeKey = '', wiping = false, stepT = 0, lastTurn = '', moving = false, diceKey = '', selDie = -1, trayKey = '', lastPlaced = -1, figLine = null, handRoll = false, diceMode = null;
+  var DCAP = { lame: 'frappe', garde: 'bouclier', seve: 'soin', echo: 'renfort', miroir: 'copie', braise: 'brûle', venin: 'poison', foudre: 'tous', astre: 'ultime' };
+  var flipMode = false;
   var DSHORT = { lame: 'frappe', garde: 'protège', seve: 'soigne', echo: 'renforce le reste de ta main', miroir: 'copie le dernier dé joué', braise: 'frappe et brûle', venin: 'empoisonne', foudre: 'frappe tous', astre: 'charge l’ultime' };
   var RANGED = { pyro: 'fire', necro: 'dark', chasseuse: 'blade', pretresse: 'holy' };
   var ORB = { gold: '💰', heal: '❤️', ult: '🌟', fury: '🔥' };
@@ -206,14 +208,16 @@ UI.run = (function () {
     var tr = $('#dtray'); if (!tr) return;
     var c = run.phase === 'combat' && run.combat && !run.combat.over ? run.combat : null, mine = !!c && c.turn === 'hero', auto = !!S().settings.auto, i;
     if (c && selDie >= c.hand.length) selDie = -1;
-    var key = !c ? 'x' + run.bag.length : [mine ? 1 : 0, selDie, c.rerolls, c.flips, auto ? 1 : 0, figLine ? 1 : 0, (c.played || []).join(''), c.dfx && c.dfx.id, c.lastT, c.hand.map(function (d) { return d.t + d.v + (d.fire ? 'f' : '') + (d.ice ? 'i' : '') + (d.up ? 'u' : ''); }).join(','), c.hero.ap].join('|');
+    if (!c || !mine || !(c.flips > 0)) flipMode = false;
+    var key = !c ? 'x' + run.bag.length : [mine ? 1 : 0, flipMode ? 'F' : selDie, c.rerolls, c.flips, auto ? 1 : 0, figLine ? 1 : 0, (c.played || []).join(''), c.dfx && c.dfx.id, c.lastT, c.hand.map(function (d) { return d.t + d.v + (d.fire ? 'f' : '') + (d.ice ? 'i' : '') + (d.up ? 'u' : ''); }).join(','), c.hero.ap].join('|');
     if (key === trayKey) return; trayKey = key;
     tr.className = 'dtray' + (!c ? ' idle' : mine ? '' : ' wait');
     $('#dbag').lastChild.textContent = run.bag.length;
     var re = $('#dre'), canRe = mine && c.hand.length > 0 && c.rerolls > 0; re.lastChild.textContent = c ? c.rerolls : ''; re.classList.toggle('off', !canRe);
     var fl = $('#dfl'); fl.lastChild.textContent = c ? (c.flips || 0) : ''; fl.classList.toggle('off', !(mine && c.hand.length > 0 && c.flips > 0));
+    fl.classList.toggle('on', flipMode);
     var hh = '';
-    if (c && c.hand.length) c.hand.forEach(function (d, k) { hh += '<button class="hd' + (k === selDie && mine && !auto ? ' sel' : '') + (handRoll ? ' roll' : '') + '" style="animation-delay:' + (k * 0.06) + 's" data-act="hdie" data-i="' + k + '">' + tdie(d.t, d.v, (d.fire ? ' fire' : '') + (d.ice ? ' ice' : '') + (d.up ? ' up' : '')) + '</button>'; });
+    if (c && c.hand.length) c.hand.forEach(function (d, k) { hh += '<button class="hd' + (flipMode && mine ? ' flipme' : '') + (handRoll ? ' roll' : '') + '" style="animation-delay:' + (k * 0.06) + 's" data-act="hdie" data-i="' + k + '">' + tdie(d.t, d.v, (d.fire ? ' fire' : '') + (d.ice ? ' ice' : '') + (d.up ? ' up' : '')) + '<span class="dcap">' + (DCAP[d.t] || '') + '</span></button>'; });
     else hh = '<span class="dnone">' + (c ? (mine ? 'Tous tes dés sont joués' : 'Les ennemis jouent...') : '🎲 Ton sac : ' + run.bag.length + ' dés') + '</span>';
     $('#dhand').innerHTML = hh; handRoll = false;
     // la figure du tour : 3 cases qui se remplissent avec la valeur de chaque dé joué
@@ -231,7 +235,8 @@ UI.run = (function () {
       var pv = E.dieCalc(selDie), what = sd.t === 'echo' ? (c.hand.length > 1 ? 'donne +' + Math.ceil(sd.v / 2) + ' aux autres dés' : 'charge ton ultime') : sd.t === 'miroir' ? 'copie ' + D.DICE[pv.t].name : DSHORT[sd.t];
       hint = '<b class="t-' + sd.t + '">' + D.DICE[sd.t].name + ' ' + (pv && pv.v !== sd.v ? pv.v : sd.v) + '</b> ' + what + (sd.fire ? ' · <b class="t-braise">en feu : -3 % PV</b>' : sd.ice ? ' · <b class="t-garde">gelé</b> (⇅ le dégèle)' : '') + ' <i>›</i> <u>retouche pour jouer</u>';
     }
-    else if (c.hand.length) hint = 'Touche un <u>dé</u> pour le choisir' + (c.hero.ap > 0 ? ' · joue tes dés avant de frapper' : ' · ou termine ton tour');
+    else if (flipMode) hint = '⇅ Touche le dé à <u>retourner</u>';
+    else if (c.hand.length) hint = 'Touche un <u>dé</u> pour le jouer · ou un <u>pouvoir</u>' + (c.hero.ap > 0 ? ', puis frappe' : '');
     else hint = c.hero.ap > 0 ? 'Dés joués · frappe, pare, ou termine ton tour' : 'Il ne te reste plus qu’à <u>terminer ton tour</u>';
     var dh = $('#dhint'); if (dh) dh.innerHTML = hint;
   }
@@ -241,8 +246,10 @@ UI.run = (function () {
     var run = S().run, c = run && run.combat, i = +d.i; if (!c || !c.hand[i]) return;
     if (c.turn !== 'hero' || S().settings.auto) { dieInfo(c.hand[i].t, c.hand[i].v, (c.hand[i].fire ? '<br>🔥 <b>Dé enflammé</b> : le jouer te coûte 3 % de tes PV.' : '') + (c.hand[i].ice ? '<br>❄️ <b>Dé gelé</b> : tu es entravé, ton meilleur dé est tombé à 1. ⇅ Retourner le dégèle.' : '')); trayKey = ''; return; }
     if (performance.now() - lastPlay < 280) return;
-    if (i === selDie) { lastPlay = performance.now(); selDie = -1; if (!E.playDie(i)) SND.play('error'); }
-    else { selDie = i; SND.play('click', 0.6); }
+    // v4.8 : un seul toucher joue le dé. En mode Retourne, il est retourné à la place.
+    selDie = -1;
+    if (flipMode) { flipMode = false; if (E.flipDie(i)) { SND.play('equip', 0.7); handRoll = false; } else SND.play('error'); trayKey = ''; return; }
+    lastPlay = performance.now(); if (!E.playDie(i)) SND.play('error');
     trayKey = '';
   };
   ACT.dreroll = function () {
@@ -252,8 +259,7 @@ UI.run = (function () {
   };
   ACT.dflip = function () {
     var run = S().run, c = run && run.combat;
-    if (c && c.turn === 'hero' && c.hand.length && !c.hand[selDie]) { UI.toast('⇅ Choisis d’abord le dé à retourner.'); return; }
-    if (c && myTurn() && E.flipDie(selDie)) { SND.play('equip', 0.7); handRoll = false; trayKey = ''; return; }
+    if (c && c.turn === 'hero' && c.hand.length && c.flips > 0 && !S().settings.auto) { flipMode = !flipMode; SND.play('click'); trayKey = ''; if (flipMode) tuto('flip1', '⇅ Touche maintenant le dé à <b>retourner</b> : 1↔6, 2↔5, 3↔4.'); return; }
     UI.toast('⇅ <b>Retourner.</b> Retourne le dé choisi sur sa face opposée : 1↔6, 2↔5, 3↔4. Pratique pour compléter une figure ou la condition d’un pouvoir. ' + (c ? (c.flips > 0 ? 'Une fois par tour.' : 'Déjà utilisé ce tour.') : 'Une fois par tour.'), true);
   };
   function bagSheet() {
@@ -394,7 +400,7 @@ UI.run = (function () {
         case 'potion': SND.play('potion'); break;
         case 'die': if (el) { var dp = center(el); if (vfx && dp) VFX.death(vfx, dp.x, dp.y, e.boss); souls(el, e.boss ? 12 : 3, e.boss ? 10 : 3); dropGems(c, el); el.classList.add('dead'); el.classList.remove('charging'); } SND.play(e.boss ? 'boss_die' : 'die'); if (e.boss) { UI.flash('#ffffffaa'); anim($('#arena'), 'shake', 250); hitstop(160); UI.vib([40, 40, 120]); } break;
         case 'pturn': var fgp = $('#cdice'); if (fgp) fgp.innerHTML = ''; if (e.n === 2) tuto('intent', '👁️ <b>Intentions.</b> Sous le nom de chaque ennemi : ce qu’il fera à son tour. ⚔️ 12 = il frappera pour 12 · ⚠️ = il charge un gros coup · 💤 = il ne fera rien.'); anim($('#aps'), 'bump', 300); if (e.n > 1) { floatAt(hero, 'À toi', 'txt'); } document.querySelectorAll('.unit.en.acting').forEach(function (x) { x.classList.remove('acting'); }); break;
-        case 'draw': handRoll = true; trayKey = ''; if (!e.again) selDie = -1; SND.play('click', 0.8); setTimeout(function () { SND.play('click', 0.6); }, 90); tuto('dice4', '🎲 <b>Tes dés.</b> À chaque tour tu pioches 3 dés. Touche un dé pour le choisir, <b>retouche-le pour le jouer</b> : il agit tout de suite, sans coûter d’action. Ou glisse-le dans un <b>pouvoir</b>.<br>Les 3 dés joués forment peut-être une <b>figure</b> : Paire, Suite (2-3-4) ou Brelan.'); break;
+        case 'draw': handRoll = true; trayKey = ''; if (!e.again) selDie = -1; SND.play('click', 0.8); setTimeout(function () { SND.play('click', 0.6); }, 90); tuto('dice4', '🎲 <b>Tes dés.</b> À chaque tour tu pioches 3 dés. <b>Touche un dé</b> : il agit tout de suite, sans coûter d’action. Ou touche un <b>pouvoir</b> : il prend le bon dé tout seul.<br>Les 3 dés joués forment peut-être une <b>figure</b> : Paire, Suite (2-3-4) ou Brelan.'); break;
         case 'slot': anim($('#sk' + e.i), 'fire', 300); SND.play('equip', 0.6); trayKey = ''; tuto('slot2', '🎲 <b>Dé glissé dans un pouvoir.</b> Plus le dé est fort, plus le pouvoir frappe : un 5 vaut 100 %, un 6 vaut 110 %, un 1 vaut 60 %. Les pouvoirs d’appui, eux, se contentent d’un petit dé.'); break;
         case 'flip': trayKey = ''; break;
         case 'place': SND.play(e.t === 'garde' ? 'block' : e.t === 'echo' || e.mir ? 'equip' : 'click', 0.7); if (e.t === 'echo') floatAt(hero, '✨ Écho', 'txt'); else if (e.mir) floatAt(hero, '🪞 Miroir', 'txt'); break;
@@ -451,6 +457,8 @@ UI.run = (function () {
   }
   function stIcons(st) { return (st.burn ? '🔥' : '') + (st.poison ? '☠️' + (st.poison.n > 1 ? st.poison.n : '') : '') + (st.bleed ? '🩸' : '') + (st.stun > 0 ? '💫' : '') + (st.weak > 0 ? '⬇️' : '') + (st.slow > 0 ? '🕸️' : '') + (st.vuln > 0 ? '🎯' : ''); }
   function updateHud() {
+    // v4.8 : les outils arrivent au fil du jeu. Les premiers combats n'ont que les dés, les pouvoirs, Frapper et Parer.
+    var nov = (S().stats.kills || 0) < 3, app = $('#app'); if (app.classList.contains('novice') !== nov) { app.classList.toggle('novice', nov); if (!nov && S().run && S().run.combat) tuto('tools', '🎲 <b>Nouveaux outils.</b> <b>Relance</b> relance ta main (une fois par combat), <b>Retourne</b> met un dé sur sa face opposée (une fois par tour). Les <b>primes</b> en haut paient des petits objectifs.'); }
     var run = S().run; if (!run) return; var c = run.combat, stt = run.stats, z = E.zoneOf(run.floor), pos = ((run.floor - 1) % 10) + 1, i;
     var key = run.floor + '|' + run.gold + '|' + run.cendres + '|' + run.lvl + '|' + Object.keys(run.boons).length + run.artifacts.length + '|' + run.evos.length;
     if (updateHud.key !== key) {
@@ -533,6 +541,15 @@ UI.run = (function () {
     var m = $('#minions'), n = c.hero.skel || 0;
     if (m && m.children.length !== n) { var h = ''; for (var i = 0; i < n; i++) h += UI.spr('serviteur'); m.innerHTML = h; }
   }
+  // v4.8 : main vide et rien à décider (pas de charge, de point faible, de crâne, de gros coup en vue) : les actions restantes frappent seules
+  var autoT = 0;
+  function autoStrikeOk(run, c) {
+    if (c.turn !== 'hero' || c.over || c.hand.length || c.hero.ap <= 0 || c.weak || (c.shots && c.shots.length)) return false;
+    var threat = 0, ch = false; c.enemies.forEach(function (e) { if (e.dead) return; if (e.charge) ch = true; });
+    if (ch) return false;
+    E.intents().forEach(function (it) { threat += (it.dmg || 0) * (it.n || 1); });
+    return threat < run.stats.hp * 0.15;
+  }
   function frame(ts) {
     if (!running) return;
     var dt = Math.min(0.1, (ts - last) / 1000); last = ts;
@@ -549,7 +566,8 @@ UI.run = (function () {
           if (stepT <= 0) {
             if (c.turn === 'foes') stepT = E.foeStep() ? 0.42 : 0.25;
             else if (S().settings.auto) { E.autoAct(); stepT = 0.5; }
-            else stepT = 0;
+            else if (autoStrikeOk(run, c)) { autoT += dt; if (autoT > 0.6) { autoT = 0.15; if (E.strike()) tuto('autostrike', '⚔️ Plus de dé en main : tes actions restantes <b>frappent toutes seules</b>. Quand un ennemi charge ou montre un point faible, c’est toi qui décides.'); } stepT = 0; }
+            else { autoT = 0; stepT = 0; }
           }
         }
       }
@@ -848,7 +866,7 @@ UI.run = (function () {
     if (c.hero.cds[i] > 0) { SND.play('error'); UI.toast(k.icon + ' <b>' + k.name + '</b> se recharge : encore ' + E.turns(c.hero.cds[i]) + ' tour' + (E.turns(c.hero.cds[i]) > 1 ? 's' : '') + '.'); return; }
     if (!c.hand.length) { SND.play('error'); UI.toast('🎲 Plus de dé en main. Un pouvoir se lance en y glissant <b>' + nd.txt + '</b> : garde-en un au prochain tour.', true); return; }
     if (!c.hand[selDie]) { var bd = E.bestDie(i); if (bd >= 0) { E.useSkill(i, bd); return; } }
-    if (!E.dieFits(i, selDie)) { SND.play('error'); var alt = E.bestDie(i); UI.toast(k.icon + ' <b>' + k.name + '</b> demande <b>' + nd.txt + '</b>.' + (alt >= 0 ? ' Choisis d’abord ce dé dans ta main.' : c.flips > 0 ? ' Essaie de ⇅ retourner un dé.' : ' Aucun dé ne convient ce tour.'), true); if (alt >= 0) { selDie = alt; trayKey = ''; } return; }
+    if (!E.dieFits(i, selDie)) { SND.play('error'); var alt = E.bestDie(i); UI.toast(k.icon + ' <b>' + k.name + '</b> demande <b>' + nd.txt + '</b>.' + (c.flips > 0 ? ' Essaie de ⇅ retourner un dé.' : ' Aucun dé ne convient ce tour.'), true); return; }
     E.useSkill(i, selDie);
   };
   ACT.potion = function () { var run = S().run; if (!run) return; if (E.usePotion()) { if (!run.combat || run.phase !== 'combat') SND.play('potion'); } else SND.play('error'); };
@@ -897,7 +915,7 @@ UI.run = (function () {
     }
     h += '<div class="li on"><div class="ic">✨</div><div class="grow"><b>Éveils de pouvoir</b><div class="small dim">Tous les 4 niveaux d’une descente (4, 8, 12...), tu fais évoluer un de tes pouvoirs. Un ✦ sur le bouton montre qu’il est éveillé.</div></div></div>';
     h += '<div class="li on"><div class="ic">🎲</div><div class="grow"><b>Tour par tour</b><div class="small dim">À ton tour tu as <b>2 actions ⚡</b>. Frapper, parer, toucher un point faible ou renvoyer un crâne coûtent 1 action. Les pouvoirs, eux, se paient avec un dé. L’ultime, la fiole, la posture et les orbes sont gratuits. Ensuite chaque ennemi joue, l’un après l’autre.</div></div></div>';
-    h += '<div class="li on"><div class="ic">🎒</div><div class="grow"><b>Dés de combat</b><div class="small dim">À chaque tour tu pioches <b>3 dés</b>. Touche un dé pour le choisir, <b>retouche-le pour le jouer</b> : il agit tout de suite, <b>sans coûter d’action</b>. Ou glisse-le dans un <b>pouvoir</b> : chacun affiche le dé qu’il demande (≤3, PAIR, ≥4...), et plus le dé est fort, plus le pouvoir l’est.<br>⚔️ Lame frappe · 🛡️ Garde protège · ❤️ Sève soigne · ✨ Écho renforce le reste de ta main · 🪞 Miroir copie le dernier dé joué<br><b>Figures</b> : les 3 premiers dés joués du tour. 🎲 Paire (+30 % dégâts) · ✨ Suite 2-3-4 (+1 action, prochain coup critique) · 👑 Brelan (+1 action, coups critiques).<br>⇅ <b>Retourner</b> change un dé en sa face opposée, une fois par tour. ↻ relance ta main : 1 fois par combat.</div><div class="btns" style="margin-top:6px"><button class="btn sm" data-act="bag">🎒 Mon sac et les figures</button></div></div></div>';
+    h += '<div class="li on"><div class="ic">🎒</div><div class="grow"><b>Dés de combat</b><div class="small dim">À chaque tour tu pioches <b>3 dés</b>. <b>Touche un dé</b> : il agit tout de suite, <b>sans coûter d’action</b>. Ou touche un <b>pouvoir</b> : il prend le meilleur dé qui convient. Chacun affiche le dé qu’il demande (≤3, PAIR, ≥4...), et plus le dé est fort, plus le pouvoir l’est.<br>⚔️ Lame frappe · 🛡️ Garde protège · ❤️ Sève soigne · ✨ Écho renforce le reste de ta main · 🪞 Miroir copie le dernier dé joué<br><b>Figures</b> : les 3 premiers dés joués du tour. 🎲 Paire (+30 % dégâts) · ✨ Suite 2-3-4 (+1 action, prochain coup critique) · 👑 Brelan (+1 action, coups critiques).<br>⇅ <b>Retourner</b> change un dé en sa face opposée, une fois par tour. ↻ relance ta main : 1 fois par combat.</div><div class="btns" style="margin-top:6px"><button class="btn sm" data-act="bag">🎒 Mon sac et les figures</button></div></div></div>';
     h += '<div class="li on"><div class="ic">👁️</div><div class="grow"><b>Intentions</b><div class="small dim">Sous le nom de chaque ennemi, ce qu’il fera à son tour : ⚔️ 12 il frappe pour 12 · 💥 gros coup · ⚠️ il charge (étourdis-le ou pare) · 💤 rien · ✚ soin · 👥 renfort.</div></div></div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les autres boutons</h3>' +
       '<div class="li"><div class="ic">⚔️</div><div class="grow"><b>Frapper</b><div class="small dim">Attaque l’ennemi visé (▼). Plus ta vitesse d’attaque est haute, plus tu donnes de coups par action. Toucher un ennemi le vise ; le toucher encore le frappe.</div></div></div>' +

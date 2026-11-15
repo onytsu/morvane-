@@ -5,18 +5,11 @@ UI.guide = (function () {
 
   // Tutoriel du premier combat, raconté par la Veilleuse
   var FIGHT = [
-    { t: 'Ton premier combat', x: 'Écoute-moi bien, voyageur. Ici, chacun frappe à son tour : <b>toi d’abord</b>, puis tes ennemis. Laisse-moi te montrer.' },
-    { s: '.unit.en', t: 'L’ennemi', x: 'Au-dessus de sa tête, il trahit <b>ce qu’il va faire</b>. Un glaive et un nombre : il frappera pour autant.<br>S’ils sont plusieurs, touche celui que tu veux viser.' },
-    { s: '.hprow', t: 'Ta vie', x: 'Cette barre rouge, c’est ce qu’il te reste de vie. Le petit blason à côté porte ton niveau.' },
-    { s: '#aps', t: 'Tes actions', x: 'Ces deux losanges d’or sont tes <b>actions</b>. Frapper ou parer en coûte une.' },
-    { s: '#bstrike', t: 'Frapper', x: 'Ta lame contre l’ennemi visé.<br>Quand un ennemi baisse sa garde, ce bouton se couvre d’<b class="g-y">or</b> et devient <b class="g-y">Critique</b>. Ne laisse pas passer ta chance.' },
-    { s: '#bparry', t: 'Parer', x: 'Quand un ennemi rassemble ses forces pour un grand coup, ce bouton s’embrase de <b class="g-c">bleu</b>.<br>Pare à cet instant : le coup est brisé, et tu ripostes.' },
-    { s: '#dhand', t: 'Tes dés', x: 'À chaque tour, tu tires <b>trois dés</b> de ton sac. Touche un dé pour le choisir, <b>retouche-le pour le jouer</b> : il agit aussitôt, et ne coûte rien. La ligne du haut te dit toujours ce qu’il fera.' },
-    { s: '#dfigw', t: 'Les figures', x: 'Les <b>trois premiers dés</b> que tu joues dans un tour s’inscrivent ici. Deux pareils font une <b>Paire</b>, trois qui se suivent une <b>Suite</b>, trois pareils un <b>Brelan</b>. Plus la figure est rare, plus elle paie.' },
-    { s: '.skills', t: 'Tes pouvoirs', x: 'Tes pouvoirs se nourrissent d’un dé, pas d’une action. L’étiquette dit lequel ils réclament. Quand ton dé convient, le cadre <b class="g-g">s’illumine</b>.' },
-    { s: '#tpass', t: 'Fin du tour', x: 'Quand tu as tout joué, rends la main. Les ennemis agiront.' },
-    { s: '[data-act=runMenu]', t: 'Le menu', x: 'L’aide, la vitesse, le jeu automatique et la posture dorment ici. Tu pourras m’y rappeler.' },
-    { t: 'Va, maintenant', x: 'Frappe juste, joue tes dés… et <b class="g-c">guette la lueur bleue</b>.', btn: 'Au combat' }
+    { t: 'Ton premier combat', x: 'Écoute-moi bien, voyageur. Ici, chacun frappe à son tour : <b>toi d’abord</b>, puis tes ennemis. Essaie, je te guide.', btn: 'Montre-moi' },
+    { s: '.dhand .hd', t: 'Joue un dé', x: 'À chaque tour, tu tires <b>trois dés</b>. <b>Touche celui-ci</b> : il agit aussitôt. Le petit mot dessous dit ce qu’il fait.', tap: 1 },
+    { s: '.unit.en', t: 'L’ennemi', x: 'Sous son nom, il trahit <b>ce qu’il va faire</b> : un glaive et un nombre, il frappera pour autant.' },
+    { s: '.skills', t: 'Tes pouvoirs', x: 'Un pouvoir se nourrit d’un dé. Quand son cadre <b class="g-g">s’illumine</b>, touche-le : il prend le bon dé tout seul.' },
+    { s: '#bstrike', t: 'Frapper et parer', x: 'Tes dés joués, tes <b>deux actions</b> frappent, toutes seules si rien ne menace.<br>Quand un ennemi rassemble ses forces, <b class="g-c">Parer</b> s’embrase de bleu : pare, et son coup se brise.', btn: 'Au combat' }
   ];
   // Rappels qui apparaissent une seule fois, au bon moment
   var ONCE = {
@@ -55,7 +48,12 @@ UI.guide = (function () {
       e.stopPropagation();
       if (e.target.closest('.g-skip')) { SND.play('click'); close(); return; }
       if (e.target.closest('.g-next')) { SND.play('click'); next(); return; }
-      var st = steps[idx]; if (st && st.tap && e.target.closest('.g-hole')) { var el = target(st); close(); if (el) el.click(); }
+      var st = steps[idx]; if (st && st.tap && e.target.closest('.g-hole')) {
+        var el = target(st);
+        // étape à faire soi-même : l'action se joue, puis la Veilleuse reprend après un court instant
+        if (idx < steps.length - 1) { root.classList.remove('on', 'pop'); if (el) el.click(); setTimeout(function () { if (!isOpen) return; root.classList.add('on'); next(); }, 1100); }
+        else { close(); if (el) el.click(); }
+      }
     });
     window.addEventListener('resize', function () { if (isOpen) place(); });
   }
@@ -68,6 +66,7 @@ UI.guide = (function () {
     var many = steps.length > 1, d = ''; if (many) for (var i = 0; i < steps.length; i++) d += '<i class="' + (i === idx ? 'on' : '') + '"></i>';
     bub.querySelector('.g-dots').innerHTML = d;
     bub.querySelector('.g-next').textContent = st.btn || (idx < steps.length - 1 ? 'Suivant' : 'Compris');
+    bub.querySelector('.g-next').style.display = st.tap && many ? 'none' : ''; // étape à faire soi-même : pas de bouton, on touche l'élément
     bub.querySelector('.g-skip').style.display = many && idx < steps.length - 1 ? '' : 'none';
     root.classList.toggle('tap', !!st.tap);
     if (!el) { root.classList.add('center'); hole.style.cssText = ''; bub.style.top = ''; bub.style.bottom = ''; return; }

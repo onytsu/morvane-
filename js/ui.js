@@ -160,7 +160,7 @@ var UI = (function () {
   ACT.enter = function () {
     SND.unlock(); SND.play('door');
     if (!S().stats.runs && !S().run) {
-      modal('<h2>La descente</h2><p class="center">Le Roi Creux a éteint le monde. Six royaumes pourrissent sous la terre de Morvane.</p><p class="center">Descends. Meurs. <b>Garde ton butin.</b> Reviens plus fort.</p><p class="center dim small">Le combat se joue au tour par tour.<br>Un petit tutoriel te guidera au premier combat.</p><div class="btns"><button class="btn primary big" data-act="firstRun">DESCENDRE</button></div>', true);
+      ACT.firstRun(); // le prologue explique tout : plus de fenêtre avant
       return;
     }
     if (S().run) { UI.run.show(); return; }
