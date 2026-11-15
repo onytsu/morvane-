@@ -117,12 +117,12 @@ h3 { font-size: 15px; }
 .arena::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--zc, #888) 16%, transparent), transparent 65%); pointer-events: none; }
 .arena.shake { animation: shake .25s; }
 .unit { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 2; }
-.unit img { display: block; filter: drop-shadow(0 5px 4px #000b); }
+.unit img { display: block; }
 .unit .emo { font-size: 54px; line-height: 1; }
 .unit.hero { left: 5%; bottom: 24%; } .unit.hero img { width: 120px; height: 120px; }
 .unit.hero.atk img { animation: lunge .22s; } .unit.hero.hit img { animation: hitL .25s; }
-.unit.en img { width: 100px; height: 100px; transform-origin: 50% 100%; animation: ebob 2.2s ease-in-out var(--bd, 0s) infinite; }
-.unit.en.elite img { width: 132px; height: 132px; } .unit.en.boss img { width: 192px; height: 192px; }
+.unit.en img { width: 96px; height: 96px; transform-origin: 50% 100%; animation: ebob 2.2s ease-in-out var(--bd, 0s) infinite; }
+.unit.en.elite img { width: 128px; height: 128px; } .unit.en.boss img { width: 192px; height: 192px; }
 .unit.en.atk img { animation: lungeL .25s; } .unit.en.hit img { animation: hitR .22s; filter: brightness(2.2) drop-shadow(0 5px 4px #000b); }
 .unit.en.dead { animation: die .5s forwards; pointer-events: none; }
 .unit.en.spawn { animation: spawn .4s; }
@@ -445,7 +445,7 @@ h3.gold, h3 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
 @keyframes shake { 20% { transform: translate(-7px, 3px) rotate(-.4deg); } 45% { transform: translate(6px, -4px) rotate(.4deg); } 70% { transform: translate(-4px, 2px); } }
 
 /* unités */
-.unit img { filter: drop-shadow(0 6px 5px #000c); }
+/* plus d’ombre portée permanente sur les sprites : Safari les lissait (flou). L’ombre au sol (.unit::before) suffit. */
 .unit::before { left: 6%; right: 6%; bottom: 2px; height: 18px; background: radial-gradient(#000e, #0007 45%, transparent 72%); }
 .unit.hero::after { content: ''; position: absolute; left: -45%; right: -45%; top: -25%; bottom: -30%; z-index: -2; pointer-events: none; background: radial-gradient(closest-side, #ffd9a02e, #ffd9a010 55%, transparent); mix-blend-mode: screen; animation: flicker 3s ease-in-out infinite; }
 .unit.hero.enter { animation: enter .75s cubic-bezier(.2, .9, .3, 1) backwards; }

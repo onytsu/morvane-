@@ -798,7 +798,9 @@ function url(id) {
     if (typeof document === 'undefined' || !document.createElement) return EMPTY;
     var p = pixels(id), cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     var ctx = cv.getContext('2d'), im = ctx.createImageData(W, H); im.data.set(p.data); ctx.putImageData(im, 0, 0);
-    urlCache[id] = cv.toDataURL('image/png');
+    // livré agrandi ×4, pixels nets (Safari lisse les fonds qui ont un filtre)
+    var c2 = document.createElement('canvas'); c2.width = W * 4; c2.height = H * 4; var x2 = c2.getContext('2d'); x2.imageSmoothingEnabled = false; x2.drawImage(cv, 0, 0, c2.width, c2.height);
+    urlCache[id] = c2.toDataURL('image/png');
     return urlCache[id];
   } catch (e) { return EMPTY; }
 }

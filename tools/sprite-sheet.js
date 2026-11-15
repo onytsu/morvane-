@@ -24,11 +24,11 @@ function png(w, h, rgba) {
 /* ---------- image ---------- */
 function image(w, h, bg) { var d = new Uint8ClampedArray(w * h * 4); for (var i = 0; i < w * h; i++) { d[i * 4] = bg[0]; d[i * 4 + 1] = bg[1]; d[i * 4 + 2] = bg[2]; d[i * 4 + 3] = 255; } return { w: w, h: h, data: d }; }
 function blit(img, id, ox, oy, s) {
-  var p = Sprites.pixels(id);
+  var p = Sprites.pixels(id), f = Sprites.size(id).w / p.w; s = s * f; // sprites tracés en double résolution : s devient fractionnaire
   for (var y = 0; y < p.h; y++) for (var x = 0; x < p.w; x++) {
     var k = (y * p.w + x) * 4, a = p.data[k + 3] / 255; if (!a) continue;
-    for (var j = 0; j < s; j++) for (var i = 0; i < s; i++) {
-      var X = ox + x * s + i, Y = oy + y * s + j; if (X < 0 || Y < 0 || X >= img.w || Y >= img.h) continue;
+    for (var j = 0; j < Math.ceil(s); j++) for (var i = 0; i < Math.ceil(s); i++) {
+      var X = Math.floor(ox + x * s) + i, Y = Math.floor(oy + y * s) + j; if (X < 0 || Y < 0 || X >= img.w || Y >= img.h) continue;
       var q = (Y * img.w + X) * 4;
       img.data[q] = p.data[k] * a + img.data[q] * (1 - a); img.data[q + 1] = p.data[k + 1] * a + img.data[q + 1] * (1 - a); img.data[q + 2] = p.data[k + 2] * a + img.data[q + 2] * (1 - a);
     }
@@ -87,7 +87,7 @@ else {
     if (!Sprites.has(id)) { bad.push(id + ' (absent)'); return; }
     var p = Sprites.pixels(id), s = Sprites.size(id), n = 0;
     for (var i = 3; i < p.data.length; i += 4) if (p.data[i]) n++;
-    if (p.w !== s.w || p.h !== s.h || p.data.length !== p.w * p.h * 4 || n < 20) bad.push(id + ' (pixels)');
+    if (p.w % s.w || p.w / s.w !== p.h / s.h || p.data.length !== p.w * p.h * 4 || n < 20) bad.push(id + ' (pixels)');
   });
   console.log(Sprites.ids.length + ' ids, ' + (bad.length ? 'PROBLEMES : ' + bad.join(', ') : 'tous OK') + ', url sans DOM -> ' + (typeof Sprites.url('logo')));
 }

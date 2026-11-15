@@ -385,8 +385,10 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.6';
+  var VERSION = '4.7';
   var NEWS = [
+    ['🎨', 'Des personnages plus fins', 'Héros et monstres sont dessinés en double résolution : contours plus fins, courbes plus douces, relief et reflets. Les 8 héros et les monstres de la Crypte ont reçu des détails à la main (bouclier bordé d’or, plis des capes, os fêlés...).'],
+    ['🔍', 'Fini le flou', 'Les images arrivent déjà agrandies au pixel près : sur iPhone, les personnages et les décors ne sont plus lissés.'],
     ['🧹', 'Balayer', 'Quand des ennemis ne font pas le poids, un bouton « Balayer le combat » le règle d’un geste, butin compris. Il te rend la main si ça tourne mal.'],
     ['⚡', 'Victoire éclair', 'Le compteur « Tour 1/2 » montre l’objectif (3 tours contre une horde ou une élite) : gagne dans les temps et tu touches +50 % d’or et de Cendres.'],
     ['🗡️', 'Coup de grâce', 'Un ennemi (hors boss) touché sous 12 % de ses PV est achevé d’un coup. Élites et boss ont moins de PV mais frappent plus fort : des combats plus courts et plus tendus.'],

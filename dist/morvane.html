@@ -121,12 +121,12 @@ h3 { font-size: 15px; }
 .arena::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--zc, #888) 16%, transparent), transparent 65%); pointer-events: none; }
 .arena.shake { animation: shake .25s; }
 .unit { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 2; }
-.unit img { display: block; filter: drop-shadow(0 5px 4px #000b); }
+.unit img { display: block; }
 .unit .emo { font-size: 54px; line-height: 1; }
 .unit.hero { left: 5%; bottom: 24%; } .unit.hero img { width: 120px; height: 120px; }
 .unit.hero.atk img { animation: lunge .22s; } .unit.hero.hit img { animation: hitL .25s; }
-.unit.en img { width: 100px; height: 100px; transform-origin: 50% 100%; animation: ebob 2.2s ease-in-out var(--bd, 0s) infinite; }
-.unit.en.elite img { width: 132px; height: 132px; } .unit.en.boss img { width: 192px; height: 192px; }
+.unit.en img { width: 96px; height: 96px; transform-origin: 50% 100%; animation: ebob 2.2s ease-in-out var(--bd, 0s) infinite; }
+.unit.en.elite img { width: 128px; height: 128px; } .unit.en.boss img { width: 192px; height: 192px; }
 .unit.en.atk img { animation: lungeL .25s; } .unit.en.hit img { animation: hitR .22s; filter: brightness(2.2) drop-shadow(0 5px 4px #000b); }
 .unit.en.dead { animation: die .5s forwards; pointer-events: none; }
 .unit.en.spawn { animation: spawn .4s; }
@@ -449,7 +449,7 @@ h3.gold, h3 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
 @keyframes shake { 20% { transform: translate(-7px, 3px) rotate(-.4deg); } 45% { transform: translate(6px, -4px) rotate(.4deg); } 70% { transform: translate(-4px, 2px); } }
 
 /* unités */
-.unit img { filter: drop-shadow(0 6px 5px #000c); }
+/* plus d’ombre portée permanente sur les sprites : Safari les lissait (flou). L’ombre au sol (.unit::before) suffit. */
 .unit::before { left: 6%; right: 6%; bottom: 2px; height: 18px; background: radial-gradient(#000e, #0007 45%, transparent 72%); }
 .unit.hero::after { content: ''; position: absolute; left: -45%; right: -45%; top: -25%; bottom: -30%; z-index: -2; pointer-events: none; background: radial-gradient(closest-side, #ffd9a02e, #ffd9a010 55%, transparent); mix-blend-mode: screen; animation: flicker 3s ease-in-out infinite; }
 .unit.hero.enter { animation: enter .75s cubic-bezier(.2, .9, .3, 1) backwards; }
@@ -1591,8 +1591,10 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.6';
+  var VERSION = '4.7';
   var NEWS = [
+    ['🎨', 'Des personnages plus fins', 'Héros et monstres sont dessinés en double résolution : contours plus fins, courbes plus douces, relief et reflets. Les 8 héros et les monstres de la Crypte ont reçu des détails à la main (bouclier bordé d’or, plis des capes, os fêlés...).'],
+    ['🔍', 'Fini le flou', 'Les images arrivent déjà agrandies au pixel près : sur iPhone, les personnages et les décors ne sont plus lissés.'],
     ['🧹', 'Balayer', 'Quand des ennemis ne font pas le poids, un bouton « Balayer le combat » le règle d’un geste, butin compris. Il te rend la main si ça tourne mal.'],
     ['⚡', 'Victoire éclair', 'Le compteur « Tour 1/2 » montre l’objectif (3 tours contre une horde ou une élite) : gagne dans les temps et tu touches +50 % d’or et de Cendres.'],
     ['🗡️', 'Coup de grâce', 'Un ennemi (hors boss) touché sous 12 % de ses PV est achevé d’un coup. Élites et boss ont moins de PV mais frappent plus fort : des combats plus courts et plus tendus.'],
@@ -3858,6 +3860,11 @@ var RD = '#c81e2c', RP = '#a08a5a';
 
 /* ---------- tampon de dessin courant ---------- */
 var cw = 0, ch = 0, col = null, base = null, flat = null, glow = null;
+/* K : finesse du dessin. Les personnages (v4.7) sont tracés en double résolution : mêmes formes, mêmes coordonnées,
+   mais des courbes plus douces, un contour plus fin et une passe de détail (volume, grain, reflets). */
+var K = 1;
+function blk(x, y, c) { x = Math.round(x) * K; y = Math.round(y) * K; for (var j = 0; j < K; j++) for (var i = 0; i < K; i++) set(x + i, y + j, c); }
+function hx(X) { return (X + 0.5) / K - 0.5; }
 
 function begin(w, h) {
   cw = w; ch = h; col = new Array(w * h); base = new Array(w * h); flat = new Uint8Array(w * h); glow = [];
@@ -3871,26 +3878,29 @@ function set(x, y, c) {
   else { col[i] = c; base[i] = c; flat[i] = 0; }
 }
 /* rectangle */
-function R(x, y, w, h, c) { for (var j = 0; j < h; j++) for (var i = 0; i < w; i++) set(x + i, y + j, c); }
+function R(x, y, w, h, c) { for (var j = 0; j < h; j++) for (var i = 0; i < w; i++) blk(x + i, y + j, c); }
 /* ellipse pleine (centre, rayons) */
 function inE(x, y, cx, cy, rx, ry) { var a = (x - cx) / (rx + 0.5), b = (y - cy) / (ry + 0.5); return a * a + b * b <= 1; }
 function E(cx, cy, rx, ry, c) {
-  for (var y = Math.floor(cy - ry - 1); y <= Math.ceil(cy + ry + 1); y++)
-    for (var x = Math.floor(cx - rx - 1); x <= Math.ceil(cx + rx + 1); x++)
-      if (inE(x, y, cx, cy, rx, ry)) set(x, y, c);
+  for (var y = Math.floor(cy - ry - 1) * K; y < (Math.ceil(cy + ry + 1) + 1) * K; y++)
+    for (var x = Math.floor(cx - rx - 1) * K; x < (Math.ceil(cx + rx + 1) + 1) * K; x++)
+      if (inE(hx(x), hx(y), cx, cy, rx, ry)) set(x, y, c);
 }
 /* anneau (contour d'ellipse) */
 function O(cx, cy, rx, ry, c) {
-  for (var y = Math.floor(cy - ry - 1); y <= Math.ceil(cy + ry + 1); y++)
-    for (var x = Math.floor(cx - rx - 1); x <= Math.ceil(cx + rx + 1); x++)
-      if (inE(x, y, cx, cy, rx, ry) && !(inE(x - 1, y, cx, cy, rx, ry) && inE(x + 1, y, cx, cy, rx, ry) && inE(x, y - 1, cx, cy, rx, ry) && inE(x, y + 1, cx, cy, rx, ry))) set(x, y, c);
+  var d = 1 / K;
+  for (var y = Math.floor(cy - ry - 1) * K; y < (Math.ceil(cy + ry + 1) + 1) * K; y++)
+    for (var x = Math.floor(cx - rx - 1) * K; x < (Math.ceil(cx + rx + 1) + 1) * K; x++) {
+      var u = hx(x), v = hx(y);
+      if (inE(u, v, cx, cy, rx, ry) && !(inE(u - 1, v, cx, cy, rx, ry) && inE(u + 1, v, cx, cy, rx, ry) && inE(u, v - 1, cx, cy, rx, ry) && inE(u, v + 1, cx, cy, rx, ry))) set(x, y, c);
+    }
 }
 /* ligne (epaisseur w) */
 function L(x0, y0, x1, y1, c, w) {
-  w = w || 1; x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1);
-  var dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx - dy, o = Math.floor((w - 1) / 2);
+  var w0 = w || 1; w = w0 * K; x0 = Math.round(x0) * K; y0 = Math.round(y0) * K; x1 = Math.round(x1) * K; y1 = Math.round(y1) * K;
+  var dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx - dy, o = K * Math.floor((w0 - 1) / 2);
   for (;;) {
-    if (w === 1) set(x0, y0, c); else R(x0 - o, y0 - o, w, w, c);
+    if (w === 1) set(x0, y0, c); else for (var lj = 0; lj < w; lj++) for (var li = 0; li < w; li++) set(x0 - o + li, y0 - o + lj, c);
     if (x0 === x1 && y0 === y1) break;
     var e2 = 2 * err; if (e2 > -dy) { err -= dy; x0 += sx; } if (e2 < dx) { err += dx; y0 += sy; }
   }
@@ -3899,13 +3909,13 @@ function L(x0, y0, x1, y1, c, w) {
 function P(c, p) {
   var n = p.length / 2, minx = 1e9, maxx = -1e9, miny = 1e9, maxy = -1e9, i, j;
   for (i = 0; i < n; i++) { minx = Math.min(minx, p[i * 2]); maxx = Math.max(maxx, p[i * 2]); miny = Math.min(miny, p[i * 2 + 1]); maxy = Math.max(maxy, p[i * 2 + 1]); }
-  for (var y = miny; y <= maxy; y++) for (var x = minx; x <= maxx; x++) {
-    var inside = false;
+  for (var Y = Math.floor(miny) * K; Y < (Math.floor(maxy) + 1) * K; Y++) for (var X = Math.floor(minx) * K; X < (Math.floor(maxx) + 1) * K; X++) {
+    var inside = false, x = hx(X), y = hx(Y);
     for (i = 0, j = n - 1; i < n; j = i++) {
       var xi = p[i * 2], yi = p[i * 2 + 1], xj = p[j * 2], yj = p[j * 2 + 1];
       if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
     }
-    if (inside) set(x, y, c);
+    if (inside) set(X, Y, c);
   }
   for (i = 0, j = n - 1; i < n; j = i++) L(p[j * 2], p[j * 2 + 1], p[i * 2], p[i * 2 + 1], c);
 }
@@ -3925,21 +3935,32 @@ function T(pts, r0, r1, c) {
 /* points de detail (sans ombrage) : D(couleur, x,y, x,y, ...) */
 function D(c) {
   for (var k = 1; k < arguments.length; k += 2) {
-    var x = Math.round(arguments[k]), y = Math.round(arguments[k + 1]);
-    if (x < 0 || y < 0 || x >= cw || y >= ch) continue;
-    var i = y * cw + x; col[i] = c; flat[i] = 1; if (base[i] === null) base[i] = c;
+    var x0 = Math.round(arguments[k]) * K, y0 = Math.round(arguments[k + 1]) * K;
+    for (var j = 0; j < K; j++) for (var q = 0; q < K; q++) {
+      var x = x0 + q, y = y0 + j; if (x < 0 || y < 0 || x >= cw || y >= ch) continue;
+      var i = y * cw + x; col[i] = c; flat[i] = 1; if (base[i] === null) base[i] = c;
+    }
   }
 }
+/* demi-pixel (v4.7) : points et traits fins à la résolution réelle du sprite (coordonnées en 0,5).
+   En résolution simple, ils retombent sur le pixel le plus proche. */
+function hp(x, y, c) { if (x < 0 || y < 0 || x >= cw || y >= ch) return; var i = y * cw + x; col[i] = c; flat[i] = 1; if (base[i] === null) base[i] = c; }
+function H(c) { for (var k = 1; k < arguments.length; k += 2) hp(Math.round(arguments[k] * K), Math.round(arguments[k + 1] * K), c); }
+function HL(x0, y0, x1, y1, c) {
+  x0 = Math.round(x0 * K); y0 = Math.round(y0 * K); x1 = Math.round(x1 * K); y1 = Math.round(y1 * K);
+  var dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx - dy;
+  for (;;) { hp(x0, y0, c); if (x0 === x1 && y0 === y1) break; var e2 = 2 * err; if (e2 > -dy) { err -= dy; x0 += sx; } if (e2 < dx) { err += dx; y0 += sy; } }
+}
 /* lueurs posees apres le contour (alpha accepte : #rrggbbaa) */
-function G(c) { for (var k = 1; k < arguments.length; k += 2) glow.push([Math.round(arguments[k]), Math.round(arguments[k + 1]), c]); }
+function G(c) { for (var k = 1; k < arguments.length; k += 2) { var x = Math.round(arguments[k]) * K, y = Math.round(arguments[k + 1]) * K; for (var j = 0; j < K; j++) for (var i = 0; i < K; i++) glow.push([x + i, y + j, c]); } }
 function GE(cx, cy, rx, ry, c) {
-  for (var y = Math.floor(cy - ry - 1); y <= Math.ceil(cy + ry + 1); y++)
-    for (var x = Math.floor(cx - rx - 1); x <= Math.ceil(cx + rx + 1); x++)
-      if (inE(x, y, cx, cy, rx, ry)) glow.push([x, y, c]);
+  for (var y = Math.floor(cy - ry - 1) * K; y < (Math.ceil(cy + ry + 1) + 1) * K; y++)
+    for (var x = Math.floor(cx - rx - 1) * K; x < (Math.ceil(cx + rx + 1) + 1) * K; x++)
+      if (inE(hx(x), hx(y), cx, cy, rx, ry)) glow.push([x, y, c]);
 }
 /* gomme */
 function X(x, y, w, h) {
-  w = w || 1; h = h || 1;
+  w = (w || 1) * K; h = (h || 1) * K; x = Math.round(x) * K; y = Math.round(y) * K;
   for (var j = 0; j < h; j++) for (var i = 0; i < w; i++) {
     var px = x + i, py = y + j; if (px < 0 || py < 0 || px >= cw || py >= ch) continue;
     var k = py * cw + px; col[k] = null; base[k] = null; flat[k] = 0;
@@ -3970,6 +3991,8 @@ function finish(o) {
   var data = new Uint8ClampedArray(w * h * 4), rim = rgb(o.rim || OUT);
   function diff(xx, yy, b) { if (xx < 0 || yy < 0 || xx >= w || yy >= h) return 1; var q = base[yy * w + xx]; return (q === null || q !== b) ? 1 : 0; }
   function full(xx, yy) { return xx >= 0 && yy >= 0 && xx < w && yy < h && col[yy * w + xx] !== null; }
+  var hd = !!o.hd;
+  function hole(xx, yy) { return xx < 0 || yy < 0 || xx >= w || yy >= h || col[yy * w + xx] === null; }
   for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
     i = y * w + x; var k = i * 4;
     if (col[i] !== null) {
@@ -3978,6 +4001,18 @@ function finish(o) {
         var b0 = base[i], sc = diff(x, y - 1, b0) + diff(x - 1, y, b0) - diff(x, y + 1, b0) - diff(x + 1, y, b0);
         if (sc > 0) { r += (255 - r) * 0.2; g += (255 - g) * 0.2; bl += (255 - bl) * 0.2; }
         else if (sc < 0) { r *= 0.68; g *= 0.68; bl *= 0.7; }
+        if (hd) {
+          // relief : un second liseré, plus doux, à l'intérieur de chaque zone de couleur
+          var s2 = diff(x, y - 2, b0) + diff(x - 2, y, b0) - diff(x, y + 2, b0) - diff(x + 2, y, b0);
+          if (sc === 0 && s2 > 0) { r += (255 - r) * 0.09; g += (255 - g) * 0.09; bl += (255 - bl) * 0.09; }
+          else if (sc === 0 && s2 < 0) { r *= 0.86; g *= 0.86; bl *= 0.88; }
+          // lumière de lune sur le haut de la silhouette, ombre portée en bas à droite
+          if (hole(x, y - 1) || hole(x - 1, y)) { r += (220 - r) * 0.22; g += (228 - g) * 0.22; bl += (255 - bl) * 0.26; }
+          else if (hole(x, y + 1) || hole(x + 1, y) || hole(x + 1, y + 1)) { r *= 0.78; g *= 0.76; bl *= 0.82; }
+        }
+      } else if (hd && (x % 2 === 0) && (y % 2 === 0) && base[i] !== null && diff(x - 1, y, base[i]) && diff(x, y - 1, base[i]) && (c[0] + c[1] + c[2]) > 180) {
+        // petit reflet sur les détails (yeux, gemmes, rivets, boucles)
+        r += (255 - r) * 0.5; g += (255 - g) * 0.5; bl += (255 - bl) * 0.5;
       }
       data[k] = r; data[k + 1] = g; data[k + 2] = bl; data[k + 3] = 255;
     } else if (full(x - 1, y) || full(x + 1, y) || full(x, y - 1) || full(x, y + 1)) {
@@ -4000,10 +4035,10 @@ function finish(o) {
 /* ---------- registre ---------- */
 var defs = {}, ids = [], pxCache = {}, urlCache = {};
 function def(id, w, h, o, fn) { defs[id] = { w: w, h: h, o: o || {}, fn: fn }; if (id.charAt(0) !== '_') ids.push(id); }
-function hero(id, fn, o) { def(id, 24, 24, o, fn); }
-function mon(id, fn, o) { o = o || {}; o.flip = true; def(id, 24, 24, o, fn); }
-function elite(id, fn, o) { o = o || {}; o.flip = true; def(id, 32, 32, o, fn); }
-function boss(id, fn, o) { o = o || {}; o.flip = true; def(id, 48, 48, o, fn); }
+function hero(id, fn, o) { o = o || {}; o.hd = 1; def(id, 24, 24, o, fn); }
+function mon(id, fn, o) { o = o || {}; o.flip = true; o.hd = 1; def(id, 24, 24, o, fn); }
+function elite(id, fn, o) { o = o || {}; o.flip = true; o.hd = 1; def(id, 32, 32, o, fn); }
+function boss(id, fn, o) { o = o || {}; o.flip = true; o.hd = 1; def(id, 48, 48, o, fn); }
 
 /* silhouette grise a capuche : sprite de secours pour un id inconnu */
 def('_fallback', 24, 24, {}, function () {
@@ -4026,6 +4061,13 @@ hero('chevalier', function () {
   D(S3, 10, 6, 10, 7); D(cape, 10, 1, 9, 1, 8, 2, 11, 0);
   P(S3, [14, 9, 20, 9, 20, 17, 17, 21, 14, 17]);
   R(16, 11, 2, 7, cape); R(15, 13, 4, 2, cape); D(S1, 14, 9, 20, 9, 15, 10); D(S4, 19, 15, 18, 12);
+  // détails fins : crête et rivets du heaume, bord doré du bouclier, plis de la cape, plastron gravé
+  HL(9.5, 2.5, 14.5, 2.5, '#d4d9e4'); HL(12, 1.5, 12, 3.5, S3); H('#d4d9e4', 9.5, 6.5, 14.5, 7); H(S4, 12, 6.5, 13, 6.5);
+  HL(14.5, 9.5, 19.5, 9.5, A1); HL(19.5, 10, 19.5, 16.5, A2); HL(14.5, 10, 14.5, 16.5, A2); HL(15, 17, 17, 20.5, A2); HL(19.5, 17, 17.5, 20.5, A3);
+  H('#ff7a7a', 16.5, 11.5, 15.5, 13.5); H(A1, 16.5, 10.5);
+  HL(5.5, 13, 4.5, 19, '#5a1622'); HL(7.5, 14, 7, 20, '#5a1622'); H('#a8404c', 6, 11);
+  HL(11.5, 9.5, 11.5, 14.5, S3); H(S1, 9.5, 10.5, 13.5, 10.5, 10.5, 16.5, 14.5, 16.5); H(A1, 8.5, 12, 7.5, 12);
+  HL(5, 9, 4, 2.5, '#ffffff');
 });
 hero('pyro', function () {
   var rb = '#3d3843', hd = '#4d4754';
@@ -4039,6 +4081,9 @@ hero('pyro', function () {
   P(F3, [18, 10, 18, 6, 19, 3, 20, 6, 22, 4, 21, 10]); P(F2, [19, 9, 19, 7, 20, 7, 21, 8, 20, 9]); D(F1, 19, 9, 20, 8, 20, 9);
   L(8, 11, 6, 15, rb, 2); D('#b89a84', 6, 17);
   G(F2, 22, 1, 17, 3); G(F3, 16, 6, 21, 2);
+  // détails fins (v4.7)
+  HL(9.5, 4.5, 10.5, 2.5, '#6e6678'); HL(11, 2.5, 13, 2.5, '#6e6678'); HL(11.5, 14.5, 11.5, 21.5, '#2a2630'); HL(9, 15, 8, 21.5, '#2a2630'); HL(14.5, 15, 15.5, 21.5, '#2a2630');
+  H('#9a8a72', 10.5, 13.5, 13.5, 13.5); H(F1, 12, 6.5, 14, 6.5); H('#fff3c0', 20, 8.5, 20.5, 9); H(F2, 9.5, 19.5, 14.5, 18.5); H('#5a5262', 10.5, 9.5, 13.5, 9.5);
 });
 hero('assassin', function () {
   var ck = '#27304e', hd = '#313b5e', dk = '#1b2136';
@@ -4051,6 +4096,9 @@ hero('assassin', function () {
   D('#56648f', 8, 8, 12, 8, 16, 8, 10, 10, 14, 10);
   P(hd, [9, 7, 9, 4, 11, 2, 14, 2, 16, 4, 16, 7]); D(hd, 9, 2, 10, 2);
   R(12, 4, 4, 2, '!#0b0d16'); D('#7fdcff', 14, 4); R(12, 6, 4, 1, '#46527c');
+  // détails fins (v4.7)
+  HL(10.5, 3, 13, 2.5, '#5a6a8a'); HL(9.5, 9.5, 14.5, 13.5, '#161b28'); HL(10, 9.5, 15, 13.5, '#3a4660'); H(A1, 12.5, 11.5); H('#6a5a44', 10.5, 15.5, 11, 15.5);
+  H('#bff0ff', 13.5, 3.5); HL(9.5, 6.5, 14.5, 6.5, '#161b28'); HL(11, 16, 10.5, 20.5, '#161b28'); HL(14, 16, 14.5, 20, '#161b28'); H('#5a6a8a', 9.5, 21.5, 14.5, 21.5);
 });
 hero('necro', function () {
   var rb = '#34244a', hd = '#423060';
@@ -4064,6 +4112,9 @@ hero('necro', function () {
   R(20, 6, 3, 5, S3); R(21, 7, 1, 3, '!' + N2); D(N1, 21, 8); D(S1, 21, 6);
   GE(21, 8, 2.5, 3, '#4fe07a30'); G(N2, 22, 3, 19, 13); G(N3, 17, 2);
   L(8, 11, 6, 14, rb, 2); D(B1, 6, 16);
+  // détails fins (v4.7)
+  HL(9.5, 7.5, 11.5, 7.5, '#3a2a3a'); H('#3a2a3a', 10, 8, 11, 8); H('#ffffff', 9.5, 4.5); HL(10.5, 15, 9.5, 21.5, '#24163a'); HL(13.5, 15, 14, 21.5, '#24163a');
+  H(N2, 10.5, 17.5, 12, 18.5, 11, 19.5, 13, 17); HL(8, 3.5, 9.5, 2.5, '#7a5aa8'); H(A1, 7.5, 13.5, 13.5, 13.5); HL(18.5, 6, 18.5, 10.5, '#244a2a'); H(N1, 19, 7.5);
 });
 hero('berserker', function () {
   var sk = '#b88868', fur = '#6e5c48', hair = '#c2a66c', pt = '#3c2e28';
@@ -4077,6 +4128,9 @@ hero('berserker', function () {
   L(19, 3, 19, 22, W1); L(16, 10, 18, 12, sk, 2); D('#4e3626', 18, 12, 19, 12);
   P(S1, [20, 2, 22, 3, 23, 6, 22, 9, 20, 10]); P(S2, [18, 3, 16, 4, 15, 6, 16, 8, 18, 9]);
   D('#f0f3fa', 23, 5, 23, 6, 23, 7, 22, 4, 22, 8); D(RD, 22, 9, 21, 10, 15, 7);
+  // détails fins (v4.7)
+  HL(9, 1.5, 9, 6, '#c8a050'); HL(10, 1.5, 10, 4, '#f0d890'); HL(11.5, 8.5, 11.5, 12.5, '#9a6448'); HL(9, 9.5, 10.5, 10, '#9a6448'); HL(12.5, 10, 14, 9.5, '#9a6448');
+  H('#9a6448', 10.5, 11.5, 12.5, 11.5, 10.5, 12.5, 12.5, 12.5); HL(16.5, 3, 16.5, 8, '#eef2f8'); H('#3a2a1e', 6.5, 7.5, 7.5, 8, 14.5, 7.5); H('#ffffff', 11, 3.5);
 });
 hero('pretresse', function () {
   var rb = '#c9c1ae', vl = '#dfd9c8';
@@ -4091,6 +4145,9 @@ hero('pretresse', function () {
   D(S1, 19, 11, 19, 13, 20, 12, 20, 14); E(20, 16.5, 1.5, 1.5, A2); D(A1, 19, 16); D(F2, 20, 17, 21, 16); D(A3, 20, 19);
   G('#d8d0c890', 21, 13, 22, 11); G('#d8d0c850', 22, 9, 21, 8);
   L(8, 11, 7, 14, rb, 2); D('#b3a498', 7, 16);
+  // détails fins (v4.7)
+  HL(9, 12, 8.5, 20.5, '#b0a890'); HL(15, 12, 15.5, 20.5, '#b0a890'); HL(13.5, 3, 14.5, 9, '#c8c0a8'); H('#fff3c0', 11.5, 11.5, 11.5, 14.5, 11.5, 17.5); H(A3, 12.5, 12, 12.5, 15, 12.5, 18);
+  H('#ff8a8a', 9.5, 2, 12, 0.5); H('#ffe7a0', 20, 16, 21, 17.5); HL(19.5, 12.5, 20, 14.5, '#d8dce6'); H('#e6e0d0', 21.5, 9.5, 22.5, 8);
 });
 /* la Veilleuse : gardienne de la derniere flamme (histoire, sanctuaire) */
 hero('veilleuse', function () {
@@ -4127,6 +4184,8 @@ mon('squelette', function () {
   D(DK, 12, 4, 14, 4, 13, 5, 12, 7, 14, 7); D('#7fe8ff', 14, 4);
   L(15, 9, 17, 12, B1); D(B2, 17, 13);
   L(18, 12, 21, 3, '#a8a49a'); D('#a0522d', 19, 9, 20, 6, 21, 4); D('#e6e2d8', 21, 3); L(16, 11, 19, 14, A3); D(W2, 17, 13);
+  // détails fins (v4.7)
+HL(11.5, 0.5, 10.5, 2.5, '#8a826a'); H('#3a3428', 13, 5.5, 12, 5.5, 11, 5.5); H('#e6ffff', 14, 3.5); HL(12, 8.5, 12, 13.5, '#8a826a'); HL(13.5, 16, 13, 19.5, '#3a1a1e'); HL(11, 16, 11, 19, '#3a1a1e');
 });
 mon('goule', function () {
   var sk = '#939b82', dk = '#687060';
@@ -4137,6 +4196,8 @@ mon('goule', function () {
   E(16, 8, 2.5, 2.5, '#a4ac93'); D('#ffd84a', 17, 7); D(DK, 15, 7); R(16, 9, 3, 2, '!#5c0f18'); D(B1, 16, 9, 18, 9, 17, 10);
   D(dk, 14, 6, 15, 5);
   L(13, 10, 18, 15, sk, 2); L(19, 16, 21, 20, B1); L(18, 17, 18, 20, B1); L(20, 15, 22, 17, B1);
+  // détails fins (v4.7)
+H('#e8e0c8', 19, 9.5, 17.5, 9.5, 18.5, 10.5); H('#6a7a5a', 12.5, 8, 9.5, 10, 11.5, 12.5, 8, 8.5); HL(13.5, 11, 10.5, 12.5, '#5a6a4a'); HL(9.5, 11, 7.5, 12, '#5a6a4a'); H('#c8e0a0', 18, 11.5); H('#fff3a0', 17.5, 6.5);
 });
 mon('rat', function () {
   var fur = '#62544c', f2 = '#77675c', pk = '#b88080';
@@ -4147,6 +4208,8 @@ mon('rat', function () {
   D('#4a3e38', 7, 14, 9, 13, 11, 13, 13, 14, 8, 17, 11, 18);
   D('#b8c46a', 8, 15, 12, 15, 5, 16); D('#e4ec9a', 8, 14, 12, 14);
   D('#d8d0c0', 21, 16, 22, 15);
+  // détails fins (v4.7)
+HL(14.5, 12.5, 11.5, 12, '#6a5a50'); HL(10.5, 13, 7.5, 12.5, '#6a5a50'); HL(22, 16, 23, 15.5, '#d8c8b8'); HL(22, 17, 23, 17.5, '#d8c8b8'); HL(17.5, 20.5, 8.5, 20.5, '#8a7a70'); H('#ffd0d0', 19.5, 14.5); H('#e89aa0', 16.5, 12);
 });
 mon('spectre', function () {
   var sh = '#9fc4d8';
@@ -4156,6 +4219,8 @@ mon('spectre', function () {
   L(15, 11, 20, 10, sh); D(sh, 21, 9, 21, 11, 22, 10); L(14, 13, 19, 14, sh); D(sh, 20, 13, 20, 15);
   D(S1, 11, 11, 12, 11, 13, 11, 14, 11);
   G('#9fe8ff70', 12, 22, 10, 22); G('#9fe8ff40', 14, 21, 6, 18, 18, 19);
+  // détails fins (v4.7)
+HL(14.5, 12, 15, 19, '#e6f6ff'); HL(8.5, 12, 8, 18.5, '#7a9ac0'); HL(14, 5.5, 9.5, 5.5, '#5a7aa0'); H('#ffffff', 13.5, 7.5, 10.5, 7.5); H('#bfe0ff', 12.5, 14, 11, 16.5, 13, 18);
 });
 
 /* ================= ZONE 2 : BOIS DES PENDUS ================= */
@@ -4525,6 +4590,9 @@ elite('chevalier_os', function () {
   P(BL, [25, 15, 27, 3, 29, 1, 29, 5, 27, 16]); L(27, 14, 28, 4, '#8c92a4'); D('#ffffff', 29, 1, 28, 2); D('#a0522d', 27, 9, 28, 7, 26, 12);
   L(22, 16, 28, 18, A3); D(A2, 22, 16, 28, 18); L(24, 18, 23, 21, W2); D(B1, 23, 22);
   G(cy, 16, 13); G('#7fe8ff60', 15, 13, 17, 13, 16, 12); G('#7fe8ff', 4, 22); G('#7fe8ff60', 3, 18, 26, 24);
+  // détails fins (v4.7)
+HL(15.5, 4.5, 14, 7, '#8a826a'); H('#3a3428', 18.5, 9.5, 17.5, 9.5, 16.5, 9.5, 15.5, 9.5); HL(20, 12, 17.5, 12.5, '#8a826a'); HL(15, 12.5, 13, 12, '#8a826a'); HL(20, 15, 17.5, 15.5, '#8a826a'); HL(15, 15.5, 13, 15, '#8a826a');
+  H('#ffffff', 17, 12.5); HL(29, 2, 26, 14, '#f4f8ff'); HL(8.5, 21, 9, 29, '#163238'); HL(6, 21, 5.5, 28, '#163238'); H('#5afaff', 17.5, 6.5, 15, 6.5);
 });
 elite('dryade', function () {
   var bk = '#54402e', lt = '#6e563e', dk = '#382a20', fg = '#d88a3a', gl = '#9affc8', ms = '#4c6c3c';
@@ -4637,6 +4705,9 @@ boss('fossoyeur', function () {
   D('#ffffff', 21, 38, 22, 38, 22, 37); D(F2, 21, 40, 22, 40); D(S3, 22, 36, 22, 39);
   GE(21.5, 38, 6, 6, '#ffe48a16'); GE(21.5, 38, 4, 4, '#ffe48a1c');
   G('#ffe48a', 27, 36, 15, 39); G('#ffe48a80', 28, 33, 14, 34, 25, 44);
+  // détails fins (v4.7)
+HL(37, 8, 26, 8, '#8a2a30'); HL(34.5, 14, 32.5, 14.5, '#6a6a50'); HL(31, 14.5, 29, 14, '#6a6a50'); HL(32.5, 22, 32.5, 40, '#2a2632'); H(A2, 30.5, 25, 30.5, 29, 30.5, 33);
+  HL(11.5, 10, 12.5, 28, '#5a3820'); HL(7.5, 12, 8, 26, '#5a3820'); H('#d8dce6', 18.5, 8, 6.5, 11, 19.5, 31, 9.5, 30); HL(46, 3, 46, 10, '#d8dce6'); H('#fff3c0', 21.5, 37.5);
 });
 boss('mere_ronces', function () {
   var bk = '#4a382c', lt = '#66503c', dk = '#30241c', th = '#a8946a', hr = '#ff2a3a', gr = '#3c5a30';
@@ -4817,6 +4888,9 @@ hero('chasseuse', function () {
   L(13, 12, 22, 12, W1); D(W2, 14, 13, 15, 13); D(BL, 22, 12); D('#ffffff', 22, 11);
   D(S1, 18, 8, 19, 9, 20, 10, 20, 11, 20, 13, 20, 14, 19, 15, 18, 16); D('#c8b27c', 18, 9, 18, 10, 18, 11, 18, 13, 18, 14, 18, 15);
   L(15, 10, 16, 12, ck, 2); D(sk, 17, 13);
+  // détails fins (v4.7)
+  HL(10, 2.5, 13.5, 1.5, '#6a9a6a'); HL(10.5, 8.5, 14.5, 13, '#3a2a1e'); H(A1, 12.5, 10.5); HL(8.5, 13, 7.5, 19.5, '#1e3a26'); HL(10.5, 14, 10, 19.5, '#1e3a26');
+  H('#ffffff', 14.5, 5.5); HL(21.5, 9, 21.5, 15.5, '#e6ecf6'); H('#ff5a5a', 7.5, 1.5); H('#c8a878', 12.5, 15.5, 13.5, 15.5);
 });
 hero('moine', function () {
   var rb = '#737070', dk = '#4c4948', or = '#b4541f', od = '#7c3614', sk = '#c49a7a', wr = '#dcd4c2';
@@ -4831,6 +4905,10 @@ hero('moine', function () {
   D(DK, 14, 4); D('#a4a4a0', 13, 3, 14, 3); D('#9a7258', 15, 5);
   L(15, 10, 18, 11, rb, 2); L(19, 10, 20, 8, wr, 2); D('#a89e8a', 19, 9, 20, 10); E(20.5, 6, 1.5, 1.5, sk); D('#8e6a50', 20, 7);
   G(F2, 22, 4, 21, 3, 3, 12); G('#ff8a2a80', 23, 6, 19, 3, 2, 15, 4, 11); GE(20.5, 6, 2.5, 2.5, '#ff8a2a2c'); GE(4.5, 14, 2.5, 2.5, '#ff8a2a2c');
+  // détails fins (v4.7)
+  HL(10.5, 6, 10, 9, '#ececec'); HL(12.5, 6, 12.5, 9.5, '#8a8a92'); HL(14, 6, 14, 8.5, '#ececec'); H('#ffe6cc', 11, 1.5, 11.5, 2); H('#c87a5a', 13.5, 4.5);
+  H('#5a3a1e', 10, 10, 11, 10.5, 12, 10.5, 13, 10.5, 14, 10); H(A1, 12, 11);
+  HL(12, 12, 11.5, 20.5, '#a04418'); HL(14.5, 12, 15, 20.5, '#a04418'); H('#e8dcc0', 7, 13, 8, 13.5, 20, 6.5, 21, 7);
 });
 
 mon('chauve_souris', function () {
@@ -4842,6 +4920,8 @@ mon('chauve_souris', function () {
   P(c, [10, 7, 10, 3, 12, 6]); P(c, [13, 6, 15, 3, 15, 7]); D('#8a5a70', 11, 5, 14, 5);
   E(12, 12, 1.5, 3, c); E(12.5, 8, 2, 1.5, c);
   D('#ff3a2a', 12, 8, 14, 8); D(B1, 13, 10, 14, 10); D(dk, 12, 13, 12, 14); D('#6e5a76', 11, 16, 13, 16);
+  // détails fins (v4.7)
+HL(14.5, 7, 20.5, 5.5, '#2a1a2e'); HL(14.5, 9, 21, 10, '#2a1a2e'); HL(8.5, 7, 2.5, 5.5, '#2a1a2e'); HL(8.5, 9, 2, 10, '#2a1a2e'); H('#ffffff', 13, 11.5, 11, 11.5); H('#a05a70', 13.5, 3.5, 10, 3.5); H('#ffb0b0', 13, 7.5, 11, 7.5);
 });
 mon('momie', function () {
   var b1 = '#cabd98', b2 = '#9c9070', b3 = '#6c624e';
@@ -4856,6 +4936,8 @@ mon('momie', function () {
   L(15, 10, 20, 10, b1, 2); D(b3, 17, 10, 19, 11); D(b1, 22, 9, 22, 11); D(b2, 22, 10);
   L(18, 12, 19, 16, b1); D(b1, 18, 17); L(20, 15, 20, 18, b2);
   G(N2, 16, 3); G('#4fe07a70', 17, 2, 15, 2, 16, 5);
+  // détails fins (v4.7)
+HL(12.5, 6.5, 8, 7.5, '#a8946a'); HL(12.5, 13.5, 8, 12.5, '#a8946a'); HL(12.5, 18, 8.5, 19, '#a8946a'); HL(7, 14, 5.5, 17, '#e6d8b0'); H('#c8ffc0', 12, 3); HL(20.5, 10.5, 15.5, 11, '#a8946a');
 });
 mon('sanglier', function () {
   var fur = '#52403a', dk = '#342828', lt = '#6c5648', sn = '#8c6c62';
@@ -4994,6 +5076,8 @@ elite('liche', function () {
   E(26, 5, 2, 2, B1); R(25, 7, 3, 1, B2); D(DK, 25, 5, 27, 5, 26, 7); D(cy, 27, 5, 25, 5);
   GE(26, 5, 4, 4, '#7fe8ff26'); G(cy, 26, 1, 29, 3, 23, 2); G('#7fe8ff70', 30, 6, 22, 5, 28, 0);
   G(cy, 16, 30, 12, 29); G('#7fe8ff60', 19, 30, 14, 31, 9, 28, 22, 28);
+  // détails fins (v4.7)
+H('#ff3a5a', 16, 3.5); H('#5afaff', 18.5, 4, 13.5, 4); HL(20.5, 19, 21.5, 26, '#2a3448'); HL(13, 19, 12, 26, '#2a3448'); HL(18.5, 20, 19, 27, '#6a7a98'); H(A1, 19.5, 13, 12.5, 13); H('#ffffff', 17.5, 8.5, 14.5, 8.5); H('#3a3428', 17, 10.5, 16, 10.5, 15, 10.5);
 });
 elite('chasseur_fou', function () {
   var fur = '#6c6672', fd = '#48444f', fl = '#8a8490', lth = '#5c4432', dk = '#382a22', sk = '#b8947a';
@@ -5462,7 +5546,7 @@ function has(id) { return Object.prototype.hasOwnProperty.call(defs, id) && Stri
 function key(id) { return has(id) ? id : '_fallback'; }
 function pixels(id) {
   id = key(id);
-  if (!pxCache[id]) { var d = defs[id]; begin(d.w, d.h); d.fn(); pxCache[id] = finish(d.o); }
+  if (!pxCache[id]) { var d = defs[id]; K = d.o.hd ? 2 : 1; begin(d.w * K, d.h * K); try { d.fn(); pxCache[id] = finish(d.o); } finally { K = 1; } }
   return pxCache[id];
 }
 function size(id) { var d = defs[key(id)]; return { w: d.w, h: d.h }; }
@@ -5474,6 +5558,10 @@ function url(id) {
     var p = pixels(id), c = document.createElement('canvas'); c.width = p.w; c.height = p.h;
     var ctx = c.getContext('2d'), im = ctx.createImageData(p.w, p.h);
     im.data.set(p.data); ctx.putImageData(im, 0, 0);
+    // L'image est livrée déjà agrandie, pixels nets : sinon Safari (iPhone) lisse les sprites dès qu'ils ont une ombre ou un filtre,
+    // et tout paraît flou. Les cadres d'interface (découpés en 9 au pixel près) restent à leur taille.
+    var U = id.indexOf('ui_') === 0 || !(defs[id].o.hd || defs[id].w >= 24) ? 1 : Math.max(1, Math.round(8 * defs[id].w / p.w));
+    if (U > 1) { var c2 = document.createElement('canvas'); c2.width = p.w * U; c2.height = p.h * U; var x2 = c2.getContext('2d'); x2.imageSmoothingEnabled = false; x2.drawImage(c, 0, 0, c2.width, c2.height); c = c2; }
     urlCache[id] = c.toDataURL('image/png');
     return urlCache[id];
   } catch (e) { return EMPTY; }
@@ -6283,7 +6371,9 @@ function url(id) {
     if (typeof document === 'undefined' || !document.createElement) return EMPTY;
     var p = pixels(id), cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     var ctx = cv.getContext('2d'), im = ctx.createImageData(W, H); im.data.set(p.data); ctx.putImageData(im, 0, 0);
-    urlCache[id] = cv.toDataURL('image/png');
+    // livré agrandi ×4, pixels nets (Safari lisse les fonds qui ont un filtre)
+    var c2 = document.createElement('canvas'); c2.width = W * 4; c2.height = H * 4; var x2 = c2.getContext('2d'); x2.imageSmoothingEnabled = false; x2.drawImage(cv, 0, 0, c2.width, c2.height);
+    urlCache[id] = c2.toDataURL('image/png');
     return urlCache[id];
   } catch (e) { return EMPTY; }
 }
