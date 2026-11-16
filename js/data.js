@@ -385,8 +385,11 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.9';
+  var VERSION = '4.10';
   var NEWS = [
+    ['👁️', 'Des intentions toujours lisibles', 'Ce que chaque ennemi va faire s’affiche au-dessus de tout : plus jamais caché par le bandeau du haut, les primes ou un autre monstre. Les noms trop hauts (boss, petits écrans) redescendent.'],
+    ['🛡️', 'La parade se voit', 'Quand tu pares, un halo bleu entoure ton héros et les intentions passent en bleu avec les dégâts qui passeront encore. « PARÉ » s’affiche en grand.'],
+    ['☠️', 'Poison et soins sur les barres', 'Au bout de chaque barre de vie, en violet, ce que poison, brûlure et saignement retireront au prochain tour ; en vert, les soins à venir. Pour toi comme pour les ennemis.'],
     ['⚒️', 'Des objets qui ont un nom', 'Chaque objet porte un adjectif tiré de son premier bonus, accordé comme il faut : « Épée cruelle », « Grèves vives », « Capuche bénie ». Les Sandales deviennent des Bottines, et la Couronne de Ronces un Diadème de Ronces.'],
     ['📖', 'Une aide à jour', 'La fiche du sac de dés et le lexique expliquent le geste actuel : un toucher joue le dé, un appui long le choisit pour un pouvoir. La Mère des Ronces décrit son entrave en tours, dé gelé compris.'],
     ['🛠️', 'Petites corrections', 'Régénération affichée en PV par tour, Vulnérables au départ comptés en tours, niveau des objets de set lisible par-dessus leur double contour, prologue en plein écran, numéro d’étage qui ne part plus seul à la ligne.'],

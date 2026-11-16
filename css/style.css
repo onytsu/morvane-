@@ -1208,3 +1208,23 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 #app.novice #dre, #app.novice #dfl, #app.novice #dbag, #app.novice #primes { visibility: hidden; }
 /* frappes auto retenues : Frapper et Parer attendent une décision */
 .bigact.nudge { animation: pulse .6s infinite alternate; box-shadow: 0 0 0 2px #f2bd5e88, 0 0 14px #f2bd5e55; }
+/* v4.10 : intentions dans un calque au-dessus des ennemis, lisibles ; libellés poussés sous le bandeau ; aperçu poison/soins sur les barres */
+.ilayer { position: absolute; inset: 0; z-index: 12; pointer-events: none; }
+.ilayer .intent { position: absolute; left: 0; top: 0; display: block; width: max-content; padding: 2px 7px; border-radius: 9px; background: #0d0a14f0; border: 1.5px solid #ff5b6bcc; box-shadow: 0 2px 6px #000c; font-size: 12px; font-weight: 800; color: #ffe1da; line-height: 14px; letter-spacing: 0; white-space: nowrap; }
+.ilayer .intent:empty { display: none; }
+.ilayer .intent.k-big { border-color: #ffcf4a; color: #ffe08a; box-shadow: 0 0 10px #ffb21f88, 0 2px 6px #000c; }
+.ilayer .intent.k-prep { border-color: var(--parry); color: #c8ffff; box-shadow: 0 0 10px #3ff0ff77, 0 2px 6px #000c; }
+.ilayer .intent.k-wait, .ilayer .intent.k-stun, .ilayer .intent.k-hidden, .ilayer .intent.k-flee { color: #b8c7d9; border-color: #ffffff33; }
+.ilayer .intent.parried { border-color: var(--parry); color: #c8ffff; background: #062a33f0; box-shadow: 0 0 10px #3ff0ff88, 0 2px 6px #000c; }
+.ename .isp { display: block; height: 19px; }
+.unit.en .ename, .unit.en .cbar, .unit.en .ebar { position: relative; top: var(--lift, 0px); }
+.unit.en .ename { z-index: 2; }
+.ebar .pv, .hpbar .pv { position: absolute; top: 0; left: 0; width: 0; height: 100%; z-index: 2; pointer-events: none; border-radius: 0; }
+.ebar .pv.d, .hpbar .pv.d { background: repeating-linear-gradient(135deg, #c86bff 0 3px, #8a2be2 3px 6px); box-shadow: inset 0 0 0 1px #e6c4ff; animation: pvpulse .7s ease-in-out infinite alternate; }
+.ebar .pv.h, .hpbar .pv.h { background: repeating-linear-gradient(135deg, #7dffa0cc 0 3px, #2fbf5fcc 3px 6px); box-shadow: inset 0 0 0 1px #c9ffd9; animation: pvpulse .7s ease-in-out infinite alternate; }
+.hpbar .pv { z-index: 2; }
+@keyframes pvpulse { from { opacity: .65; } to { opacity: 1; } }
+.unit.hero.guard img { filter: drop-shadow(0 0 9px var(--parry)) drop-shadow(0 0 3px #fff) brightness(1.15); }
+.unit.hero.guard::after { content: ""; position: absolute; left: 50%; right: auto; top: auto; bottom: 4%; z-index: 1; background: none; width: 96px; height: 120px; margin-left: -48px; border-radius: 50% 50% 46% 46%; border: 2px solid #3ff0ffcc; box-shadow: 0 0 16px #3ff0ff99, inset 0 0 18px #3ff0ff55; pointer-events: none; animation: pvpulse .6s ease-in-out infinite alternate; }
+.float.parry { font-size: 24px; color: #c8ffff; text-shadow: 0 3px 0 #0009, 0 0 14px #3ff0ff; animation-name: floatcrit; }
+@media (prefers-reduced-motion: reduce) { .ebar .pv, .hpbar .pv, .unit.hero.guard::after { animation: none; } }

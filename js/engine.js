@@ -941,7 +941,13 @@
     if (c.dfx && c.dfx.guard) d *= 1 - c.dfx.guard / 100;
     return d * Math.max(0.3, 1 + st.takenP / 100) * (run.stance === 'a' ? 1.2 : run.stance === 'd' ? 0.75 : 1);
   }
+  // L'intention tient compte de la parade en cours : un gros coup paré ne passe pas, une frappe parée fait 30 %
   function intentOf(run, c, e) {
+    var o = rawIntent(run, c, e);
+    if (o.dmg && c.hero.parryT > 0) { o.parried = 1; o.dmg = o.k === 'big' ? 0 : o.dmg * 0.3; }
+    return o;
+  }
+  function rawIntent(run, c, e) {
     var dt = ROUND, o = { k: 'wait' }, limit = c.boss ? FURY.boss : FURY.mob, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1, enr = e.enraged ? 1.25 : 1;
     if (e.dead) return o;
     if (e.flee > 0 && e.flee - dt <= 0) return { k: 'flee' };
@@ -958,6 +964,38 @@
     return o;
   }
   E.intents = function () { var run = S.run, c = run && run.combat; return c ? c.enemies.map(function (e) { return intentOf(run, c, e); }) : []; };
+  // v4.10 : ce que poison, brûlure, saignement et soins feront au prochain tour ennemi, pour les barres de vie
+  // { hero: {dot, heal}, foes: [{dot, heal}] } aligné sur c.enemies
+  E.preview = function () {
+    var run = S.run, c = run && run.combat; if (!c) return null;
+    var st = run.stats, h = c.hero, dt = ROUND, its = c.enemies.map(function (e) { return intentOf(run, c, e); }), foes, hit0 = 0, k;
+    foes = c.enemies.map(function (e) {
+      var o = { dot: 0, heal: 0 }; if (e.dead) return o;
+      if (!(e.hidden > 0) && e.born !== c.round) {
+        for (k in { burn: 1, poison: 1, bleed: 1 }) if (e.st[k]) o.dot += e.st[k].dps * dt;
+        o.dot *= heroMods(run, c, e); o.dot = Math.max(0, o.dot - (e.shield || 0));
+      }
+      if (c.cond === 'brume') o.dot += e.maxhp * 0.02 * dt;
+      o.dot = Math.min(o.dot, e.hp);
+      return o;
+    });
+    c.enemies.forEach(function (e, i) {
+      var it = its[i]; if (e.dead) return; hit0 += (it.dmg || 0) * (it.n || 1);
+      if (it.heal) { var low = alive(c).sort(function (a, b) { return a.hp / a.maxhp - b.hp / b.maxhp; })[0]; if (low) foes[c.enemies.indexOf(low)].heal += low.maxhp * e.ab.heal / 100; }
+      if (e.ab.leech && it.dmg) foes[i].heal += it.dmg * (it.n || 1) * e.ab.leech / 100 * 3;
+    });
+    c.enemies.forEach(function (e, i) { if (!e.dead) foes[i].heal = Math.max(0, Math.min(foes[i].heal, e.maxhp - e.hp)); });
+    var hm = takenMods(run), dot = 0, heal = 0;
+    for (k in { burn: 1, poison: 1, bleed: 1 }) if (h.st[k]) dot += h.st[k].dps * dt * hm;
+    alive(c).forEach(function (e) { if (e.boss && e.ab.heat && !(e.st.stun > 0)) dot += st.hp * Math.min(0.03, 0.004 + c.t * 0.0003) * dt * hm; });
+    var shl = h.shieldT > 0 && h.shieldT < 900 && h.shieldT - dt <= 0 ? 0 : Math.max(0, (h.shield || 0) - hit0);
+    dot = Math.max(0, dot - shl);
+    if (c.cond === 'brume') dot += st.hp * 0.01 * dt;
+    var hp = Math.max(0.1, 1 + st.healP / 100);
+    if (st.regen) heal += st.hp * st.regen / 100 * dt * hp;
+    if (c.cond === 'beni') heal += st.hp * 0.02 * dt * hp;
+    return { hero: { dot: Math.min(dot, Math.max(0, run.hp)), heal: Math.max(0, Math.min(heal, st.hp - run.hp)) }, foes: foes };
+  };
   // Joue automatiquement les dés de la main (mode AUTO et robot de test) : l'Écho d'abord, le Miroir en dernier, puis au plus offrant
   function autoPlace(run, c) {
     var guard = 0, h = c.hero;
@@ -1045,6 +1083,20 @@
   E.setTarget = function (i) { var c = S.run && S.run.combat; if (c && c.enemies[i] && !c.enemies[i].dead) c.target = i; };
   function heroHeal(run, c, amount, raw) { var h = heal(run, amount, raw); if (h >= 1) ev(c, { k: 'heal', v: h }); return h; }
 
+  // Multiplicateurs communs à tous les dégâts du héros, brûlure/poison/saignement compris (partagé avec l'aperçu des barres de vie)
+  function heroMods(run, c, e) {
+    var st = run.stats, h = c.hero, m = 1 + st.dmgP / 100;
+    if (run.hero === 'berserker') m *= 1 + (1 - run.hp / st.hp);
+    if (run.hero === 'moine') m *= 1 + 0.04 * (h.elan || 0);
+    if (h.st.weak > 0) m *= 0.75;
+    if (h.buffs.fury) m *= 1 + h.buffs.fury.v / 100;
+    if (e.st.vuln > 0) m *= 1.25;
+    if (run.stance === 'a') m *= 1.25; else if (run.stance === 'd') m *= 0.8;
+    if (c.cond === 'sang') m *= 1.4;
+    return m;
+  }
+  // Multiplicateur des dégâts que subit le héros sans armure ni esquive (poison, brûlure...)
+  function takenMods(run) { return Math.max(0.3, 1 + run.stats.takenP / 100) * (run.stance === 'a' ? 1.2 : run.stance === 'd' ? 0.75 : 1); }
   // Le héros inflige des dégâts. o : {skill:1|2|3, crit:force, noCrit, dot, flat (dégâts déjà calculés), auto}
   function hit(run, c, e, mult, o) {
     o = o || {}; if (!e || e.dead) return 0;
@@ -1060,17 +1112,10 @@
       if (h.first) { h.first = false; if (st.firstStrike) dmg *= 1 + st.firstStrike / 100; }
       if (st.exec && e.hp / e.maxhp < 0.3) dmg *= 1 + st.exec / 100;
     }
-    dmg *= 1 + st.dmgP / 100;
-    if (run.hero === 'berserker') dmg *= 1 + (1 - run.hp / st.hp);
-    if (run.hero === 'moine') dmg *= 1 + 0.04 * (h.elan || 0);
-    if (h.st.weak > 0) dmg *= 0.75;
-    if (h.buffs.fury) dmg *= 1 + h.buffs.fury.v / 100;
-    if (e.st.vuln > 0) dmg *= 1.25;
+    dmg *= heroMods(run, c, e);
     if (!o.dot && st.stunDmg && e.st.stun > 0) dmg *= 1 + st.stunDmg / 100;
     if (!o.dot && st.statusDmg && (e.st.burn || e.st.poison || e.st.bleed)) dmg *= 1 + st.statusDmg / 100;
-    if (run.stance === 'a') dmg *= 1.25; else if (run.stance === 'd') dmg *= 0.8;
     if (o.ult) dmg *= 1 + st.pow / 100;
-    if (c.cond === 'sang') dmg *= 1.4;
     if (!o.dot && !o.pierce && e.def > 0) dmg *= (2 * st.atk) / (2 * st.atk + e.def);
     if (e.shield > 0) { var ab = Math.min(e.shield, dmg); e.shield -= ab; dmg -= ab; if (dmg <= 0) { ev(c, { k: 'dmg', id: e.id, v: 0, sh: 1 }); return 0; } }
     e.hp -= dmg; run.dmg = (run.dmg || 0) + dmg; if (!o.dot && dmg > (run.maxHit || 0)) run.maxHit = dmg;
@@ -1207,7 +1252,7 @@
       dmg *= (2 * raw) / (2 * raw + st.def);
     }
     if (c.dfx && c.dfx.guard && !o.dot) dmg *= 1 - c.dfx.guard / 100;
-    dmg *= Math.max(0.3, 1 + st.takenP / 100) * pm * (run.stance === 'a' ? 1.2 : run.stance === 'd' ? 0.75 : 1);
+    dmg *= takenMods(run) * pm;
     if (h.shield > 0) { var ab = Math.min(h.shield, dmg); h.shield -= ab; dmg -= ab; if (ab > 0 && dmg <= 0) { ev(c, { k: 'hurt', v: 0, sh: 1 }); dmg = 0; } }
     if (dmg > 0 && !o.dot) ug(run, 3);
     if (dmg > 0 && o.big && h.elan) { h.elan = 0; ev(c, { k: 'elanbreak' }); }
