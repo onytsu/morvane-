@@ -35,7 +35,7 @@ UI.run = (function () {
       '<div class="dhand-w"><span class="dlab">Ta main</span><div class="dhand" id="dhand"></div></div>' +
       '<button class="dfig-w" id="dfigw" data-act="figs"><span class="dlab">Ce tour</span><span class="dslots" id="dslots"></span><span class="dfig" id="dfig"></span></button></div></div>' +
       '<div class="hud">' +
-      '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><span></span></div></div></div>' +
+      '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><em class="pv d"></em><em class="pv b"></em><em class="pv h"></em><span></span></div></div></div>' +
       '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + UI.spr('ul_' + h.id, 'ic') + h.ult.name + '</span></button>' +
       '<div class="turnrow"><span class="aps" id="aps"></span><b id="tlabel"></b><span class="hsts" id="hsts"></span><span class="grow"></span><button class="tog spd" id="tspd" data-act="speed"></button><button class="tog pass" id="tpass" data-act="pass">Fin du tour</button></div>' +
       '<div class="mainacts"><button class="bigact strike" id="bstrike" data-act="strike" data-info="strike">' + UI.spr('i_sword', 'ic') + '<b>Frapper</b></button>' +
@@ -57,8 +57,8 @@ UI.run = (function () {
     a.style.setProperty('--z1', z.bg[0]); a.style.setProperty('--z2', z.bg[1]); a.style.setProperty('--zc', z.color);
     var bg = typeof Backgrounds !== 'undefined' ? ' style="background-image:url(' + Backgrounds.url(z.id) + ')"' : ''; a.classList.add('hasbg'); a.classList.remove('danger');
     a.innerHTML = '<div class="abg"' + bg + '></div><div class="rays"></div><div class="fog f1"></div>' + propsHtml(z.id) + '<div class="unit hero enter" id="uhero">' + UI.spr(run.hero) + '</div><div class="minions" id="minions"></div><div class="fog f2"></div><div class="vig"></div>' +
-      '<button class="primes" id="primes" data-act="primes"></button><button class="cdice" id="cdice" data-act="cdice"></button><div class="combo" id="combo"></div><button class="sweepb" id="tsweep" data-act="sweep">Balayer le combat</button>' + extraHtml(run);
-    els = {}; posOf = {}; floats = 0; lootShown = 0; combo = 0; orbEls = {}; shotEls = {}; primeKey = '';
+      '<div class="ilayer" id="ilayer"></div><button class="primes" id="primes" data-act="primes"></button><button class="cdice" id="cdice" data-act="cdice"></button><div class="combo" id="combo"></div><button class="sweepb" id="tsweep" data-act="sweep">Balayer le combat</button>' + extraHtml(run);
+    els = {}; posOf = {}; labKey = ''; floats = 0; lootShown = 0; combo = 0; orbEls = {}; shotEls = {}; primeKey = '';
     vfx = typeof VFX !== 'undefined' ? VFX.attach(a) : null;
     fxL = typeof FX !== 'undefined' ? FX.attach(a, { ambient: ['dust', 'leaves', 'fireflies', 'gold', 'embers', 'void'][z.id - 1], warm: 2 }) : null;
     if (c && c.dfx && c.dfx.id) showFig(c.dfx, true);
@@ -78,9 +78,10 @@ UI.run = (function () {
     d.className = 'unit en' + (e.boss ? ' boss' : e.elite ? ' elite' : '') + (spawn ? ' spawn' : '') + (e.fix ? ' fixed fx-' + e.fix : '') + (e.big ? ' giant' : '') + (e.gold ? ' golden' : '') + (e.champ ? ' champ' : '');
     d.id = 'en' + e.id; d.dataset.act = 'target'; d.dataset.i = i; d.dataset.info = 'foe:' + i;
     d.style.setProperty('--bd', -(Math.random() * 2.2).toFixed(2) + 's'); d.style.right = P[pi].r + '%'; d.style.bottom = P[pi].b + '%'; d.style.zIndex = 10 - Math.round(P[pi].b / 5);
-    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span><span class="intent"></span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">' + UI.spr('i_burst', 'ic') + '</span>';
+    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span><span class="isp"></span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><em class="pv d"></em><em class="pv b"></em><em class="pv h"></em><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">' + UI.spr('i_burst', 'ic') + '</span>';
     if (e.boss || e.elite || e.champ) d.insertAdjacentHTML('beforeend', '<i class="aura"></i>'); // en dernier : updateArena lit les enfants par position
     $('#arena').appendChild(d); els[e.id] = d;
+    var it = document.createElement('span'); it.className = 'intent'; d._it = it; var il = $('#ilayer'); if (il) il.appendChild(it); labKey = '';
   }
   // Entrée du boss, propre à sa zone : il surgit de la terre, tombe des arbres, sort de la brume, descend dans la lumière, jaillit des flammes ou naît du vide
   var BIN = { 1: ['death', 1000], 2: ['dark', 1100], 3: ['poison', 1200], 4: ['holy', 1150], 5: ['fire', 900], 6: ['dark', 1250] };
@@ -267,7 +268,7 @@ UI.run = (function () {
     run.bag.forEach(function (d) { var k = d.t + '|' + d.f.join(''); if (!groups[k]) { groups[k] = { d: d, n: 0 }; order.push(k); } groups[k].n++; });
     h = '<h2>🎒 Ton sac de dés</h2><div class="tiny dim center" style="margin:-6px 0 10px">' + run.bag.length + ' dés · tu en pioches ' + (3 + (run.stats.diceHand || 0)) + ' par tour · le sac se remélange quand il est vide</div>';
     order.forEach(function (k) { var g = groups[k], d = g.d; h += '<div class="li"><div class="ic">' + tdie(d.t, facesTxt(d.f)) + '</div><div class="grow"><b>' + E.dieName(d) + (g.n > 1 ? ' ×' + g.n : '') + '</b> <span class="tiny dim">faces ' + d.f[0] + ' à ' + d.f[5] + '</span><div class="small dim">' + D.DICE[d.t].desc + '</div></div></div>'; });
-    h += '<h3 class="gold" style="margin:10px 0 6px">Jouer un dé</h3><div class="small dim" style="line-height:1.6">Touche un dé de ta main pour le choisir, retouche-le pour le <b>jouer</b> : il agit tout de suite et ne coûte <b>aucune action</b>. Tu peux aussi le glisser dans un <b>pouvoir</b> s’il respecte sa condition (≤3, PAIR, ≥4...).</div>';
+    h += '<h3 class="gold" style="margin:10px 0 6px">Jouer un dé</h3><div class="small dim" style="line-height:1.6">Touche un dé de ta main : il <b>agit tout de suite</b> et ne coûte <b>aucune action</b>. Touche un <b>pouvoir</b> qui s’illumine : il prend tout seul le bon dé. Pour choisir toi-même le dé d’un pouvoir, <b>appui long</b> sur le dé, puis touche le pouvoir (condition ≤3, PAIR, ≥4...).</div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les figures</h3><div class="tiny dim" style="margin-bottom:6px">Les <b>3 premiers dés</b> que tu joues dans un tour forment une figure, selon le chiffre affiché sur chacun. L’ordre ne compte pas.</div>';
     D.FIGS.forEach(function (f) { h += '<div class="li"><div class="ic">' + f[0] + '</div><div class="grow"><b>' + f[1] + '</b> <span class="tiny dim">' + f[2] + '</span><div class="small dim">' + f[3] + '</div></div></div>'; });
     h += '<div class="btns"><button class="btn primary big" data-act="close">FERMER</button></div>';
@@ -275,7 +276,8 @@ UI.run = (function () {
   }
   ACT.bag = function () { SND.play('click'); bagSheet(); };
   function intentHtml(it) {
-    var h = it.k === 'atk' ? '⚔️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '') : it.k === 'big' ? '💥 ' + E.fmt(Math.ceil(it.dmg)) : it.k === 'prep' ? '⚠️ charge' : it.k === 'stun' ? '💫' : it.k === 'flee' ? '🏃 fuit' : it.k === 'hidden' ? '🌊' : '💤';
+    if (it.parried) return it.k === 'big' ? '🛡️ paré' : '🛡️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '');
+    var h = it.k === 'atk' ? '⚔️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '') : it.k === 'big' ? '🛡️ PARE ! 💥 ' + E.fmt(Math.ceil(it.dmg)) : it.k === 'prep' ? '⚠️ charge' : it.k === 'stun' ? '💫' : it.k === 'flee' ? '🏃 fuit' : it.k === 'hidden' ? '🌊' : '💤';
     return h + (it.heal ? ' ✚' : '') + (it.shield ? ' 🛡️' : '') + (it.summon ? ' 👥' : '');
   }
   // --- orbes à ramasser ---
@@ -437,7 +439,7 @@ UI.run = (function () {
         case 'explode': UI.flash('#9aa04a55'); break;
         case 'dead': UI.vib([80, 60, 160]); SND.play('death'); UI.flash('#000000dd'); break;
         case 'parryOn': anim(hero, 'parry', 1000); SND.play('equip'); break;
-        case 'parry': if (e.perfect) { UI.vib(30); fxAt(hero, 'ice', 24); var pc = center(hero); if (vfx && pc) { VFX.ring(vfx, pc.x + 20, pc.y, 'ice', 130, 0.4, 8); VFX.flash(vfx, pc.x + 20, pc.y, 'ice', 110, 0.2); } hitstop(90); floatAt(hero, 'PARADE PARFAITE !', 'crit'); UI.flash('#ffe9b888'); SND.play('block'); anim($('#arena'), 'shake', 250); } else { floatAt(hero, 'Paré', 'txt'); SND.play('block', 0.6); } break;
+        case 'parry': if (e.perfect) { UI.vib(30); fxAt(hero, 'ice', 24); var pc = center(hero); if (vfx && pc) { VFX.ring(vfx, pc.x + 20, pc.y, 'ice', 130, 0.4, 8); VFX.flash(vfx, pc.x + 20, pc.y, 'ice', 110, 0.2); } hitstop(90); floatAt(hero, 'PARADE PARFAITE !', 'crit'); UI.flash('#ffe9b888'); SND.play('block'); anim($('#arena'), 'shake', 250); } else { floatAt(hero, '🛡️ PARÉ', 'parry'); fxAt(hero, 'ice', 10); SND.play('block', 0.6); } break;
         case 'ult': var uc = center(hero), upts = []; c.enemies.forEach(function (x) { if (els[x.id] && !els[x.id].classList.contains('dead')) upts.push(center(els[x.id])); });
           if (vfx && uc) { VFX.pillar(vfx, uc.x, uc.y, 'ult', 120, 0.9); VFX.cast(vfx, sfxKind(e.sfx), uc.x, uc.y, upts, true); VFX.sparks(vfx, uc.x, uc.y, 'ult', 50, { speed: 420, g: -80, life: 1.2 }); } hitstop(140); banner(e.name.toUpperCase(), 'ULTIME'); UI.flash('#d9a441aa'); SND.play(e.sfx); SND.play('levelup', 0.6); anim($('#arena'), 'shake', 250); break;
         case 'passive': floatAt(hero, e.txt, 'txt'); break;
@@ -463,7 +465,7 @@ UI.run = (function () {
     var key = run.floor + '|' + run.gold + '|' + run.cendres + '|' + run.lvl + '|' + Object.keys(run.boons).length + run.artifacts.length + '|' + run.evos.length;
     if (updateHud.key !== key) {
       updateHud.key = key;
-      $('#rzone').innerHTML = '<b style="color:' + z.color + '">' + z.name + '</b> · étage ' + run.floor + (E.cycleOf(run.floor) ? ' · <span class="bad">Abîme ' + E.cycleOf(run.floor) + '</span>' : '');
+      $('#rzone').innerHTML = '<b style="color:' + z.color + '">' + z.name + '</b> · <span style="white-space:nowrap">étage ' + run.floor + '</span>' + (E.cycleOf(run.floor) ? ' · <span class="bad">Abîme ' + E.cycleOf(run.floor) + '</span>' : '');
       var p = ''; for (i = 1; i <= 10; i++) p += '<i class="' + (i <= pos ? 'on' : '') + (i === 10 ? ' boss' : '') + '"></i>';
       $('#rpips').innerHTML = p; $('#rgold').textContent = '💰 ' + run.gold; $('#rcend').textContent = '🔥 ' + E.fmt(run.cendres);
       $('#rlvl').textContent = run.lvl;
@@ -475,6 +477,8 @@ UI.run = (function () {
     updatePrimes(run); drainPrimes(run);
     hb.lastChild.textContent = E.fmt(Math.ceil(run.hp)) + ' / ' + E.fmt(stt.hp) + (sh >= 1 ? '  (+' + E.fmt(sh) + ')' : '');
     hb.classList.toggle('low', frac < 0.3);
+    var pvw = c && !c.over && c.turn === 'hero' && run.phase === 'combat' ? E.preview() : null;
+    setPv(hb.children[3], hb.children[4], hb.children[5], run.hp, stt.hp, pvw && pvw.hero);
     $('#rlvl').style.setProperty('--xp', Math.min(100, run.xp / E.xpNeed(run.lvl) * 100) + '%');
     UI.setTxt($('#hsts'), c ? stIcons(c.hero.st) + (c.hero.elan ? ' ⚡x' + c.hero.elan : '') : '');
     var charging = !!c && !c.over && c.enemies.some(function (x) { return !x.dead && x.charge; }), hsk = E.hero(run.hero).skills;
@@ -520,6 +524,63 @@ UI.run = (function () {
     if (wkOn && UI.guide) UI.guide.once('weak');
     var pt = $('#pot'); pt.lastChild.textContent = run.potions; pt.classList.toggle('cool', run.potions <= 0);
   }
+  // v4.10 : barres de vie. Violet = ce que poison/brûlure/saignement retireront au prochain tour ennemi, vert = les soins à venir
+  // v4.11 : la brûlure a sa propre bande orange, collée à droite de la violette (poison, saignement)
+  function seg(el, l, w) { var k = w > 0 ? l.toFixed(2) + '|' + w.toFixed(2) : ''; if (el._k === k) return; el._k = k; el.style.left = k ? l.toFixed(2) + '%' : ''; el.style.width = k ? w.toFixed(2) + '%' : '0'; }
+  function setPv(d, bn, hl, hp, max, p) {
+    var hpc = hp / max * 100, tot = 0, bw = 0, dw = 0;
+    if (p && p.dot >= 0.5 && hp > 0) {
+      tot = Math.min(Math.max(p.dot / max * 100, 6), hpc);
+      bw = p.burn >= 0.5 ? Math.min(tot, Math.max(p.burn / max * 100, p.burn < p.dot - 0.5 ? 3 : tot)) : 0;
+      dw = tot - bw; if (dw > 0 && dw < 3 && bw > 3) { bw -= 3 - dw; dw = 3; }
+    }
+    seg(bn, hpc - bw, bw); seg(d, hpc - bw - dw, dw);
+    var hw = p && p.heal >= 0.5 && hp > 0 && hp < max ? Math.min(Math.max(p.heal / max * 100, 3), 100 - hpc) : 0;
+    seg(hl, hpc, hw);
+  }
+  // v4.10 : les intentions vivent dans un calque au-dessus de tous les ennemis, jamais sous le bandeau du haut ni sous un autre ennemi.
+  // Les noms et barres trop hauts (boss, petits écrans) descendent juste sous les primes. Recalculé seulement quand quelque chose change.
+  var labKey = '';
+  function placeLabels(c) {
+    var a = $('#arena'), il = $('#ilayer'); if (!a || !il) return;
+    var top = 4; ['#primes', '#cond'].forEach(function (q) { var b = $(q); if (b && b.offsetHeight && !$('#app').classList.contains('novice')) top = Math.max(top, b.offsetTop + b.offsetHeight + 3); });
+    var live = c.enemies.filter(function (e) { return !e.dead && els[e.id]; }), k = top + ':' + a.clientWidth + 'x' + a.clientHeight + ':' + live.map(function (e) { return e.id; }).join(',');
+    if (k === labKey) return; labKey = k;
+    var boxes = [];
+    live.forEach(function (e) {
+      var el = els[e.id], en = el.children[1], sp = en.lastElementChild, it = el._it;
+      el.style.removeProperty('--lift');
+      var y0 = el.offsetTop + en.offsetTop, lift = Math.max(0, top - y0);
+      if (lift) el.style.setProperty('--lift', lift + 'px');
+      var w = it.offsetWidth || 0, cx = el.offsetLeft + en.offsetLeft + en.offsetWidth / 2, y = y0 + lift + sp.offsetTop;
+      boxes.push({ it: it, x: Math.max(4, Math.min(a.clientWidth - w - 4, cx - w / 2)), y: y, w: w, h: it.offsetHeight || 0 });
+    });
+    boxes.sort(function (p, q) { return p.y - q.y || p.x - q.x; });
+    boxes.forEach(function (b, i) {
+      for (var j = 0; j < i; j++) { var o = boxes[j]; if (b.w && o.w && b.x < o.x + o.w + 2 && o.x < b.x + b.w + 2 && b.y < o.y + o.h + 1 && o.y < b.y + b.h + 1) { b.y = o.y + o.h + 1; j = -1; } }
+      b.it.style.transform = 'translate(' + Math.round(b.x) + 'px,' + Math.round(b.y) + 'px)';
+    });
+  }
+  // v4.11 : brûlé, empoisonné, saignant se voient sur le personnage lui-même (lueur colorée + particules)
+  function stClasses(el, st) {
+    var k = (st.burn ? 'b' : '') + (st.poison ? 'p' : '') + (st.bleed ? 's' : '');
+    if (el._st === k) return; el._st = k;
+    el.classList.toggle('st-burn', !!st.burn); el.classList.toggle('st-poison', !!st.poison); el.classList.toggle('st-bleed', !!st.bleed);
+  }
+  var stfxT = 0;
+  function statusFx(c) {
+    var now = performance.now(); if (!vfx || now - stfxT < 340) return; stfxT = now;
+    var a = $('#arena'); if (!a) return; var ar = a.getBoundingClientRect();
+    function emit(el, st) {
+      var im = el && el.querySelector('img:not(.ic):not(.emo)'); if (!im) return; var r = im.getBoundingClientRect(); if (!r.width) return;
+      var x = r.left - ar.left + r.width / 2, w = r.width * 0.32, y = r.top - ar.top;
+      if (st.burn) VFX.sparks(vfx, x + (Math.random() * 2 - 1) * w, y + r.height * 0.8, 'fire', 3, { speed: 50, g: -240, life: 0.8, size: 9, dir: -Math.PI / 2, spread: 0.8 });
+      if (st.poison) VFX.sparks(vfx, x + (Math.random() * 2 - 1) * w, y + r.height * 0.6, 'venom', 2, { speed: 30, g: -110, life: 1.1, size: 8, dir: -Math.PI / 2, spread: 1.2 });
+      if (st.bleed) VFX.sparks(vfx, x + (Math.random() * 2 - 1) * w, y + r.height * 0.45, 'blood', 2, { speed: 40, g: 380, life: 0.6, size: 7, dir: Math.PI / 2, spread: 0.6 });
+    }
+    if (!c.over) emit($('#uhero'), c.hero.st);
+    c.enemies.forEach(function (e) { if (!e.dead && !(e.hidden > 0)) emit(els[e.id], e.st); });
+  }
   function updateArena() {
     var run = S().run, c = run && run.combat; if (!c) return;
     c.enemies.forEach(function (e, i) {
@@ -535,11 +596,17 @@ UI.run = (function () {
     var ctm = $('#condt'); if (ctm && c.cond === 'defi') { var left = Math.max(0, Math.ceil((20 - c.t) / E.ROUND)); ctm.textContent = ' ' + left + ' tour' + (left > 1 ? 's' : ''); ctm.parentNode.classList.toggle('late', left <= 0); }
     var hu = $('#uhero'); if (hu) { hu.classList.toggle('invuln', c.hero.invuln > 0); hu.classList.toggle('undying', !!c.hero.buffs.undying); }
     if (hu) hu.classList.toggle('fury', !!c.hero.buffs.fury);
-    var its = !c.over && c.turn === 'hero' ? E.intents() : null;
+    var its = !c.over && c.turn === 'hero' ? E.intents() : null, pv = its ? E.preview() : null;
+    if (hu) hu.classList.toggle('guard', c.hero.parryT > 0 && !c.over);
+    if (hu) stClasses(hu, c.over ? {} : c.hero.st);
+    c.enemies.forEach(function (e) { var el = els[e.id]; if (el) stClasses(el, e.dead ? {} : e.st); });
+    statusFx(c);
     c.enemies.forEach(function (e, i) {
-      var el = els[e.id]; if (!el) return; var ie = el._it || (el._it = el.querySelector('.intent')), ih = its && !e.dead ? intentHtml(its[i]) : '';
-      if (ie && ie._raw !== ih) { UI.setTxt(ie, ih); ie.className = 'intent' + (its && !e.dead ? ' k-' + its[i].k : ''); }
+      var el = els[e.id]; if (!el) return; var ie = el._it, ih = its && !e.dead ? intentHtml(its[i]) : '';
+      if (ie && ie._raw !== ih) { UI.setTxt(ie, ih); ie.className = 'intent' + (its && !e.dead ? ' k-' + its[i].k + (its[i].parried ? ' parried' : '') : ''); labKey = ''; }
+      var eb = el.children[3]; setPv(eb.children[2], eb.children[3], eb.children[4], e.dead ? 0 : e.hp, e.maxhp, pv && !e.dead ? pv.foes[i] : null);
     });
+    placeLabels(c);
     for (var oi = 0; oi < c.orbs.length; oi++) { var ob = orbEls[c.orbs[oi].oid]; if (ob) ob.classList.toggle('last', c.orbs[oi].t <= E.ROUND); }
     var m = $('#minions'), n = c.hero.skel || 0;
     if (m && m.children.length !== n) { var h = ''; for (var i = 0; i < n; i++) h += UI.spr('serviteur'); m.innerHTML = h; }
@@ -919,7 +986,8 @@ UI.run = (function () {
     h += '<div class="li on"><div class="ic">✨</div><div class="grow"><b>Éveils de pouvoir</b><div class="small dim">Tous les 4 niveaux d’une descente (4, 8, 12...), tu fais évoluer un de tes pouvoirs. Un ✦ sur le bouton montre qu’il est éveillé.</div></div></div>';
     h += '<div class="li on"><div class="ic">🎲</div><div class="grow"><b>Tour par tour</b><div class="small dim">À ton tour tu as <b>2 actions ⚡</b>. Frapper, parer, toucher un point faible ou renvoyer un crâne coûtent 1 action. Les pouvoirs, eux, se paient avec un dé. L’ultime, la fiole, la posture et les orbes sont gratuits. Ensuite chaque ennemi joue, l’un après l’autre.</div></div></div>';
     h += '<div class="li on"><div class="ic">🎒</div><div class="grow"><b>Dés de combat</b><div class="small dim">À chaque tour tu pioches <b>3 dés</b>. <b>Touche un dé</b> : il agit tout de suite, <b>sans coûter d’action</b>. Ou touche un <b>pouvoir</b> : il prend le meilleur dé qui convient. Chacun affiche le dé qu’il demande (≤3, PAIR, ≥4...), et plus le dé est fort, plus le pouvoir l’est.<br>⚔️ Lame frappe · 🛡️ Garde protège · ❤️ Sève soigne · ✨ Écho renforce le reste de ta main · 🪞 Miroir copie le dernier dé joué<br><b>Figures</b> : les 3 premiers dés joués du tour. 🎲 Paire (+30 % dégâts) · ✨ Suite 2-3-4 (+1 action, prochain coup critique) · 👑 Brelan (+1 action, coups critiques).<br>⇅ <b>Retourner</b> change un dé en sa face opposée, une fois par tour. ↻ relance ta main : 1 fois par combat.</div><div class="btns" style="margin-top:6px"><button class="btn sm" data-act="bag">🎒 Mon sac et les figures</button></div></div></div>';
-    h += '<div class="li on"><div class="ic">👁️</div><div class="grow"><b>Intentions</b><div class="small dim">Sous le nom de chaque ennemi, ce qu’il fera à son tour : ⚔️ 12 il frappe pour 12 · 💥 gros coup · ⚠️ il charge (étourdis-le ou pare) · 💤 rien · ✚ soin · 👥 renfort.</div></div></div>';
+    h += '<div class="li on"><div class="ic">👁️</div><div class="grow"><b>Intentions</b><div class="small dim">Sous le nom de chaque ennemi, ce qu’il fera à son tour : ⚔️ 12 il frappe pour 12 · 💥 gros coup · ⚠️ il charge (étourdis-le ou pare) · 💤 rien · ✚ soin · 👥 renfort. En bleu 🛡️ : tu pares, le chiffre montre ce qui passera encore.</div></div></div>';
+    h += '<div class="li on"><div class="ic">❤️</div><div class="grow"><b>Barres de vie</b><div class="small dim">Au bout de la barre, en <b style="color:#c86bff">violet</b> : ce que poison et saignement retireront au prochain tour, en <b style="color:#ff8a3c">orange</b> la brûlure. En <b style="color:#7dffa0">vert</b> : les soins à venir. Pour toi comme pour les ennemis.</div></div></div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les autres boutons</h3>' +
       '<div class="li"><div class="ic">⚔️</div><div class="grow"><b>Frapper</b><div class="small dim">Attaque l’ennemi visé (▼). Plus ta vitesse d’attaque est haute, plus tu donnes de coups par action. Toucher un ennemi le vise ; le toucher encore le frappe.</div></div></div>' +
       '<div class="li"><div class="ic">🛡️</div><div class="grow"><b>Parer</b><div class="small dim">Jusqu’à ton prochain tour, tu subis 70 % de dégâts en moins et tu ripostes. Quand un ennemi charge un gros coup ⚠️, le bouton devient <b style="color:#3ff0ff">bleu vif : PARE !</b> Pare à ce moment : le coup est annulé et l’ennemi est étourdi.</div></div></div>' +

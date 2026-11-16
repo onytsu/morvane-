@@ -677,6 +677,7 @@ h3.gold, h3 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
 /* ================= v3.3 : histoire, décors, détails ================= */
 /* --- scènes d'histoire --- */
 #story { position: absolute; inset: 0; z-index: 70; display: none; flex-direction: column; background: #050409; --sc: #ffb347; user-select: none; -webkit-user-select: none; }
+#story.card { margin: 0; padding: 0; border: 0; border-radius: 0; } /* « card » nomme ici le carton de chapitre, pas le style des panneaux .card */
 #story.on { display: flex; animation: stin .4s ease-out; } @keyframes stin { from { opacity: 0; } }
 .st-scene { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 .st-scene .fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; image-rendering: pixelated; }
@@ -1111,6 +1112,8 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 /* Pièces de set : double contour, couleur de rareté à l'extérieur, vert du set à l'intérieur */
 .item.set::after { content: ''; position: absolute; inset: 2px; border-radius: 10px; border: 2px solid var(--sc, #3fe08f); box-shadow: 0 0 6px color-mix(in srgb, var(--sc, #2bd67b) 60%, transparent), inset 0 0 6px color-mix(in srgb, var(--sc, #2bd67b) 35%, transparent); pointer-events: none; }
 .item-head .item.set::after, .lootc .item.set::after { inset: 3px; border-width: 2.5px; }
+/* le niveau, le +N et les marques restent lisibles par-dessus le double contour des sets */
+.item.set > span { z-index: 1; }
 
 /* ===== v4.3 : la vie des personnages ===== */
 /* Combat : le héros respire, change d'appui, puis serre son arme (cycle long, sans toucher aux filtres) */
@@ -1205,3 +1208,57 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 #app.novice #dre, #app.novice #dfl, #app.novice #dbag, #app.novice #primes { visibility: hidden; }
 /* frappes auto retenues : Frapper et Parer attendent une décision */
 .bigact.nudge { animation: pulse .6s infinite alternate; box-shadow: 0 0 0 2px #f2bd5e88, 0 0 14px #f2bd5e55; }
+/* v4.10 : intentions dans un calque au-dessus des ennemis, lisibles ; libellés poussés sous le bandeau ; aperçu poison/soins sur les barres */
+.ilayer { position: absolute; inset: 0; z-index: 12; pointer-events: none; }
+.ilayer .intent { position: absolute; left: 0; top: 0; display: block; width: max-content; padding: 2px 7px; border-radius: 9px; background: #0d0a14f0; border: 1.5px solid #ff5b6bcc; box-shadow: 0 2px 6px #000c; font-size: 12px; font-weight: 800; color: #ffe1da; line-height: 14px; letter-spacing: 0; white-space: nowrap; }
+.ilayer .intent:empty { display: none; }
+.ilayer .intent.k-big { border-color: #ffcf4a; color: #ffe08a; box-shadow: 0 0 10px #ffb21f88, 0 2px 6px #000c; }
+.ilayer .intent.k-prep { border-color: var(--parry); color: #c8ffff; box-shadow: 0 0 10px #3ff0ff77, 0 2px 6px #000c; }
+.ilayer .intent.k-wait, .ilayer .intent.k-stun, .ilayer .intent.k-hidden, .ilayer .intent.k-flee { color: #b8c7d9; border-color: #ffffff33; }
+.ilayer .intent.parried { border-color: var(--parry); color: #c8ffff; background: #062a33f0; box-shadow: 0 0 10px #3ff0ff88, 0 2px 6px #000c; }
+.ename .isp { display: block; height: 19px; }
+.unit.en .ename, .unit.en .cbar, .unit.en .ebar { position: relative; top: var(--lift, 0px); }
+.unit.en .ename { z-index: 2; }
+.ebar .pv, .hpbar .pv { position: absolute; top: 0; left: 0; width: 0; height: 100%; z-index: 2; pointer-events: none; border-radius: 0; }
+.ebar .pv.d, .hpbar .pv.d { background: repeating-linear-gradient(135deg, #c86bff 0 3px, #8a2be2 3px 6px); box-shadow: inset 0 0 0 1px #e6c4ff; animation: pvpulse .7s ease-in-out infinite alternate; }
+.ebar .pv.h, .hpbar .pv.h { background: repeating-linear-gradient(135deg, #7dffa0cc 0 3px, #2fbf5fcc 3px 6px); box-shadow: inset 0 0 0 1px #c9ffd9; animation: pvpulse .7s ease-in-out infinite alternate; }
+.hpbar .pv { z-index: 2; }
+@keyframes pvpulse { from { opacity: .65; } to { opacity: 1; } }
+.unit.hero.guard img { filter: drop-shadow(0 0 9px var(--parry)) drop-shadow(0 0 3px #fff) brightness(1.15); }
+.unit.hero.guard::after { content: ""; position: absolute; left: 50%; right: auto; top: auto; bottom: 4%; z-index: 1; background: none; width: 96px; height: 120px; margin-left: -48px; border-radius: 50% 50% 46% 46%; border: 2px solid #3ff0ffcc; box-shadow: 0 0 16px #3ff0ff99, inset 0 0 18px #3ff0ff55; pointer-events: none; animation: pvpulse .6s ease-in-out infinite alternate; }
+.float.parry { font-size: 24px; color: #c8ffff; text-shadow: 0 3px 0 #0009, 0 0 14px #3ff0ff; animation-name: floatcrit; }
+@media (prefers-reduced-motion: reduce) { .ebar .pv, .hpbar .pv, .unit.hero.guard::after { animation: none; } }
+/* v4.11 : explications à fermer soi-même */
+#toasts .toast.long { pointer-events: auto; cursor: pointer; animation: toastin .25s ease-out both; }
+#toasts .toast.long.out { opacity: 0; transform: translateY(-6px); transition: opacity .2s, transform .2s; }
+@keyframes toastin { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.toast .tclose { display: block; margin-top: 6px; font-size: 10.5px; letter-spacing: .08em; color: #f2bd5ecc; text-transform: uppercase; }
+/* v4.11 : brûlure en orange sur les barres */
+.ebar .pv.b, .hpbar .pv.b { background: repeating-linear-gradient(135deg, #ffb347 0 3px, #ff6a1f 3px 6px); box-shadow: inset 0 0 0 1px #ffe0b0; animation: pvpulse .7s ease-in-out infinite alternate; }
+/* v4.11 : états visibles sur le personnage */
+.unit.st-poison:not(.hit):not(.charging):not(.guard) img:where(:not(.ic):not(.emo)) { filter: drop-shadow(0 0 5px #b45cff) drop-shadow(0 0 2px #8a2be2) saturate(.85) hue-rotate(-12deg); }
+.unit.st-bleed:not(.hit):not(.charging):not(.guard) img:where(:not(.ic):not(.emo)) { filter: drop-shadow(0 0 5px #ff2a45) drop-shadow(0 0 2px #c2283a); }
+.unit.st-burn:not(.hit):not(.charging):not(.guard) img:where(:not(.ic):not(.emo)) { filter: drop-shadow(0 0 6px #ff7a1f) drop-shadow(0 0 2px #ffb347) sepia(.25) saturate(1.4); }
+.unit.st-burn::before { background: radial-gradient(#ff7a1fcc, #ff3b1f55 45%, transparent 72%); animation: pvpulse .35s ease-in-out infinite alternate; }
+.unit.st-poison:not(.st-burn)::before { background: radial-gradient(#b45cffcc, #8a2be255 45%, transparent 72%); animation: pvpulse .6s ease-in-out infinite alternate; }
+/* v4.11 : l'alerte « pare ! » ne se cache plus en haut : à côté du sprite, et l'intention le dit en grand */
+.unit.en .warn { top: auto; bottom: 45%; left: -14px; z-index: 4; font-size: 26px; filter: drop-shadow(0 0 6px var(--parry)); }
+.ilayer .intent.k-big:not(.parried) { border: 2px solid var(--parry); color: #fff; background: #0a3d4af2; font-size: 13px; box-shadow: 0 0 14px var(--parry), 0 2px 6px #000c; animation: pvpulse .45s ease-in-out infinite alternate; }
+/* v4.11 : écrans peu hauts : plateau de dés et commandes plus compacts pour laisser de la place à l'arène */
+@media (max-height: 800px) {
+  .dtray { padding: 2px 8px 5px; }
+  .dhint { height: 16px; font-size: 11px; }
+  .dlab { margin-bottom: 1px; font-size: 8px; }
+  .dside { gap: 2px; } .dtool { height: 28px; }
+  .dhand { padding: 2px 0 0; } .dhand .tdie { width: 44px; height: 44px; } .dhand .tdie b { font-size: 18px; }
+  .dfig-w { padding: 2px 4px 3px; gap: 2px; }
+  .hud { padding-top: 6px; }
+  .bigact { height: 46px; } .mainacts { margin-bottom: 5px; }
+  .turnrow { margin-bottom: 3px; }
+}
+@media (max-height: 680px) {
+  .unit.en img { width: 80px; height: 80px; } .unit.en.elite img { width: 104px; height: 104px; } .unit.en.boss img { width: 160px; height: 160px; }
+  .unit.en.giant img { width: 110px; height: 110px; } .unit.en.champ img { width: 136px; height: 136px; }
+  .unit.hero img:where(:not(.ic):not(.emo)) { width: 100px; height: 100px; }
+}
+.unit.en .warn img, .unit.en .warn img.emo { width: 24px; height: 24px; animation: none; filter: none; image-rendering: pixelated; }

@@ -48,6 +48,8 @@ var UI = (function () {
   function fmtMod(k, v) {
     var m = D.MODS[k]; if (!m || !v) return null;
     var a = Math.abs(v), num;
+    if (k === 'regen') a *= E.ROUND; // écrit en % par seconde, le jeu compte en tours
+    if (k === 'vulnStart') a = E.turns(a);
     if (m.fmt === 'flat') num = (a < 20 && Math.round(a * 10) % 10 ? a.toFixed(1).replace('.', ',') : E.fmt(a));
     else num = (Math.round(a * 10) % 10 ? a.toFixed(1).replace('.', ',') : Math.round(a)) + ' %';
     return [k === 'cdr' ? 'Vitesse de recharge' : m.n, (v >= 0 ? '+' : '−') + num];
@@ -57,9 +59,11 @@ var UI = (function () {
     return h;
   }
   function toast(msg, long) {
+    // v4.11 : les explications (long) restent affichées jusqu'à ce qu'on les touche, pour avoir le temps de les lire
     var t = document.createElement('div'); t.className = 'toast' + (long ? ' long' : ''); t.innerHTML = msg; $('#toasts').appendChild(t);
+    if (long) { t.insertAdjacentHTML('beforeend', '<span class="tclose">Touche pour fermer ✕</span>'); t.addEventListener('click', function (ev) { ev.stopPropagation(); t.classList.add('out'); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 200); }); }
     while ($('#toasts').children.length > 2) $('#toasts').removeChild($('#toasts').firstChild);
-    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, long ? 6000 : 3200);
+    if (!long) setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 3200);
   }
   function flash(color) { var f = $('#flash'); f.style.background = color; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
   function modal(html, centered) { var m = $('#modal'); m.innerHTML = '<div class="sheet' + (centered ? ' mid' : '') + '">' + html + '</div>'; m.className = 'on' + (centered ? ' centered' : ''); }

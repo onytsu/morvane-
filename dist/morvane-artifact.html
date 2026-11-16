@@ -678,6 +678,7 @@ h3.gold, h3 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
 /* ================= v3.3 : histoire, décors, détails ================= */
 /* --- scènes d'histoire --- */
 #story { position: absolute; inset: 0; z-index: 70; display: none; flex-direction: column; background: #050409; --sc: #ffb347; user-select: none; -webkit-user-select: none; }
+#story.card { margin: 0; padding: 0; border: 0; border-radius: 0; } /* « card » nomme ici le carton de chapitre, pas le style des panneaux .card */
 #story.on { display: flex; animation: stin .4s ease-out; } @keyframes stin { from { opacity: 0; } }
 .st-scene { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 .st-scene .fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; image-rendering: pixelated; }
@@ -1112,6 +1113,8 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 /* Pièces de set : double contour, couleur de rareté à l'extérieur, vert du set à l'intérieur */
 .item.set::after { content: ''; position: absolute; inset: 2px; border-radius: 10px; border: 2px solid var(--sc, #3fe08f); box-shadow: 0 0 6px color-mix(in srgb, var(--sc, #2bd67b) 60%, transparent), inset 0 0 6px color-mix(in srgb, var(--sc, #2bd67b) 35%, transparent); pointer-events: none; }
 .item-head .item.set::after, .lootc .item.set::after { inset: 3px; border-width: 2.5px; }
+/* le niveau, le +N et les marques restent lisibles par-dessus le double contour des sets */
+.item.set > span { z-index: 1; }
 
 /* ===== v4.3 : la vie des personnages ===== */
 /* Combat : le héros respire, change d'appui, puis serre son arme (cycle long, sans toucher aux filtres) */
@@ -1206,6 +1209,60 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 #app.novice #dre, #app.novice #dfl, #app.novice #dbag, #app.novice #primes { visibility: hidden; }
 /* frappes auto retenues : Frapper et Parer attendent une décision */
 .bigact.nudge { animation: pulse .6s infinite alternate; box-shadow: 0 0 0 2px #f2bd5e88, 0 0 14px #f2bd5e55; }
+/* v4.10 : intentions dans un calque au-dessus des ennemis, lisibles ; libellés poussés sous le bandeau ; aperçu poison/soins sur les barres */
+.ilayer { position: absolute; inset: 0; z-index: 12; pointer-events: none; }
+.ilayer .intent { position: absolute; left: 0; top: 0; display: block; width: max-content; padding: 2px 7px; border-radius: 9px; background: #0d0a14f0; border: 1.5px solid #ff5b6bcc; box-shadow: 0 2px 6px #000c; font-size: 12px; font-weight: 800; color: #ffe1da; line-height: 14px; letter-spacing: 0; white-space: nowrap; }
+.ilayer .intent:empty { display: none; }
+.ilayer .intent.k-big { border-color: #ffcf4a; color: #ffe08a; box-shadow: 0 0 10px #ffb21f88, 0 2px 6px #000c; }
+.ilayer .intent.k-prep { border-color: var(--parry); color: #c8ffff; box-shadow: 0 0 10px #3ff0ff77, 0 2px 6px #000c; }
+.ilayer .intent.k-wait, .ilayer .intent.k-stun, .ilayer .intent.k-hidden, .ilayer .intent.k-flee { color: #b8c7d9; border-color: #ffffff33; }
+.ilayer .intent.parried { border-color: var(--parry); color: #c8ffff; background: #062a33f0; box-shadow: 0 0 10px #3ff0ff88, 0 2px 6px #000c; }
+.ename .isp { display: block; height: 19px; }
+.unit.en .ename, .unit.en .cbar, .unit.en .ebar { position: relative; top: var(--lift, 0px); }
+.unit.en .ename { z-index: 2; }
+.ebar .pv, .hpbar .pv { position: absolute; top: 0; left: 0; width: 0; height: 100%; z-index: 2; pointer-events: none; border-radius: 0; }
+.ebar .pv.d, .hpbar .pv.d { background: repeating-linear-gradient(135deg, #c86bff 0 3px, #8a2be2 3px 6px); box-shadow: inset 0 0 0 1px #e6c4ff; animation: pvpulse .7s ease-in-out infinite alternate; }
+.ebar .pv.h, .hpbar .pv.h { background: repeating-linear-gradient(135deg, #7dffa0cc 0 3px, #2fbf5fcc 3px 6px); box-shadow: inset 0 0 0 1px #c9ffd9; animation: pvpulse .7s ease-in-out infinite alternate; }
+.hpbar .pv { z-index: 2; }
+@keyframes pvpulse { from { opacity: .65; } to { opacity: 1; } }
+.unit.hero.guard img { filter: drop-shadow(0 0 9px var(--parry)) drop-shadow(0 0 3px #fff) brightness(1.15); }
+.unit.hero.guard::after { content: ""; position: absolute; left: 50%; right: auto; top: auto; bottom: 4%; z-index: 1; background: none; width: 96px; height: 120px; margin-left: -48px; border-radius: 50% 50% 46% 46%; border: 2px solid #3ff0ffcc; box-shadow: 0 0 16px #3ff0ff99, inset 0 0 18px #3ff0ff55; pointer-events: none; animation: pvpulse .6s ease-in-out infinite alternate; }
+.float.parry { font-size: 24px; color: #c8ffff; text-shadow: 0 3px 0 #0009, 0 0 14px #3ff0ff; animation-name: floatcrit; }
+@media (prefers-reduced-motion: reduce) { .ebar .pv, .hpbar .pv, .unit.hero.guard::after { animation: none; } }
+/* v4.11 : explications à fermer soi-même */
+#toasts .toast.long { pointer-events: auto; cursor: pointer; animation: toastin .25s ease-out both; }
+#toasts .toast.long.out { opacity: 0; transform: translateY(-6px); transition: opacity .2s, transform .2s; }
+@keyframes toastin { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.toast .tclose { display: block; margin-top: 6px; font-size: 10.5px; letter-spacing: .08em; color: #f2bd5ecc; text-transform: uppercase; }
+/* v4.11 : brûlure en orange sur les barres */
+.ebar .pv.b, .hpbar .pv.b { background: repeating-linear-gradient(135deg, #ffb347 0 3px, #ff6a1f 3px 6px); box-shadow: inset 0 0 0 1px #ffe0b0; animation: pvpulse .7s ease-in-out infinite alternate; }
+/* v4.11 : états visibles sur le personnage */
+.unit.st-poison:not(.hit):not(.charging):not(.guard) img:where(:not(.ic):not(.emo)) { filter: drop-shadow(0 0 5px #b45cff) drop-shadow(0 0 2px #8a2be2) saturate(.85) hue-rotate(-12deg); }
+.unit.st-bleed:not(.hit):not(.charging):not(.guard) img:where(:not(.ic):not(.emo)) { filter: drop-shadow(0 0 5px #ff2a45) drop-shadow(0 0 2px #c2283a); }
+.unit.st-burn:not(.hit):not(.charging):not(.guard) img:where(:not(.ic):not(.emo)) { filter: drop-shadow(0 0 6px #ff7a1f) drop-shadow(0 0 2px #ffb347) sepia(.25) saturate(1.4); }
+.unit.st-burn::before { background: radial-gradient(#ff7a1fcc, #ff3b1f55 45%, transparent 72%); animation: pvpulse .35s ease-in-out infinite alternate; }
+.unit.st-poison:not(.st-burn)::before { background: radial-gradient(#b45cffcc, #8a2be255 45%, transparent 72%); animation: pvpulse .6s ease-in-out infinite alternate; }
+/* v4.11 : l'alerte « pare ! » ne se cache plus en haut : à côté du sprite, et l'intention le dit en grand */
+.unit.en .warn { top: auto; bottom: 45%; left: -14px; z-index: 4; font-size: 26px; filter: drop-shadow(0 0 6px var(--parry)); }
+.ilayer .intent.k-big:not(.parried) { border: 2px solid var(--parry); color: #fff; background: #0a3d4af2; font-size: 13px; box-shadow: 0 0 14px var(--parry), 0 2px 6px #000c; animation: pvpulse .45s ease-in-out infinite alternate; }
+/* v4.11 : écrans peu hauts : plateau de dés et commandes plus compacts pour laisser de la place à l'arène */
+@media (max-height: 800px) {
+  .dtray { padding: 2px 8px 5px; }
+  .dhint { height: 16px; font-size: 11px; }
+  .dlab { margin-bottom: 1px; font-size: 8px; }
+  .dside { gap: 2px; } .dtool { height: 28px; }
+  .dhand { padding: 2px 0 0; } .dhand .tdie { width: 44px; height: 44px; } .dhand .tdie b { font-size: 18px; }
+  .dfig-w { padding: 2px 4px 3px; gap: 2px; }
+  .hud { padding-top: 6px; }
+  .bigact { height: 46px; } .mainacts { margin-bottom: 5px; }
+  .turnrow { margin-bottom: 3px; }
+}
+@media (max-height: 680px) {
+  .unit.en img { width: 80px; height: 80px; } .unit.en.elite img { width: 104px; height: 104px; } .unit.en.boss img { width: 160px; height: 160px; }
+  .unit.en.giant img { width: 110px; height: 110px; } .unit.en.champ img { width: 136px; height: 136px; }
+  .unit.hero img:where(:not(.ic):not(.emo)) { width: 100px; height: 100px; }
+}
+.unit.en .warn img, .unit.en .warn img.emo { width: 24px; height: 24px; animation: none; filter: none; image-rendering: pixelated; }
 
 :root { color-scheme: dark; --sat: 0px; --sab: 0px; } html, body { height: 100%; } #app { height: 100%; }</style>
 <div id="app"><div id="screen"></div><div id="overlay"></div><div id="modal"></div><div id="toasts"></div><div id="flash"></div></div>
@@ -1232,7 +1289,7 @@ var DATA = (function () {
     spdP: { n: "Vitesse d'attaque", fmt: 'pct' }, allP: { n: 'Toutes les stats', fmt: 'pct' },
     crit: { n: 'Chance de critique', fmt: 'pct' }, critd: { n: 'Dégâts critiques', fmt: 'pct' },
     ls: { n: 'Vol de vie', fmt: 'pct' }, dodge: { n: 'Esquive', fmt: 'pct' },
-    regen: { n: 'Régénération / s', fmt: 'pct' }, pow: { n: 'Puissance des pouvoirs', fmt: 'pct' },
+    regen: { n: 'Régénération (PV par tour)', fmt: 'pct' }, pow: { n: 'Puissance des pouvoirs', fmt: 'pct' },
     cdr: { n: 'Recharge des pouvoirs', fmt: 'pctm' }, gf: { n: 'Or et Cendres', fmt: 'pct' },
     mf: { n: 'Chance de butin', fmt: 'pct' }, xp: { n: 'Expérience', fmt: 'pct' },
     thorns: { n: 'Épines (renvoi)', fmt: 'pct' }, block: { n: 'Chance de blocage', fmt: 'pct' },
@@ -1249,7 +1306,7 @@ var DATA = (function () {
     bleedP: { n: 'Dégâts de saignement', fmt: 'pct' }, skel: { n: 'Serviteur squelette max', fmt: 'flat' },
     skelP: { n: 'Dégâts des serviteurs', fmt: 'pct' }, s1P: { n: 'Dégâts du pouvoir 1', fmt: 'pct' },
     s2P: { n: 'Dégâts du pouvoir 2', fmt: 'pct' }, s3P: { n: 'Dégâts du pouvoir 3', fmt: 'pct' },
-    atkPerRoom: { n: 'Attaque par salle franchie', fmt: 'pct' }, vulnStart: { n: 'Les ennemis commencent Vulnérables (s)', fmt: 'flat' },
+    atkPerRoom: { n: 'Attaque par salle franchie', fmt: 'pct' }, vulnStart: { n: 'Les ennemis commencent Vulnérables (tours)', fmt: 'flat' },
     rerolls: { n: "Relance d'aubaines", fmt: 'flat' }, startGold: { n: 'Or de départ', fmt: 'flat' },
     idleP: { n: "Cendres de l'Ossuaire", fmt: 'pct' }, startBoons: { n: 'Aubaine offerte au départ', fmt: 'flat' },
     enemyHpP: { n: 'PV des ennemis', fmt: 'pct' }, idleH: { n: "Heures de réserve de l'Ossuaire", fmt: 'flat' },
@@ -1543,7 +1600,7 @@ var DATA = (function () {
   // ---------- Lexique : tous les mots du jeu, expliqués ----------
   var GLOSS = [
     ['🎒', 'Sac de dés', 'Les dés de ton héros pour cette descente. Tu en pioches 3 par tour ; quand le sac est vide, il est remélangé. Élites, boss et un combat sur trois t’offrent un dé.'],
-    ['🔲', 'Jouer un dé', 'Touche un dé de ta main, puis retouche-le : il agit tout de suite et ne coûte aucune action.'],
+    ['🔲', 'Jouer un dé', 'Touche un dé de ta main : il agit tout de suite et ne coûte aucune action. Appui long : il est choisi, pour le glisser dans un pouvoir.'],
     ['🎲', 'Figure', 'Les 3 premiers dés joués dans un tour : Paire (deux identiques), Suite (2-3-4) ou Brelan (trois identiques).'],
     ['👁️', 'Intention', 'Ce qu’un ennemi fera à son prochain tour, affiché sous son nom, avec les dégâts attendus.'],
     ['🔥', 'Brûlure', '25 % de ton attaque par seconde pendant 3 s. Relancer une brûlure la remet à 3 s.'],
@@ -1597,8 +1654,18 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.8';
+  var VERSION = '4.11';
   var NEWS = [
+    ['💬', 'Le temps de lire', 'Les explications restent affichées jusqu’à ce que tu les touches.'],
+    ['🔥', 'Brûlé, empoisonné, ça se voit', 'Un personnage qui brûle s’entoure d’orange et lâche des braises, un empoisonné de violet avec des bulles, un saignant de rouge. Sur les barres de vie, la brûlure à venir a sa bande orange, à côté du violet du poison.'],
+    ['🛡️', 'Quand parer', 'Le gros coup qui arrive s’annonce en grand sur l’ennemi : « PARE ! » en bleu, et le ⚠️ n’est plus caché en haut de l’écran.'],
+    ['📱', 'Plus de place', 'Sur les écrans peu hauts, le plateau de dés et les commandes se resserrent, et les personnages rapetissent un peu pour que tout tienne.'],
+    ['👁️', 'Des intentions toujours lisibles', 'Ce que chaque ennemi va faire s’affiche au-dessus de tout : plus jamais caché par le bandeau du haut, les primes ou un autre monstre. Les noms trop hauts (boss, petits écrans) redescendent.'],
+    ['🛡️', 'La parade se voit', 'Quand tu pares, un halo bleu entoure ton héros et les intentions passent en bleu avec les dégâts qui passeront encore. « PARÉ » s’affiche en grand.'],
+    ['☠️', 'Poison et soins sur les barres', 'Au bout de chaque barre de vie, en violet, ce que poison, brûlure et saignement retireront au prochain tour ; en vert, les soins à venir. Pour toi comme pour les ennemis.'],
+    ['⚒️', 'Des objets qui ont un nom', 'Chaque objet porte un adjectif tiré de son premier bonus, accordé comme il faut : « Épée cruelle », « Grèves vives », « Capuche bénie ». Les Sandales deviennent des Bottines, et la Couronne de Ronces un Diadème de Ronces.'],
+    ['📖', 'Une aide à jour', 'La fiche du sac de dés et le lexique expliquent le geste actuel : un toucher joue le dé, un appui long le choisit pour un pouvoir. La Mère des Ronces décrit son entrave en tours, dé gelé compris.'],
+    ['🛠️', 'Petites corrections', 'Régénération affichée en PV par tour, Vulnérables au départ comptés en tours, niveau des objets de set lisible par-dessus leur double contour, prologue en plein écran, numéro d’étage qui ne part plus seul à la ligne.'],
     ['👆', 'Un toucher, un dé', 'Touche un dé : il agit tout de suite. Un petit mot sous chaque dé dit ce qu’il fait. Pour Retourner, touche le bouton puis le dé.'],
     ['⚔️', 'Frappes automatiques', 'Main vide et rien à craindre : tes actions restantes frappent toutes seules. Quand un ennemi charge, frappe fort, montre un point faible, lance un crâne, ou quand ton ultime est prêt, « À toi : frappe ou pare » s’affiche et la main reste à toi.'],
     ['✋', 'Appui long sur un dé', 'Il montre ce que fera le dé et le choisit : touche ensuite un pouvoir pour l’y glisser.'],
@@ -1845,7 +1912,7 @@ var DATA = (function () {
   // Spécialité de chaque boss, affichée dans la présentation de la zone
   var MECH = {
     1: 'À la moitié de ses PV, il relève deux squelettes d’un coup.',
-    2: 'Ses racines t’entravent régulièrement : tu frappes 2 fois moins vite pendant 4 s.',
+    2: 'Ses racines t’entravent régulièrement : pendant 4 s, tu frappes 2 fois moins vite et ton meilleur dé tombe à 1 (⇅ le dégèle).',
     3: 'Il plonge et devient intouchable, puis resurgit avec un coup énorme : pare-le.',
     4: 'À 66 % et 33 % de ses PV, il se protège d’un bouclier et te réduit au silence (pouvoirs retardés).',
     5: 'La chaleur de la forge te brûle de plus en plus fort : tue-le vite.',
@@ -1875,38 +1942,38 @@ var DATA = (function () {
   ];
   // imp = bonus fixe de la base. s = grandit avec le niveau d'objet (exponentiel) ; sinon valeur en %.
   var BASES = [
-    { id: 'epee', slot: 'arme', name: 'Épée', icon: '🗡️', imp: { atk: 5 } },
-    { id: 'hache', slot: 'arme', name: 'Hache', icon: '🪓', imp: { atk: 5.6 }, imp2: { critd: 12 } },
-    { id: 'dague', slot: 'arme', name: 'Dague', icon: '🔪', imp: { atk: 4.2 }, imp2: { crit: 5 } },
+    { id: 'epee', g: 'f', slot: 'arme', name: 'Épée', icon: '🗡️', imp: { atk: 5 } },
+    { id: 'hache', g: 'f', slot: 'arme', name: 'Hache', icon: '🪓', imp: { atk: 5.6 }, imp2: { critd: 12 } },
+    { id: 'dague', g: 'f', slot: 'arme', name: 'Dague', icon: '🔪', imp: { atk: 4.2 }, imp2: { crit: 5 } },
     { id: 'baton', slot: 'arme', name: 'Bâton', icon: '⚕️', imp: { atk: 4.4 }, imp2: { pow: 15 } },
-    { id: 'masse', slot: 'arme', name: 'Masse', icon: '🔨', imp: { atk: 5.2 }, imp2: { block: 4 } },
+    { id: 'masse', g: 'f', slot: 'arme', name: 'Masse', icon: '🔨', imp: { atk: 5.2 }, imp2: { block: 4 } },
     { id: 'heaume', slot: 'casque', name: 'Heaume', icon: '⛑️', imp: { hp: 22, def: 1.5 } },
-    { id: 'capuche', slot: 'casque', name: 'Capuche', icon: '🎭', imp: { hp: 18 }, imp2: { dodge: 3 } },
+    { id: 'capuche', g: 'f', slot: 'casque', name: 'Capuche', icon: '🎭', imp: { hp: 18 }, imp2: { dodge: 3 } },
     { id: 'couronne', slot: 'casque', name: 'Diadème', icon: '👑', imp: { hp: 16 }, imp2: { pow: 10 } },
     { id: 'plastron', slot: 'armure', name: 'Plastron', icon: '🛡️', imp: { hp: 26, def: 3 } },
-    { id: 'robe', slot: 'armure', name: 'Robe', icon: '🥋', imp: { hp: 30 }, imp2: { cdr: 5 } },
-    { id: 'cuir', slot: 'armure', name: 'Cuirasse', icon: '🦺', imp: { hp: 24, def: 2 }, imp2: { dodge: 3 } },
-    { id: 'greves', slot: 'bottes', name: 'Grèves', icon: '🥾', imp: { hp: 12, def: 2 } },
-    { id: 'sandales', slot: 'bottes', name: 'Sandales', icon: '👢', imp: { hp: 12 }, imp2: { spdP: 6 } },
-    { id: 'chevaliere', slot: 'anneau', name: 'Chevalière', icon: '💍', imp: { atk: 1.6 }, imp2: { crit: 4 } },
+    { id: 'robe', g: 'f', slot: 'armure', name: 'Robe', icon: '🥋', imp: { hp: 30 }, imp2: { cdr: 5 } },
+    { id: 'cuir', g: 'f', slot: 'armure', name: 'Cuirasse', icon: '🦺', imp: { hp: 24, def: 2 }, imp2: { dodge: 3 } },
+    { id: 'greves', g: 'fp', slot: 'bottes', name: 'Grèves', icon: '🥾', imp: { hp: 12, def: 2 } },
+    { id: 'sandales', g: 'fp', slot: 'bottes', name: 'Bottines', icon: '👢', imp: { hp: 12 }, imp2: { spdP: 6 } },
+    { id: 'chevaliere', g: 'f', slot: 'anneau', name: 'Chevalière', icon: '💍', imp: { atk: 1.6 }, imp2: { crit: 4 } },
     { id: 'jonc', slot: 'anneau', name: 'Jonc', icon: '⭕', imp: { hp: 10 }, imp2: { ls: 2 } },
     { id: 'pendentif', slot: 'amulette', name: 'Pendentif', icon: '📿', imp: { hp: 12 }, imp2: { pow: 12 } },
     { id: 'talisman', slot: 'amulette', name: 'Talisman', icon: '🧿', imp: { atk: 1.4 }, imp2: { mf: 10 } }
   ];
   // Affixes aléatoires. s:true = valeur qui grandit avec le niveau d'objet.
   var AFFIXES = [
-    { k: 'atk', min: 1.2, max: 2.2, s: true, pre: 'cruel', slots: ['arme', 'anneau', 'amulette'] },
-    { k: 'hp', min: 8, max: 15, s: true, pre: 'robuste' },
-    { k: 'def', min: 1, max: 2, s: true, pre: 'blindé', slots: ['casque', 'armure', 'bottes'] },
-    { k: 'atkP', min: 4, max: 9, pre: 'féroce' }, { k: 'hpP', min: 4, max: 9, pre: 'vigoureux' },
-    { k: 'defP', min: 5, max: 10, pre: 'solide', slots: ['casque', 'armure', 'bottes'] },
-    { k: 'spdP', min: 3, max: 7, pre: 'vif' }, { k: 'crit', min: 2, max: 5, pre: 'perçant' },
-    { k: 'critd', min: 8, max: 18, pre: 'brutal' }, { k: 'ls', min: 1, max: 3, pre: 'vampirique' },
-    { k: 'dodge', min: 2, max: 4, pre: 'furtif' }, { k: 'regen', min: 0.2, max: 0.5, pre: 'béni' },
-    { k: 'pow', min: 6, max: 14, pre: 'occulte' }, { k: 'cdr', min: 3, max: 6, pre: 'hâtif' },
-    { k: 'gf', min: 6, max: 14, pre: 'doré' }, { k: 'mf', min: 5, max: 12, pre: 'chanceux' },
-    { k: 'xp', min: 5, max: 10, pre: 'sage' }, { k: 'thorns', min: 6, max: 14, pre: 'épineux', slots: ['casque', 'armure', 'bottes'] },
-    { k: 'block', min: 2, max: 4, pre: 'gardien', slots: ['arme', 'armure'] }
+    { k: 'atk', min: 1.2, max: 2.2, s: true, pre: 'cruel|cruelle|cruels|cruelles', slots: ['arme', 'anneau', 'amulette'] },
+    { k: 'hp', min: 8, max: 15, s: true, pre: 'robuste|robuste|robustes|robustes' },
+    { k: 'def', min: 1, max: 2, s: true, pre: 'blindé|blindée|blindés|blindées', slots: ['casque', 'armure', 'bottes'] },
+    { k: 'atkP', min: 4, max: 9, pre: 'féroce|féroce|féroces|féroces' }, { k: 'hpP', min: 4, max: 9, pre: 'vigoureux|vigoureuse|vigoureux|vigoureuses' },
+    { k: 'defP', min: 5, max: 10, pre: 'solide|solide|solides|solides', slots: ['casque', 'armure', 'bottes'] },
+    { k: 'spdP', min: 3, max: 7, pre: 'vif|vive|vifs|vives' }, { k: 'crit', min: 2, max: 5, pre: 'perçant|perçante|perçants|perçantes' },
+    { k: 'critd', min: 8, max: 18, pre: 'brutal|brutale|brutaux|brutales' }, { k: 'ls', min: 1, max: 3, pre: 'vampirique|vampirique|vampiriques|vampiriques' },
+    { k: 'dodge', min: 2, max: 4, pre: 'furtif|furtive|furtifs|furtives' }, { k: 'regen', min: 0.2, max: 0.5, pre: 'béni|bénie|bénis|bénies' },
+    { k: 'pow', min: 6, max: 14, pre: 'occulte|occulte|occultes|occultes' }, { k: 'cdr', min: 3, max: 6, pre: 'hâtif|hâtive|hâtifs|hâtives' },
+    { k: 'gf', min: 6, max: 14, pre: 'doré|dorée|dorés|dorées' }, { k: 'mf', min: 5, max: 12, pre: 'chanceux|chanceuse|chanceux|chanceuses' },
+    { k: 'xp', min: 5, max: 10, pre: 'sage|sage|sages|sages' }, { k: 'thorns', min: 6, max: 14, pre: 'épineux|épineuse|épineux|épineuses', slots: ['casque', 'armure', 'bottes'] },
+    { k: 'block', min: 2, max: 4, pre: 'gardien|gardienne|gardiens|gardiennes', slots: ['arme', 'armure'] }
   ];
   // Pouvoirs des objets légendaires (un au hasard)
   var POWERS = [
@@ -1924,7 +1991,7 @@ var DATA = (function () {
   var UNIQUES = [
     { id: 'u_pelle', name: 'Pelle du Fossoyeur', base: 'masse', lore: 'Elle a creusé plus de tombes que de tranchées.', aff: { atkP: 14, critd: 20, hpP: 8, gf: 20 }, mods: { killHeal: 10, firstStrike: 150 } },
     { id: 'u_linceul', name: 'Linceul du Dernier Souffle', base: 'robe', lore: 'On ne meurt qu’une fois. Sauf toi.', aff: { hpP: 14, regen: 0.6, defP: 12, cdr: 6 }, mods: { revive: 1 } },
-    { id: 'u_ronces', name: 'Couronne de Ronces', base: 'couronne', lore: 'Chaque épine est un souvenir.', aff: { hpP: 12, defP: 12, pow: 14, regen: 0.4 }, mods: { thorns: 70, bleedHit: 30 } },
+    { id: 'u_ronces', name: 'Diadème de Ronces', base: 'couronne', lore: 'Chaque épine est un souvenir.', aff: { hpP: 12, defP: 12, pow: 14, regen: 0.4 }, mods: { thorns: 70, bleedHit: 30 } },
     { id: 'u_corbeau', name: 'Pas du Corbeau', base: 'sandales', lore: 'Tu arrives avant ton ombre.', aff: { spdP: 10, dodge: 6, crit: 5, atkP: 8 }, mods: { dodge: 10, frenzy: 3 } },
     { id: 'u_coeur', name: 'Cœur du Léviathan', base: 'pendentif', lore: 'Il bat encore. Lentement.', aff: { hpP: 16, ls: 3, pow: 14, defP: 8 }, mods: { regen: 2, hpP: 20 } },
     { id: 'u_carapace', name: "Carapace de l'Abomination", base: 'plastron', lore: 'Forgée dans ce qui ne voulait pas mourir.', aff: { hpP: 12, defP: 16, thorns: 14, block: 4 }, mods: { startShield: 45 } },
@@ -2386,10 +2453,17 @@ if (typeof module !== 'undefined') module.exports = DATA;
   // « de » élidé devant une voyelle : « d’Aldric », « d’Écu du Parjure », mais « de Hrolf »
   E.de = function (n) { return (/^[AEIOUYÀÂÉÈÊËÎÏÔÛÜaeiouyàâéèêëîïôûü]/.test(n) ? 'd’' : 'de ') + n; };
   E.itemBase = function (it) { return byId(D.BASES, it.base); };
+  // Adjectif tiré du premier bonus de l'objet, accordé au nom (« Épée cruelle », « Grèves vives »)
+  function adjOf(k, g) {
+    var a = null; for (var i = 0; i < D.AFFIXES.length; i++) if (D.AFFIXES[i].k === k) a = D.AFFIXES[i];
+    if (!a || !a.pre) return '';
+    var f = a.pre.split('|'); return f[{ f: 1, mp: 2, fp: 3 }[g] || 0] || f[0];
+  }
   E.itemName = function (it) {
     if (it.uq) return byId(D.UNIQUES, it.uq).name;
     var b = byId(D.BASES, it.base), n = b.name;
     if (it.set) n += ' ' + byId(D.SETS, it.set).short;
+    else if (it.aff && it.aff.length) { var adj = adjOf(it.aff[0][0], b.g); if (adj) n += ' ' + adj; }
     if (it.pw) n += ' « ' + byId(D.POWERS, it.pw).name + ' »';
     return n + (it.up ? ' +' + it.up : '');
   };
@@ -3185,7 +3259,13 @@ if (typeof module !== 'undefined') module.exports = DATA;
     if (c.dfx && c.dfx.guard) d *= 1 - c.dfx.guard / 100;
     return d * Math.max(0.3, 1 + st.takenP / 100) * (run.stance === 'a' ? 1.2 : run.stance === 'd' ? 0.75 : 1);
   }
+  // L'intention tient compte de la parade en cours : un gros coup paré ne passe pas, une frappe parée fait 30 %
   function intentOf(run, c, e) {
+    var o = rawIntent(run, c, e);
+    if (o.dmg && c.hero.parryT > 0) { o.parried = 1; o.dmg = o.k === 'big' ? 0 : o.dmg * 0.3; }
+    return o;
+  }
+  function rawIntent(run, c, e) {
     var dt = ROUND, o = { k: 'wait' }, limit = c.boss ? FURY.boss : FURY.mob, fury = c.t > limit ? 1 + (c.t - limit) * 0.05 : 1, enr = e.enraged ? 1.25 : 1;
     if (e.dead) return o;
     if (e.flee > 0 && e.flee - dt <= 0) return { k: 'flee' };
@@ -3202,6 +3282,40 @@ if (typeof module !== 'undefined') module.exports = DATA;
     return o;
   }
   E.intents = function () { var run = S.run, c = run && run.combat; return c ? c.enemies.map(function (e) { return intentOf(run, c, e); }) : []; };
+  // v4.10 : ce que poison, brûlure, saignement et soins feront au prochain tour ennemi, pour les barres de vie
+  // { hero: {dot, heal}, foes: [{dot, heal}] } aligné sur c.enemies
+  E.preview = function () {
+    var run = S.run, c = run && run.combat; if (!c) return null;
+    var st = run.stats, h = c.hero, dt = ROUND, its = c.enemies.map(function (e) { return intentOf(run, c, e); }), foes, hit0 = 0, k;
+    foes = c.enemies.map(function (e) {
+      var o = { dot: 0, burn: 0, heal: 0 }; if (e.dead) return o;
+      if (!(e.hidden > 0) && e.born !== c.round) {
+        var m = heroMods(run, c, e), sh = e.shield || 0;
+        // même ordre que foeAct : brûlure, poison, saignement ; le bouclier absorbe d'abord
+        ['burn', 'poison', 'bleed'].forEach(function (q) { if (!e.st[q]) return; var d = e.st[q].dps * dt * m, ab = Math.min(sh, d); sh -= ab; d -= ab; o.dot += d; if (q === 'burn') o.burn += d; });
+      }
+      if (c.cond === 'brume') o.dot += e.maxhp * 0.02 * dt;
+      o.dot = Math.min(o.dot, e.hp); o.burn = Math.min(o.burn, o.dot);
+      return o;
+    });
+    c.enemies.forEach(function (e, i) {
+      var it = its[i]; if (e.dead) return; hit0 += (it.dmg || 0) * (it.n || 1);
+      if (it.heal) { var low = alive(c).sort(function (a, b) { return a.hp / a.maxhp - b.hp / b.maxhp; })[0]; if (low) foes[c.enemies.indexOf(low)].heal += low.maxhp * e.ab.heal / 100; }
+      if (e.ab.leech && it.dmg) foes[i].heal += it.dmg * (it.n || 1) * e.ab.leech / 100 * 3;
+    });
+    c.enemies.forEach(function (e, i) { if (!e.dead) foes[i].heal = Math.max(0, Math.min(foes[i].heal, e.maxhp - e.hp)); });
+    var hm = takenMods(run), dot = 0, burn = 0, heal = 0;
+    var shl = h.shieldT > 0 && h.shieldT < 900 && h.shieldT - dt <= 0 ? 0 : Math.max(0, (h.shield || 0) - hit0);
+    function take(d, isBurn) { var ab = Math.min(shl, d); shl -= ab; d -= ab; dot += d; if (isBurn) burn += d; }
+    alive(c).forEach(function (e) { if (e.boss && e.ab.heat && !(e.st.stun > 0)) take(st.hp * Math.min(0.03, 0.004 + c.t * 0.0003) * dt * hm, true); });
+    ['poison', 'burn', 'bleed'].forEach(function (q) { if (h.st[q]) take(h.st[q].dps * dt * hm, q === 'burn'); });
+    if (c.cond === 'brume') dot += st.hp * 0.01 * dt;
+    var hp = Math.max(0.1, 1 + st.healP / 100);
+    if (st.regen) heal += st.hp * st.regen / 100 * dt * hp;
+    if (c.cond === 'beni') heal += st.hp * 0.02 * dt * hp;
+    dot = Math.min(dot, Math.max(0, run.hp));
+    return { hero: { dot: dot, burn: Math.min(burn, dot), heal: Math.max(0, Math.min(heal, st.hp - run.hp)) }, foes: foes };
+  };
   // Joue automatiquement les dés de la main (mode AUTO et robot de test) : l'Écho d'abord, le Miroir en dernier, puis au plus offrant
   function autoPlace(run, c) {
     var guard = 0, h = c.hero;
@@ -3289,6 +3403,20 @@ if (typeof module !== 'undefined') module.exports = DATA;
   E.setTarget = function (i) { var c = S.run && S.run.combat; if (c && c.enemies[i] && !c.enemies[i].dead) c.target = i; };
   function heroHeal(run, c, amount, raw) { var h = heal(run, amount, raw); if (h >= 1) ev(c, { k: 'heal', v: h }); return h; }
 
+  // Multiplicateurs communs à tous les dégâts du héros, brûlure/poison/saignement compris (partagé avec l'aperçu des barres de vie)
+  function heroMods(run, c, e) {
+    var st = run.stats, h = c.hero, m = 1 + st.dmgP / 100;
+    if (run.hero === 'berserker') m *= 1 + (1 - run.hp / st.hp);
+    if (run.hero === 'moine') m *= 1 + 0.04 * (h.elan || 0);
+    if (h.st.weak > 0) m *= 0.75;
+    if (h.buffs.fury) m *= 1 + h.buffs.fury.v / 100;
+    if (e.st.vuln > 0) m *= 1.25;
+    if (run.stance === 'a') m *= 1.25; else if (run.stance === 'd') m *= 0.8;
+    if (c.cond === 'sang') m *= 1.4;
+    return m;
+  }
+  // Multiplicateur des dégâts que subit le héros sans armure ni esquive (poison, brûlure...)
+  function takenMods(run) { return Math.max(0.3, 1 + run.stats.takenP / 100) * (run.stance === 'a' ? 1.2 : run.stance === 'd' ? 0.75 : 1); }
   // Le héros inflige des dégâts. o : {skill:1|2|3, crit:force, noCrit, dot, flat (dégâts déjà calculés), auto}
   function hit(run, c, e, mult, o) {
     o = o || {}; if (!e || e.dead) return 0;
@@ -3304,17 +3432,10 @@ if (typeof module !== 'undefined') module.exports = DATA;
       if (h.first) { h.first = false; if (st.firstStrike) dmg *= 1 + st.firstStrike / 100; }
       if (st.exec && e.hp / e.maxhp < 0.3) dmg *= 1 + st.exec / 100;
     }
-    dmg *= 1 + st.dmgP / 100;
-    if (run.hero === 'berserker') dmg *= 1 + (1 - run.hp / st.hp);
-    if (run.hero === 'moine') dmg *= 1 + 0.04 * (h.elan || 0);
-    if (h.st.weak > 0) dmg *= 0.75;
-    if (h.buffs.fury) dmg *= 1 + h.buffs.fury.v / 100;
-    if (e.st.vuln > 0) dmg *= 1.25;
+    dmg *= heroMods(run, c, e);
     if (!o.dot && st.stunDmg && e.st.stun > 0) dmg *= 1 + st.stunDmg / 100;
     if (!o.dot && st.statusDmg && (e.st.burn || e.st.poison || e.st.bleed)) dmg *= 1 + st.statusDmg / 100;
-    if (run.stance === 'a') dmg *= 1.25; else if (run.stance === 'd') dmg *= 0.8;
     if (o.ult) dmg *= 1 + st.pow / 100;
-    if (c.cond === 'sang') dmg *= 1.4;
     if (!o.dot && !o.pierce && e.def > 0) dmg *= (2 * st.atk) / (2 * st.atk + e.def);
     if (e.shield > 0) { var ab = Math.min(e.shield, dmg); e.shield -= ab; dmg -= ab; if (dmg <= 0) { ev(c, { k: 'dmg', id: e.id, v: 0, sh: 1 }); return 0; } }
     e.hp -= dmg; run.dmg = (run.dmg || 0) + dmg; if (!o.dot && dmg > (run.maxHit || 0)) run.maxHit = dmg;
@@ -3451,7 +3572,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
       dmg *= (2 * raw) / (2 * raw + st.def);
     }
     if (c.dfx && c.dfx.guard && !o.dot) dmg *= 1 - c.dfx.guard / 100;
-    dmg *= Math.max(0.3, 1 + st.takenP / 100) * pm * (run.stance === 'a' ? 1.2 : run.stance === 'd' ? 0.75 : 1);
+    dmg *= takenMods(run) * pm;
     if (h.shield > 0) { var ab = Math.min(h.shield, dmg); h.shield -= ab; dmg -= ab; if (ab > 0 && dmg <= 0) { ev(c, { k: 'hurt', v: 0, sh: 1 }); dmg = 0; } }
     if (dmg > 0 && !o.dot) ug(run, 3);
     if (dmg > 0 && o.big && h.elan) { h.elan = 0; ev(c, { k: 'elanbreak' }); }
@@ -6624,7 +6745,7 @@ var VFX = (function () {
     fire: ['#ffb347', '#ff6a1f', '#ffe9a8', '#ff3b1f'], holy: ['#fff4c4', '#ffd87a', '#ffffff'], dark: ['#b48cff', '#7a4de0', '#e0ccff', '#5a2bd0'],
     blade: ['#e9f4ff', '#9cc6ee', '#ffffff'], war: ['#ffd27a', '#ff8a3c', '#ffffff'], heal: ['#7dffa0', '#c9ffd8', '#3fe07a'], gold: ['#ffd27a', '#fff1c4', '#e8a53a'],
     ice: ['#bfe3ff', '#ffffff', '#7fb8ff'], poison: ['#9dff6a', '#5fdc3a', '#d4ffb0'], death: ['#8a7aa0', '#c9bfe0', '#4a3f5c'], ult: ['#ffe9b8', '#ffd23c', '#ffffff', '#ff9a2e'],
-    fury: ['#ff5a3c', '#ffb347', '#ff2a2a'], curse: ['#c9ff8a', '#7ddc5a', '#eaffd0']
+    fury: ['#ff5a3c', '#ffb347', '#ff2a2a'], venom: ['#d59bff', '#a24dff', '#f0d6ff', '#8a2be2'], curse: ['#c9ff8a', '#7ddc5a', '#eaffd0']
   };
   function pal(k) { return PAL[k] || PAL.hit; }
 
@@ -6824,6 +6945,8 @@ var UI = (function () {
   function fmtMod(k, v) {
     var m = D.MODS[k]; if (!m || !v) return null;
     var a = Math.abs(v), num;
+    if (k === 'regen') a *= E.ROUND; // écrit en % par seconde, le jeu compte en tours
+    if (k === 'vulnStart') a = E.turns(a);
     if (m.fmt === 'flat') num = (a < 20 && Math.round(a * 10) % 10 ? a.toFixed(1).replace('.', ',') : E.fmt(a));
     else num = (Math.round(a * 10) % 10 ? a.toFixed(1).replace('.', ',') : Math.round(a)) + ' %';
     return [k === 'cdr' ? 'Vitesse de recharge' : m.n, (v >= 0 ? '+' : '−') + num];
@@ -6833,9 +6956,11 @@ var UI = (function () {
     return h;
   }
   function toast(msg, long) {
+    // v4.11 : les explications (long) restent affichées jusqu'à ce qu'on les touche, pour avoir le temps de les lire
     var t = document.createElement('div'); t.className = 'toast' + (long ? ' long' : ''); t.innerHTML = msg; $('#toasts').appendChild(t);
+    if (long) { t.insertAdjacentHTML('beforeend', '<span class="tclose">Touche pour fermer ✕</span>'); t.addEventListener('click', function (ev) { ev.stopPropagation(); t.classList.add('out'); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 200); }); }
     while ($('#toasts').children.length > 2) $('#toasts').removeChild($('#toasts').firstChild);
-    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, long ? 6000 : 3200);
+    if (!long) setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 3200);
   }
   function flash(color) { var f = $('#flash'); f.style.background = color; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
   function modal(html, centered) { var m = $('#modal'); m.innerHTML = '<div class="sheet' + (centered ? ' mid' : '') + '">' + html + '</div>'; m.className = 'on' + (centered ? ' centered' : ''); }
@@ -7384,7 +7509,7 @@ UI.run = (function () {
       '<div class="dhand-w"><span class="dlab">Ta main</span><div class="dhand" id="dhand"></div></div>' +
       '<button class="dfig-w" id="dfigw" data-act="figs"><span class="dlab">Ce tour</span><span class="dslots" id="dslots"></span><span class="dfig" id="dfig"></span></button></div></div>' +
       '<div class="hud">' +
-      '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><span></span></div></div></div>' +
+      '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><em class="pv d"></em><em class="pv b"></em><em class="pv h"></em><span></span></div></div></div>' +
       '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + UI.spr('ul_' + h.id, 'ic') + h.ult.name + '</span></button>' +
       '<div class="turnrow"><span class="aps" id="aps"></span><b id="tlabel"></b><span class="hsts" id="hsts"></span><span class="grow"></span><button class="tog spd" id="tspd" data-act="speed"></button><button class="tog pass" id="tpass" data-act="pass">Fin du tour</button></div>' +
       '<div class="mainacts"><button class="bigact strike" id="bstrike" data-act="strike" data-info="strike">' + UI.spr('i_sword', 'ic') + '<b>Frapper</b></button>' +
@@ -7406,8 +7531,8 @@ UI.run = (function () {
     a.style.setProperty('--z1', z.bg[0]); a.style.setProperty('--z2', z.bg[1]); a.style.setProperty('--zc', z.color);
     var bg = typeof Backgrounds !== 'undefined' ? ' style="background-image:url(' + Backgrounds.url(z.id) + ')"' : ''; a.classList.add('hasbg'); a.classList.remove('danger');
     a.innerHTML = '<div class="abg"' + bg + '></div><div class="rays"></div><div class="fog f1"></div>' + propsHtml(z.id) + '<div class="unit hero enter" id="uhero">' + UI.spr(run.hero) + '</div><div class="minions" id="minions"></div><div class="fog f2"></div><div class="vig"></div>' +
-      '<button class="primes" id="primes" data-act="primes"></button><button class="cdice" id="cdice" data-act="cdice"></button><div class="combo" id="combo"></div><button class="sweepb" id="tsweep" data-act="sweep">Balayer le combat</button>' + extraHtml(run);
-    els = {}; posOf = {}; floats = 0; lootShown = 0; combo = 0; orbEls = {}; shotEls = {}; primeKey = '';
+      '<div class="ilayer" id="ilayer"></div><button class="primes" id="primes" data-act="primes"></button><button class="cdice" id="cdice" data-act="cdice"></button><div class="combo" id="combo"></div><button class="sweepb" id="tsweep" data-act="sweep">Balayer le combat</button>' + extraHtml(run);
+    els = {}; posOf = {}; labKey = ''; floats = 0; lootShown = 0; combo = 0; orbEls = {}; shotEls = {}; primeKey = '';
     vfx = typeof VFX !== 'undefined' ? VFX.attach(a) : null;
     fxL = typeof FX !== 'undefined' ? FX.attach(a, { ambient: ['dust', 'leaves', 'fireflies', 'gold', 'embers', 'void'][z.id - 1], warm: 2 }) : null;
     if (c && c.dfx && c.dfx.id) showFig(c.dfx, true);
@@ -7427,9 +7552,10 @@ UI.run = (function () {
     d.className = 'unit en' + (e.boss ? ' boss' : e.elite ? ' elite' : '') + (spawn ? ' spawn' : '') + (e.fix ? ' fixed fx-' + e.fix : '') + (e.big ? ' giant' : '') + (e.gold ? ' golden' : '') + (e.champ ? ' champ' : '');
     d.id = 'en' + e.id; d.dataset.act = 'target'; d.dataset.i = i; d.dataset.info = 'foe:' + i;
     d.style.setProperty('--bd', -(Math.random() * 2.2).toFixed(2) + 's'); d.style.right = P[pi].r + '%'; d.style.bottom = P[pi].b + '%'; d.style.zIndex = 10 - Math.round(P[pi].b / 5);
-    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span><span class="intent"></span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">' + UI.spr('i_burst', 'ic') + '</span>';
+    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span><span class="isp"></span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><em class="pv d"></em><em class="pv b"></em><em class="pv h"></em><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">' + UI.spr('i_burst', 'ic') + '</span>';
     if (e.boss || e.elite || e.champ) d.insertAdjacentHTML('beforeend', '<i class="aura"></i>'); // en dernier : updateArena lit les enfants par position
     $('#arena').appendChild(d); els[e.id] = d;
+    var it = document.createElement('span'); it.className = 'intent'; d._it = it; var il = $('#ilayer'); if (il) il.appendChild(it); labKey = '';
   }
   // Entrée du boss, propre à sa zone : il surgit de la terre, tombe des arbres, sort de la brume, descend dans la lumière, jaillit des flammes ou naît du vide
   var BIN = { 1: ['death', 1000], 2: ['dark', 1100], 3: ['poison', 1200], 4: ['holy', 1150], 5: ['fire', 900], 6: ['dark', 1250] };
@@ -7616,7 +7742,7 @@ UI.run = (function () {
     run.bag.forEach(function (d) { var k = d.t + '|' + d.f.join(''); if (!groups[k]) { groups[k] = { d: d, n: 0 }; order.push(k); } groups[k].n++; });
     h = '<h2>🎒 Ton sac de dés</h2><div class="tiny dim center" style="margin:-6px 0 10px">' + run.bag.length + ' dés · tu en pioches ' + (3 + (run.stats.diceHand || 0)) + ' par tour · le sac se remélange quand il est vide</div>';
     order.forEach(function (k) { var g = groups[k], d = g.d; h += '<div class="li"><div class="ic">' + tdie(d.t, facesTxt(d.f)) + '</div><div class="grow"><b>' + E.dieName(d) + (g.n > 1 ? ' ×' + g.n : '') + '</b> <span class="tiny dim">faces ' + d.f[0] + ' à ' + d.f[5] + '</span><div class="small dim">' + D.DICE[d.t].desc + '</div></div></div>'; });
-    h += '<h3 class="gold" style="margin:10px 0 6px">Jouer un dé</h3><div class="small dim" style="line-height:1.6">Touche un dé de ta main pour le choisir, retouche-le pour le <b>jouer</b> : il agit tout de suite et ne coûte <b>aucune action</b>. Tu peux aussi le glisser dans un <b>pouvoir</b> s’il respecte sa condition (≤3, PAIR, ≥4...).</div>';
+    h += '<h3 class="gold" style="margin:10px 0 6px">Jouer un dé</h3><div class="small dim" style="line-height:1.6">Touche un dé de ta main : il <b>agit tout de suite</b> et ne coûte <b>aucune action</b>. Touche un <b>pouvoir</b> qui s’illumine : il prend tout seul le bon dé. Pour choisir toi-même le dé d’un pouvoir, <b>appui long</b> sur le dé, puis touche le pouvoir (condition ≤3, PAIR, ≥4...).</div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les figures</h3><div class="tiny dim" style="margin-bottom:6px">Les <b>3 premiers dés</b> que tu joues dans un tour forment une figure, selon le chiffre affiché sur chacun. L’ordre ne compte pas.</div>';
     D.FIGS.forEach(function (f) { h += '<div class="li"><div class="ic">' + f[0] + '</div><div class="grow"><b>' + f[1] + '</b> <span class="tiny dim">' + f[2] + '</span><div class="small dim">' + f[3] + '</div></div></div>'; });
     h += '<div class="btns"><button class="btn primary big" data-act="close">FERMER</button></div>';
@@ -7624,7 +7750,8 @@ UI.run = (function () {
   }
   ACT.bag = function () { SND.play('click'); bagSheet(); };
   function intentHtml(it) {
-    var h = it.k === 'atk' ? '⚔️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '') : it.k === 'big' ? '💥 ' + E.fmt(Math.ceil(it.dmg)) : it.k === 'prep' ? '⚠️ charge' : it.k === 'stun' ? '💫' : it.k === 'flee' ? '🏃 fuit' : it.k === 'hidden' ? '🌊' : '💤';
+    if (it.parried) return it.k === 'big' ? '🛡️ paré' : '🛡️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '');
+    var h = it.k === 'atk' ? '⚔️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '') : it.k === 'big' ? '🛡️ PARE ! 💥 ' + E.fmt(Math.ceil(it.dmg)) : it.k === 'prep' ? '⚠️ charge' : it.k === 'stun' ? '💫' : it.k === 'flee' ? '🏃 fuit' : it.k === 'hidden' ? '🌊' : '💤';
     return h + (it.heal ? ' ✚' : '') + (it.shield ? ' 🛡️' : '') + (it.summon ? ' 👥' : '');
   }
   // --- orbes à ramasser ---
@@ -7786,7 +7913,7 @@ UI.run = (function () {
         case 'explode': UI.flash('#9aa04a55'); break;
         case 'dead': UI.vib([80, 60, 160]); SND.play('death'); UI.flash('#000000dd'); break;
         case 'parryOn': anim(hero, 'parry', 1000); SND.play('equip'); break;
-        case 'parry': if (e.perfect) { UI.vib(30); fxAt(hero, 'ice', 24); var pc = center(hero); if (vfx && pc) { VFX.ring(vfx, pc.x + 20, pc.y, 'ice', 130, 0.4, 8); VFX.flash(vfx, pc.x + 20, pc.y, 'ice', 110, 0.2); } hitstop(90); floatAt(hero, 'PARADE PARFAITE !', 'crit'); UI.flash('#ffe9b888'); SND.play('block'); anim($('#arena'), 'shake', 250); } else { floatAt(hero, 'Paré', 'txt'); SND.play('block', 0.6); } break;
+        case 'parry': if (e.perfect) { UI.vib(30); fxAt(hero, 'ice', 24); var pc = center(hero); if (vfx && pc) { VFX.ring(vfx, pc.x + 20, pc.y, 'ice', 130, 0.4, 8); VFX.flash(vfx, pc.x + 20, pc.y, 'ice', 110, 0.2); } hitstop(90); floatAt(hero, 'PARADE PARFAITE !', 'crit'); UI.flash('#ffe9b888'); SND.play('block'); anim($('#arena'), 'shake', 250); } else { floatAt(hero, '🛡️ PARÉ', 'parry'); fxAt(hero, 'ice', 10); SND.play('block', 0.6); } break;
         case 'ult': var uc = center(hero), upts = []; c.enemies.forEach(function (x) { if (els[x.id] && !els[x.id].classList.contains('dead')) upts.push(center(els[x.id])); });
           if (vfx && uc) { VFX.pillar(vfx, uc.x, uc.y, 'ult', 120, 0.9); VFX.cast(vfx, sfxKind(e.sfx), uc.x, uc.y, upts, true); VFX.sparks(vfx, uc.x, uc.y, 'ult', 50, { speed: 420, g: -80, life: 1.2 }); } hitstop(140); banner(e.name.toUpperCase(), 'ULTIME'); UI.flash('#d9a441aa'); SND.play(e.sfx); SND.play('levelup', 0.6); anim($('#arena'), 'shake', 250); break;
         case 'passive': floatAt(hero, e.txt, 'txt'); break;
@@ -7812,7 +7939,7 @@ UI.run = (function () {
     var key = run.floor + '|' + run.gold + '|' + run.cendres + '|' + run.lvl + '|' + Object.keys(run.boons).length + run.artifacts.length + '|' + run.evos.length;
     if (updateHud.key !== key) {
       updateHud.key = key;
-      $('#rzone').innerHTML = '<b style="color:' + z.color + '">' + z.name + '</b> · étage ' + run.floor + (E.cycleOf(run.floor) ? ' · <span class="bad">Abîme ' + E.cycleOf(run.floor) + '</span>' : '');
+      $('#rzone').innerHTML = '<b style="color:' + z.color + '">' + z.name + '</b> · <span style="white-space:nowrap">étage ' + run.floor + '</span>' + (E.cycleOf(run.floor) ? ' · <span class="bad">Abîme ' + E.cycleOf(run.floor) + '</span>' : '');
       var p = ''; for (i = 1; i <= 10; i++) p += '<i class="' + (i <= pos ? 'on' : '') + (i === 10 ? ' boss' : '') + '"></i>';
       $('#rpips').innerHTML = p; $('#rgold').textContent = '💰 ' + run.gold; $('#rcend').textContent = '🔥 ' + E.fmt(run.cendres);
       $('#rlvl').textContent = run.lvl;
@@ -7824,6 +7951,8 @@ UI.run = (function () {
     updatePrimes(run); drainPrimes(run);
     hb.lastChild.textContent = E.fmt(Math.ceil(run.hp)) + ' / ' + E.fmt(stt.hp) + (sh >= 1 ? '  (+' + E.fmt(sh) + ')' : '');
     hb.classList.toggle('low', frac < 0.3);
+    var pvw = c && !c.over && c.turn === 'hero' && run.phase === 'combat' ? E.preview() : null;
+    setPv(hb.children[3], hb.children[4], hb.children[5], run.hp, stt.hp, pvw && pvw.hero);
     $('#rlvl').style.setProperty('--xp', Math.min(100, run.xp / E.xpNeed(run.lvl) * 100) + '%');
     UI.setTxt($('#hsts'), c ? stIcons(c.hero.st) + (c.hero.elan ? ' ⚡x' + c.hero.elan : '') : '');
     var charging = !!c && !c.over && c.enemies.some(function (x) { return !x.dead && x.charge; }), hsk = E.hero(run.hero).skills;
@@ -7869,6 +7998,63 @@ UI.run = (function () {
     if (wkOn && UI.guide) UI.guide.once('weak');
     var pt = $('#pot'); pt.lastChild.textContent = run.potions; pt.classList.toggle('cool', run.potions <= 0);
   }
+  // v4.10 : barres de vie. Violet = ce que poison/brûlure/saignement retireront au prochain tour ennemi, vert = les soins à venir
+  // v4.11 : la brûlure a sa propre bande orange, collée à droite de la violette (poison, saignement)
+  function seg(el, l, w) { var k = w > 0 ? l.toFixed(2) + '|' + w.toFixed(2) : ''; if (el._k === k) return; el._k = k; el.style.left = k ? l.toFixed(2) + '%' : ''; el.style.width = k ? w.toFixed(2) + '%' : '0'; }
+  function setPv(d, bn, hl, hp, max, p) {
+    var hpc = hp / max * 100, tot = 0, bw = 0, dw = 0;
+    if (p && p.dot >= 0.5 && hp > 0) {
+      tot = Math.min(Math.max(p.dot / max * 100, 6), hpc);
+      bw = p.burn >= 0.5 ? Math.min(tot, Math.max(p.burn / max * 100, p.burn < p.dot - 0.5 ? 3 : tot)) : 0;
+      dw = tot - bw; if (dw > 0 && dw < 3 && bw > 3) { bw -= 3 - dw; dw = 3; }
+    }
+    seg(bn, hpc - bw, bw); seg(d, hpc - bw - dw, dw);
+    var hw = p && p.heal >= 0.5 && hp > 0 && hp < max ? Math.min(Math.max(p.heal / max * 100, 3), 100 - hpc) : 0;
+    seg(hl, hpc, hw);
+  }
+  // v4.10 : les intentions vivent dans un calque au-dessus de tous les ennemis, jamais sous le bandeau du haut ni sous un autre ennemi.
+  // Les noms et barres trop hauts (boss, petits écrans) descendent juste sous les primes. Recalculé seulement quand quelque chose change.
+  var labKey = '';
+  function placeLabels(c) {
+    var a = $('#arena'), il = $('#ilayer'); if (!a || !il) return;
+    var top = 4; ['#primes', '#cond'].forEach(function (q) { var b = $(q); if (b && b.offsetHeight && !$('#app').classList.contains('novice')) top = Math.max(top, b.offsetTop + b.offsetHeight + 3); });
+    var live = c.enemies.filter(function (e) { return !e.dead && els[e.id]; }), k = top + ':' + a.clientWidth + 'x' + a.clientHeight + ':' + live.map(function (e) { return e.id; }).join(',');
+    if (k === labKey) return; labKey = k;
+    var boxes = [];
+    live.forEach(function (e) {
+      var el = els[e.id], en = el.children[1], sp = en.lastElementChild, it = el._it;
+      el.style.removeProperty('--lift');
+      var y0 = el.offsetTop + en.offsetTop, lift = Math.max(0, top - y0);
+      if (lift) el.style.setProperty('--lift', lift + 'px');
+      var w = it.offsetWidth || 0, cx = el.offsetLeft + en.offsetLeft + en.offsetWidth / 2, y = y0 + lift + sp.offsetTop;
+      boxes.push({ it: it, x: Math.max(4, Math.min(a.clientWidth - w - 4, cx - w / 2)), y: y, w: w, h: it.offsetHeight || 0 });
+    });
+    boxes.sort(function (p, q) { return p.y - q.y || p.x - q.x; });
+    boxes.forEach(function (b, i) {
+      for (var j = 0; j < i; j++) { var o = boxes[j]; if (b.w && o.w && b.x < o.x + o.w + 2 && o.x < b.x + b.w + 2 && b.y < o.y + o.h + 1 && o.y < b.y + b.h + 1) { b.y = o.y + o.h + 1; j = -1; } }
+      b.it.style.transform = 'translate(' + Math.round(b.x) + 'px,' + Math.round(b.y) + 'px)';
+    });
+  }
+  // v4.11 : brûlé, empoisonné, saignant se voient sur le personnage lui-même (lueur colorée + particules)
+  function stClasses(el, st) {
+    var k = (st.burn ? 'b' : '') + (st.poison ? 'p' : '') + (st.bleed ? 's' : '');
+    if (el._st === k) return; el._st = k;
+    el.classList.toggle('st-burn', !!st.burn); el.classList.toggle('st-poison', !!st.poison); el.classList.toggle('st-bleed', !!st.bleed);
+  }
+  var stfxT = 0;
+  function statusFx(c) {
+    var now = performance.now(); if (!vfx || now - stfxT < 340) return; stfxT = now;
+    var a = $('#arena'); if (!a) return; var ar = a.getBoundingClientRect();
+    function emit(el, st) {
+      var im = el && el.querySelector('img:not(.ic):not(.emo)'); if (!im) return; var r = im.getBoundingClientRect(); if (!r.width) return;
+      var x = r.left - ar.left + r.width / 2, w = r.width * 0.32, y = r.top - ar.top;
+      if (st.burn) VFX.sparks(vfx, x + (Math.random() * 2 - 1) * w, y + r.height * 0.8, 'fire', 3, { speed: 50, g: -240, life: 0.8, size: 9, dir: -Math.PI / 2, spread: 0.8 });
+      if (st.poison) VFX.sparks(vfx, x + (Math.random() * 2 - 1) * w, y + r.height * 0.6, 'venom', 2, { speed: 30, g: -110, life: 1.1, size: 8, dir: -Math.PI / 2, spread: 1.2 });
+      if (st.bleed) VFX.sparks(vfx, x + (Math.random() * 2 - 1) * w, y + r.height * 0.45, 'blood', 2, { speed: 40, g: 380, life: 0.6, size: 7, dir: Math.PI / 2, spread: 0.6 });
+    }
+    if (!c.over) emit($('#uhero'), c.hero.st);
+    c.enemies.forEach(function (e) { if (!e.dead && !(e.hidden > 0)) emit(els[e.id], e.st); });
+  }
   function updateArena() {
     var run = S().run, c = run && run.combat; if (!c) return;
     c.enemies.forEach(function (e, i) {
@@ -7884,11 +8070,17 @@ UI.run = (function () {
     var ctm = $('#condt'); if (ctm && c.cond === 'defi') { var left = Math.max(0, Math.ceil((20 - c.t) / E.ROUND)); ctm.textContent = ' ' + left + ' tour' + (left > 1 ? 's' : ''); ctm.parentNode.classList.toggle('late', left <= 0); }
     var hu = $('#uhero'); if (hu) { hu.classList.toggle('invuln', c.hero.invuln > 0); hu.classList.toggle('undying', !!c.hero.buffs.undying); }
     if (hu) hu.classList.toggle('fury', !!c.hero.buffs.fury);
-    var its = !c.over && c.turn === 'hero' ? E.intents() : null;
+    var its = !c.over && c.turn === 'hero' ? E.intents() : null, pv = its ? E.preview() : null;
+    if (hu) hu.classList.toggle('guard', c.hero.parryT > 0 && !c.over);
+    if (hu) stClasses(hu, c.over ? {} : c.hero.st);
+    c.enemies.forEach(function (e) { var el = els[e.id]; if (el) stClasses(el, e.dead ? {} : e.st); });
+    statusFx(c);
     c.enemies.forEach(function (e, i) {
-      var el = els[e.id]; if (!el) return; var ie = el._it || (el._it = el.querySelector('.intent')), ih = its && !e.dead ? intentHtml(its[i]) : '';
-      if (ie && ie._raw !== ih) { UI.setTxt(ie, ih); ie.className = 'intent' + (its && !e.dead ? ' k-' + its[i].k : ''); }
+      var el = els[e.id]; if (!el) return; var ie = el._it, ih = its && !e.dead ? intentHtml(its[i]) : '';
+      if (ie && ie._raw !== ih) { UI.setTxt(ie, ih); ie.className = 'intent' + (its && !e.dead ? ' k-' + its[i].k + (its[i].parried ? ' parried' : '') : ''); labKey = ''; }
+      var eb = el.children[3]; setPv(eb.children[2], eb.children[3], eb.children[4], e.dead ? 0 : e.hp, e.maxhp, pv && !e.dead ? pv.foes[i] : null);
     });
+    placeLabels(c);
     for (var oi = 0; oi < c.orbs.length; oi++) { var ob = orbEls[c.orbs[oi].oid]; if (ob) ob.classList.toggle('last', c.orbs[oi].t <= E.ROUND); }
     var m = $('#minions'), n = c.hero.skel || 0;
     if (m && m.children.length !== n) { var h = ''; for (var i = 0; i < n; i++) h += UI.spr('serviteur'); m.innerHTML = h; }
@@ -8268,7 +8460,8 @@ UI.run = (function () {
     h += '<div class="li on"><div class="ic">✨</div><div class="grow"><b>Éveils de pouvoir</b><div class="small dim">Tous les 4 niveaux d’une descente (4, 8, 12...), tu fais évoluer un de tes pouvoirs. Un ✦ sur le bouton montre qu’il est éveillé.</div></div></div>';
     h += '<div class="li on"><div class="ic">🎲</div><div class="grow"><b>Tour par tour</b><div class="small dim">À ton tour tu as <b>2 actions ⚡</b>. Frapper, parer, toucher un point faible ou renvoyer un crâne coûtent 1 action. Les pouvoirs, eux, se paient avec un dé. L’ultime, la fiole, la posture et les orbes sont gratuits. Ensuite chaque ennemi joue, l’un après l’autre.</div></div></div>';
     h += '<div class="li on"><div class="ic">🎒</div><div class="grow"><b>Dés de combat</b><div class="small dim">À chaque tour tu pioches <b>3 dés</b>. <b>Touche un dé</b> : il agit tout de suite, <b>sans coûter d’action</b>. Ou touche un <b>pouvoir</b> : il prend le meilleur dé qui convient. Chacun affiche le dé qu’il demande (≤3, PAIR, ≥4...), et plus le dé est fort, plus le pouvoir l’est.<br>⚔️ Lame frappe · 🛡️ Garde protège · ❤️ Sève soigne · ✨ Écho renforce le reste de ta main · 🪞 Miroir copie le dernier dé joué<br><b>Figures</b> : les 3 premiers dés joués du tour. 🎲 Paire (+30 % dégâts) · ✨ Suite 2-3-4 (+1 action, prochain coup critique) · 👑 Brelan (+1 action, coups critiques).<br>⇅ <b>Retourner</b> change un dé en sa face opposée, une fois par tour. ↻ relance ta main : 1 fois par combat.</div><div class="btns" style="margin-top:6px"><button class="btn sm" data-act="bag">🎒 Mon sac et les figures</button></div></div></div>';
-    h += '<div class="li on"><div class="ic">👁️</div><div class="grow"><b>Intentions</b><div class="small dim">Sous le nom de chaque ennemi, ce qu’il fera à son tour : ⚔️ 12 il frappe pour 12 · 💥 gros coup · ⚠️ il charge (étourdis-le ou pare) · 💤 rien · ✚ soin · 👥 renfort.</div></div></div>';
+    h += '<div class="li on"><div class="ic">👁️</div><div class="grow"><b>Intentions</b><div class="small dim">Sous le nom de chaque ennemi, ce qu’il fera à son tour : ⚔️ 12 il frappe pour 12 · 💥 gros coup · ⚠️ il charge (étourdis-le ou pare) · 💤 rien · ✚ soin · 👥 renfort. En bleu 🛡️ : tu pares, le chiffre montre ce qui passera encore.</div></div></div>';
+    h += '<div class="li on"><div class="ic">❤️</div><div class="grow"><b>Barres de vie</b><div class="small dim">Au bout de la barre, en <b style="color:#c86bff">violet</b> : ce que poison et saignement retireront au prochain tour, en <b style="color:#ff8a3c">orange</b> la brûlure. En <b style="color:#7dffa0">vert</b> : les soins à venir. Pour toi comme pour les ennemis.</div></div></div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les autres boutons</h3>' +
       '<div class="li"><div class="ic">⚔️</div><div class="grow"><b>Frapper</b><div class="small dim">Attaque l’ennemi visé (▼). Plus ta vitesse d’attaque est haute, plus tu donnes de coups par action. Toucher un ennemi le vise ; le toucher encore le frappe.</div></div></div>' +
       '<div class="li"><div class="ic">🛡️</div><div class="grow"><b>Parer</b><div class="small dim">Jusqu’à ton prochain tour, tu subis 70 % de dégâts en moins et tu ripostes. Quand un ennemi charge un gros coup ⚠️, le bouton devient <b style="color:#3ff0ff">bleu vif : PARE !</b> Pare à ce moment : le coup est annulé et l’ennemi est étourdi.</div></div></div>' +

@@ -13,7 +13,7 @@ var VFX = (function () {
     fire: ['#ffb347', '#ff6a1f', '#ffe9a8', '#ff3b1f'], holy: ['#fff4c4', '#ffd87a', '#ffffff'], dark: ['#b48cff', '#7a4de0', '#e0ccff', '#5a2bd0'],
     blade: ['#e9f4ff', '#9cc6ee', '#ffffff'], war: ['#ffd27a', '#ff8a3c', '#ffffff'], heal: ['#7dffa0', '#c9ffd8', '#3fe07a'], gold: ['#ffd27a', '#fff1c4', '#e8a53a'],
     ice: ['#bfe3ff', '#ffffff', '#7fb8ff'], poison: ['#9dff6a', '#5fdc3a', '#d4ffb0'], death: ['#8a7aa0', '#c9bfe0', '#4a3f5c'], ult: ['#ffe9b8', '#ffd23c', '#ffffff', '#ff9a2e'],
-    fury: ['#ff5a3c', '#ffb347', '#ff2a2a'], curse: ['#c9ff8a', '#7ddc5a', '#eaffd0']
+    fury: ['#ff5a3c', '#ffb347', '#ff2a2a'], venom: ['#d59bff', '#a24dff', '#f0d6ff', '#8a2be2'], curse: ['#c9ff8a', '#7ddc5a', '#eaffd0']
   };
   function pal(k) { return PAL[k] || PAL.hit; }
 

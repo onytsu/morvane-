@@ -20,7 +20,7 @@ var DATA = (function () {
     spdP: { n: "Vitesse d'attaque", fmt: 'pct' }, allP: { n: 'Toutes les stats', fmt: 'pct' },
     crit: { n: 'Chance de critique', fmt: 'pct' }, critd: { n: 'Dégâts critiques', fmt: 'pct' },
     ls: { n: 'Vol de vie', fmt: 'pct' }, dodge: { n: 'Esquive', fmt: 'pct' },
-    regen: { n: 'Régénération / s', fmt: 'pct' }, pow: { n: 'Puissance des pouvoirs', fmt: 'pct' },
+    regen: { n: 'Régénération (PV par tour)', fmt: 'pct' }, pow: { n: 'Puissance des pouvoirs', fmt: 'pct' },
     cdr: { n: 'Recharge des pouvoirs', fmt: 'pctm' }, gf: { n: 'Or et Cendres', fmt: 'pct' },
     mf: { n: 'Chance de butin', fmt: 'pct' }, xp: { n: 'Expérience', fmt: 'pct' },
     thorns: { n: 'Épines (renvoi)', fmt: 'pct' }, block: { n: 'Chance de blocage', fmt: 'pct' },
@@ -37,7 +37,7 @@ var DATA = (function () {
     bleedP: { n: 'Dégâts de saignement', fmt: 'pct' }, skel: { n: 'Serviteur squelette max', fmt: 'flat' },
     skelP: { n: 'Dégâts des serviteurs', fmt: 'pct' }, s1P: { n: 'Dégâts du pouvoir 1', fmt: 'pct' },
     s2P: { n: 'Dégâts du pouvoir 2', fmt: 'pct' }, s3P: { n: 'Dégâts du pouvoir 3', fmt: 'pct' },
-    atkPerRoom: { n: 'Attaque par salle franchie', fmt: 'pct' }, vulnStart: { n: 'Les ennemis commencent Vulnérables (s)', fmt: 'flat' },
+    atkPerRoom: { n: 'Attaque par salle franchie', fmt: 'pct' }, vulnStart: { n: 'Les ennemis commencent Vulnérables (tours)', fmt: 'flat' },
     rerolls: { n: "Relance d'aubaines", fmt: 'flat' }, startGold: { n: 'Or de départ', fmt: 'flat' },
     idleP: { n: "Cendres de l'Ossuaire", fmt: 'pct' }, startBoons: { n: 'Aubaine offerte au départ', fmt: 'flat' },
     enemyHpP: { n: 'PV des ennemis', fmt: 'pct' }, idleH: { n: "Heures de réserve de l'Ossuaire", fmt: 'flat' },
@@ -331,7 +331,7 @@ var DATA = (function () {
   // ---------- Lexique : tous les mots du jeu, expliqués ----------
   var GLOSS = [
     ['🎒', 'Sac de dés', 'Les dés de ton héros pour cette descente. Tu en pioches 3 par tour ; quand le sac est vide, il est remélangé. Élites, boss et un combat sur trois t’offrent un dé.'],
-    ['🔲', 'Jouer un dé', 'Touche un dé de ta main, puis retouche-le : il agit tout de suite et ne coûte aucune action.'],
+    ['🔲', 'Jouer un dé', 'Touche un dé de ta main : il agit tout de suite et ne coûte aucune action. Appui long : il est choisi, pour le glisser dans un pouvoir.'],
     ['🎲', 'Figure', 'Les 3 premiers dés joués dans un tour : Paire (deux identiques), Suite (2-3-4) ou Brelan (trois identiques).'],
     ['👁️', 'Intention', 'Ce qu’un ennemi fera à son prochain tour, affiché sous son nom, avec les dégâts attendus.'],
     ['🔥', 'Brûlure', '25 % de ton attaque par seconde pendant 3 s. Relancer une brûlure la remet à 3 s.'],
@@ -385,8 +385,18 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.8';
+  var VERSION = '4.11';
   var NEWS = [
+    ['💬', 'Le temps de lire', 'Les explications restent affichées jusqu’à ce que tu les touches.'],
+    ['🔥', 'Brûlé, empoisonné, ça se voit', 'Un personnage qui brûle s’entoure d’orange et lâche des braises, un empoisonné de violet avec des bulles, un saignant de rouge. Sur les barres de vie, la brûlure à venir a sa bande orange, à côté du violet du poison.'],
+    ['🛡️', 'Quand parer', 'Le gros coup qui arrive s’annonce en grand sur l’ennemi : « PARE ! » en bleu, et le ⚠️ n’est plus caché en haut de l’écran.'],
+    ['📱', 'Plus de place', 'Sur les écrans peu hauts, le plateau de dés et les commandes se resserrent, et les personnages rapetissent un peu pour que tout tienne.'],
+    ['👁️', 'Des intentions toujours lisibles', 'Ce que chaque ennemi va faire s’affiche au-dessus de tout : plus jamais caché par le bandeau du haut, les primes ou un autre monstre. Les noms trop hauts (boss, petits écrans) redescendent.'],
+    ['🛡️', 'La parade se voit', 'Quand tu pares, un halo bleu entoure ton héros et les intentions passent en bleu avec les dégâts qui passeront encore. « PARÉ » s’affiche en grand.'],
+    ['☠️', 'Poison et soins sur les barres', 'Au bout de chaque barre de vie, en violet, ce que poison, brûlure et saignement retireront au prochain tour ; en vert, les soins à venir. Pour toi comme pour les ennemis.'],
+    ['⚒️', 'Des objets qui ont un nom', 'Chaque objet porte un adjectif tiré de son premier bonus, accordé comme il faut : « Épée cruelle », « Grèves vives », « Capuche bénie ». Les Sandales deviennent des Bottines, et la Couronne de Ronces un Diadème de Ronces.'],
+    ['📖', 'Une aide à jour', 'La fiche du sac de dés et le lexique expliquent le geste actuel : un toucher joue le dé, un appui long le choisit pour un pouvoir. La Mère des Ronces décrit son entrave en tours, dé gelé compris.'],
+    ['🛠️', 'Petites corrections', 'Régénération affichée en PV par tour, Vulnérables au départ comptés en tours, niveau des objets de set lisible par-dessus leur double contour, prologue en plein écran, numéro d’étage qui ne part plus seul à la ligne.'],
     ['👆', 'Un toucher, un dé', 'Touche un dé : il agit tout de suite. Un petit mot sous chaque dé dit ce qu’il fait. Pour Retourner, touche le bouton puis le dé.'],
     ['⚔️', 'Frappes automatiques', 'Main vide et rien à craindre : tes actions restantes frappent toutes seules. Quand un ennemi charge, frappe fort, montre un point faible, lance un crâne, ou quand ton ultime est prêt, « À toi : frappe ou pare » s’affiche et la main reste à toi.'],
     ['✋', 'Appui long sur un dé', 'Il montre ce que fera le dé et le choisit : touche ensuite un pouvoir pour l’y glisser.'],
@@ -633,7 +643,7 @@ var DATA = (function () {
   // Spécialité de chaque boss, affichée dans la présentation de la zone
   var MECH = {
     1: 'À la moitié de ses PV, il relève deux squelettes d’un coup.',
-    2: 'Ses racines t’entravent régulièrement : tu frappes 2 fois moins vite pendant 4 s.',
+    2: 'Ses racines t’entravent régulièrement : pendant 4 s, tu frappes 2 fois moins vite et ton meilleur dé tombe à 1 (⇅ le dégèle).',
     3: 'Il plonge et devient intouchable, puis resurgit avec un coup énorme : pare-le.',
     4: 'À 66 % et 33 % de ses PV, il se protège d’un bouclier et te réduit au silence (pouvoirs retardés).',
     5: 'La chaleur de la forge te brûle de plus en plus fort : tue-le vite.',
@@ -663,38 +673,38 @@ var DATA = (function () {
   ];
   // imp = bonus fixe de la base. s = grandit avec le niveau d'objet (exponentiel) ; sinon valeur en %.
   var BASES = [
-    { id: 'epee', slot: 'arme', name: 'Épée', icon: '🗡️', imp: { atk: 5 } },
-    { id: 'hache', slot: 'arme', name: 'Hache', icon: '🪓', imp: { atk: 5.6 }, imp2: { critd: 12 } },
-    { id: 'dague', slot: 'arme', name: 'Dague', icon: '🔪', imp: { atk: 4.2 }, imp2: { crit: 5 } },
+    { id: 'epee', g: 'f', slot: 'arme', name: 'Épée', icon: '🗡️', imp: { atk: 5 } },
+    { id: 'hache', g: 'f', slot: 'arme', name: 'Hache', icon: '🪓', imp: { atk: 5.6 }, imp2: { critd: 12 } },
+    { id: 'dague', g: 'f', slot: 'arme', name: 'Dague', icon: '🔪', imp: { atk: 4.2 }, imp2: { crit: 5 } },
     { id: 'baton', slot: 'arme', name: 'Bâton', icon: '⚕️', imp: { atk: 4.4 }, imp2: { pow: 15 } },
-    { id: 'masse', slot: 'arme', name: 'Masse', icon: '🔨', imp: { atk: 5.2 }, imp2: { block: 4 } },
+    { id: 'masse', g: 'f', slot: 'arme', name: 'Masse', icon: '🔨', imp: { atk: 5.2 }, imp2: { block: 4 } },
     { id: 'heaume', slot: 'casque', name: 'Heaume', icon: '⛑️', imp: { hp: 22, def: 1.5 } },
-    { id: 'capuche', slot: 'casque', name: 'Capuche', icon: '🎭', imp: { hp: 18 }, imp2: { dodge: 3 } },
+    { id: 'capuche', g: 'f', slot: 'casque', name: 'Capuche', icon: '🎭', imp: { hp: 18 }, imp2: { dodge: 3 } },
     { id: 'couronne', slot: 'casque', name: 'Diadème', icon: '👑', imp: { hp: 16 }, imp2: { pow: 10 } },
     { id: 'plastron', slot: 'armure', name: 'Plastron', icon: '🛡️', imp: { hp: 26, def: 3 } },
-    { id: 'robe', slot: 'armure', name: 'Robe', icon: '🥋', imp: { hp: 30 }, imp2: { cdr: 5 } },
-    { id: 'cuir', slot: 'armure', name: 'Cuirasse', icon: '🦺', imp: { hp: 24, def: 2 }, imp2: { dodge: 3 } },
-    { id: 'greves', slot: 'bottes', name: 'Grèves', icon: '🥾', imp: { hp: 12, def: 2 } },
-    { id: 'sandales', slot: 'bottes', name: 'Sandales', icon: '👢', imp: { hp: 12 }, imp2: { spdP: 6 } },
-    { id: 'chevaliere', slot: 'anneau', name: 'Chevalière', icon: '💍', imp: { atk: 1.6 }, imp2: { crit: 4 } },
+    { id: 'robe', g: 'f', slot: 'armure', name: 'Robe', icon: '🥋', imp: { hp: 30 }, imp2: { cdr: 5 } },
+    { id: 'cuir', g: 'f', slot: 'armure', name: 'Cuirasse', icon: '🦺', imp: { hp: 24, def: 2 }, imp2: { dodge: 3 } },
+    { id: 'greves', g: 'fp', slot: 'bottes', name: 'Grèves', icon: '🥾', imp: { hp: 12, def: 2 } },
+    { id: 'sandales', g: 'fp', slot: 'bottes', name: 'Bottines', icon: '👢', imp: { hp: 12 }, imp2: { spdP: 6 } },
+    { id: 'chevaliere', g: 'f', slot: 'anneau', name: 'Chevalière', icon: '💍', imp: { atk: 1.6 }, imp2: { crit: 4 } },
     { id: 'jonc', slot: 'anneau', name: 'Jonc', icon: '⭕', imp: { hp: 10 }, imp2: { ls: 2 } },
     { id: 'pendentif', slot: 'amulette', name: 'Pendentif', icon: '📿', imp: { hp: 12 }, imp2: { pow: 12 } },
     { id: 'talisman', slot: 'amulette', name: 'Talisman', icon: '🧿', imp: { atk: 1.4 }, imp2: { mf: 10 } }
   ];
   // Affixes aléatoires. s:true = valeur qui grandit avec le niveau d'objet.
   var AFFIXES = [
-    { k: 'atk', min: 1.2, max: 2.2, s: true, pre: 'cruel', slots: ['arme', 'anneau', 'amulette'] },
-    { k: 'hp', min: 8, max: 15, s: true, pre: 'robuste' },
-    { k: 'def', min: 1, max: 2, s: true, pre: 'blindé', slots: ['casque', 'armure', 'bottes'] },
-    { k: 'atkP', min: 4, max: 9, pre: 'féroce' }, { k: 'hpP', min: 4, max: 9, pre: 'vigoureux' },
-    { k: 'defP', min: 5, max: 10, pre: 'solide', slots: ['casque', 'armure', 'bottes'] },
-    { k: 'spdP', min: 3, max: 7, pre: 'vif' }, { k: 'crit', min: 2, max: 5, pre: 'perçant' },
-    { k: 'critd', min: 8, max: 18, pre: 'brutal' }, { k: 'ls', min: 1, max: 3, pre: 'vampirique' },
-    { k: 'dodge', min: 2, max: 4, pre: 'furtif' }, { k: 'regen', min: 0.2, max: 0.5, pre: 'béni' },
-    { k: 'pow', min: 6, max: 14, pre: 'occulte' }, { k: 'cdr', min: 3, max: 6, pre: 'hâtif' },
-    { k: 'gf', min: 6, max: 14, pre: 'doré' }, { k: 'mf', min: 5, max: 12, pre: 'chanceux' },
-    { k: 'xp', min: 5, max: 10, pre: 'sage' }, { k: 'thorns', min: 6, max: 14, pre: 'épineux', slots: ['casque', 'armure', 'bottes'] },
-    { k: 'block', min: 2, max: 4, pre: 'gardien', slots: ['arme', 'armure'] }
+    { k: 'atk', min: 1.2, max: 2.2, s: true, pre: 'cruel|cruelle|cruels|cruelles', slots: ['arme', 'anneau', 'amulette'] },
+    { k: 'hp', min: 8, max: 15, s: true, pre: 'robuste|robuste|robustes|robustes' },
+    { k: 'def', min: 1, max: 2, s: true, pre: 'blindé|blindée|blindés|blindées', slots: ['casque', 'armure', 'bottes'] },
+    { k: 'atkP', min: 4, max: 9, pre: 'féroce|féroce|féroces|féroces' }, { k: 'hpP', min: 4, max: 9, pre: 'vigoureux|vigoureuse|vigoureux|vigoureuses' },
+    { k: 'defP', min: 5, max: 10, pre: 'solide|solide|solides|solides', slots: ['casque', 'armure', 'bottes'] },
+    { k: 'spdP', min: 3, max: 7, pre: 'vif|vive|vifs|vives' }, { k: 'crit', min: 2, max: 5, pre: 'perçant|perçante|perçants|perçantes' },
+    { k: 'critd', min: 8, max: 18, pre: 'brutal|brutale|brutaux|brutales' }, { k: 'ls', min: 1, max: 3, pre: 'vampirique|vampirique|vampiriques|vampiriques' },
+    { k: 'dodge', min: 2, max: 4, pre: 'furtif|furtive|furtifs|furtives' }, { k: 'regen', min: 0.2, max: 0.5, pre: 'béni|bénie|bénis|bénies' },
+    { k: 'pow', min: 6, max: 14, pre: 'occulte|occulte|occultes|occultes' }, { k: 'cdr', min: 3, max: 6, pre: 'hâtif|hâtive|hâtifs|hâtives' },
+    { k: 'gf', min: 6, max: 14, pre: 'doré|dorée|dorés|dorées' }, { k: 'mf', min: 5, max: 12, pre: 'chanceux|chanceuse|chanceux|chanceuses' },
+    { k: 'xp', min: 5, max: 10, pre: 'sage|sage|sages|sages' }, { k: 'thorns', min: 6, max: 14, pre: 'épineux|épineuse|épineux|épineuses', slots: ['casque', 'armure', 'bottes'] },
+    { k: 'block', min: 2, max: 4, pre: 'gardien|gardienne|gardiens|gardiennes', slots: ['arme', 'armure'] }
   ];
   // Pouvoirs des objets légendaires (un au hasard)
   var POWERS = [
@@ -712,7 +722,7 @@ var DATA = (function () {
   var UNIQUES = [
     { id: 'u_pelle', name: 'Pelle du Fossoyeur', base: 'masse', lore: 'Elle a creusé plus de tombes que de tranchées.', aff: { atkP: 14, critd: 20, hpP: 8, gf: 20 }, mods: { killHeal: 10, firstStrike: 150 } },
     { id: 'u_linceul', name: 'Linceul du Dernier Souffle', base: 'robe', lore: 'On ne meurt qu’une fois. Sauf toi.', aff: { hpP: 14, regen: 0.6, defP: 12, cdr: 6 }, mods: { revive: 1 } },
-    { id: 'u_ronces', name: 'Couronne de Ronces', base: 'couronne', lore: 'Chaque épine est un souvenir.', aff: { hpP: 12, defP: 12, pow: 14, regen: 0.4 }, mods: { thorns: 70, bleedHit: 30 } },
+    { id: 'u_ronces', name: 'Diadème de Ronces', base: 'couronne', lore: 'Chaque épine est un souvenir.', aff: { hpP: 12, defP: 12, pow: 14, regen: 0.4 }, mods: { thorns: 70, bleedHit: 30 } },
     { id: 'u_corbeau', name: 'Pas du Corbeau', base: 'sandales', lore: 'Tu arrives avant ton ombre.', aff: { spdP: 10, dodge: 6, crit: 5, atkP: 8 }, mods: { dodge: 10, frenzy: 3 } },
     { id: 'u_coeur', name: 'Cœur du Léviathan', base: 'pendentif', lore: 'Il bat encore. Lentement.', aff: { hpP: 16, ls: 3, pow: 14, defP: 8 }, mods: { regen: 2, hpP: 20 } },
     { id: 'u_carapace', name: "Carapace de l'Abomination", base: 'plastron', lore: 'Forgée dans ce qui ne voulait pas mourir.', aff: { hpP: 12, defP: 16, thorns: 14, block: 4 }, mods: { startShield: 45 } },
