@@ -1228,3 +1228,37 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 .unit.hero.guard::after { content: ""; position: absolute; left: 50%; right: auto; top: auto; bottom: 4%; z-index: 1; background: none; width: 96px; height: 120px; margin-left: -48px; border-radius: 50% 50% 46% 46%; border: 2px solid #3ff0ffcc; box-shadow: 0 0 16px #3ff0ff99, inset 0 0 18px #3ff0ff55; pointer-events: none; animation: pvpulse .6s ease-in-out infinite alternate; }
 .float.parry { font-size: 24px; color: #c8ffff; text-shadow: 0 3px 0 #0009, 0 0 14px #3ff0ff; animation-name: floatcrit; }
 @media (prefers-reduced-motion: reduce) { .ebar .pv, .hpbar .pv, .unit.hero.guard::after { animation: none; } }
+/* v4.11 : explications à fermer soi-même */
+#toasts .toast.long { pointer-events: auto; cursor: pointer; animation: toastin .25s ease-out both; }
+#toasts .toast.long.out { opacity: 0; transform: translateY(-6px); transition: opacity .2s, transform .2s; }
+@keyframes toastin { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.toast .tclose { display: block; margin-top: 6px; font-size: 10.5px; letter-spacing: .08em; color: #f2bd5ecc; text-transform: uppercase; }
+/* v4.11 : brûlure en orange sur les barres */
+.ebar .pv.b, .hpbar .pv.b { background: repeating-linear-gradient(135deg, #ffb347 0 3px, #ff6a1f 3px 6px); box-shadow: inset 0 0 0 1px #ffe0b0; animation: pvpulse .7s ease-in-out infinite alternate; }
+/* v4.11 : états visibles sur le personnage */
+.unit.st-poison:not(.hit):not(.charging):not(.guard) img:where(:not(.ic):not(.emo)) { filter: drop-shadow(0 0 5px #b45cff) drop-shadow(0 0 2px #8a2be2) saturate(.85) hue-rotate(-12deg); }
+.unit.st-bleed:not(.hit):not(.charging):not(.guard) img:where(:not(.ic):not(.emo)) { filter: drop-shadow(0 0 5px #ff2a45) drop-shadow(0 0 2px #c2283a); }
+.unit.st-burn:not(.hit):not(.charging):not(.guard) img:where(:not(.ic):not(.emo)) { filter: drop-shadow(0 0 6px #ff7a1f) drop-shadow(0 0 2px #ffb347) sepia(.25) saturate(1.4); }
+.unit.st-burn::before { background: radial-gradient(#ff7a1fcc, #ff3b1f55 45%, transparent 72%); animation: pvpulse .35s ease-in-out infinite alternate; }
+.unit.st-poison:not(.st-burn)::before { background: radial-gradient(#b45cffcc, #8a2be255 45%, transparent 72%); animation: pvpulse .6s ease-in-out infinite alternate; }
+/* v4.11 : l'alerte « pare ! » ne se cache plus en haut : à côté du sprite, et l'intention le dit en grand */
+.unit.en .warn { top: auto; bottom: 45%; left: -14px; z-index: 4; font-size: 26px; filter: drop-shadow(0 0 6px var(--parry)); }
+.ilayer .intent.k-big:not(.parried) { border: 2px solid var(--parry); color: #fff; background: #0a3d4af2; font-size: 13px; box-shadow: 0 0 14px var(--parry), 0 2px 6px #000c; animation: pvpulse .45s ease-in-out infinite alternate; }
+/* v4.11 : écrans peu hauts : plateau de dés et commandes plus compacts pour laisser de la place à l'arène */
+@media (max-height: 800px) {
+  .dtray { padding: 2px 8px 5px; }
+  .dhint { height: 16px; font-size: 11px; }
+  .dlab { margin-bottom: 1px; font-size: 8px; }
+  .dside { gap: 2px; } .dtool { height: 28px; }
+  .dhand { padding: 2px 0 0; } .dhand .tdie { width: 44px; height: 44px; } .dhand .tdie b { font-size: 18px; }
+  .dfig-w { padding: 2px 4px 3px; gap: 2px; }
+  .hud { padding-top: 6px; }
+  .bigact { height: 46px; } .mainacts { margin-bottom: 5px; }
+  .turnrow { margin-bottom: 3px; }
+}
+@media (max-height: 680px) {
+  .unit.en img { width: 80px; height: 80px; } .unit.en.elite img { width: 104px; height: 104px; } .unit.en.boss img { width: 160px; height: 160px; }
+  .unit.en.giant img { width: 110px; height: 110px; } .unit.en.champ img { width: 136px; height: 136px; }
+  .unit.hero img:where(:not(.ic):not(.emo)) { width: 100px; height: 100px; }
+}
+.unit.en .warn img, .unit.en .warn img.emo { width: 24px; height: 24px; animation: none; filter: none; image-rendering: pixelated; }

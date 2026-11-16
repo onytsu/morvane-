@@ -35,7 +35,7 @@ UI.run = (function () {
       '<div class="dhand-w"><span class="dlab">Ta main</span><div class="dhand" id="dhand"></div></div>' +
       '<button class="dfig-w" id="dfigw" data-act="figs"><span class="dlab">Ce tour</span><span class="dslots" id="dslots"></span><span class="dfig" id="dfig"></span></button></div></div>' +
       '<div class="hud">' +
-      '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><em class="pv d"></em><em class="pv h"></em><span></span></div></div></div>' +
+      '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><em class="pv d"></em><em class="pv b"></em><em class="pv h"></em><span></span></div></div></div>' +
       '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + UI.spr('ul_' + h.id, 'ic') + h.ult.name + '</span></button>' +
       '<div class="turnrow"><span class="aps" id="aps"></span><b id="tlabel"></b><span class="hsts" id="hsts"></span><span class="grow"></span><button class="tog spd" id="tspd" data-act="speed"></button><button class="tog pass" id="tpass" data-act="pass">Fin du tour</button></div>' +
       '<div class="mainacts"><button class="bigact strike" id="bstrike" data-act="strike" data-info="strike">' + UI.spr('i_sword', 'ic') + '<b>Frapper</b></button>' +
@@ -78,7 +78,7 @@ UI.run = (function () {
     d.className = 'unit en' + (e.boss ? ' boss' : e.elite ? ' elite' : '') + (spawn ? ' spawn' : '') + (e.fix ? ' fixed fx-' + e.fix : '') + (e.big ? ' giant' : '') + (e.gold ? ' golden' : '') + (e.champ ? ' champ' : '');
     d.id = 'en' + e.id; d.dataset.act = 'target'; d.dataset.i = i; d.dataset.info = 'foe:' + i;
     d.style.setProperty('--bd', -(Math.random() * 2.2).toFixed(2) + 's'); d.style.right = P[pi].r + '%'; d.style.bottom = P[pi].b + '%'; d.style.zIndex = 10 - Math.round(P[pi].b / 5);
-    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span><span class="isp"></span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><em class="pv d"></em><em class="pv h"></em><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">' + UI.spr('i_burst', 'ic') + '</span>';
+    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span><span class="isp"></span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><em class="pv d"></em><em class="pv b"></em><em class="pv h"></em><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">' + UI.spr('i_burst', 'ic') + '</span>';
     if (e.boss || e.elite || e.champ) d.insertAdjacentHTML('beforeend', '<i class="aura"></i>'); // en dernier : updateArena lit les enfants par position
     $('#arena').appendChild(d); els[e.id] = d;
     var it = document.createElement('span'); it.className = 'intent'; d._it = it; var il = $('#ilayer'); if (il) il.appendChild(it); labKey = '';
@@ -277,7 +277,7 @@ UI.run = (function () {
   ACT.bag = function () { SND.play('click'); bagSheet(); };
   function intentHtml(it) {
     if (it.parried) return it.k === 'big' ? '🛡️ paré' : '🛡️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '');
-    var h = it.k === 'atk' ? '⚔️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '') : it.k === 'big' ? '💥 ' + E.fmt(Math.ceil(it.dmg)) : it.k === 'prep' ? '⚠️ charge' : it.k === 'stun' ? '💫' : it.k === 'flee' ? '🏃 fuit' : it.k === 'hidden' ? '🌊' : '💤';
+    var h = it.k === 'atk' ? '⚔️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '') : it.k === 'big' ? '🛡️ PARE ! 💥 ' + E.fmt(Math.ceil(it.dmg)) : it.k === 'prep' ? '⚠️ charge' : it.k === 'stun' ? '💫' : it.k === 'flee' ? '🏃 fuit' : it.k === 'hidden' ? '🌊' : '💤';
     return h + (it.heal ? ' ✚' : '') + (it.shield ? ' 🛡️' : '') + (it.summon ? ' 👥' : '');
   }
   // --- orbes à ramasser ---
@@ -478,7 +478,7 @@ UI.run = (function () {
     hb.lastChild.textContent = E.fmt(Math.ceil(run.hp)) + ' / ' + E.fmt(stt.hp) + (sh >= 1 ? '  (+' + E.fmt(sh) + ')' : '');
     hb.classList.toggle('low', frac < 0.3);
     var pvw = c && !c.over && c.turn === 'hero' && run.phase === 'combat' ? E.preview() : null;
-    setPv(hb.children[3], hb.children[4], run.hp, stt.hp, pvw && pvw.hero);
+    setPv(hb.children[3], hb.children[4], hb.children[5], run.hp, stt.hp, pvw && pvw.hero);
     $('#rlvl').style.setProperty('--xp', Math.min(100, run.xp / E.xpNeed(run.lvl) * 100) + '%');
     UI.setTxt($('#hsts'), c ? stIcons(c.hero.st) + (c.hero.elan ? ' ⚡x' + c.hero.elan : '') : '');
     var charging = !!c && !c.over && c.enemies.some(function (x) { return !x.dead && x.charge; }), hsk = E.hero(run.hero).skills;
@@ -525,12 +525,18 @@ UI.run = (function () {
     var pt = $('#pot'); pt.lastChild.textContent = run.potions; pt.classList.toggle('cool', run.potions <= 0);
   }
   // v4.10 : barres de vie. Violet = ce que poison/brûlure/saignement retireront au prochain tour ennemi, vert = les soins à venir
-  function setPv(d, hl, hp, max, p) {
-    var dk = '', hk = '';
-    if (p && p.dot >= 0.5 && hp > 0) { var w = Math.max(p.dot / max * 100, 6), l = Math.max(0, hp / max * 100 - w); dk = l.toFixed(2) + '|' + Math.min(w, hp / max * 100 + 0.01).toFixed(2); }
-    if (p && p.heal >= 0.5 && hp > 0 && hp < max) { var hw = Math.min(Math.max(p.heal / max * 100, 3), 100 - hp / max * 100); hk = (hp / max * 100).toFixed(2) + '|' + hw.toFixed(2); }
-    if (d._k !== dk) { d._k = dk; var a = dk.split('|'); d.style.left = dk ? a[0] + '%' : ''; d.style.width = dk ? a[1] + '%' : '0'; }
-    if (hl._k !== hk) { hl._k = hk; var b = hk.split('|'); hl.style.left = hk ? b[0] + '%' : ''; hl.style.width = hk ? b[1] + '%' : '0'; }
+  // v4.11 : la brûlure a sa propre bande orange, collée à droite de la violette (poison, saignement)
+  function seg(el, l, w) { var k = w > 0 ? l.toFixed(2) + '|' + w.toFixed(2) : ''; if (el._k === k) return; el._k = k; el.style.left = k ? l.toFixed(2) + '%' : ''; el.style.width = k ? w.toFixed(2) + '%' : '0'; }
+  function setPv(d, bn, hl, hp, max, p) {
+    var hpc = hp / max * 100, tot = 0, bw = 0, dw = 0;
+    if (p && p.dot >= 0.5 && hp > 0) {
+      tot = Math.min(Math.max(p.dot / max * 100, 6), hpc);
+      bw = p.burn >= 0.5 ? Math.min(tot, Math.max(p.burn / max * 100, p.burn < p.dot - 0.5 ? 3 : tot)) : 0;
+      dw = tot - bw; if (dw > 0 && dw < 3 && bw > 3) { bw -= 3 - dw; dw = 3; }
+    }
+    seg(bn, hpc - bw, bw); seg(d, hpc - bw - dw, dw);
+    var hw = p && p.heal >= 0.5 && hp > 0 && hp < max ? Math.min(Math.max(p.heal / max * 100, 3), 100 - hpc) : 0;
+    seg(hl, hpc, hw);
   }
   // v4.10 : les intentions vivent dans un calque au-dessus de tous les ennemis, jamais sous le bandeau du haut ni sous un autre ennemi.
   // Les noms et barres trop hauts (boss, petits écrans) descendent juste sous les primes. Recalculé seulement quand quelque chose change.
@@ -555,6 +561,26 @@ UI.run = (function () {
       b.it.style.transform = 'translate(' + Math.round(b.x) + 'px,' + Math.round(b.y) + 'px)';
     });
   }
+  // v4.11 : brûlé, empoisonné, saignant se voient sur le personnage lui-même (lueur colorée + particules)
+  function stClasses(el, st) {
+    var k = (st.burn ? 'b' : '') + (st.poison ? 'p' : '') + (st.bleed ? 's' : '');
+    if (el._st === k) return; el._st = k;
+    el.classList.toggle('st-burn', !!st.burn); el.classList.toggle('st-poison', !!st.poison); el.classList.toggle('st-bleed', !!st.bleed);
+  }
+  var stfxT = 0;
+  function statusFx(c) {
+    var now = performance.now(); if (!vfx || now - stfxT < 340) return; stfxT = now;
+    var a = $('#arena'); if (!a) return; var ar = a.getBoundingClientRect();
+    function emit(el, st) {
+      var im = el && el.querySelector('img:not(.ic):not(.emo)'); if (!im) return; var r = im.getBoundingClientRect(); if (!r.width) return;
+      var x = r.left - ar.left + r.width / 2, w = r.width * 0.32, y = r.top - ar.top;
+      if (st.burn) VFX.sparks(vfx, x + (Math.random() * 2 - 1) * w, y + r.height * 0.8, 'fire', 3, { speed: 50, g: -240, life: 0.8, size: 9, dir: -Math.PI / 2, spread: 0.8 });
+      if (st.poison) VFX.sparks(vfx, x + (Math.random() * 2 - 1) * w, y + r.height * 0.6, 'venom', 2, { speed: 30, g: -110, life: 1.1, size: 8, dir: -Math.PI / 2, spread: 1.2 });
+      if (st.bleed) VFX.sparks(vfx, x + (Math.random() * 2 - 1) * w, y + r.height * 0.45, 'blood', 2, { speed: 40, g: 380, life: 0.6, size: 7, dir: Math.PI / 2, spread: 0.6 });
+    }
+    if (!c.over) emit($('#uhero'), c.hero.st);
+    c.enemies.forEach(function (e) { if (!e.dead && !(e.hidden > 0)) emit(els[e.id], e.st); });
+  }
   function updateArena() {
     var run = S().run, c = run && run.combat; if (!c) return;
     c.enemies.forEach(function (e, i) {
@@ -572,10 +598,13 @@ UI.run = (function () {
     if (hu) hu.classList.toggle('fury', !!c.hero.buffs.fury);
     var its = !c.over && c.turn === 'hero' ? E.intents() : null, pv = its ? E.preview() : null;
     if (hu) hu.classList.toggle('guard', c.hero.parryT > 0 && !c.over);
+    if (hu) stClasses(hu, c.over ? {} : c.hero.st);
+    c.enemies.forEach(function (e) { var el = els[e.id]; if (el) stClasses(el, e.dead ? {} : e.st); });
+    statusFx(c);
     c.enemies.forEach(function (e, i) {
       var el = els[e.id]; if (!el) return; var ie = el._it, ih = its && !e.dead ? intentHtml(its[i]) : '';
       if (ie && ie._raw !== ih) { UI.setTxt(ie, ih); ie.className = 'intent' + (its && !e.dead ? ' k-' + its[i].k + (its[i].parried ? ' parried' : '') : ''); labKey = ''; }
-      var eb = el.children[3]; setPv(eb.children[2], eb.children[3], e.dead ? 0 : e.hp, e.maxhp, pv && !e.dead ? pv.foes[i] : null);
+      var eb = el.children[3]; setPv(eb.children[2], eb.children[3], eb.children[4], e.dead ? 0 : e.hp, e.maxhp, pv && !e.dead ? pv.foes[i] : null);
     });
     placeLabels(c);
     for (var oi = 0; oi < c.orbs.length; oi++) { var ob = orbEls[c.orbs[oi].oid]; if (ob) ob.classList.toggle('last', c.orbs[oi].t <= E.ROUND); }
@@ -958,7 +987,7 @@ UI.run = (function () {
     h += '<div class="li on"><div class="ic">🎲</div><div class="grow"><b>Tour par tour</b><div class="small dim">À ton tour tu as <b>2 actions ⚡</b>. Frapper, parer, toucher un point faible ou renvoyer un crâne coûtent 1 action. Les pouvoirs, eux, se paient avec un dé. L’ultime, la fiole, la posture et les orbes sont gratuits. Ensuite chaque ennemi joue, l’un après l’autre.</div></div></div>';
     h += '<div class="li on"><div class="ic">🎒</div><div class="grow"><b>Dés de combat</b><div class="small dim">À chaque tour tu pioches <b>3 dés</b>. <b>Touche un dé</b> : il agit tout de suite, <b>sans coûter d’action</b>. Ou touche un <b>pouvoir</b> : il prend le meilleur dé qui convient. Chacun affiche le dé qu’il demande (≤3, PAIR, ≥4...), et plus le dé est fort, plus le pouvoir l’est.<br>⚔️ Lame frappe · 🛡️ Garde protège · ❤️ Sève soigne · ✨ Écho renforce le reste de ta main · 🪞 Miroir copie le dernier dé joué<br><b>Figures</b> : les 3 premiers dés joués du tour. 🎲 Paire (+30 % dégâts) · ✨ Suite 2-3-4 (+1 action, prochain coup critique) · 👑 Brelan (+1 action, coups critiques).<br>⇅ <b>Retourner</b> change un dé en sa face opposée, une fois par tour. ↻ relance ta main : 1 fois par combat.</div><div class="btns" style="margin-top:6px"><button class="btn sm" data-act="bag">🎒 Mon sac et les figures</button></div></div></div>';
     h += '<div class="li on"><div class="ic">👁️</div><div class="grow"><b>Intentions</b><div class="small dim">Sous le nom de chaque ennemi, ce qu’il fera à son tour : ⚔️ 12 il frappe pour 12 · 💥 gros coup · ⚠️ il charge (étourdis-le ou pare) · 💤 rien · ✚ soin · 👥 renfort. En bleu 🛡️ : tu pares, le chiffre montre ce qui passera encore.</div></div></div>';
-    h += '<div class="li on"><div class="ic">❤️</div><div class="grow"><b>Barres de vie</b><div class="small dim">Au bout de la barre, en <b style="color:#c86bff">violet</b> : ce que poison, brûlure et saignement retireront au prochain tour. En <b style="color:#7dffa0">vert</b> : les soins à venir. Pour toi comme pour les ennemis.</div></div></div>';
+    h += '<div class="li on"><div class="ic">❤️</div><div class="grow"><b>Barres de vie</b><div class="small dim">Au bout de la barre, en <b style="color:#c86bff">violet</b> : ce que poison et saignement retireront au prochain tour, en <b style="color:#ff8a3c">orange</b> la brûlure. En <b style="color:#7dffa0">vert</b> : les soins à venir. Pour toi comme pour les ennemis.</div></div></div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les autres boutons</h3>' +
       '<div class="li"><div class="ic">⚔️</div><div class="grow"><b>Frapper</b><div class="small dim">Attaque l’ennemi visé (▼). Plus ta vitesse d’attaque est haute, plus tu donnes de coups par action. Toucher un ennemi le vise ; le toucher encore le frappe.</div></div></div>' +
       '<div class="li"><div class="ic">🛡️</div><div class="grow"><b>Parer</b><div class="small dim">Jusqu’à ton prochain tour, tu subis 70 % de dégâts en moins et tu ripostes. Quand un ennemi charge un gros coup ⚠️, le bouton devient <b style="color:#3ff0ff">bleu vif : PARE !</b> Pare à ce moment : le coup est annulé et l’ennemi est étourdi.</div></div></div>' +

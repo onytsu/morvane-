@@ -59,9 +59,11 @@ var UI = (function () {
     return h;
   }
   function toast(msg, long) {
+    // v4.11 : les explications (long) restent affichées jusqu'à ce qu'on les touche, pour avoir le temps de les lire
     var t = document.createElement('div'); t.className = 'toast' + (long ? ' long' : ''); t.innerHTML = msg; $('#toasts').appendChild(t);
+    if (long) { t.insertAdjacentHTML('beforeend', '<span class="tclose">Touche pour fermer ✕</span>'); t.addEventListener('click', function (ev) { ev.stopPropagation(); t.classList.add('out'); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 200); }); }
     while ($('#toasts').children.length > 2) $('#toasts').removeChild($('#toasts').firstChild);
-    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, long ? 6000 : 3200);
+    if (!long) setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 3200);
   }
   function flash(color) { var f = $('#flash'); f.style.background = color; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
   function modal(html, centered) { var m = $('#modal'); m.innerHTML = '<div class="sheet' + (centered ? ' mid' : '') + '">' + html + '</div>'; m.className = 'on' + (centered ? ' centered' : ''); }

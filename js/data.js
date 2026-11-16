@@ -385,8 +385,12 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.10';
+  var VERSION = '4.11';
   var NEWS = [
+    ['💬', 'Le temps de lire', 'Les explications restent affichées jusqu’à ce que tu les touches.'],
+    ['🔥', 'Brûlé, empoisonné, ça se voit', 'Un personnage qui brûle s’entoure d’orange et lâche des braises, un empoisonné de violet avec des bulles, un saignant de rouge. Sur les barres de vie, la brûlure à venir a sa bande orange, à côté du violet du poison.'],
+    ['🛡️', 'Quand parer', 'Le gros coup qui arrive s’annonce en grand sur l’ennemi : « PARE ! » en bleu, et le ⚠️ n’est plus caché en haut de l’écran.'],
+    ['📱', 'Plus de place', 'Sur les écrans peu hauts, le plateau de dés et les commandes se resserrent, et les personnages rapetissent un peu pour que tout tienne.'],
     ['👁️', 'Des intentions toujours lisibles', 'Ce que chaque ennemi va faire s’affiche au-dessus de tout : plus jamais caché par le bandeau du haut, les primes ou un autre monstre. Les noms trop hauts (boss, petits écrans) redescendent.'],
     ['🛡️', 'La parade se voit', 'Quand tu pares, un halo bleu entoure ton héros et les intentions passent en bleu avec les dégâts qui passeront encore. « PARÉ » s’affiche en grand.'],
     ['☠️', 'Poison et soins sur les barres', 'Au bout de chaque barre de vie, en violet, ce que poison, brûlure et saignement retireront au prochain tour ; en vert, les soins à venir. Pour toi comme pour les ennemis.'],

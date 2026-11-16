@@ -1229,6 +1229,40 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 .unit.hero.guard::after { content: ""; position: absolute; left: 50%; right: auto; top: auto; bottom: 4%; z-index: 1; background: none; width: 96px; height: 120px; margin-left: -48px; border-radius: 50% 50% 46% 46%; border: 2px solid #3ff0ffcc; box-shadow: 0 0 16px #3ff0ff99, inset 0 0 18px #3ff0ff55; pointer-events: none; animation: pvpulse .6s ease-in-out infinite alternate; }
 .float.parry { font-size: 24px; color: #c8ffff; text-shadow: 0 3px 0 #0009, 0 0 14px #3ff0ff; animation-name: floatcrit; }
 @media (prefers-reduced-motion: reduce) { .ebar .pv, .hpbar .pv, .unit.hero.guard::after { animation: none; } }
+/* v4.11 : explications à fermer soi-même */
+#toasts .toast.long { pointer-events: auto; cursor: pointer; animation: toastin .25s ease-out both; }
+#toasts .toast.long.out { opacity: 0; transform: translateY(-6px); transition: opacity .2s, transform .2s; }
+@keyframes toastin { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.toast .tclose { display: block; margin-top: 6px; font-size: 10.5px; letter-spacing: .08em; color: #f2bd5ecc; text-transform: uppercase; }
+/* v4.11 : brûlure en orange sur les barres */
+.ebar .pv.b, .hpbar .pv.b { background: repeating-linear-gradient(135deg, #ffb347 0 3px, #ff6a1f 3px 6px); box-shadow: inset 0 0 0 1px #ffe0b0; animation: pvpulse .7s ease-in-out infinite alternate; }
+/* v4.11 : états visibles sur le personnage */
+.unit.st-poison:not(.hit):not(.charging):not(.guard) img:where(:not(.ic):not(.emo)) { filter: drop-shadow(0 0 5px #b45cff) drop-shadow(0 0 2px #8a2be2) saturate(.85) hue-rotate(-12deg); }
+.unit.st-bleed:not(.hit):not(.charging):not(.guard) img:where(:not(.ic):not(.emo)) { filter: drop-shadow(0 0 5px #ff2a45) drop-shadow(0 0 2px #c2283a); }
+.unit.st-burn:not(.hit):not(.charging):not(.guard) img:where(:not(.ic):not(.emo)) { filter: drop-shadow(0 0 6px #ff7a1f) drop-shadow(0 0 2px #ffb347) sepia(.25) saturate(1.4); }
+.unit.st-burn::before { background: radial-gradient(#ff7a1fcc, #ff3b1f55 45%, transparent 72%); animation: pvpulse .35s ease-in-out infinite alternate; }
+.unit.st-poison:not(.st-burn)::before { background: radial-gradient(#b45cffcc, #8a2be255 45%, transparent 72%); animation: pvpulse .6s ease-in-out infinite alternate; }
+/* v4.11 : l'alerte « pare ! » ne se cache plus en haut : à côté du sprite, et l'intention le dit en grand */
+.unit.en .warn { top: auto; bottom: 45%; left: -14px; z-index: 4; font-size: 26px; filter: drop-shadow(0 0 6px var(--parry)); }
+.ilayer .intent.k-big:not(.parried) { border: 2px solid var(--parry); color: #fff; background: #0a3d4af2; font-size: 13px; box-shadow: 0 0 14px var(--parry), 0 2px 6px #000c; animation: pvpulse .45s ease-in-out infinite alternate; }
+/* v4.11 : écrans peu hauts : plateau de dés et commandes plus compacts pour laisser de la place à l'arène */
+@media (max-height: 800px) {
+  .dtray { padding: 2px 8px 5px; }
+  .dhint { height: 16px; font-size: 11px; }
+  .dlab { margin-bottom: 1px; font-size: 8px; }
+  .dside { gap: 2px; } .dtool { height: 28px; }
+  .dhand { padding: 2px 0 0; } .dhand .tdie { width: 44px; height: 44px; } .dhand .tdie b { font-size: 18px; }
+  .dfig-w { padding: 2px 4px 3px; gap: 2px; }
+  .hud { padding-top: 6px; }
+  .bigact { height: 46px; } .mainacts { margin-bottom: 5px; }
+  .turnrow { margin-bottom: 3px; }
+}
+@media (max-height: 680px) {
+  .unit.en img { width: 80px; height: 80px; } .unit.en.elite img { width: 104px; height: 104px; } .unit.en.boss img { width: 160px; height: 160px; }
+  .unit.en.giant img { width: 110px; height: 110px; } .unit.en.champ img { width: 136px; height: 136px; }
+  .unit.hero img:where(:not(.ic):not(.emo)) { width: 100px; height: 100px; }
+}
+.unit.en .warn img, .unit.en .warn img.emo { width: 24px; height: 24px; animation: none; filter: none; image-rendering: pixelated; }
 
 :root { color-scheme: dark; --sat: 0px; --sab: 0px; } html, body { height: 100%; } #app { height: 100%; }</style>
 <div id="app"><div id="screen"></div><div id="overlay"></div><div id="modal"></div><div id="toasts"></div><div id="flash"></div></div>
@@ -1620,8 +1654,12 @@ var DATA = (function () {
   ];
 
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.10';
+  var VERSION = '4.11';
   var NEWS = [
+    ['💬', 'Le temps de lire', 'Les explications restent affichées jusqu’à ce que tu les touches.'],
+    ['🔥', 'Brûlé, empoisonné, ça se voit', 'Un personnage qui brûle s’entoure d’orange et lâche des braises, un empoisonné de violet avec des bulles, un saignant de rouge. Sur les barres de vie, la brûlure à venir a sa bande orange, à côté du violet du poison.'],
+    ['🛡️', 'Quand parer', 'Le gros coup qui arrive s’annonce en grand sur l’ennemi : « PARE ! » en bleu, et le ⚠️ n’est plus caché en haut de l’écran.'],
+    ['📱', 'Plus de place', 'Sur les écrans peu hauts, le plateau de dés et les commandes se resserrent, et les personnages rapetissent un peu pour que tout tienne.'],
     ['👁️', 'Des intentions toujours lisibles', 'Ce que chaque ennemi va faire s’affiche au-dessus de tout : plus jamais caché par le bandeau du haut, les primes ou un autre monstre. Les noms trop hauts (boss, petits écrans) redescendent.'],
     ['🛡️', 'La parade se voit', 'Quand tu pares, un halo bleu entoure ton héros et les intentions passent en bleu avec les dégâts qui passeront encore. « PARÉ » s’affiche en grand.'],
     ['☠️', 'Poison et soins sur les barres', 'Au bout de chaque barre de vie, en violet, ce que poison, brûlure et saignement retireront au prochain tour ; en vert, les soins à venir. Pour toi comme pour les ennemis.'],
@@ -3250,13 +3288,14 @@ if (typeof module !== 'undefined') module.exports = DATA;
     var run = S.run, c = run && run.combat; if (!c) return null;
     var st = run.stats, h = c.hero, dt = ROUND, its = c.enemies.map(function (e) { return intentOf(run, c, e); }), foes, hit0 = 0, k;
     foes = c.enemies.map(function (e) {
-      var o = { dot: 0, heal: 0 }; if (e.dead) return o;
+      var o = { dot: 0, burn: 0, heal: 0 }; if (e.dead) return o;
       if (!(e.hidden > 0) && e.born !== c.round) {
-        for (k in { burn: 1, poison: 1, bleed: 1 }) if (e.st[k]) o.dot += e.st[k].dps * dt;
-        o.dot *= heroMods(run, c, e); o.dot = Math.max(0, o.dot - (e.shield || 0));
+        var m = heroMods(run, c, e), sh = e.shield || 0;
+        // même ordre que foeAct : brûlure, poison, saignement ; le bouclier absorbe d'abord
+        ['burn', 'poison', 'bleed'].forEach(function (q) { if (!e.st[q]) return; var d = e.st[q].dps * dt * m, ab = Math.min(sh, d); sh -= ab; d -= ab; o.dot += d; if (q === 'burn') o.burn += d; });
       }
       if (c.cond === 'brume') o.dot += e.maxhp * 0.02 * dt;
-      o.dot = Math.min(o.dot, e.hp);
+      o.dot = Math.min(o.dot, e.hp); o.burn = Math.min(o.burn, o.dot);
       return o;
     });
     c.enemies.forEach(function (e, i) {
@@ -3265,16 +3304,17 @@ if (typeof module !== 'undefined') module.exports = DATA;
       if (e.ab.leech && it.dmg) foes[i].heal += it.dmg * (it.n || 1) * e.ab.leech / 100 * 3;
     });
     c.enemies.forEach(function (e, i) { if (!e.dead) foes[i].heal = Math.max(0, Math.min(foes[i].heal, e.maxhp - e.hp)); });
-    var hm = takenMods(run), dot = 0, heal = 0;
-    for (k in { burn: 1, poison: 1, bleed: 1 }) if (h.st[k]) dot += h.st[k].dps * dt * hm;
-    alive(c).forEach(function (e) { if (e.boss && e.ab.heat && !(e.st.stun > 0)) dot += st.hp * Math.min(0.03, 0.004 + c.t * 0.0003) * dt * hm; });
+    var hm = takenMods(run), dot = 0, burn = 0, heal = 0;
     var shl = h.shieldT > 0 && h.shieldT < 900 && h.shieldT - dt <= 0 ? 0 : Math.max(0, (h.shield || 0) - hit0);
-    dot = Math.max(0, dot - shl);
+    function take(d, isBurn) { var ab = Math.min(shl, d); shl -= ab; d -= ab; dot += d; if (isBurn) burn += d; }
+    alive(c).forEach(function (e) { if (e.boss && e.ab.heat && !(e.st.stun > 0)) take(st.hp * Math.min(0.03, 0.004 + c.t * 0.0003) * dt * hm, true); });
+    ['poison', 'burn', 'bleed'].forEach(function (q) { if (h.st[q]) take(h.st[q].dps * dt * hm, q === 'burn'); });
     if (c.cond === 'brume') dot += st.hp * 0.01 * dt;
     var hp = Math.max(0.1, 1 + st.healP / 100);
     if (st.regen) heal += st.hp * st.regen / 100 * dt * hp;
     if (c.cond === 'beni') heal += st.hp * 0.02 * dt * hp;
-    return { hero: { dot: Math.min(dot, Math.max(0, run.hp)), heal: Math.max(0, Math.min(heal, st.hp - run.hp)) }, foes: foes };
+    dot = Math.min(dot, Math.max(0, run.hp));
+    return { hero: { dot: dot, burn: Math.min(burn, dot), heal: Math.max(0, Math.min(heal, st.hp - run.hp)) }, foes: foes };
   };
   // Joue automatiquement les dés de la main (mode AUTO et robot de test) : l'Écho d'abord, le Miroir en dernier, puis au plus offrant
   function autoPlace(run, c) {
@@ -6705,7 +6745,7 @@ var VFX = (function () {
     fire: ['#ffb347', '#ff6a1f', '#ffe9a8', '#ff3b1f'], holy: ['#fff4c4', '#ffd87a', '#ffffff'], dark: ['#b48cff', '#7a4de0', '#e0ccff', '#5a2bd0'],
     blade: ['#e9f4ff', '#9cc6ee', '#ffffff'], war: ['#ffd27a', '#ff8a3c', '#ffffff'], heal: ['#7dffa0', '#c9ffd8', '#3fe07a'], gold: ['#ffd27a', '#fff1c4', '#e8a53a'],
     ice: ['#bfe3ff', '#ffffff', '#7fb8ff'], poison: ['#9dff6a', '#5fdc3a', '#d4ffb0'], death: ['#8a7aa0', '#c9bfe0', '#4a3f5c'], ult: ['#ffe9b8', '#ffd23c', '#ffffff', '#ff9a2e'],
-    fury: ['#ff5a3c', '#ffb347', '#ff2a2a'], curse: ['#c9ff8a', '#7ddc5a', '#eaffd0']
+    fury: ['#ff5a3c', '#ffb347', '#ff2a2a'], venom: ['#d59bff', '#a24dff', '#f0d6ff', '#8a2be2'], curse: ['#c9ff8a', '#7ddc5a', '#eaffd0']
   };
   function pal(k) { return PAL[k] || PAL.hit; }
 
@@ -6916,9 +6956,11 @@ var UI = (function () {
     return h;
   }
   function toast(msg, long) {
+    // v4.11 : les explications (long) restent affichées jusqu'à ce qu'on les touche, pour avoir le temps de les lire
     var t = document.createElement('div'); t.className = 'toast' + (long ? ' long' : ''); t.innerHTML = msg; $('#toasts').appendChild(t);
+    if (long) { t.insertAdjacentHTML('beforeend', '<span class="tclose">Touche pour fermer ✕</span>'); t.addEventListener('click', function (ev) { ev.stopPropagation(); t.classList.add('out'); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 200); }); }
     while ($('#toasts').children.length > 2) $('#toasts').removeChild($('#toasts').firstChild);
-    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, long ? 6000 : 3200);
+    if (!long) setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 3200);
   }
   function flash(color) { var f = $('#flash'); f.style.background = color; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
   function modal(html, centered) { var m = $('#modal'); m.innerHTML = '<div class="sheet' + (centered ? ' mid' : '') + '">' + html + '</div>'; m.className = 'on' + (centered ? ' centered' : ''); }
@@ -7467,7 +7509,7 @@ UI.run = (function () {
       '<div class="dhand-w"><span class="dlab">Ta main</span><div class="dhand" id="dhand"></div></div>' +
       '<button class="dfig-w" id="dfigw" data-act="figs"><span class="dlab">Ce tour</span><span class="dslots" id="dslots"></span><span class="dfig" id="dfig"></span></button></div></div>' +
       '<div class="hud">' +
-      '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><em class="pv d"></em><em class="pv h"></em><span></span></div></div></div>' +
+      '<div class="hprow"><b class="lvb" id="rlvl"></b><div class="hpframe"><div class="hpbar" id="hpbar"><i></i><u></u><b class="gh"></b><em class="pv d"></em><em class="pv b"></em><em class="pv h"></em><span></span></div></div></div>' +
       '<button class="ultb" id="bult" data-act="ult" data-info="ult"><i></i><span>' + UI.spr('ul_' + h.id, 'ic') + h.ult.name + '</span></button>' +
       '<div class="turnrow"><span class="aps" id="aps"></span><b id="tlabel"></b><span class="hsts" id="hsts"></span><span class="grow"></span><button class="tog spd" id="tspd" data-act="speed"></button><button class="tog pass" id="tpass" data-act="pass">Fin du tour</button></div>' +
       '<div class="mainacts"><button class="bigact strike" id="bstrike" data-act="strike" data-info="strike">' + UI.spr('i_sword', 'ic') + '<b>Frapper</b></button>' +
@@ -7510,7 +7552,7 @@ UI.run = (function () {
     d.className = 'unit en' + (e.boss ? ' boss' : e.elite ? ' elite' : '') + (spawn ? ' spawn' : '') + (e.fix ? ' fixed fx-' + e.fix : '') + (e.big ? ' giant' : '') + (e.gold ? ' golden' : '') + (e.champ ? ' champ' : '');
     d.id = 'en' + e.id; d.dataset.act = 'target'; d.dataset.i = i; d.dataset.info = 'foe:' + i;
     d.style.setProperty('--bd', -(Math.random() * 2.2).toFixed(2) + 's'); d.style.right = P[pi].r + '%'; d.style.bottom = P[pi].b + '%'; d.style.zIndex = 10 - Math.round(P[pi].b / 5);
-    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span><span class="isp"></span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><em class="pv d"></em><em class="pv h"></em><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">' + UI.spr('i_burst', 'ic') + '</span>';
+    d.innerHTML = '<span class="warn">⚠️</span><div class="ename">' + e.name + ' <span class="abi">' + UI.abIcons(e.ab) + '</span><span class="isp"></span></div><div class="cbar"><i></i></div><div class="ebar"><i></i><b class="gh"></b><em class="pv d"></em><em class="pv b"></em><em class="pv h"></em><u></u></div>' + UI.spr(e.key) + '<div class="sts"></div><span class="wk">' + UI.spr('i_burst', 'ic') + '</span>';
     if (e.boss || e.elite || e.champ) d.insertAdjacentHTML('beforeend', '<i class="aura"></i>'); // en dernier : updateArena lit les enfants par position
     $('#arena').appendChild(d); els[e.id] = d;
     var it = document.createElement('span'); it.className = 'intent'; d._it = it; var il = $('#ilayer'); if (il) il.appendChild(it); labKey = '';
@@ -7709,7 +7751,7 @@ UI.run = (function () {
   ACT.bag = function () { SND.play('click'); bagSheet(); };
   function intentHtml(it) {
     if (it.parried) return it.k === 'big' ? '🛡️ paré' : '🛡️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '');
-    var h = it.k === 'atk' ? '⚔️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '') : it.k === 'big' ? '💥 ' + E.fmt(Math.ceil(it.dmg)) : it.k === 'prep' ? '⚠️ charge' : it.k === 'stun' ? '💫' : it.k === 'flee' ? '🏃 fuit' : it.k === 'hidden' ? '🌊' : '💤';
+    var h = it.k === 'atk' ? '⚔️ ' + E.fmt(Math.ceil(it.dmg)) + (it.n > 1 ? ' ×' + it.n : '') : it.k === 'big' ? '🛡️ PARE ! 💥 ' + E.fmt(Math.ceil(it.dmg)) : it.k === 'prep' ? '⚠️ charge' : it.k === 'stun' ? '💫' : it.k === 'flee' ? '🏃 fuit' : it.k === 'hidden' ? '🌊' : '💤';
     return h + (it.heal ? ' ✚' : '') + (it.shield ? ' 🛡️' : '') + (it.summon ? ' 👥' : '');
   }
   // --- orbes à ramasser ---
@@ -7910,7 +7952,7 @@ UI.run = (function () {
     hb.lastChild.textContent = E.fmt(Math.ceil(run.hp)) + ' / ' + E.fmt(stt.hp) + (sh >= 1 ? '  (+' + E.fmt(sh) + ')' : '');
     hb.classList.toggle('low', frac < 0.3);
     var pvw = c && !c.over && c.turn === 'hero' && run.phase === 'combat' ? E.preview() : null;
-    setPv(hb.children[3], hb.children[4], run.hp, stt.hp, pvw && pvw.hero);
+    setPv(hb.children[3], hb.children[4], hb.children[5], run.hp, stt.hp, pvw && pvw.hero);
     $('#rlvl').style.setProperty('--xp', Math.min(100, run.xp / E.xpNeed(run.lvl) * 100) + '%');
     UI.setTxt($('#hsts'), c ? stIcons(c.hero.st) + (c.hero.elan ? ' ⚡x' + c.hero.elan : '') : '');
     var charging = !!c && !c.over && c.enemies.some(function (x) { return !x.dead && x.charge; }), hsk = E.hero(run.hero).skills;
@@ -7957,12 +7999,18 @@ UI.run = (function () {
     var pt = $('#pot'); pt.lastChild.textContent = run.potions; pt.classList.toggle('cool', run.potions <= 0);
   }
   // v4.10 : barres de vie. Violet = ce que poison/brûlure/saignement retireront au prochain tour ennemi, vert = les soins à venir
-  function setPv(d, hl, hp, max, p) {
-    var dk = '', hk = '';
-    if (p && p.dot >= 0.5 && hp > 0) { var w = Math.max(p.dot / max * 100, 6), l = Math.max(0, hp / max * 100 - w); dk = l.toFixed(2) + '|' + Math.min(w, hp / max * 100 + 0.01).toFixed(2); }
-    if (p && p.heal >= 0.5 && hp > 0 && hp < max) { var hw = Math.min(Math.max(p.heal / max * 100, 3), 100 - hp / max * 100); hk = (hp / max * 100).toFixed(2) + '|' + hw.toFixed(2); }
-    if (d._k !== dk) { d._k = dk; var a = dk.split('|'); d.style.left = dk ? a[0] + '%' : ''; d.style.width = dk ? a[1] + '%' : '0'; }
-    if (hl._k !== hk) { hl._k = hk; var b = hk.split('|'); hl.style.left = hk ? b[0] + '%' : ''; hl.style.width = hk ? b[1] + '%' : '0'; }
+  // v4.11 : la brûlure a sa propre bande orange, collée à droite de la violette (poison, saignement)
+  function seg(el, l, w) { var k = w > 0 ? l.toFixed(2) + '|' + w.toFixed(2) : ''; if (el._k === k) return; el._k = k; el.style.left = k ? l.toFixed(2) + '%' : ''; el.style.width = k ? w.toFixed(2) + '%' : '0'; }
+  function setPv(d, bn, hl, hp, max, p) {
+    var hpc = hp / max * 100, tot = 0, bw = 0, dw = 0;
+    if (p && p.dot >= 0.5 && hp > 0) {
+      tot = Math.min(Math.max(p.dot / max * 100, 6), hpc);
+      bw = p.burn >= 0.5 ? Math.min(tot, Math.max(p.burn / max * 100, p.burn < p.dot - 0.5 ? 3 : tot)) : 0;
+      dw = tot - bw; if (dw > 0 && dw < 3 && bw > 3) { bw -= 3 - dw; dw = 3; }
+    }
+    seg(bn, hpc - bw, bw); seg(d, hpc - bw - dw, dw);
+    var hw = p && p.heal >= 0.5 && hp > 0 && hp < max ? Math.min(Math.max(p.heal / max * 100, 3), 100 - hpc) : 0;
+    seg(hl, hpc, hw);
   }
   // v4.10 : les intentions vivent dans un calque au-dessus de tous les ennemis, jamais sous le bandeau du haut ni sous un autre ennemi.
   // Les noms et barres trop hauts (boss, petits écrans) descendent juste sous les primes. Recalculé seulement quand quelque chose change.
@@ -7987,6 +8035,26 @@ UI.run = (function () {
       b.it.style.transform = 'translate(' + Math.round(b.x) + 'px,' + Math.round(b.y) + 'px)';
     });
   }
+  // v4.11 : brûlé, empoisonné, saignant se voient sur le personnage lui-même (lueur colorée + particules)
+  function stClasses(el, st) {
+    var k = (st.burn ? 'b' : '') + (st.poison ? 'p' : '') + (st.bleed ? 's' : '');
+    if (el._st === k) return; el._st = k;
+    el.classList.toggle('st-burn', !!st.burn); el.classList.toggle('st-poison', !!st.poison); el.classList.toggle('st-bleed', !!st.bleed);
+  }
+  var stfxT = 0;
+  function statusFx(c) {
+    var now = performance.now(); if (!vfx || now - stfxT < 340) return; stfxT = now;
+    var a = $('#arena'); if (!a) return; var ar = a.getBoundingClientRect();
+    function emit(el, st) {
+      var im = el && el.querySelector('img:not(.ic):not(.emo)'); if (!im) return; var r = im.getBoundingClientRect(); if (!r.width) return;
+      var x = r.left - ar.left + r.width / 2, w = r.width * 0.32, y = r.top - ar.top;
+      if (st.burn) VFX.sparks(vfx, x + (Math.random() * 2 - 1) * w, y + r.height * 0.8, 'fire', 3, { speed: 50, g: -240, life: 0.8, size: 9, dir: -Math.PI / 2, spread: 0.8 });
+      if (st.poison) VFX.sparks(vfx, x + (Math.random() * 2 - 1) * w, y + r.height * 0.6, 'venom', 2, { speed: 30, g: -110, life: 1.1, size: 8, dir: -Math.PI / 2, spread: 1.2 });
+      if (st.bleed) VFX.sparks(vfx, x + (Math.random() * 2 - 1) * w, y + r.height * 0.45, 'blood', 2, { speed: 40, g: 380, life: 0.6, size: 7, dir: Math.PI / 2, spread: 0.6 });
+    }
+    if (!c.over) emit($('#uhero'), c.hero.st);
+    c.enemies.forEach(function (e) { if (!e.dead && !(e.hidden > 0)) emit(els[e.id], e.st); });
+  }
   function updateArena() {
     var run = S().run, c = run && run.combat; if (!c) return;
     c.enemies.forEach(function (e, i) {
@@ -8004,10 +8072,13 @@ UI.run = (function () {
     if (hu) hu.classList.toggle('fury', !!c.hero.buffs.fury);
     var its = !c.over && c.turn === 'hero' ? E.intents() : null, pv = its ? E.preview() : null;
     if (hu) hu.classList.toggle('guard', c.hero.parryT > 0 && !c.over);
+    if (hu) stClasses(hu, c.over ? {} : c.hero.st);
+    c.enemies.forEach(function (e) { var el = els[e.id]; if (el) stClasses(el, e.dead ? {} : e.st); });
+    statusFx(c);
     c.enemies.forEach(function (e, i) {
       var el = els[e.id]; if (!el) return; var ie = el._it, ih = its && !e.dead ? intentHtml(its[i]) : '';
       if (ie && ie._raw !== ih) { UI.setTxt(ie, ih); ie.className = 'intent' + (its && !e.dead ? ' k-' + its[i].k + (its[i].parried ? ' parried' : '') : ''); labKey = ''; }
-      var eb = el.children[3]; setPv(eb.children[2], eb.children[3], e.dead ? 0 : e.hp, e.maxhp, pv && !e.dead ? pv.foes[i] : null);
+      var eb = el.children[3]; setPv(eb.children[2], eb.children[3], eb.children[4], e.dead ? 0 : e.hp, e.maxhp, pv && !e.dead ? pv.foes[i] : null);
     });
     placeLabels(c);
     for (var oi = 0; oi < c.orbs.length; oi++) { var ob = orbEls[c.orbs[oi].oid]; if (ob) ob.classList.toggle('last', c.orbs[oi].t <= E.ROUND); }
@@ -8390,7 +8461,7 @@ UI.run = (function () {
     h += '<div class="li on"><div class="ic">🎲</div><div class="grow"><b>Tour par tour</b><div class="small dim">À ton tour tu as <b>2 actions ⚡</b>. Frapper, parer, toucher un point faible ou renvoyer un crâne coûtent 1 action. Les pouvoirs, eux, se paient avec un dé. L’ultime, la fiole, la posture et les orbes sont gratuits. Ensuite chaque ennemi joue, l’un après l’autre.</div></div></div>';
     h += '<div class="li on"><div class="ic">🎒</div><div class="grow"><b>Dés de combat</b><div class="small dim">À chaque tour tu pioches <b>3 dés</b>. <b>Touche un dé</b> : il agit tout de suite, <b>sans coûter d’action</b>. Ou touche un <b>pouvoir</b> : il prend le meilleur dé qui convient. Chacun affiche le dé qu’il demande (≤3, PAIR, ≥4...), et plus le dé est fort, plus le pouvoir l’est.<br>⚔️ Lame frappe · 🛡️ Garde protège · ❤️ Sève soigne · ✨ Écho renforce le reste de ta main · 🪞 Miroir copie le dernier dé joué<br><b>Figures</b> : les 3 premiers dés joués du tour. 🎲 Paire (+30 % dégâts) · ✨ Suite 2-3-4 (+1 action, prochain coup critique) · 👑 Brelan (+1 action, coups critiques).<br>⇅ <b>Retourner</b> change un dé en sa face opposée, une fois par tour. ↻ relance ta main : 1 fois par combat.</div><div class="btns" style="margin-top:6px"><button class="btn sm" data-act="bag">🎒 Mon sac et les figures</button></div></div></div>';
     h += '<div class="li on"><div class="ic">👁️</div><div class="grow"><b>Intentions</b><div class="small dim">Sous le nom de chaque ennemi, ce qu’il fera à son tour : ⚔️ 12 il frappe pour 12 · 💥 gros coup · ⚠️ il charge (étourdis-le ou pare) · 💤 rien · ✚ soin · 👥 renfort. En bleu 🛡️ : tu pares, le chiffre montre ce qui passera encore.</div></div></div>';
-    h += '<div class="li on"><div class="ic">❤️</div><div class="grow"><b>Barres de vie</b><div class="small dim">Au bout de la barre, en <b style="color:#c86bff">violet</b> : ce que poison, brûlure et saignement retireront au prochain tour. En <b style="color:#7dffa0">vert</b> : les soins à venir. Pour toi comme pour les ennemis.</div></div></div>';
+    h += '<div class="li on"><div class="ic">❤️</div><div class="grow"><b>Barres de vie</b><div class="small dim">Au bout de la barre, en <b style="color:#c86bff">violet</b> : ce que poison et saignement retireront au prochain tour, en <b style="color:#ff8a3c">orange</b> la brûlure. En <b style="color:#7dffa0">vert</b> : les soins à venir. Pour toi comme pour les ennemis.</div></div></div>';
     h += '<h3 class="gold" style="margin:10px 0 6px">Les autres boutons</h3>' +
       '<div class="li"><div class="ic">⚔️</div><div class="grow"><b>Frapper</b><div class="small dim">Attaque l’ennemi visé (▼). Plus ta vitesse d’attaque est haute, plus tu donnes de coups par action. Toucher un ennemi le vise ; le toucher encore le frappe.</div></div></div>' +
       '<div class="li"><div class="ic">🛡️</div><div class="grow"><b>Parer</b><div class="small dim">Jusqu’à ton prochain tour, tu subis 70 % de dégâts en moins et tu ripostes. Quand un ennemi charge un gros coup ⚠️, le bouton devient <b style="color:#3ff0ff">bleu vif : PARE !</b> Pare à ce moment : le coup est annulé et l’ennemi est étourdi.</div></div></div>' +

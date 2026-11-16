@@ -970,13 +970,14 @@
     var run = S.run, c = run && run.combat; if (!c) return null;
     var st = run.stats, h = c.hero, dt = ROUND, its = c.enemies.map(function (e) { return intentOf(run, c, e); }), foes, hit0 = 0, k;
     foes = c.enemies.map(function (e) {
-      var o = { dot: 0, heal: 0 }; if (e.dead) return o;
+      var o = { dot: 0, burn: 0, heal: 0 }; if (e.dead) return o;
       if (!(e.hidden > 0) && e.born !== c.round) {
-        for (k in { burn: 1, poison: 1, bleed: 1 }) if (e.st[k]) o.dot += e.st[k].dps * dt;
-        o.dot *= heroMods(run, c, e); o.dot = Math.max(0, o.dot - (e.shield || 0));
+        var m = heroMods(run, c, e), sh = e.shield || 0;
+        // même ordre que foeAct : brûlure, poison, saignement ; le bouclier absorbe d'abord
+        ['burn', 'poison', 'bleed'].forEach(function (q) { if (!e.st[q]) return; var d = e.st[q].dps * dt * m, ab = Math.min(sh, d); sh -= ab; d -= ab; o.dot += d; if (q === 'burn') o.burn += d; });
       }
       if (c.cond === 'brume') o.dot += e.maxhp * 0.02 * dt;
-      o.dot = Math.min(o.dot, e.hp);
+      o.dot = Math.min(o.dot, e.hp); o.burn = Math.min(o.burn, o.dot);
       return o;
     });
     c.enemies.forEach(function (e, i) {
@@ -985,16 +986,17 @@
       if (e.ab.leech && it.dmg) foes[i].heal += it.dmg * (it.n || 1) * e.ab.leech / 100 * 3;
     });
     c.enemies.forEach(function (e, i) { if (!e.dead) foes[i].heal = Math.max(0, Math.min(foes[i].heal, e.maxhp - e.hp)); });
-    var hm = takenMods(run), dot = 0, heal = 0;
-    for (k in { burn: 1, poison: 1, bleed: 1 }) if (h.st[k]) dot += h.st[k].dps * dt * hm;
-    alive(c).forEach(function (e) { if (e.boss && e.ab.heat && !(e.st.stun > 0)) dot += st.hp * Math.min(0.03, 0.004 + c.t * 0.0003) * dt * hm; });
+    var hm = takenMods(run), dot = 0, burn = 0, heal = 0;
     var shl = h.shieldT > 0 && h.shieldT < 900 && h.shieldT - dt <= 0 ? 0 : Math.max(0, (h.shield || 0) - hit0);
-    dot = Math.max(0, dot - shl);
+    function take(d, isBurn) { var ab = Math.min(shl, d); shl -= ab; d -= ab; dot += d; if (isBurn) burn += d; }
+    alive(c).forEach(function (e) { if (e.boss && e.ab.heat && !(e.st.stun > 0)) take(st.hp * Math.min(0.03, 0.004 + c.t * 0.0003) * dt * hm, true); });
+    ['poison', 'burn', 'bleed'].forEach(function (q) { if (h.st[q]) take(h.st[q].dps * dt * hm, q === 'burn'); });
     if (c.cond === 'brume') dot += st.hp * 0.01 * dt;
     var hp = Math.max(0.1, 1 + st.healP / 100);
     if (st.regen) heal += st.hp * st.regen / 100 * dt * hp;
     if (c.cond === 'beni') heal += st.hp * 0.02 * dt * hp;
-    return { hero: { dot: Math.min(dot, Math.max(0, run.hp)), heal: Math.max(0, Math.min(heal, st.hp - run.hp)) }, foes: foes };
+    dot = Math.min(dot, Math.max(0, run.hp));
+    return { hero: { dot: dot, burn: Math.min(burn, dot), heal: Math.max(0, Math.min(heal, st.hp - run.hp)) }, foes: foes };
   };
   // Joue automatiquement les dés de la main (mode AUTO et robot de test) : l'Écho d'abord, le Miroir en dernier, puis au plus offrant
   function autoPlace(run, c) {
