@@ -272,7 +272,7 @@ var UI = (function () {
     html += '<div class="small dim" style="margin:4px 2px 8px">' + h.desc + '</div><div class="skills-list"><div class="sk"><div class="ic">' + h.passive.icon + '</div><div><b>' + h.passive.name + '</b> <span class="tiny dim">passif</span><div class="small dim">' + h.passive.desc + '</div></div></div>' +
       '<div class="sk"><div class="ic">' + h.ult.icon + '</div><div><b>' + h.ult.name + '</b> <span class="tiny gold">ultime</span><div class="small dim">' + h.ult.desc + '</div></div></div>' +
       h.skills.map(function (k, i) { var ok = E.skillUnlocked(h.id, i); return '<button class="sk tap' + (ok ? '' : ' locked') + '" data-act="skillInfo" data-h="' + h.id + '" data-i="' + i + '"><div class="ic">' + (ok ? k.icon : '🔒') + '</div><div class="grow"><b>' + k.name + '</b> <span class="tiny dim">' + (ok ? '' : 'Maîtrise ' + (i + 1)) + '</span>' + tagsHtml(k) + '<div class="small dim">' + k.desc + '</div></div><span class="dim">›</span></button>'; }).join('') + '</div>';
-    html += '<div class="btns"><button class="btn sm" data-act="lexique">📖 Lexique</button><button class="btn primary" data-act="close">Fermer</button></div>';
+    html += '<div class="btns"><button class="btn sm" data-act="lexique">📖 Lexique</button>' + (Object.keys(S().heroes).length > 1 ? '<button class="btn sm" data-act="xferMenu">🔁 Échanger l’équipement</button>' : '') + '<button class="btn primary" data-act="close">Fermer</button></div>';
     modal(html);
   };
   ACT.roster = function () {
@@ -438,6 +438,7 @@ var UI = (function () {
     h += '<div class="btns">';
     h += eqBy === S().hero ? '<button class="btn" data-act="unequip" data-slot="' + b.slot + '">Retirer</button>' : '<button class="btn primary" data-act="equip" data-uid="' + it.uid + '">Équiper</button>';
     h += '<button class="btn" data-act="lock" data-uid="' + it.uid + '">' + (it.lock ? '🔓 Déverrouiller' : '🔒 Verrouiller') + '</button></div><div class="btns">';
+    if (Object.keys(S().heroes).length > 1) h += '<button class="btn wide" data-act="giveMenu" data-uid="' + it.uid + '">🔁 Donner à un autre héros…</button></div><div class="btns">';
     if (uc) h += '<button class="btn goldb' + (S().essence >= uc.essence && S().cendres >= uc.cendres ? '' : ' off') + '" data-act="upgrade" data-uid="' + it.uid + '">⚒️ Améliorer +' + (it.up + 1) + '<br><span class="tiny">💠 ' + E.fmt(uc.essence) + ' · 🔥 ' + E.fmt(uc.cendres) + '</span></button>';
     else h += '<button class="btn off">Amélioration max</button>';
     if (tc) h += '<button class="btn' + (S().essence >= tc.essence ? '' : ' off') + '" data-act="temper" data-uid="' + it.uid + '">🔥 Retremper niv. ' + tc.target + '<br><span class="tiny">💠 ' + E.fmt(tc.essence) + '</span></button>';
@@ -458,6 +459,54 @@ var UI = (function () {
   ACT.temper = function (d) { if (E.temper(+d.uid)) { SND.play('upgrade'); flash('#ff8a3c55'); E.save(); modal(itemSheet(E.findItem(+d.uid))); refresh(); } else SND.play('error'); };
   ACT.salvage = function (d) { var v = E.salvage(+d.uid); if (v) { SND.play('salvage'); toast('+' + E.fmt(v) + ' 💠 Essence'); E.save(); closeModal(); refresh(); } };
   ACT.close = function () { closeModal(); };
+  // ---------- transfert d'objets entre héros ----------
+  function heroesOwned() { return D.HEROES.filter(function (x) { return E.heroUnlocked(x.id); }); }
+  function cmpTxt(it, other) {
+    if (!other) return '<span class="good">emplacement vide</span>';
+    var diff = Math.round((E.itemScore(it) / Math.max(1, E.itemScore(other)) - 1) * 100);
+    return 'porte <b class="c' + other.rar + '">' + E.itemName(other) + '</b> · <b class="' + (diff >= 0 ? 'good' : 'bad') + '">' + (diff >= 0 ? '▲ +' : '▼ ') + diff + ' %</b>';
+  }
+  ACT.giveMenu = function (d) {
+    var it = E.findItem(+d.uid); if (!it) return; SND.play('click');
+    var sl = E.itemBase(it).slot, from = E.equippedBy(it.uid), runH = S().run ? S().run.hero : null;
+    var h = '<h2>🔁 Donner à…</h2><div class="small center" style="margin:-6px 0 10px"><b class="c' + it.rar + '">' + E.itemName(it) + '</b>' + (from ? '<div class="tiny dim">Porté par ' + E.hero(from).name + ' : il récupérera en échange l’objet du receveur.</div>' : '') + '</div>';
+    heroesOwned().forEach(function (x) {
+      if (x.id === from) return;
+      var cur = S().heroes[x.id].equip[sl], ci = cur ? E.findItem(cur) : null;
+      h += '<button class="choice b1" data-act="giveTo" data-uid="' + it.uid + '" data-h="' + x.id + '"><div class="ic">' + spr(x.id) + '</div><div class="grow"><b>' + x.name + '</b>' + (x.id === runH ? ' <span class="tiny gold">en descente</span>' : '') + '<div class="d">' + cmpTxt(it, ci) + '</div></div></button>';
+    });
+    h += '<div class="btns"><button class="btn" data-act="item" data-uid="' + it.uid + '">Retour</button></div>';
+    modal(h);
+  };
+  ACT.giveTo = function (d) {
+    var it = E.findItem(+d.uid), r = E.giveItem(+d.uid, d.h); if (!it || !r) { SND.play('error'); return; }
+    SND.play('equip'); vib(15);
+    var back = r.back != null ? E.findItem(r.back) : null;
+    toast('🔁 ' + E.hero(d.h).name + ' équipe <b class="c' + it.rar + '">' + E.itemName(it) + '</b>' + (r.from ? (back ? ' · ' + E.hero(r.from).name + ' prend ' + E.itemName(back) : ' · ' + E.hero(r.from).name + ' n’a plus rien à cet emplacement') : '') + '.');
+    E.save(); closeModal(); refresh();
+  };
+  // Échange de l'équipement entre deux héros, emplacement par emplacement
+  ACT.xferMenu = function () {
+    var a = st.view, others = heroesOwned().filter(function (x) { return x.id !== a; }); SND.play('click');
+    if (!others.length) { toast('Recrute un autre héros pour échanger son équipement.'); return; }
+    modal('<h2>🔁 Échanger avec…</h2><div class="roster-big">' + others.map(function (x) { return '<button class="rhb" data-act="xfer" data-b="' + x.id + '">' + spr(x.id) + '<b>' + x.name + '</b><span>Puissance ' + E.fmt(E.power(x.id)) + '</span></button>'; }).join('') + '</div><div class="btns"><button class="btn" data-act="heroSheet">Retour</button></div>');
+  };
+  function xferTile(it, sl) { return it ? '<div class="item r' + it.rar + E.setAttr(it) + '">' + E.itemBase(it).icon + '<span class="lv">' + it.ilvl + '</span>' + (it.up ? '<span class="up">+' + it.up + '</span>' : '') + '</div>' : '<div class="slot empty">' + sl.icon + '</div>'; }
+  ACT.xfer = function (d) {
+    var a = st.view, b = d.b || st.xferB; st.xferB = b; if (!E.heroUnlocked(a) || !E.heroUnlocked(b) || a === b) return;
+    var A = E.hero(a), B = E.hero(b), ea = S().heroes[a].equip, eb = S().heroes[b].equip;
+    var h = '<h2>🔁 Échange d’équipement</h2><div class="xfer"><div class="xh">' + spr(a) + '<b>' + A.name + '</b><span>Puissance ' + E.fmt(E.power(a)) + '</span></div><div></div><div class="xh">' + spr(b) + '<b>' + B.name + '</b><span>Puissance ' + E.fmt(E.power(b)) + '</span></div>';
+    D.SLOTS.forEach(function (sl) {
+      var x = ea[sl.id] ? E.findItem(ea[sl.id]) : null, y = eb[sl.id] ? E.findItem(eb[sl.id]) : null;
+      h += xferTile(x, sl) + '<button class="btn sm' + (x || y ? '' : ' off') + '" data-act="xferSwap" data-s="' + sl.id + '">' + (x && y ? '⇄' : x ? '→' : y ? '←' : '·') + '</button>' + xferTile(y, sl);
+    });
+    h += '</div><div class="tiny dim center" style="margin:8px 0">Touche une flèche pour échanger cet emplacement.</div>';
+    h += '<div class="btns"><button class="btn" data-act="xferMenu">Autre héros</button><button class="btn goldb" data-act="xferAll">⇄ Tout échanger</button><button class="btn primary" data-act="xferDone">Fermer</button></div>';
+    modal(h);
+  };
+  ACT.xferSwap = function (d) { if (E.swapSlot(st.view, st.xferB, d.s)) { SND.play('equip'); E.save(); ACT.xfer({}); } else SND.play('error'); };
+  ACT.xferAll = function () { var n = 0; D.SLOTS.forEach(function (sl) { if (E.swapSlot(st.view, st.xferB, sl.id)) n++; }); if (n) { SND.play('equip'); vib(20); E.save(); } ACT.xfer({}); };
+  ACT.xferDone = function () { closeModal(); refresh(); };
 
   // ---------- autel ----------
   function tabAutel() {

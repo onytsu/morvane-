@@ -384,9 +384,22 @@ var DATA = (function () {
     ['👑', 'Brelan', 'trois valeurs identiques', '+1 action ⚡ et tous tes coups sont critiques ce tour.']
   ];
 
+  // ---------- Le Seuil : halte entre deux zones, après chaque boss ----------
+  var SEUIL = [
+    { id: 'veille', icon: '🔥', name: 'Veillée', desc: 'Tu reprends tout ton souffle : PV au maximum et une fiole de plus.' },
+    { id: 'aubaine', icon: '🌒', name: 'Bénédiction', desc: 'Choisis une aubaine, avec bien plus de chances qu’elle soit rare.' },
+    { id: 'butin', icon: '🎁', name: 'Reliquaire', desc: 'Un objet épique ou mieux, au niveau de la nouvelle zone.' },
+    { id: 'forge', icon: '⚒️', name: 'Enclume oubliée', desc: '+10 % attaque et PV jusqu’à la fin de la descente.' },
+    { id: 'de', icon: '🎲', name: 'Dé gravé', desc: 'Un nouveau dé à choisir pour ton sac.' },
+    { id: 'or', icon: '💰', name: 'Tribut', desc: '+{or} or pour les marchands de la zone.' }
+  ];
+
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.11';
+  var VERSION = '4.12';
   var NEWS = [
+    ['🚪', 'Nouvelle zone, tout de suite', 'Dès que le boss tombe, tu es dans la zone suivante : étage, décor, musique et présentation changent aussitôt, au lieu d’attendre le premier combat.'],
+    ['🕯️', 'Le Seuil', 'Entre deux zones, une halte : choisis une récompense parmi trois (soin complet, aubaine rare, objet épique, enclume, dé ou or).'],
+    ['🔁', 'Donner un objet à un autre héros', 'Dans la fiche d’un objet, « Donner à… » l’équipe directement sur le héros de ton choix. S’il était porté, son ancien porteur récupère l’objet du receveur. Depuis la fiche d’un héros, « Échanger l’équipement » met deux héros face à face, emplacement par emplacement.'],
     ['💬', 'Le temps de lire', 'Les explications restent affichées jusqu’à ce que tu les touches.'],
     ['🔥', 'Brûlé, empoisonné, ça se voit', 'Un personnage qui brûle s’entoure d’orange et lâche des braises, un empoisonné de violet avec des bulles, un saignant de rouge. Sur les barres de vie, la brûlure à venir a sa bande orange, à côté du violet du poison.'],
     ['🛡️', 'Quand parer', 'Le gros coup qui arrive s’annonce en grand sur l’ennemi : « PARE ! » en bleu, et le ⚠️ n’est plus caché en haut de l’écran.'],
@@ -1039,7 +1052,7 @@ var DATA = (function () {
     RARITIES: RARITIES, MODS: MODS, HEROES: HEROES, ENEMIES: ENEMIES, ZONES: ZONES, SLOTS: SLOTS, BASES: BASES,
     SETS: SETS, OMENS: OMENS, TALENTS: TALENTS, FAMILIARS: FAMILIARS, MOBFIX: MOBFIX, CONDS: CONDS, ALLIES: ALLIES, CONTRACTS: CONTRACTS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
     PACTS: PACTS, ACHIEVEMENTS: ACHIEVEMENTS, EVENTS: EVENTS, ROOMS: ROOMS, PRIMES: PRIMES, WHEEL: WHEEL, ALTARS: ALTARS,
-    AB_INFO: AB_INFO, GLOSS: GLOSS, NEEDS: NEEDS, DICE: DICE, BAGS: BAGS, FIGS: FIGS, VERSION: VERSION, NEWS: NEWS
+    AB_INFO: AB_INFO, GLOSS: GLOSS, NEEDS: NEEDS, DICE: DICE, BAGS: BAGS, FIGS: FIGS, VERSION: VERSION, NEWS: NEWS, SEUIL: SEUIL
   }
   conv(OUT, 0);
   return OUT;

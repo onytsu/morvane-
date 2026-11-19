@@ -635,7 +635,7 @@
   }
   E.rerollBoard = function () { var run = S.run; if (!run || run.phase !== 'doors' || !run.board || !(run.board.rerolls > 0)) return false; run.board.rerolls--; rollDice(run); E.save(); return true; };
   E.chooseDoor = function (i) {
-    var run = S.run; if (!run || run.phase !== 'doors' || run.pendingBoons > 0 || run.pendingEvos > 0 || run.pendingDice > 0) return false;
+    var run = S.run; if (!run || run.phase !== 'doors' || run.pendingBoons > 0 || run.pendingEvos > 0 || run.pendingDice > 0 || run.seuil) return false;
     var t = run.doors[i]; if (!t) return false;
     var m = run.moves[i], dbl = run.dice[0] === run.dice[1];
     run.board.pos = m.to; run.floor = floorAt(run, m.to); run.note = null;
@@ -646,12 +646,46 @@
   };
   function toDoors(run, instant) {
     if (!instant) run.rooms++;
+    // v4.12 : sitôt le boss vaincu, on est dans la zone suivante (étage, décor, musique), avec une halte au Seuil
+    if (!run.board || run.board.pos > CELLS) { var post = !!run.board; genBoard(run, Math.floor(run.floor / 10) * 10, 0); if (post) { run.floor = floorAt(run, 0); run.seuil = seuilOffer(run); } }
     if (run.floor > S.stats.best) S.stats.best = run.floor;
     recalc(run);
-    if (!run.board || run.board.pos > CELLS) genBoard(run, Math.floor(run.floor / 10) * 10, 0);
     rollDice(run); run.phase = 'doors'; if (run.pendingEvos > 0 && !run.evoOffer) E.makeEvoOffer(run); if (run.pendingBoons > 0 && !run.offer) E.makeOffer(run); if (run.pendingDice > 0 && !run.diceOffer) E.makeDiceOffer(run);
     E.checkAch(); E.save();
   }
+  // ----- Le Seuil : entre deux zones, une récompense au choix parmi trois -----
+  function seuilGold(run) { return Math.round(70 * (1 + 0.2 * (E.zoneNum(run.floor) - 1)) * (1 + run.stats.gf / 100)); }
+  function seuilOffer(run) { var p = D.SEUIL.map(function (x) { return x.id; }), out = []; while (out.length < 3 && p.length) out.push(p.splice(Math.floor(rnd() * p.length), 1)[0]); return out; }
+  E.seuilDesc = function (id) { var s = byId(D.SEUIL, id); return s.desc.replace('{or}', seuilGold(S.run)); };
+  E.chooseSeuil = function (i) {
+    var run = S.run; if (!run || !run.seuil || run.phase !== 'doors') return false;
+    var id = run.seuil[i]; if (!id) return false; var res = { id: id };
+    if (id === 'veille') { res.hp = Math.ceil(heal(run, run.stats.hp, true)); run.potions = Math.min(run.potionsMax, run.potions + 1); }
+    else if (id === 'aubaine') { run.pendingBoons++; if (!run.offer) run.offer = offerBoons(run, 3 + run.stats.boonChoices, 2); }
+    else if (id === 'butin') { res.item = dropItem(run, 'chest', 3); }
+    else if (id === 'forge') { add(run.mods, { atkP: 10, hpP: 10 }); recalc(run); }
+    else if (id === 'de') { run.pendingDice = (run.pendingDice || 0) + 1; if (!run.diceOffer) E.makeDiceOffer(run); }
+    else if (id === 'or') { res.gold = seuilGold(run); run.gold += res.gold; }
+    run.seuil = null; E.save(); return res;
+  };
+  // ----- Transfert d'objets entre héros -----
+  // Échange le contenu d'un emplacement entre deux héros (un côté peut être vide)
+  E.swapSlot = function (a, b, slot) {
+    if (a === b || !S.heroes[a] || !S.heroes[b]) return false;
+    var ea = S.heroes[a].equip, eb = S.heroes[b].equip, x = ea[slot], y = eb[slot];
+    if (x == null && y == null) return false;
+    if (y != null) ea[slot] = y; else delete ea[slot];
+    if (x != null) eb[slot] = x; else delete eb[slot];
+    if (S.run) recalc(S.run); return true;
+  };
+  // Donne un objet à un héros : s'il était porté par un autre, celui-ci récupère en échange l'ancien objet du receveur
+  E.giveItem = function (uid, to) {
+    var it = E.findItem(uid); if (!it || !S.heroes[to]) return false;
+    var sl = E.itemBase(it).slot, from = E.equippedBy(uid), old = S.heroes[to].equip[sl];
+    if (from === to) return false;
+    if (from) { E.swapSlot(from, to, sl); return { from: from, back: old != null ? old : null }; }
+    E.equip(uid, to); return { from: null, back: null, bag: old != null ? old : null };
+  };
   E.continueRun = function () { var run = S.run; if (run && run.phase === 'victory') { toDoors(run); return true; } return false; };
 
   // Actions des salles sans combat. Renvoie un texte de résultat (ou false).
