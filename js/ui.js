@@ -473,7 +473,7 @@ var UI = (function () {
     heroesOwned().forEach(function (x) {
       if (x.id === from) return;
       var cur = S().heroes[x.id].equip[sl], ci = cur ? E.findItem(cur) : null;
-      h += '<button class="choice b1" data-act="giveTo" data-uid="' + it.uid + '" data-h="' + x.id + '"><div class="ic">' + spr(x.id) + '</div><div class="grow"><b>' + x.name + '</b>' + (x.id === runH ? ' <span class="tiny gold">en descente</span>' : '') + '<div class="d">' + cmpTxt(it, ci) + '</div></div></button>';
+      h += '<button class="choice b1 give" data-act="giveTo" data-uid="' + it.uid + '" data-h="' + x.id + '"><div class="ic">' + spr(x.id) + '</div><div class="grow"><b>' + x.name + '</b>' + (x.id === runH ? ' <span class="tiny gold">en descente</span>' : '') + '<div class="d">' + cmpTxt(it, ci) + '</div></div></button>';
     });
     h += '<div class="btns"><button class="btn" data-act="item" data-uid="' + it.uid + '">Retour</button></div>';
     modal(h);

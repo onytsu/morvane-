@@ -1263,7 +1263,7 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
 }
 .unit.en .warn img, .unit.en .warn img.emo { width: 24px; height: 24px; animation: none; filter: none; image-rendering: pixelated; }
 /* v4.12 : transfert d'objets entre héros */
-.choice .ic img.px:not(.ski) { width: 40px; height: 40px; }
+.choice.give .ic img.px { width: 40px; height: 40px; }
 .xfer { display: grid; grid-template-columns: 1fr 52px 1fr; gap: 6px 8px; align-items: center; justify-items: center; }
 .xfer .item, .xfer .slot { width: 52px; height: 52px; }
 .xfer .btn.sm { min-width: 44px; padding: 6px 0; font-size: 16px; }
