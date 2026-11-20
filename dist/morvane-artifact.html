@@ -1263,6 +1263,13 @@ img.emo { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.
   .unit.hero img:where(:not(.ic):not(.emo)) { width: 100px; height: 100px; }
 }
 .unit.en .warn img, .unit.en .warn img.emo { width: 24px; height: 24px; animation: none; filter: none; image-rendering: pixelated; }
+/* v4.12 : transfert d'objets entre héros */
+.choice.give .ic img.px { width: 40px; height: 40px; }
+.xfer { display: grid; grid-template-columns: 1fr 52px 1fr; gap: 6px 8px; align-items: center; justify-items: center; }
+.xfer .item, .xfer .slot { width: 52px; height: 52px; }
+.xfer .btn.sm { min-width: 44px; padding: 6px 0; font-size: 16px; }
+.xfer .xh { display: flex; flex-direction: column; align-items: center; } .xfer .xh > img:first-child { width: 44px; height: 44px; image-rendering: pixelated; }
+.xfer .xh b { font-family: var(--serif); font-size: 12px; } .xfer .xh span { font-size: 10px; color: var(--dim); }
 
 :root { color-scheme: dark; --sat: 0px; --sab: 0px; } html, body { height: 100%; } #app { height: 100%; }</style>
 <div id="app"><div id="screen"></div><div id="overlay"></div><div id="modal"></div><div id="toasts"></div><div id="flash"></div></div>
@@ -1653,9 +1660,22 @@ var DATA = (function () {
     ['👑', 'Brelan', 'trois valeurs identiques', '+1 action ⚡ et tous tes coups sont critiques ce tour.']
   ];
 
+  // ---------- Le Seuil : halte entre deux zones, après chaque boss ----------
+  var SEUIL = [
+    { id: 'veille', icon: '🔥', name: 'Veillée', desc: 'Tu reprends tout ton souffle : PV au maximum et une fiole de plus.' },
+    { id: 'aubaine', icon: '🌒', name: 'Bénédiction', desc: 'Choisis une aubaine, avec bien plus de chances qu’elle soit rare.' },
+    { id: 'butin', icon: '🎁', name: 'Reliquaire', desc: 'Un objet épique ou mieux, au niveau de la nouvelle zone.' },
+    { id: 'forge', icon: '⚒️', name: 'Enclume oubliée', desc: '+10 % attaque et PV jusqu’à la fin de la descente.' },
+    { id: 'de', icon: '🎲', name: 'Dé gravé', desc: 'Un nouveau dé à choisir pour ton sac.' },
+    { id: 'or', icon: '💰', name: 'Tribut', desc: '+{or} or pour les marchands de la zone.' }
+  ];
+
   // ---------- Version et nouveautés ----------
-  var VERSION = '4.11';
+  var VERSION = '4.12';
   var NEWS = [
+    ['🚪', 'Nouvelle zone, tout de suite', 'Dès que le boss tombe, tu es dans la zone suivante : étage, décor, musique et présentation changent aussitôt, au lieu d’attendre le premier combat.'],
+    ['🕯️', 'Le Seuil', 'Entre deux zones, une halte : choisis une récompense parmi trois (soin complet, aubaine rare, objet épique, enclume, dé ou or).'],
+    ['🔁', 'Donner un objet à un autre héros', 'Dans la fiche d’un objet, « Donner à… » l’équipe directement sur le héros de ton choix. S’il était porté, son ancien porteur récupère l’objet du receveur. Depuis la fiche d’un héros, « Échanger l’équipement » met deux héros face à face, emplacement par emplacement.'],
     ['💬', 'Le temps de lire', 'Les explications restent affichées jusqu’à ce que tu les touches.'],
     ['🔥', 'Brûlé, empoisonné, ça se voit', 'Un personnage qui brûle s’entoure d’orange et lâche des braises, un empoisonné de violet avec des bulles, un saignant de rouge. Sur les barres de vie, la brûlure à venir a sa bande orange, à côté du violet du poison.'],
     ['🛡️', 'Quand parer', 'Le gros coup qui arrive s’annonce en grand sur l’ennemi : « PARE ! » en bleu, et le ⚠️ n’est plus caché en haut de l’écran.'],
@@ -2308,7 +2328,7 @@ var DATA = (function () {
     RARITIES: RARITIES, MODS: MODS, HEROES: HEROES, ENEMIES: ENEMIES, ZONES: ZONES, SLOTS: SLOTS, BASES: BASES,
     SETS: SETS, OMENS: OMENS, TALENTS: TALENTS, FAMILIARS: FAMILIARS, MOBFIX: MOBFIX, CONDS: CONDS, ALLIES: ALLIES, CONTRACTS: CONTRACTS, AFFIXES: AFFIXES, POWERS: POWERS, UNIQUES: UNIQUES, BOONS: BOONS, ARTIFACTS: ARTIFACTS, META: META,
     PACTS: PACTS, ACHIEVEMENTS: ACHIEVEMENTS, EVENTS: EVENTS, ROOMS: ROOMS, PRIMES: PRIMES, WHEEL: WHEEL, ALTARS: ALTARS,
-    AB_INFO: AB_INFO, GLOSS: GLOSS, NEEDS: NEEDS, DICE: DICE, BAGS: BAGS, FIGS: FIGS, VERSION: VERSION, NEWS: NEWS
+    AB_INFO: AB_INFO, GLOSS: GLOSS, NEEDS: NEEDS, DICE: DICE, BAGS: BAGS, FIGS: FIGS, VERSION: VERSION, NEWS: NEWS, SEUIL: SEUIL
   }
   conv(OUT, 0);
   return OUT;
@@ -2382,7 +2402,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
     for (k in ref) if (S[k] === undefined) S[k] = ref[k];
     for (k in ref.stats) if (S.stats[k] === undefined) S.stats[k] = ref.stats[k];
     for (k in ref.settings) if (S.settings[k] === undefined) S.settings[k] = ref.settings[k];
-    if (S.run) { if (!S.run.bag) S.run.bag = startBag(S.run.hero); S.run.pendingDice = S.run.pendingDice || 0; S.run.evos = S.run.evos || []; S.run.pendingEvos = S.run.pendingEvos || 0; S.run.cnt = S.run.cnt || {}; S.run.primeLog = S.run.primeLog || []; if (!S.run.primes) { S.run.primes = []; rollPrimes(S.run); } if (!S.run.board) { recalc(S.run); genBoard(S.run, Math.floor((S.run.floor - 1) / 10) * 10, S.run.floor % 10 === 0 ? CELLS + 1 : ((S.run.floor - 1) % 10) * 4 + 1); if (S.run.phase === 'doors') rollDice(S.run); } var sc = S.run.combat; S.run.combat = null;
+    if (S.run) { if (!S.run.bag) S.run.bag = startBag(S.run.hero); S.run.pendingDice = S.run.pendingDice || 0; S.run.evos = S.run.evos || []; S.run.pendingEvos = S.run.pendingEvos || 0; S.run.cnt = S.run.cnt || {}; S.run.primeLog = S.run.primeLog || []; if (!S.run.primes) { S.run.primes = []; rollPrimes(S.run); } if (!S.run.board) { recalc(S.run); genBoard(S.run, Math.floor((S.run.floor - 1) / 10) * 10, S.run.floor % 10 === 0 ? CELLS + 1 : ((S.run.floor - 1) % 10) * 4 + 1); if (S.run.phase === 'doors') rollDice(S.run); } if (S.run.board.pos === 0 && S.run.floor > 0 && S.run.floor === S.run.board.base) S.run.floor = floorAt(S.run, 0); var sc = S.run.combat; S.run.combat = null;
       // un combat sauvegardé reprend où il en était ; sinon (anciennes sauvegardes) il est rejoué depuis le début
       if (S.run.phase === 'combat') { if (sc && !sc.over && sc.enemies && sc.enemies.length && sc.hero && sc.hand && sc.pile) { sc.events = []; sc.orbs = []; S.run.combat = sc; } else E._buildCombat(S.run, true); } }
     E.S = S;
@@ -2953,7 +2973,7 @@ if (typeof module !== 'undefined') module.exports = DATA;
   }
   E.rerollBoard = function () { var run = S.run; if (!run || run.phase !== 'doors' || !run.board || !(run.board.rerolls > 0)) return false; run.board.rerolls--; rollDice(run); E.save(); return true; };
   E.chooseDoor = function (i) {
-    var run = S.run; if (!run || run.phase !== 'doors' || run.pendingBoons > 0 || run.pendingEvos > 0 || run.pendingDice > 0) return false;
+    var run = S.run; if (!run || run.phase !== 'doors' || run.pendingBoons > 0 || run.pendingEvos > 0 || run.pendingDice > 0 || run.seuil) return false;
     var t = run.doors[i]; if (!t) return false;
     var m = run.moves[i], dbl = run.dice[0] === run.dice[1];
     run.board.pos = m.to; run.floor = floorAt(run, m.to); run.note = null;
@@ -2964,12 +2984,46 @@ if (typeof module !== 'undefined') module.exports = DATA;
   };
   function toDoors(run, instant) {
     if (!instant) run.rooms++;
+    // v4.12 : sitôt le boss vaincu, on est dans la zone suivante (étage, décor, musique), avec une halte au Seuil
+    if (!run.board || run.board.pos > CELLS) { var post = !!run.board; genBoard(run, Math.floor(run.floor / 10) * 10, 0); if (post) { run.floor = floorAt(run, 0); run.seuil = seuilOffer(run); } }
     if (run.floor > S.stats.best) S.stats.best = run.floor;
     recalc(run);
-    if (!run.board || run.board.pos > CELLS) genBoard(run, Math.floor(run.floor / 10) * 10, 0);
     rollDice(run); run.phase = 'doors'; if (run.pendingEvos > 0 && !run.evoOffer) E.makeEvoOffer(run); if (run.pendingBoons > 0 && !run.offer) E.makeOffer(run); if (run.pendingDice > 0 && !run.diceOffer) E.makeDiceOffer(run);
     E.checkAch(); E.save();
   }
+  // ----- Le Seuil : entre deux zones, une récompense au choix parmi trois -----
+  function seuilGold(run) { return Math.round(70 * (1 + 0.2 * (E.zoneNum(run.floor) - 1)) * (1 + run.stats.gf / 100)); }
+  function seuilOffer(run) { var p = D.SEUIL.map(function (x) { return x.id; }), out = []; while (out.length < 3 && p.length) out.push(p.splice(Math.floor(rnd() * p.length), 1)[0]); return out; }
+  E.seuilDesc = function (id) { var s = byId(D.SEUIL, id); return s.desc.replace('{or}', seuilGold(S.run)); };
+  E.chooseSeuil = function (i) {
+    var run = S.run; if (!run || !run.seuil || run.phase !== 'doors') return false;
+    var id = run.seuil[i]; if (!id) return false; var res = { id: id };
+    if (id === 'veille') { res.hp = Math.ceil(heal(run, run.stats.hp, true)); run.potions = Math.min(run.potionsMax, run.potions + 1); }
+    else if (id === 'aubaine') { run.pendingBoons++; if (!run.offer) run.offer = offerBoons(run, 3 + run.stats.boonChoices, 2); }
+    else if (id === 'butin') { res.item = dropItem(run, 'chest', 3); }
+    else if (id === 'forge') { add(run.mods, { atkP: 10, hpP: 10 }); recalc(run); }
+    else if (id === 'de') { run.pendingDice = (run.pendingDice || 0) + 1; if (!run.diceOffer) E.makeDiceOffer(run); }
+    else if (id === 'or') { res.gold = seuilGold(run); run.gold += res.gold; }
+    run.seuil = null; E.save(); return res;
+  };
+  // ----- Transfert d'objets entre héros -----
+  // Échange le contenu d'un emplacement entre deux héros (un côté peut être vide)
+  E.swapSlot = function (a, b, slot) {
+    if (a === b || !S.heroes[a] || !S.heroes[b]) return false;
+    var ea = S.heroes[a].equip, eb = S.heroes[b].equip, x = ea[slot], y = eb[slot];
+    if (x == null && y == null) return false;
+    if (y != null) ea[slot] = y; else delete ea[slot];
+    if (x != null) eb[slot] = x; else delete eb[slot];
+    if (S.run) recalc(S.run); return true;
+  };
+  // Donne un objet à un héros : s'il était porté par un autre, celui-ci récupère en échange l'ancien objet du receveur
+  E.giveItem = function (uid, to) {
+    var it = E.findItem(uid); if (!it || !S.heroes[to]) return false;
+    var sl = E.itemBase(it).slot, from = E.equippedBy(uid), old = S.heroes[to].equip[sl];
+    if (from === to) return false;
+    if (from) { E.swapSlot(from, to, sl); return { from: from, back: old != null ? old : null }; }
+    E.equip(uid, to); return { from: null, back: null, bag: old != null ? old : null };
+  };
   E.continueRun = function () { var run = S.run; if (run && run.phase === 'victory') { toDoors(run); return true; } return false; };
 
   // Actions des salles sans combat. Renvoie un texte de résultat (ou false).
@@ -7169,7 +7223,7 @@ var UI = (function () {
     html += '<div class="small dim" style="margin:4px 2px 8px">' + h.desc + '</div><div class="skills-list"><div class="sk"><div class="ic">' + h.passive.icon + '</div><div><b>' + h.passive.name + '</b> <span class="tiny dim">passif</span><div class="small dim">' + h.passive.desc + '</div></div></div>' +
       '<div class="sk"><div class="ic">' + h.ult.icon + '</div><div><b>' + h.ult.name + '</b> <span class="tiny gold">ultime</span><div class="small dim">' + h.ult.desc + '</div></div></div>' +
       h.skills.map(function (k, i) { var ok = E.skillUnlocked(h.id, i); return '<button class="sk tap' + (ok ? '' : ' locked') + '" data-act="skillInfo" data-h="' + h.id + '" data-i="' + i + '"><div class="ic">' + (ok ? k.icon : '🔒') + '</div><div class="grow"><b>' + k.name + '</b> <span class="tiny dim">' + (ok ? '' : 'Maîtrise ' + (i + 1)) + '</span>' + tagsHtml(k) + '<div class="small dim">' + k.desc + '</div></div><span class="dim">›</span></button>'; }).join('') + '</div>';
-    html += '<div class="btns"><button class="btn sm" data-act="lexique">📖 Lexique</button><button class="btn primary" data-act="close">Fermer</button></div>';
+    html += '<div class="btns"><button class="btn sm" data-act="lexique">📖 Lexique</button>' + (Object.keys(S().heroes).length > 1 ? '<button class="btn sm" data-act="xferMenu">🔁 Échanger l’équipement</button>' : '') + '<button class="btn primary" data-act="close">Fermer</button></div>';
     modal(html);
   };
   ACT.roster = function () {
@@ -7335,6 +7389,7 @@ var UI = (function () {
     h += '<div class="btns">';
     h += eqBy === S().hero ? '<button class="btn" data-act="unequip" data-slot="' + b.slot + '">Retirer</button>' : '<button class="btn primary" data-act="equip" data-uid="' + it.uid + '">Équiper</button>';
     h += '<button class="btn" data-act="lock" data-uid="' + it.uid + '">' + (it.lock ? '🔓 Déverrouiller' : '🔒 Verrouiller') + '</button></div><div class="btns">';
+    if (Object.keys(S().heroes).length > 1) h += '<button class="btn wide" data-act="giveMenu" data-uid="' + it.uid + '">🔁 Donner à un autre héros…</button></div><div class="btns">';
     if (uc) h += '<button class="btn goldb' + (S().essence >= uc.essence && S().cendres >= uc.cendres ? '' : ' off') + '" data-act="upgrade" data-uid="' + it.uid + '">⚒️ Améliorer +' + (it.up + 1) + '<br><span class="tiny">💠 ' + E.fmt(uc.essence) + ' · 🔥 ' + E.fmt(uc.cendres) + '</span></button>';
     else h += '<button class="btn off">Amélioration max</button>';
     if (tc) h += '<button class="btn' + (S().essence >= tc.essence ? '' : ' off') + '" data-act="temper" data-uid="' + it.uid + '">🔥 Retremper niv. ' + tc.target + '<br><span class="tiny">💠 ' + E.fmt(tc.essence) + '</span></button>';
@@ -7355,6 +7410,54 @@ var UI = (function () {
   ACT.temper = function (d) { if (E.temper(+d.uid)) { SND.play('upgrade'); flash('#ff8a3c55'); E.save(); modal(itemSheet(E.findItem(+d.uid))); refresh(); } else SND.play('error'); };
   ACT.salvage = function (d) { var v = E.salvage(+d.uid); if (v) { SND.play('salvage'); toast('+' + E.fmt(v) + ' 💠 Essence'); E.save(); closeModal(); refresh(); } };
   ACT.close = function () { closeModal(); };
+  // ---------- transfert d'objets entre héros ----------
+  function heroesOwned() { return D.HEROES.filter(function (x) { return E.heroUnlocked(x.id); }); }
+  function cmpTxt(it, other) {
+    if (!other) return '<span class="good">emplacement vide</span>';
+    var diff = Math.round((E.itemScore(it) / Math.max(1, E.itemScore(other)) - 1) * 100);
+    return 'porte <b class="c' + other.rar + '">' + E.itemName(other) + '</b> · <b class="' + (diff >= 0 ? 'good' : 'bad') + '">' + (diff >= 0 ? '▲ +' : '▼ ') + diff + ' %</b>';
+  }
+  ACT.giveMenu = function (d) {
+    var it = E.findItem(+d.uid); if (!it) return; SND.play('click');
+    var sl = E.itemBase(it).slot, from = E.equippedBy(it.uid), runH = S().run ? S().run.hero : null;
+    var h = '<h2>🔁 Donner à…</h2><div class="small center" style="margin:-6px 0 10px"><b class="c' + it.rar + '">' + E.itemName(it) + '</b>' + (from ? '<div class="tiny dim">Porté par ' + E.hero(from).name + ' : il récupérera en échange l’objet du receveur.</div>' : '') + '</div>';
+    heroesOwned().forEach(function (x) {
+      if (x.id === from) return;
+      var cur = S().heroes[x.id].equip[sl], ci = cur ? E.findItem(cur) : null;
+      h += '<button class="choice b1 give" data-act="giveTo" data-uid="' + it.uid + '" data-h="' + x.id + '"><div class="ic">' + spr(x.id) + '</div><div class="grow"><b>' + x.name + '</b>' + (x.id === runH ? ' <span class="tiny gold">en descente</span>' : '') + '<div class="d">' + cmpTxt(it, ci) + '</div></div></button>';
+    });
+    h += '<div class="btns"><button class="btn" data-act="item" data-uid="' + it.uid + '">Retour</button></div>';
+    modal(h);
+  };
+  ACT.giveTo = function (d) {
+    var it = E.findItem(+d.uid), r = E.giveItem(+d.uid, d.h); if (!it || !r) { SND.play('error'); return; }
+    SND.play('equip'); vib(15);
+    var back = r.back != null ? E.findItem(r.back) : null;
+    toast('🔁 ' + E.hero(d.h).name + ' équipe <b class="c' + it.rar + '">' + E.itemName(it) + '</b>' + (r.from ? (back ? ' · ' + E.hero(r.from).name + ' prend ' + E.itemName(back) : ' · ' + E.hero(r.from).name + ' n’a plus rien à cet emplacement') : '') + '.');
+    E.save(); closeModal(); refresh();
+  };
+  // Échange de l'équipement entre deux héros, emplacement par emplacement
+  ACT.xferMenu = function () {
+    var a = st.view, others = heroesOwned().filter(function (x) { return x.id !== a; }); SND.play('click');
+    if (!others.length) { toast('Recrute un autre héros pour échanger son équipement.'); return; }
+    modal('<h2>🔁 Échanger avec…</h2><div class="roster-big">' + others.map(function (x) { return '<button class="rhb" data-act="xfer" data-b="' + x.id + '">' + spr(x.id) + '<b>' + x.name + '</b><span>Puissance ' + E.fmt(E.power(x.id)) + '</span></button>'; }).join('') + '</div><div class="btns"><button class="btn" data-act="heroSheet">Retour</button></div>');
+  };
+  function xferTile(it, sl) { return it ? '<div class="item r' + it.rar + E.setAttr(it) + '">' + E.itemBase(it).icon + '<span class="lv">' + it.ilvl + '</span>' + (it.up ? '<span class="up">+' + it.up + '</span>' : '') + '</div>' : '<div class="slot empty">' + sl.icon + '</div>'; }
+  ACT.xfer = function (d) {
+    var a = st.view, b = d.b || st.xferB; st.xferB = b; if (!E.heroUnlocked(a) || !E.heroUnlocked(b) || a === b) return;
+    var A = E.hero(a), B = E.hero(b), ea = S().heroes[a].equip, eb = S().heroes[b].equip;
+    var h = '<h2>🔁 Échange d’équipement</h2><div class="xfer"><div class="xh">' + spr(a) + '<b>' + A.name + '</b><span>Puissance ' + E.fmt(E.power(a)) + '</span></div><div></div><div class="xh">' + spr(b) + '<b>' + B.name + '</b><span>Puissance ' + E.fmt(E.power(b)) + '</span></div>';
+    D.SLOTS.forEach(function (sl) {
+      var x = ea[sl.id] ? E.findItem(ea[sl.id]) : null, y = eb[sl.id] ? E.findItem(eb[sl.id]) : null;
+      h += xferTile(x, sl) + '<button class="btn sm' + (x || y ? '' : ' off') + '" data-act="xferSwap" data-s="' + sl.id + '">' + (x && y ? '⇄' : x ? '→' : y ? '←' : '·') + '</button>' + xferTile(y, sl);
+    });
+    h += '</div><div class="tiny dim center" style="margin:8px 0">Touche une flèche pour échanger cet emplacement.</div>';
+    h += '<div class="btns"><button class="btn" data-act="xferMenu">Autre héros</button><button class="btn goldb" data-act="xferAll">⇄ Tout échanger</button><button class="btn primary" data-act="xferDone">Fermer</button></div>';
+    modal(h);
+  };
+  ACT.xferSwap = function (d) { if (E.swapSlot(st.view, st.xferB, d.s)) { SND.play('equip'); E.save(); ACT.xfer({}); } else SND.play('error'); };
+  ACT.xferAll = function () { var n = 0; D.SLOTS.forEach(function (sl) { if (E.swapSlot(st.view, st.xferB, sl.id)) n++; }); if (n) { SND.play('equip'); vib(20); E.save(); } ACT.xfer({}); };
+  ACT.xferDone = function () { closeModal(); refresh(); };
 
   // ---------- autel ----------
   function tabAutel() {
@@ -8123,7 +8226,7 @@ UI.run = (function () {
   // Affiche la bonne fenêtre selon la phase de la descente
   function syncPhase(now) {
     var run = S().run; if (!run) return;
-    var key = run.phase + '|' + run.floor + '|' + run.pendingBoons + '|' + run.pendingEvos + '|' + (run.pendingDice || 0) + '|' + (run.room ? run.room.type : '');
+    var key = run.phase + '|' + run.floor + '|' + run.pendingBoons + '|' + run.pendingEvos + '|' + (run.pendingDice || 0) + '|' + (run.room ? run.room.type : '') + '|' + (run.seuil ? 'S' : '');
     if (key === shownPhase) return; shownPhase = key;
     clearTimeout(phaseTimer);
     var delay = now ? 0 : run.phase === 'victory' && run.result && !run.result.chest ? (run.result.boss ? 1700 : 850) : run.phase === 'dead' ? 1100 : 0;
@@ -8137,7 +8240,7 @@ UI.run = (function () {
     if (built === null) buildArena();
     if (run.phase === 'victory') return sheetVictory(run);
     if ((run.phase === 'doors' || run.phase === 'room') && run.pendingEvos > 0 && sheetEvo(run)) return;
-    if (run.phase === 'doors') return run.pendingBoons > 0 ? sheetBoon(run) : run.pendingDice > 0 ? sheetDice(run) : sheetDoors(run);
+    if (run.phase === 'doors') return run.pendingBoons > 0 ? sheetBoon(run) : run.pendingDice > 0 ? sheetDice(run) : run.seuil ? sheetSeuil(run) : sheetDoors(run);
     if (run.phase === 'room') return run.pendingBoons > 0 ? sheetBoon(run) : sheetRoom(run);
     if (run.phase === 'dead') return end(false);
   }
@@ -8179,11 +8282,45 @@ UI.run = (function () {
     if (r.boss) SND.play('victory'); if (r.gold) SND.play('gold'); if (r.lvlUps) setTimeout(function () { SND.play('levelup'); }, 300);
     if (r.items.length) lootFx(r.items);
     if (r.boss) SND.music(zoneMusic(run));
-    if (r.boss && !r.chest) setTimeout(function () { UI.story.inZone(run, 'end', r.ending ? ending : null); }, 1500);
+    // la scène de fin de zone se joue avec l'étage du boss, même si on touche CONTINUER avant qu'elle démarre
+    clearTimeout(endT); endFn = null;
+    if (r.boss && !r.chest) { var at = { floor: run.floor }; endFn = function (next) { endFn = null; UI.story.inZone(at, 'end', function () { if (r.ending) ending(); if (next) next(); }); }; endT = setTimeout(function () { if (endFn) endFn(); }, 1500); }
     else if (r.ending) setTimeout(ending, 1500);
     UI.flushAch();
   }
-  ACT.cont = function () { SND.play('click'); E.continueRun(); syncPhase(true); };
+  var endT = null, endFn = null;
+  ACT.cont = function () {
+    if (wiping) return; SND.play('click');
+    var run = S().run, boss = run && run.phase === 'victory' && run.result && run.result.boss;
+    if (!boss) { E.continueRun(); syncPhase(true); return; }
+    clearTimeout(endT); var go = function () { E.continueRun(); newZone(S().run); };
+    if (endFn) endFn(go); else go();
+  };
+  // Boss vaincu : on passe tout de suite dans la zone suivante (décor, musique, présentation)
+  function newZone(run) {
+    if (!run) return; var z = E.zoneOf(run.floor);
+    SND.play('door');
+    wipe(z.name, 'Zone ' + (((E.zoneNum(run.floor) - 1) % 6) + 1) + (E.cycleOf(run.floor) ? ' · Abîme ' + E.cycleOf(run.floor) : '') + ' · étage ' + run.floor, function () {
+      UI.overlay(null); built = null; updateHud.key = null; shownPhase = null; SND.music(zoneMusic(run)); syncPhase(true);
+      UI.story.enterZone(run, function () { zoneIntro(run); });
+    });
+  }
+  function sheetSeuil(run) {
+    var z = E.zoneOf(run.floor), h = '<div class="zbanner" style="--zc:' + z.color + ';--zbg:url(' + Backgrounds.url(z.id) + ')"><h2>🕯️ Le Seuil</h2><div class="zs">Avant d’entrer dans ' + z.name + ' · étage ' + run.floor + '</div></div>';
+    h += '<div class="tiny dim center" style="margin:2px 0 8px">Le boss est tombé. Une halte avant la suite : choisis une récompense.</div>';
+    run.seuil.forEach(function (id, i) { var o = E.byId(D.SEUIL, id); h += '<button class="choice b2" style="animation-delay:' + (i * 0.07) + 's" data-act="seuil" data-i="' + i + '"><div class="ic">' + o.icon + '</div><div class="grow"><b>' + o.name + '</b><div class="d">' + E.seuilDesc(id) + '</div></div></button>'; });
+    UI.overlay(h);
+  }
+  ACT.seuil = function (d) {
+    if (wiping) return; var run = S().run, res = E.chooseSeuil(+d.i); if (!res) { SND.play('error'); return; }
+    var o = E.byId(D.SEUIL, res.id);
+    if (res.item) { var it = res.item.item; SND.play(D.RARITIES[it.rar].sfx); UI.toast(o.icon + ' <b class="c' + it.rar + '">' + E.itemName(it) + '</b>' + (res.item.salvaged ? ' (recyclé : sac plein)' : ' rejoint ton sac.'), true); }
+    else if (res.id === 'veille') { SND.play('heal'); UI.toast('🔥 PV au maximum, et une fiole de plus.'); }
+    else if (res.id === 'or') { SND.play('gold'); UI.toast('💰 +' + res.gold + ' or.'); }
+    else if (res.id === 'forge') { SND.play('upgrade'); UI.toast('⚒️ +10 % attaque et PV.'); }
+    else SND.play('click');
+    updateHud.key = null; shownPhase = null; syncPhase(true);
+  };
   function sheetBoon(run) {
     if (!run.offer) E.makeOffer(run);
     var h = '<h2>' + UI.spr('bn_tout', 'ski') + ' Choisis une aubaine</h2><div class="tiny dim center" style="margin:-6px 0 8px">Niveau ' + run.lvl + ' · elle dure jusqu’à la fin de cette descente' + (run.pendingBoons > 1 ? ' · encore ' + run.pendingBoons : '') + '</div>';

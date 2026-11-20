@@ -22,6 +22,7 @@ function playRun() {
     if (r.pendingDice > 0) { if (!r.diceOffer) E.makeDiceOffer(r); const ui = r.diceOffer.findIndex(o => o.k === 'up'); const li = r.bag.findIndex(d => d.t === 'lame' && d.f[5] < 9); if (r.bag.length >= 9 && ui >= 0 && li >= 0) E.chooseDie(ui, li); else E.chooseDie(0); continue; }
     if (r.phase === 'combat') { let n = 0; while (r.combat && !r.combat.over && n++ < 20000) { const c = r.combat; if (c.turn === 'hero') { if (!E.autoAct()) E.pass(); } else if (!E.foeStep()) simT += E.ROUND; c.events.length = 0; } if (r.combat && !r.combat.over) { r.hp = 0; r.phase = 'dead'; } continue; }
     if (r.phase === 'victory') { E.continueRun(); continue; }
+    if (r.phase === 'doors' && r.seuil) { E.chooseSeuil(Math.floor(Math.random() * r.seuil.length)); continue; }
     if (r.phase === 'doors') {
       const frac = r.hp / r.stats.hp; let ch = 0, best = -1;
       r.doors.forEach((t, i) => { let sc = { combat: 5, elite: frac > 0.7 ? 7 : 1, bourse: 6, fontaine: frac < 0.8 ? 7 : 4, piege: 0.5, tresor: 6, forge: 6, runes: 6, roue: 5, marchand: r.gold >= 70 ? 6 : 2, repos: frac < 0.6 ? 9 : 3, autel: 4, event: 5, boss: 9 }[t]; if (sc > best) { best = sc; ch = i; } });

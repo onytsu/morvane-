@@ -649,7 +649,7 @@ UI.run = (function () {
   // Affiche la bonne fenêtre selon la phase de la descente
   function syncPhase(now) {
     var run = S().run; if (!run) return;
-    var key = run.phase + '|' + run.floor + '|' + run.pendingBoons + '|' + run.pendingEvos + '|' + (run.pendingDice || 0) + '|' + (run.room ? run.room.type : '');
+    var key = run.phase + '|' + run.floor + '|' + run.pendingBoons + '|' + run.pendingEvos + '|' + (run.pendingDice || 0) + '|' + (run.room ? run.room.type : '') + '|' + (run.seuil ? 'S' : '');
     if (key === shownPhase) return; shownPhase = key;
     clearTimeout(phaseTimer);
     var delay = now ? 0 : run.phase === 'victory' && run.result && !run.result.chest ? (run.result.boss ? 1700 : 850) : run.phase === 'dead' ? 1100 : 0;
@@ -663,7 +663,7 @@ UI.run = (function () {
     if (built === null) buildArena();
     if (run.phase === 'victory') return sheetVictory(run);
     if ((run.phase === 'doors' || run.phase === 'room') && run.pendingEvos > 0 && sheetEvo(run)) return;
-    if (run.phase === 'doors') return run.pendingBoons > 0 ? sheetBoon(run) : run.pendingDice > 0 ? sheetDice(run) : sheetDoors(run);
+    if (run.phase === 'doors') return run.pendingBoons > 0 ? sheetBoon(run) : run.pendingDice > 0 ? sheetDice(run) : run.seuil ? sheetSeuil(run) : sheetDoors(run);
     if (run.phase === 'room') return run.pendingBoons > 0 ? sheetBoon(run) : sheetRoom(run);
     if (run.phase === 'dead') return end(false);
   }
@@ -705,11 +705,45 @@ UI.run = (function () {
     if (r.boss) SND.play('victory'); if (r.gold) SND.play('gold'); if (r.lvlUps) setTimeout(function () { SND.play('levelup'); }, 300);
     if (r.items.length) lootFx(r.items);
     if (r.boss) SND.music(zoneMusic(run));
-    if (r.boss && !r.chest) setTimeout(function () { UI.story.inZone(run, 'end', r.ending ? ending : null); }, 1500);
+    // la scène de fin de zone se joue avec l'étage du boss, même si on touche CONTINUER avant qu'elle démarre
+    clearTimeout(endT); endFn = null;
+    if (r.boss && !r.chest) { var at = { floor: run.floor }; endFn = function (next) { endFn = null; UI.story.inZone(at, 'end', function () { if (r.ending) ending(); if (next) next(); }); }; endT = setTimeout(function () { if (endFn) endFn(); }, 1500); }
     else if (r.ending) setTimeout(ending, 1500);
     UI.flushAch();
   }
-  ACT.cont = function () { SND.play('click'); E.continueRun(); syncPhase(true); };
+  var endT = null, endFn = null;
+  ACT.cont = function () {
+    if (wiping) return; SND.play('click');
+    var run = S().run, boss = run && run.phase === 'victory' && run.result && run.result.boss;
+    if (!boss) { E.continueRun(); syncPhase(true); return; }
+    clearTimeout(endT); var go = function () { E.continueRun(); newZone(S().run); };
+    if (endFn) endFn(go); else go();
+  };
+  // Boss vaincu : on passe tout de suite dans la zone suivante (décor, musique, présentation)
+  function newZone(run) {
+    if (!run) return; var z = E.zoneOf(run.floor);
+    SND.play('door');
+    wipe(z.name, 'Zone ' + (((E.zoneNum(run.floor) - 1) % 6) + 1) + (E.cycleOf(run.floor) ? ' · Abîme ' + E.cycleOf(run.floor) : '') + ' · étage ' + run.floor, function () {
+      UI.overlay(null); built = null; updateHud.key = null; shownPhase = null; SND.music(zoneMusic(run)); syncPhase(true);
+      UI.story.enterZone(run, function () { zoneIntro(run); });
+    });
+  }
+  function sheetSeuil(run) {
+    var z = E.zoneOf(run.floor), h = '<div class="zbanner" style="--zc:' + z.color + ';--zbg:url(' + Backgrounds.url(z.id) + ')"><h2>🕯️ Le Seuil</h2><div class="zs">Avant d’entrer dans ' + z.name + ' · étage ' + run.floor + '</div></div>';
+    h += '<div class="tiny dim center" style="margin:2px 0 8px">Le boss est tombé. Une halte avant la suite : choisis une récompense.</div>';
+    run.seuil.forEach(function (id, i) { var o = E.byId(D.SEUIL, id); h += '<button class="choice b2" style="animation-delay:' + (i * 0.07) + 's" data-act="seuil" data-i="' + i + '"><div class="ic">' + o.icon + '</div><div class="grow"><b>' + o.name + '</b><div class="d">' + E.seuilDesc(id) + '</div></div></button>'; });
+    UI.overlay(h);
+  }
+  ACT.seuil = function (d) {
+    if (wiping) return; var run = S().run, res = E.chooseSeuil(+d.i); if (!res) { SND.play('error'); return; }
+    var o = E.byId(D.SEUIL, res.id);
+    if (res.item) { var it = res.item.item; SND.play(D.RARITIES[it.rar].sfx); UI.toast(o.icon + ' <b class="c' + it.rar + '">' + E.itemName(it) + '</b>' + (res.item.salvaged ? ' (recyclé : sac plein)' : ' rejoint ton sac.'), true); }
+    else if (res.id === 'veille') { SND.play('heal'); UI.toast('🔥 PV au maximum, et une fiole de plus.'); }
+    else if (res.id === 'or') { SND.play('gold'); UI.toast('💰 +' + res.gold + ' or.'); }
+    else if (res.id === 'forge') { SND.play('upgrade'); UI.toast('⚒️ +10 % attaque et PV.'); }
+    else SND.play('click');
+    updateHud.key = null; shownPhase = null; syncPhase(true);
+  };
   function sheetBoon(run) {
     if (!run.offer) E.makeOffer(run);
     var h = '<h2>' + UI.spr('bn_tout', 'ski') + ' Choisis une aubaine</h2><div class="tiny dim center" style="margin:-6px 0 8px">Niveau ' + run.lvl + ' · elle dure jusqu’à la fin de cette descente' + (run.pendingBoons > 1 ? ' · encore ' + run.pendingBoons : '') + '</div>';
